@@ -1,31 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - EduSync</title>
+    <title>Iniciar Sesión - EduSync</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="login-container">
+        <div class="language-selector">
+            <select id="languageSelect" class="language-dropdown">
+                <option value="es">Español</option>
+                <option value="en">English</option>
+            </select>
+        </div>
         <div class="login-card">
             <div class="login-header">
-                <h1>Welcome Back</h1>
-                <p>Sign in to your account</p>
+                <h1 data-translate="welcome_back">Bienvenido de Nuevo</h1>
+                <p data-translate="sign_in_message">Inicia sesión en tu cuenta</p>
             </div>
             <form id="loginForm" class="login-form">
                 <div class="form-group">
-                    <label for="username">Username</label>
+                    <label for="username" data-translate="username">Usuario</label>
                     <input type="text" id="username" name="username" required>
                 </div>
                 <div class="form-group">
-                    <label for="password">Password</label>
+                    <label for="password" data-translate="password">Contraseña</label>
                     <input type="password" id="password" name="password" required>
                 </div>
-                <button type="submit" class="login-btn">Sign In</button>
+                <button type="submit" class="login-btn" data-translate="sign_in">Iniciar Sesión</button>
             </form>
             <div class="login-footer">
-                <p>For now, you can login with any username and password</p>
+                <p data-translate="login_note">Por ahora, puedes iniciar sesión con cualquier usuario y contraseña</p>
             </div>
         </div>
     </div>

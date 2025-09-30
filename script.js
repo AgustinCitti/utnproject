@@ -1,6 +1,212 @@
 // Global variables
 let appData = {};
 let currentSection = 'dashboard';
+let currentLanguage = 'es'; // Default to Spanish
+
+// Translation system
+const translations = {
+    es: {
+        // Login page
+        welcome_back: "Bienvenido de Nuevo",
+        sign_in_message: "Inicia sesión en tu cuenta",
+        username: "Usuario",
+        password: "Contraseña",
+        sign_in: "Iniciar Sesión",
+        login_note: "Por ahora, puedes iniciar sesión con cualquier usuario y contraseña",
+        
+        // Navigation
+        dashboard: "Panel de Control",
+        students: "Estudiantes",
+        grades: "Calificaciones",
+        attendance: "Asistencia",
+        exams: "Exámenes",
+        repository: "Repositorio",
+        notifications: "Notificaciones",
+        reports: "Reportes",
+        language: "Idioma",
+        
+        // Dashboard
+        total_students: "Total Estudiantes",
+        average_grade: "Promedio de Calificaciones",
+        attendance_rate: "Tasa de Asistencia",
+        calendar: "Calendario",
+        upcoming_classes: "Próximas Clases",
+        welcome_user: "¡Bienvenido, Usuario!",
+        
+        // Sections
+        student_management: "Gestión de Estudiantes",
+        grade_management: "Gestión de Calificaciones",
+        attendance_tracking: "Seguimiento de Asistencia",
+        exam_repository: "Repositorio de Exámenes",
+        academic_repository: "Repositorio Académico",
+        reports_analytics: "Reportes y Análisis",
+        
+        // Actions
+        add_student: "Agregar Estudiante",
+        add_grade: "Agregar Calificación",
+        mark_attendance: "Marcar Asistencia",
+        create_exam: "Crear Examen",
+        upload_file: "Subir Archivo",
+        mark_all_read: "Marcar Todo como Leído",
+        
+        // Forms
+        add_edit_student: "Agregar/Editar Estudiante",
+        first_name: "Nombre",
+        last_name: "Apellido",
+        email: "Correo Electrónico",
+        grade: "Grado",
+        student: "Estudiante",
+        subject: "Materia",
+        grade_value: "Calificación (0-100)",
+        type: "Tipo",
+        description: "Descripción",
+        cancel: "Cancelar",
+        save_student: "Guardar Estudiante",
+        save_grade: "Guardar Calificación",
+        
+        // Grade options
+        "9th_grade": "9º Grado",
+        "10th_grade": "10º Grado",
+        "11th_grade": "11º Grado",
+        "12th_grade": "12º Grado",
+        exam: "Examen",
+        homework: "Tarea",
+        lab: "Laboratorio",
+        project: "Proyecto",
+        
+        // Months
+        january: "Enero",
+        february: "Febrero",
+        march: "Marzo",
+        april: "Abril",
+        may: "Mayo",
+        june: "Junio",
+        july: "Julio",
+        august: "Agosto",
+        september: "Septiembre",
+        october: "Octubre",
+        november: "Noviembre",
+        december: "Diciembre"
+    },
+    en: {
+        // Login page
+        welcome_back: "Welcome Back",
+        sign_in_message: "Sign in to your account",
+        username: "Username",
+        password: "Password",
+        sign_in: "Sign In",
+        login_note: "For now, you can login with any username and password",
+        
+        // Navigation
+        dashboard: "Dashboard",
+        students: "Students",
+        grades: "Grades",
+        attendance: "Attendance",
+        exams: "Exams",
+        repository: "Repository",
+        notifications: "Notifications",
+        reports: "Reports",
+        language: "Language",
+        
+        // Dashboard
+        total_students: "Total Students",
+        average_grade: "Average Grade",
+        attendance_rate: "Attendance Rate",
+        calendar: "Calendar",
+        upcoming_classes: "Upcoming Classes",
+        welcome_user: "Welcome, User!",
+        
+        // Sections
+        student_management: "Student Management",
+        grade_management: "Grade Management",
+        attendance_tracking: "Attendance Tracking",
+        exam_repository: "Exam Repository",
+        academic_repository: "Academic Repository",
+        reports_analytics: "Reports & Analytics",
+        
+        // Actions
+        add_student: "Add Student",
+        add_grade: "Add Grade",
+        mark_attendance: "Mark Attendance",
+        create_exam: "Create Exam",
+        upload_file: "Upload File",
+        mark_all_read: "Mark All Read",
+        
+        // Forms
+        add_edit_student: "Add/Edit Student",
+        first_name: "First Name",
+        last_name: "Last Name",
+        email: "Email",
+        grade: "Grade",
+        student: "Student",
+        subject: "Subject",
+        grade_value: "Grade (0-100)",
+        type: "Type",
+        description: "Description",
+        cancel: "Cancel",
+        save_student: "Save Student",
+        save_grade: "Save Grade",
+        
+        // Grade options
+        "9th_grade": "9th Grade",
+        "10th_grade": "10th Grade",
+        "11th_grade": "11th Grade",
+        "12th_grade": "12th Grade",
+        exam: "Exam",
+        homework: "Homework",
+        lab: "Lab",
+        project: "Project",
+        
+        // Months
+        january: "January",
+        february: "February",
+        march: "March",
+        april: "April",
+        may: "May",
+        june: "June",
+        july: "July",
+        august: "August",
+        september: "September",
+        october: "October",
+        november: "November",
+        december: "December"
+    }
+};
+
+// Translation functions
+function translatePage(language) {
+    currentLanguage = language;
+    document.documentElement.lang = language;
+    
+    // Update all elements with data-translate attribute
+    const elements = document.querySelectorAll('[data-translate]');
+    elements.forEach(element => {
+        const key = element.getAttribute('data-translate');
+        if (translations[language] && translations[language][key]) {
+            element.textContent = translations[language][key];
+        }
+    });
+    
+    // Update month names in calendar
+    updateCalendarMonths(language);
+    
+    // Save language preference
+    localStorage.setItem('language', language);
+}
+
+function updateCalendarMonths(language) {
+    const monthNames = {
+        es: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+             'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+        en: ['January', 'February', 'March', 'April', 'May', 'June',
+             'July', 'August', 'September', 'October', 'November', 'December']
+    };
+    
+    // Update calendar if it exists
+    if (window.calendarInitialized) {
+        // This will be handled in the calendar initialization
+    }
+}
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -8,6 +214,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function initializeApp() {
+    // Initialize language system
+    initializeLanguage();
+    
     // Check authentication
     if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
         if (localStorage.getItem('isLoggedIn') === 'true') {
@@ -39,6 +248,25 @@ async function initializeApp() {
     // Update UI
     updateDashboard();
     updateNotificationCount();
+}
+
+// Language initialization
+function initializeLanguage() {
+    // Get saved language or default to Spanish
+    const savedLanguage = localStorage.getItem('language') || 'es';
+    currentLanguage = savedLanguage;
+    
+    // Set up language selector
+    const languageSelect = document.getElementById('languageSelect');
+    if (languageSelect) {
+        languageSelect.value = savedLanguage;
+        languageSelect.addEventListener('change', function() {
+            translatePage(this.value);
+        });
+    }
+    
+    // Apply translations
+    translatePage(savedLanguage);
 }
 
 // Data Management
@@ -288,15 +516,17 @@ function initializeCalendar() {
     let currentMonth = currentDate.getMonth();
     let currentYear = currentDate.getFullYear();
 
-    const monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ];
+    const monthNames = {
+        es: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+             'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+        en: ['January', 'February', 'March', 'April', 'May', 'June',
+             'July', 'August', 'September', 'October', 'November', 'December']
+    };
 
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     function renderCalendar() {
-        currentMonthElement.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+        currentMonthElement.textContent = `${monthNames[currentLanguage][currentMonth]} ${currentYear}`;
         calendarGrid.innerHTML = '';
 
         // Add day headers

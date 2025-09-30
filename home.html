@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduSync - Academic Management System</title>
+    <title>EduSync - Sistema de Gestión Académica</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -18,37 +18,49 @@
             <nav class="mobile-nav">
                 <a href="#dashboard" class="nav-item active" data-section="dashboard">
                     <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
+                    <span data-translate="dashboard">Panel de Control</span>
                 </a>
                 <a href="#students" class="nav-item" data-section="students">
                     <i class="fas fa-users"></i>
-                    <span>Students</span>
+                    <span data-translate="students">Estudiantes</span>
                 </a>
                 <a href="#grades" class="nav-item" data-section="grades">
                     <i class="fas fa-graduation-cap"></i>
-                    <span>Grades</span>
+                    <span data-translate="grades">Calificaciones</span>
                 </a>
                 <a href="#attendance" class="nav-item" data-section="attendance">
                     <i class="fas fa-calendar-check"></i>
-                    <span>Attendance</span>
+                    <span data-translate="attendance">Asistencia</span>
                 </a>
                 <a href="#exams" class="nav-item" data-section="exams">
                     <i class="fas fa-file-alt"></i>
-                    <span>Exams</span>
+                    <span data-translate="exams">Exámenes</span>
                 </a>
                 <a href="#repository" class="nav-item" data-section="repository">
                     <i class="fas fa-archive"></i>
-                    <span>Repository</span>
+                    <span data-translate="repository">Repositorio</span>
                 </a>
                 <a href="#notifications" class="nav-item" data-section="notifications">
                     <i class="fas fa-bell"></i>
-                    <span>Notifications</span>
+                    <span data-translate="notifications">Notificaciones</span>
                     <span class="notification-badge" id="notificationCount">0</span>
                 </a>
                 <a href="#reports" class="nav-item" data-section="reports">
                     <i class="fas fa-chart-bar"></i>
-                    <span>Reports</span>
+                    <span data-translate="reports">Reportes</span>
                 </a>
+                
+                <!-- Language Selector in Navigation -->
+                <div class="nav-language-selector">
+                    <div class="nav-language-label">
+                        <i class="fas fa-globe"></i>
+                        <span data-translate="language">Idioma</span>
+                    </div>
+                    <select id="languageSelect" class="nav-language-dropdown">
+                        <option value="es">Español</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
             </nav>
         </div>
     </div>
@@ -64,7 +76,7 @@
             </div>
             <div class="header-right">
                 <div class="user-info">
-                    <span id="welcomeUser">Welcome, User!</span>
+                    <span id="welcomeUser" data-translate="welcome_user">¡Bienvenido, Usuario!</span>
                     <button id="logoutBtn" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
@@ -85,7 +97,7 @@
                             </div>
                             <div class="stat-content">
                                 <h3 id="totalStudents">0</h3>
-                                <p>Total Students</p>
+                                <p data-translate="total_students">Total Estudiantes</p>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -94,7 +106,7 @@
                             </div>
                             <div class="stat-content">
                                 <h3 id="averageGrade">0%</h3>
-                                <p>Average Grade</p>
+                                <p data-translate="average_grade">Promedio de Calificaciones</p>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -103,7 +115,7 @@
                             </div>
                             <div class="stat-content">
                                 <h3 id="attendanceRate">0%</h3>
-                                <p>Attendance Rate</p>
+                                <p data-translate="attendance_rate">Tasa de Asistencia</p>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -112,18 +124,18 @@
                             </div>
                             <div class="stat-content">
                                 <h3 id="pendingNotifications">0</h3>
-                                <p>Notifications</p>
+                                <p data-translate="notifications">Notificaciones</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Calendar Component -->
                     <div class="calendar-section">
-                        <h2>Calendar</h2>
+                        <h2 data-translate="calendar">Calendario</h2>
                         <div class="calendar-container">
                             <div class="calendar-header">
                                 <button id="prevMonth" class="nav-btn">&lt;</button>
-                                <h3 id="currentMonth">January 2024</h3>
+                                <h3 id="currentMonth">Enero 2024</h3>
                                 <button id="nextMonth" class="nav-btn">&gt;</button>
                             </div>
                             <div class="calendar-grid" id="calendarGrid">
@@ -134,7 +146,7 @@
 
                     <!-- Next Classes Component -->
                     <div class="next-classes-section">
-                        <h2>Upcoming Classes</h2>
+                        <h2 data-translate="upcoming_classes">Próximas Clases</h2>
                         <div class="classes-list" id="classesList">
                             <!-- Classes will be loaded dynamically -->
                         </div>
@@ -145,7 +157,7 @@
             <!-- Students Section -->
             <section id="students" class="content-section">
                 <div class="section-header">
-                    <h2>Student Management</h2>
+                    <h2 data-translate="student_management">Gestión de Estudiantes</h2>
                     <div class="section-actions">
                         <div class="view-toggle">
                             <button id="studentsGridViewBtn" class="view-btn active" data-view="grid">
@@ -157,7 +169,7 @@
                         </div>
                         <button id="addStudentBtn" class="btn-primary">
                             <i class="fas fa-plus"></i>
-                            Add Student
+                            <span data-translate="add_student">Agregar Estudiante</span>
                         </button>
                     </div>
                 </div>
@@ -172,7 +184,7 @@
             <!-- Grades Section -->
             <section id="grades" class="content-section">
                 <div class="section-header">
-                    <h2>Grade Management</h2>
+                    <h2 data-translate="grade_management">Gestión de Calificaciones</h2>
                     <div class="section-actions">
                         <div class="view-toggle">
                             <button id="gradesGridViewBtn" class="view-btn active" data-view="grid">
@@ -184,7 +196,7 @@
                         </div>
                         <button id="addGradeBtn" class="btn-primary">
                             <i class="fas fa-plus"></i>
-                            Add Grade
+                            <span data-translate="add_grade">Agregar Calificación</span>
                         </button>
                     </div>
                 </div>
@@ -199,7 +211,7 @@
             <!-- Attendance Section -->
             <section id="attendance" class="content-section">
                 <div class="section-header">
-                    <h2>Attendance Tracking</h2>
+                    <h2 data-translate="attendance_tracking">Seguimiento de Asistencia</h2>
                     <div class="section-actions">
                         <div class="view-toggle">
                             <button id="attendanceGridViewBtn" class="view-btn active" data-view="grid">
@@ -211,7 +223,7 @@
                         </div>
                         <button id="markAttendanceBtn" class="btn-primary">
                             <i class="fas fa-check"></i>
-                            Mark Attendance
+                            <span data-translate="mark_attendance">Marcar Asistencia</span>
                         </button>
                     </div>
                 </div>
@@ -226,7 +238,7 @@
             <!-- Exams Section -->
             <section id="exams" class="content-section">
                 <div class="section-header">
-                    <h2>Exam Repository</h2>
+                    <h2 data-translate="exam_repository">Repositorio de Exámenes</h2>
                     <div class="section-actions">
                         <div class="view-toggle">
                             <button id="examsGridViewBtn" class="view-btn active" data-view="grid">
@@ -238,7 +250,7 @@
                         </div>
                         <button id="createExamBtn" class="btn-primary">
                             <i class="fas fa-plus"></i>
-                            Create Exam
+                            <span data-translate="create_exam">Crear Examen</span>
                         </button>
                     </div>
                 </div>
@@ -253,7 +265,7 @@
             <!-- Repository Section -->
             <section id="repository" class="content-section">
                 <div class="section-header">
-                    <h2>Academic Repository</h2>
+                    <h2 data-translate="academic_repository">Repositorio Académico</h2>
                     <div class="section-actions">
                         <div class="view-toggle">
                             <button id="repositoryGridViewBtn" class="view-btn active" data-view="grid">
@@ -265,7 +277,7 @@
                         </div>
                         <button id="uploadFileBtn" class="btn-primary">
                             <i class="fas fa-upload"></i>
-                            Upload File
+                            <span data-translate="upload_file">Subir Archivo</span>
                         </button>
                     </div>
                 </div>
@@ -280,7 +292,7 @@
             <!-- Notifications Section -->
             <section id="notifications" class="content-section">
                 <div class="section-header">
-                    <h2>Notifications</h2>
+                    <h2 data-translate="notifications">Notificaciones</h2>
                     <div class="section-actions">
                         <div class="view-toggle">
                             <button id="notificationsGridViewBtn" class="view-btn active" data-view="grid">
@@ -292,7 +304,7 @@
                         </div>
                         <button id="markAllReadBtn" class="btn-secondary">
                             <i class="fas fa-check-double"></i>
-                            Mark All Read
+                            <span data-translate="mark_all_read">Marcar Todo como Leído</span>
                         </button>
                     </div>
                 </div>
@@ -307,7 +319,7 @@
             <!-- Reports Section -->
             <section id="reports" class="content-section">
                 <div class="section-header">
-                    <h2>Reports & Analytics</h2>
+                    <h2 data-translate="reports_analytics">Reportes y Análisis</h2>
                 </div>
                 <div class="reports-container" id="reportsContainer">
                     <!-- Reports will be loaded dynamically -->
@@ -320,34 +332,34 @@
     <div id="studentModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Add/Edit Student</h3>
+                <h3 data-translate="add_edit_student">Agregar/Editar Estudiante</h3>
                 <button class="close-modal">&times;</button>
             </div>
             <form id="studentForm" class="modal-form">
                 <div class="form-group">
-                    <label for="studentFirstName">First Name</label>
+                    <label for="studentFirstName" data-translate="first_name">Nombre</label>
                     <input type="text" id="studentFirstName" required>
                 </div>
                 <div class="form-group">
-                    <label for="studentLastName">Last Name</label>
+                    <label for="studentLastName" data-translate="last_name">Apellido</label>
                     <input type="text" id="studentLastName" required>
                 </div>
                 <div class="form-group">
-                    <label for="studentEmail">Email</label>
+                    <label for="studentEmail" data-translate="email">Correo Electrónico</label>
                     <input type="email" id="studentEmail" required>
                 </div>
                 <div class="form-group">
-                    <label for="studentGrade">Grade</label>
+                    <label for="studentGrade" data-translate="grade">Grado</label>
                     <select id="studentGrade" required>
-                        <option value="9th">9th Grade</option>
-                        <option value="10th">10th Grade</option>
-                        <option value="11th">11th Grade</option>
-                        <option value="12th">12th Grade</option>
+                        <option value="9th" data-translate="9th_grade">9º Grado</option>
+                        <option value="10th" data-translate="10th_grade">10º Grado</option>
+                        <option value="11th" data-translate="11th_grade">11º Grado</option>
+                        <option value="12th" data-translate="12th_grade">12º Grado</option>
                     </select>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary close-modal">Cancel</button>
-                    <button type="submit" class="btn-primary">Save Student</button>
+                    <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
+                    <button type="submit" class="btn-primary" data-translate="save_student">Guardar Estudiante</button>
                 </div>
             </form>
         </div>
@@ -356,42 +368,42 @@
     <div id="gradeModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Add Grade</h3>
+                <h3 data-translate="add_grade">Agregar Calificación</h3>
                 <button class="close-modal">&times;</button>
             </div>
             <form id="gradeForm" class="modal-form">
                 <div class="form-group">
-                    <label for="gradeStudent">Student</label>
+                    <label for="gradeStudent" data-translate="student">Estudiante</label>
                     <select id="gradeStudent" required>
                         <!-- Options will be populated dynamically -->
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="gradeSubject">Subject</label>
+                    <label for="gradeSubject" data-translate="subject">Materia</label>
                     <select id="gradeSubject" required>
                         <!-- Options will be populated dynamically -->
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="gradeValue">Grade (0-100)</label>
+                    <label for="gradeValue" data-translate="grade_value">Calificación (0-100)</label>
                     <input type="number" id="gradeValue" min="0" max="100" required>
                 </div>
                 <div class="form-group">
-                    <label for="gradeType">Type</label>
+                    <label for="gradeType" data-translate="type">Tipo</label>
                     <select id="gradeType" required>
-                        <option value="exam">Exam</option>
-                        <option value="homework">Homework</option>
-                        <option value="lab">Lab</option>
-                        <option value="project">Project</option>
+                        <option value="exam" data-translate="exam">Examen</option>
+                        <option value="homework" data-translate="homework">Tarea</option>
+                        <option value="lab" data-translate="lab">Laboratorio</option>
+                        <option value="project" data-translate="project">Proyecto</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="gradeDescription">Description</label>
+                    <label for="gradeDescription" data-translate="description">Descripción</label>
                     <input type="text" id="gradeDescription">
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary close-modal">Cancel</button>
-                    <button type="submit" class="btn-primary">Save Grade</button>
+                    <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
+                    <button type="submit" class="btn-primary" data-translate="save_grade">Guardar Calificación</button>
                 </div>
             </form>
         </div>
