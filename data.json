@@ -1,0 +1,267 @@
+{
+  "students": [
+    {
+      "id": 1,
+      "firstName": "Juan",
+      "lastName": "Pérez",
+      "email": "juan.perez@email.com",
+      "studentId": "STU001",
+      "grade": "10th",
+      "subjects": ["Mathematics", "Physics", "Chemistry"],
+      "enrollmentDate": "2024-01-15",
+      "status": "active"
+    },
+    {
+      "id": 2,
+      "firstName": "María",
+      "lastName": "González",
+      "email": "maria.gonzalez@email.com",
+      "studentId": "STU002",
+      "grade": "11th",
+      "subjects": ["Mathematics", "Physics", "Biology"],
+      "enrollmentDate": "2024-01-15",
+      "status": "active"
+    },
+    {
+      "id": 3,
+      "firstName": "Carlos",
+      "lastName": "Rodríguez",
+      "email": "carlos.rodriguez@email.com",
+      "studentId": "STU003",
+      "grade": "9th",
+      "subjects": ["Mathematics", "Chemistry", "Biology"],
+      "enrollmentDate": "2024-01-15",
+      "status": "active"
+    }
+  ],
+  "teachers": [
+    {
+      "id": 1,
+      "firstName": "Dr. Ana",
+      "lastName": "Martínez",
+      "email": "ana.martinez@school.edu",
+      "subjects": ["Mathematics", "Physics"],
+      "department": "Science"
+    },
+    {
+      "id": 2,
+      "firstName": "Prof. Luis",
+      "lastName": "Hernández",
+      "email": "luis.hernandez@school.edu",
+      "subjects": ["Chemistry", "Biology"],
+      "department": "Science"
+    }
+  ],
+  "subjects": [
+    {
+      "id": 1,
+      "name": "Mathematics",
+      "code": "MATH101",
+      "credits": 4,
+      "teacherId": 1
+    },
+    {
+      "id": 2,
+      "name": "Physics",
+      "code": "PHYS101",
+      "credits": 3,
+      "teacherId": 1
+    },
+    {
+      "id": 3,
+      "name": "Chemistry",
+      "code": "CHEM101",
+      "credits": 3,
+      "teacherId": 2
+    },
+    {
+      "id": 4,
+      "name": "Biology",
+      "code": "BIO101",
+      "credits": 3,
+      "teacherId": 2
+    }
+  ],
+  "grades": [
+    {
+      "id": 1,
+      "studentId": 1,
+      "subjectId": 1,
+      "grade": 85,
+      "type": "exam",
+      "date": "2024-01-20",
+      "description": "Midterm Exam"
+    },
+    {
+      "id": 2,
+      "studentId": 1,
+      "subjectId": 1,
+      "grade": 92,
+      "type": "homework",
+      "date": "2024-01-25",
+      "description": "Algebra Assignment"
+    },
+    {
+      "id": 3,
+      "studentId": 2,
+      "subjectId": 1,
+      "grade": 78,
+      "type": "exam",
+      "date": "2024-01-20",
+      "description": "Midterm Exam"
+    },
+    {
+      "id": 4,
+      "studentId": 2,
+      "subjectId": 2,
+      "grade": 88,
+      "type": "lab",
+      "date": "2024-01-22",
+      "description": "Physics Lab Report"
+    }
+  ],
+  "attendance": [
+    {
+      "id": 1,
+      "studentId": 1,
+      "subjectId": 1,
+      "date": "2024-01-15",
+      "status": "present",
+      "notes": ""
+    },
+    {
+      "id": 2,
+      "studentId": 1,
+      "subjectId": 1,
+      "date": "2024-01-17",
+      "status": "present",
+      "notes": ""
+    },
+    {
+      "id": 3,
+      "studentId": 1,
+      "subjectId": 1,
+      "date": "2024-01-19",
+      "status": "absent",
+      "notes": "Sick leave"
+    },
+    {
+      "id": 4,
+      "studentId": 2,
+      "subjectId": 1,
+      "date": "2024-01-15",
+      "status": "present",
+      "notes": ""
+    },
+    {
+      "id": 5,
+      "studentId": 2,
+      "subjectId": 1,
+      "date": "2024-01-17",
+      "status": "late",
+      "notes": "Traffic delay"
+    }
+  ],
+  "exams": [
+    {
+      "id": 1,
+      "title": "Mathematics Midterm",
+      "subjectId": 1,
+      "date": "2024-01-20",
+      "duration": 90,
+      "type": "written",
+      "description": "Algebra and Geometry concepts",
+      "questions": [
+        {
+          "id": 1,
+          "question": "Solve for x: 2x + 5 = 13",
+          "type": "short_answer",
+          "points": 10
+        },
+        {
+          "id": 2,
+          "question": "Calculate the area of a circle with radius 5cm",
+          "type": "calculation",
+          "points": 15
+        }
+      ],
+      "totalPoints": 100
+    },
+    {
+      "id": 2,
+      "title": "Physics Lab Practical",
+      "subjectId": 2,
+      "date": "2024-01-22",
+      "duration": 120,
+      "type": "practical",
+      "description": "Measurement and data analysis",
+      "questions": [
+        {
+          "id": 1,
+          "question": "Measure the acceleration due to gravity",
+          "type": "practical",
+          "points": 50
+        }
+      ],
+      "totalPoints": 50
+    }
+  ],
+  "notifications": [
+    {
+      "id": 1,
+      "title": "New Assignment Posted",
+      "message": "Mathematics homework due next week",
+      "type": "assignment",
+      "date": "2024-01-25",
+      "read": false,
+      "recipientId": 1
+    },
+    {
+      "id": 2,
+      "title": "Grade Posted",
+      "message": "Your Physics exam grade is now available",
+      "type": "grade",
+      "date": "2024-01-23",
+      "read": false,
+      "recipientId": 1
+    }
+  ],
+  "classes": [
+    {
+      "id": 1,
+      "subjectId": 1,
+      "teacherId": 1,
+      "date": "2024-02-01",
+      "time": "10:00",
+      "room": "Room 101",
+      "duration": 60
+    },
+    {
+      "id": 2,
+      "subjectId": 2,
+      "teacherId": 1,
+      "date": "2024-02-01",
+      "time": "14:00",
+      "room": "Lab 1",
+      "duration": 90
+    },
+    {
+      "id": 3,
+      "subjectId": 3,
+      "teacherId": 2,
+      "date": "2024-02-02",
+      "time": "09:00",
+      "room": "Lab 2",
+      "duration": 120
+    },
+    {
+      "id": 4,
+      "subjectId": 1,
+      "teacherId": 1,
+      "date": "2024-02-03",
+      "time": "11:00",
+      "room": "Room 102",
+      "duration": 60
+    }
+  ]
+}
