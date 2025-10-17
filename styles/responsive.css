@@ -216,14 +216,23 @@
 
 /* Responsive Design for Login/Register Pages */
 @media (max-width: 768px) {
+    .login-page, .register-page {
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+    }
+    
     .login-container, .register-container {
         grid-template-columns: 1fr;
         gap: 2rem;
         padding: 1rem;
+        max-height: calc(100vh - 80px);
+        overflow-y: auto;
     }
     
     .login-card, .register-card {
         padding: 2rem;
+        max-height: none;
     }
     
     .form-row {
@@ -244,6 +253,12 @@
 }
 
 @media (max-width: 480px) {
+    .login-page, .register-page {
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+    }
+    
     .login-nav {
         padding: 1rem;
     }
@@ -257,12 +272,37 @@
         font-size: 0.9rem;
     }
     
+    .login-container, .register-container {
+        padding: 0.5rem;
+        max-height: calc(100vh - 80px);
+        overflow-y: auto;
+    }
+    
     .login-card, .register-card {
         padding: 1.5rem;
+        margin: 0.5rem;
     }
     
     .login-header-content h1, .register-header-content h1 {
         font-size: 1.5rem;
+    }
+    
+    .illustration-content {
+        padding: 1rem 0;
+    }
+    
+    .illustration-content h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .illustration-content p {
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+    
+    .features-list {
+        display: none;
     }
 }
 
