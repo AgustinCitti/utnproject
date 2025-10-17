@@ -47,19 +47,23 @@
 
     <!-- Hero Section -->
     <section class="hero">
+        <div class="hero-overlay"></div>
         <div class="hero-content">
-            <div class="hero-text">
+            <div class="hero-left">
+                <div class="user-count">
+                    <span>1000+ teachers are using EduSync</span>
+                </div>
                 <h1 class="hero-title" data-translate="hero_title">Transform Your Academic Management</h1>
-                <p class="hero-subtitle" data-translate="hero_subtitle">EduSync is a comprehensive academic management system designed to save teachers more than 30% of their time on administrative tasks.</p>
                 <div class="hero-buttons">
-                    <button class="btn-primary btn-large" onclick="scrollToLogin()" data-translate="get_started">Get Started</button>
-                    <button class="btn-secondary btn-large" onclick="scrollToFeatures()" data-translate="learn_more">Learn More</button>
+                    <button class="btn-primary btn-large" onclick="scrollToLogin()" data-translate="get_started">
+                        <span>Get Started</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button class="btn-secondary btn-large" onclick="scrollToFeatures()" data-translate="learn_more">Discover</button>
                 </div>
             </div>
-            <div class="hero-image">
-                <div class="hero-illustration">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                </div>
+            <div class="hero-right">
+                <p class="hero-description" data-translate="hero_description">Experience comprehensive student management, automated grading systems, and real-time attendance tracking designed to streamline every aspect of your teaching workflow whether you're managing a small class or a large institution.</p>
             </div>
         </div>
     </section>
@@ -367,3 +371,4 @@
     <script src="scripts/main.js"></script>
 </body>
 </html>
+

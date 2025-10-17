@@ -1,3 +1,20 @@
+/* Laptop and Desktop specific styles */
+@media (min-width: 769px) and (max-width: 1440px) {
+    .hero {
+        background-position: center center;
+        background-attachment: scroll;
+    }
+}
+
+/* Large desktop screens */
+@media (min-width: 1441px) {
+    .hero {
+        background-position: center top;
+        background-size: cover;
+        background-attachment: fixed;
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .nav-menu {
@@ -20,10 +37,33 @@
         display: flex;
     }
 
+    .hero {
+        margin: 1rem;
+        margin-top: 5rem;
+        border-radius: 12px;
+        min-height: 60vh;
+        padding: 3rem 1rem;
+    }
+
     .hero-content {
         grid-template-columns: 1fr;
-        text-align: center;
         gap: 2rem;
+        padding: 0 1rem;
+        text-align: center;
+    }
+
+    .hero-left {
+        order: 1;
+    }
+
+    .hero-right {
+        order: 2;
+        justify-content: center;
+    }
+
+    .hero-description {
+        text-align: center;
+        max-width: 100%;
     }
 
     .hero-title {
@@ -67,6 +107,34 @@
     .btn-large {
         width: 100%;
         max-width: 300px;
+    }
+
+    .hero {
+        margin: 0.5rem;
+        margin-top: 4rem;
+        border-radius: 8px;
+        min-height: 50vh;
+        padding: 2rem 1rem;
+    }
+
+    .hero-content {
+        padding: 0 0.5rem;
+        gap: 1.5rem;
+    }
+
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn-large {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
     }
 
     .features, .about, .registration {
