@@ -14,7 +14,7 @@ function initializeLogin() {
             if (username && password) {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('username', username);
-                window.location.href = 'home.html';
+                window.location.href = 'pages/home.html';
             } else {
                 alert('Please enter both username and password');
             }
@@ -138,7 +138,7 @@ function handleLogin() {
         console.log('Login successful, redirecting to home.html');
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('username', username);
-        window.location.href = 'home.html';
+        window.location.href = 'pages/home.html';
     } else {
         console.log('Login failed - missing credentials');
         alert('Please enter both username and password');
@@ -318,14 +318,30 @@ function initializeSwipeForm() {
         formsSlider.addEventListener('touchmove', handleTouchMove, { passive: false });
         formsSlider.addEventListener('touchend', handleTouchEnd, { passive: false });
         
-        // Mouse events for desktop
+        // Mouse events for desktop - only on the slider container, not form content
         formsSlider.addEventListener('mousedown', handleMouseDown);
         formsSlider.addEventListener('mousemove', handleMouseMove);
         formsSlider.addEventListener('mouseup', handleMouseUp);
         formsSlider.addEventListener('mouseleave', handleMouseUp);
         
+        // Prevent form switching when clicking on form elements
+        const formElements = formsSlider.querySelectorAll('input, button, select, textarea, label');
+        formElements.forEach(element => {
+            element.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+            });
+            element.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+            });
+        });
+        
         function handleTouchStart(e) {
             if (isTransitioning) return;
+            
+            // Don't start drag if touching form elements
+            if (e.target.closest('input, button, select, textarea, label, .form-group, .input-wrapper')) {
+                return;
+            }
             
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
@@ -384,6 +400,11 @@ function initializeSwipeForm() {
         
         function handleMouseDown(e) {
             if (isTransitioning) return;
+            
+            // Don't start drag if clicking on form elements
+            if (e.target.closest('input, button, select, textarea, label, .form-group, .input-wrapper')) {
+                return;
+            }
             
             startX = e.clientX;
             startY = e.clientY;

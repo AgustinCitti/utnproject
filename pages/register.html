@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - EduSync</title>
-    <link rel="stylesheet" href="styles/base.css">
-    <link rel="stylesheet" href="styles/landing.css">
-    <link rel="stylesheet" href="styles/auth.css">
-    <link rel="stylesheet" href="styles/components.css">
-    <link rel="stylesheet" href="styles/responsive.css">
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/landing.css">
+    <link rel="stylesheet" href="../styles/auth.css">
+    <link rel="stylesheet" href="../styles/components.css">
+    <link rel="stylesheet" href="../styles/responsive.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -16,7 +16,7 @@
     <header class="login-header">
         <nav class="login-nav">
             <div class="nav-brand">
-                <a href="index.html">
+                <a href="../index.html">
                     <i class="fas fa-graduation-cap"></i>
                     <span>EduSync</span>
                 </a>
@@ -41,9 +41,7 @@
         <div class="register-container">
             <div class="register-card">
                 <div class="register-header-content">
-                    <div class="register-icon">
-                        <i class="fas fa-user-plus"></i>
-                    </div>
+                   
                     <h1 data-translate="join_edusync">Join EduSync</h1>
                     <p data-translate="register_subtitle">Create your account to get started</p>
                 </div>
@@ -74,27 +72,9 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <div class="input-wrapper">
-                            <i class="fas fa-building input-icon"></i>
-                            <input type="text" id="regInstitution" name="institution" placeholder=" " required>
-                            <label for="regInstitution" data-translate="institution">Institution</label>
-                        </div>
-                    </div>
+                  
 
-                    <div class="form-group">
-                        <div class="input-wrapper">
-                            <i class="fas fa-user-tag input-icon"></i>
-                            <select id="regRole" name="role" required>
-                                <option value="" disabled selected data-translate="select_role">Select your role</option>
-                                <option value="teacher" data-translate="teacher">Teacher</option>
-                                <option value="administrator" data-translate="administrator">Administrator</option>
-                                <option value="student" data-translate="student">Student</option>
-                                <option value="parent" data-translate="parent">Parent</option>
-                            </select>
-                            <label for="regRole" data-translate="role">Role</label>
-                        </div>
-                    </div>
+                 
 
                     <div class="form-group">
                         <div class="input-wrapper">
@@ -116,7 +96,7 @@
                         <label class="checkbox-wrapper">
                             <input type="checkbox" id="agreeTerms" required>
                             <span class="checkmark"></span>
-                            <span data-translate="agree_terms">I agree to the <a href="#" class="terms-link">Terms of Service</a> and <a href="#" class="terms-link">Privacy Policy</a></span>
+                            <span>Acepto los <a href="terms.html" class="terms-link">Términos de Servicio</a> y la <a href="privacy.html" class="terms-link">Política de Privacidad</a></span>
                         </label>
                     </div>
 
@@ -126,20 +106,6 @@
                     </button>
                 </form>
 
-                <div class="divider">
-                    <span data-translate="or">or</span>
-                </div>
-
-                <div class="social-login">
-                    <button class="social-btn google-btn">
-                        <i class="fab fa-google"></i>
-                        <span data-translate="continue_with_google">Continue with Google</span>
-                    </button>
-                    <button class="social-btn microsoft-btn">
-                        <i class="fab fa-microsoft"></i>
-                        <span data-translate="continue_with_microsoft">Continue with Microsoft</span>
-                    </button>
-                </div>
 
                 <div class="register-footer">
                     <p data-translate="already_have_account">Already have an account? <a href="login.html" class="switch-link" data-translate="sign_in">Sign in</a></p>
@@ -180,9 +146,9 @@
     </main>
 
     <!-- Script Modules -->
-    <script src="scripts/translations.js"></script>
-    <script src="scripts/utils.js"></script>
-    <script src="scripts/auth.js"></script>
-    <script src="scripts/main.js"></script>
+    <script src="../scripts/translations.js"></script>
+    <script src="../scripts/utils.js"></script>
+    <script src="../scripts/auth.js"></script>
+    <script src="../scripts/main.js"></script>
 </body>
 </html>
