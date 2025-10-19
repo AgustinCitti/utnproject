@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - EduSync</title>
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/landing.css">
+    <link rel="stylesheet" href="../styles/components.css">
+    <link rel="stylesheet" href="../styles/responsive.css">
+    <link rel="stylesheet" href="../styles/contact.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="landing-header">
+        <nav class="landing-nav">
+            <div class="nav-brand">
+                <i class="fas fa-graduation-cap"></i>
+                <span>EduSync</span>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="../index.html" class="nav-link">Home</a>
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#about" class="nav-link">About</a>
+                <a href="contact.html" class="nav-link active">Contact</a>
+                <a href="login.html" class="nav-btn nav-login">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span data-translate="login">Login</span>
+                </a>
+                <a href="register.html" class="nav-btn nav-register">
+                    <i class="fas fa-user-plus"></i>
+                    <span data-translate="register">Register</span>
+                </a>
+                <div class="language-selector">
+                    <select id="languageSelect" class="language-dropdown">
+                        <option value="es">Español</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+            </div>
+            <div class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Contact Section -->
+    <section class="contact-section">
+        <div class="container">
+            <div class="contact-header">
+                <h1 data-translate="contact_title">Contact Us</h1>
+                <p data-translate="contact_subtitle">Get in touch with our team. We're here to help you with any questions about EduSync.</p>
+            </div>
+
+            <div class="contact-content">
+                <!-- Contact Information -->
+                <div class="contact-info">
+                    <div class="info-card">
+                        <div class="info-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="info-content">
+                            <h3 data-translate="address_title">Address</h3>
+                            <p data-translate="address_text">123 University Street<br>Buenos Aires, Argentina<br>CP 1000</p>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="info-content">
+                            <h3 data-translate="phone_title">Phone</h3>
+                            <p>+54 11 1234-5678</p>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="info-content">
+                            <h3 data-translate="email_title">Email</h3>
+                            <p>contact@edusync.edu.ar</p>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="info-content">
+                            <h3 data-translate="hours_title">Business Hours</h3>
+                            <p data-translate="hours_text">Monday - Friday: 9:00 AM - 6:00 PM<br>Saturday: 10:00 AM - 2:00 PM</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Form and Map -->
+                <div class="contact-form-map">
+                    <!-- Contact Form -->
+                    <div class="contact-form-container">
+                        <h2 data-translate="send_message">Send us a Message</h2>
+                        <form id="contactForm" class="contact-form" action="contact_handler.php" method="POST">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="firstName" data-translate="first_name">First Name</label>
+                                    <input type="text" id="firstName" name="firstName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lastName" data-translate="last_name">Last Name</label>
+                                    <input type="text" id="lastName" name="lastName" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email" data-translate="email">Email Address</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phone" data-translate="phone">Phone Number</label>
+                                <input type="tel" id="phone" name="phone">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="subject" data-translate="subject">Subject</label>
+                                <select id="subject" name="subject" required>
+                                    <option value="" data-translate="select_subject">Select a subject</option>
+                                    <option value="general" data-translate="general_inquiry">General Inquiry</option>
+                                    <option value="technical" data-translate="technical_support">Technical Support</option>
+                                    <option value="billing" data-translate="billing_question">Billing Question</option>
+                                    <option value="feature" data-translate="feature_request">Feature Request</option>
+                                    <option value="other" data-translate="other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="message" data-translate="message">Message</label>
+                                <textarea id="message" name="message" rows="5" required placeholder="Tell us how we can help you..."></textarea>
+                            </div>
+
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="newsletter" value="1">
+                                    <span class="checkmark"></span>
+                                    <span data-translate="newsletter_opt">I would like to receive updates about EduSync</span>
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn-primary contact-submit" data-translate="send_message_btn">
+                                <i class="fas fa-paper-plane"></i>
+                                <span>Send Message</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Google Map -->
+                    <div class="map-container">
+                        <h2 data-translate="find_us">Find Us</h2>
+                        <div id="googleMap" class="google-map"></div>
+                        <div class="map-info">
+                            <p data-translate="map_info">Visit our office located in the heart of Buenos Aires. We're easily accessible by public transportation.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>EduSync</span>
+                </div>
+                <div class="footer-links">
+                    <a href="../index.html#features" data-translate="features">Features</a>
+                    <a href="../index.html#about" data-translate="about">About</a>
+                    <a href="contact.html" data-translate="contact">Contact</a>
+                </div>
+                <div class="footer-copyright">
+                    <p>&copy; 2024 EduSync. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="../scripts/translations.js"></script>
+    <script src="../scripts/utils.js"></script>
+    <script src="../scripts/contact.js"></script>
+    
+    <!-- Google Maps API -->
+    <script async defer 
+        src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+    </script>
+</body>
+</html>
