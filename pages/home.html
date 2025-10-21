@@ -373,15 +373,6 @@
                             <input type="date" id="attendanceDate" required>
                         </div>
                         <div class="form-group">
-                            <label for="attendanceModality" data-translate="modality">Modalidad: *</label>
-                            <select id="attendanceModality" required>
-                                <option value="" data-translate="select_modality">- Seleccionar -</option>
-                                <option value="presencial" data-translate="presential">Presencial</option>
-                                <option value="virtual" data-translate="virtual">Virtual</option>
-                                <option value="hibrida" data-translate="hybrid">Híbrida</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
                             <label for="attendanceNotes" data-translate="observations">Observaciones:</label>
                             <textarea id="attendanceNotes" placeholder="Agregar observaciones sobre la clase..."></textarea>
                         </div>
@@ -414,12 +405,10 @@
                             <table class="attendance-table" id="attendanceTable">
                                 <thead>
                                     <tr>
-                                        <th data-translate="dni">DNI</th>
+                                        <th data-translate="student_id">ID Estudiante</th>
                                         <th data-translate="lastname_firstname">Apellido y nombre</th>
                                         <th class="status-column" data-translate="present">P</th>
                                         <th class="status-column" data-translate="absent">A</th>
-                                        <th class="status-column" data-translate="tardy">T</th>
-                                        <th class="status-column" data-translate="justified">J</th>
                                         <th data-translate="absences">Faltas</th>
                                         <th data-translate="status">Estado</th>
                                     </tr>

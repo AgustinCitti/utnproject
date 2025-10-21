@@ -78,7 +78,7 @@ function loadAttendance() {
                         const student = appData.estudiante.find(s => s.ID_Estudiante === attendance.Estudiante_ID_Estudiante);
                         const subject = appData.materia.find(s => s.ID_materia === attendance.Materia_ID_materia);
                         const shortDate = attendance.Fecha.split('-').slice(1).join('/');
-                        const statusText = attendance.Presente === 'Y' ? 'present' : attendance.Presente === 'N' ? 'absent' : attendance.Presente === 'T' ? 'tardy' : 'justified';
+                        const statusText = attendance.Presente === 'Y' ? 'present' : 'absent';
                         return `
                             <tr>
                                 <td><strong>${student ? student.Apellido + ', ' + student.Nombre : 'Unknown'}</strong></td>
@@ -121,7 +121,6 @@ function showAttendanceView() {
         }
         
         // Reset form
-        document.getElementById('attendanceModality').value = '';
         document.getElementById('attendanceNotes').value = '';
         document.getElementById('attendanceCourseSelect').value = '';
         document.getElementById('attendanceSubjectSelect').value = '';
@@ -130,7 +129,7 @@ function showAttendanceView() {
         // Clear student table
         const tableBody = document.getElementById('attendanceTableBody');
         if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Seleccione un curso y materia para ver los estudiantes</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Seleccione un curso y materia para ver los estudiantes</td></tr>';
         }
     }
 }
@@ -238,7 +237,7 @@ function loadStudentsForAttendanceView() {
     
     const subject = appData.materia.find(s => s.ID_materia === selectedSubjectId);
     if (!subject) {
-        tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Materia no encontrada</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Materia no encontrada</td></tr>';
         return;
     }
     
@@ -252,7 +251,7 @@ function loadStudentsForAttendanceView() {
     );
             
             if (enrolledStudents.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" class="text-center">No hay estudiantes inscritos en esta materia</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No hay estudiantes inscritos en esta materia</td></tr>';
         return;
     }
     
@@ -272,11 +271,11 @@ function loadStudentsForAttendanceView() {
             att.Presente === 'N'
         ).length;
         
-        const currentStatus = existingAttendance ? (existingAttendance.Presente === 'Y' ? 'present' : existingAttendance.Presente === 'N' ? 'absent' : existingAttendance.Presente === 'T' ? 'tardy' : 'justified') : '';
+        const currentStatus = existingAttendance ? (existingAttendance.Presente === 'Y' ? 'present' : 'absent') : '';
         
         return `
             <tr data-student-id="${student.ID_Estudiante}">
-                <td class="student-dni">${student.DNI || 'N/A'}</td>
+                <td class="student-id">${student.ID_Estudiante}</td>
                 <td class="student-name">${student.Apellido}, ${student.Nombre}</td>
                 <td class="status-cell">
                     <button class="status-btn present-btn ${currentStatus === 'present' ? 'active' : ''}" 
@@ -288,18 +287,6 @@ function loadStudentsForAttendanceView() {
                     <button class="status-btn absent-btn ${currentStatus === 'absent' ? 'active' : ''}" 
                             data-status="absent" data-student-id="${student.ID_Estudiante}">
                         <i class="fas fa-times"></i>
-                    </button>
-                </td>
-                <td class="status-cell">
-                    <button class="status-btn tardy-btn ${currentStatus === 'tardy' ? 'active' : ''}" 
-                            data-status="tardy" data-student-id="${student.ID_Estudiante}">
-                        <i class="fas fa-clock"></i>
-                    </button>
-                </td>
-                <td class="status-cell">
-                    <button class="status-btn justified-btn ${currentStatus === 'justified' ? 'active' : ''}" 
-                            data-status="justified" data-student-id="${student.ID_Estudiante}">
-                        <i class="fas fa-file-medical"></i>
                     </button>
                 </td>
                 <td class="absences-count">${studentAbsences}/0</td>
@@ -331,7 +318,7 @@ function loadStudentsForAttendance() {
     
     const subject = appData.materia.find(s => s.ID_materia === selectedSubjectId);
     if (!subject) {
-        tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Materia no encontrada</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Materia no encontrada</td></tr>';
         return;
     }
     
@@ -345,7 +332,7 @@ function loadStudentsForAttendance() {
     );
     
     if (enrolledStudents.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" class="text-center">No hay estudiantes en este curso</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No hay estudiantes en este curso</td></tr>';
         return;
     }
     
@@ -365,11 +352,11 @@ function loadStudentsForAttendance() {
             att.Presente === 'N'
         ).length;
         
-        const currentStatus = existingAttendance ? (existingAttendance.Presente === 'Y' ? 'present' : existingAttendance.Presente === 'N' ? 'absent' : existingAttendance.Presente === 'T' ? 'tardy' : 'justified') : '';
+        const currentStatus = existingAttendance ? (existingAttendance.Presente === 'Y' ? 'present' : 'absent') : '';
         
         return `
             <tr data-student-id="${student.ID_Estudiante}">
-                <td class="student-dni">${student.DNI || 'N/A'}</td>
+                <td class="student-id">${student.ID_Estudiante}</td>
                 <td class="student-name">${student.Apellido}, ${student.Nombre}</td>
                 <td class="status-cell">
                     <button class="status-btn present-btn ${currentStatus === 'present' ? 'active' : ''}" 
@@ -381,18 +368,6 @@ function loadStudentsForAttendance() {
                     <button class="status-btn absent-btn ${currentStatus === 'absent' ? 'active' : ''}" 
                             data-status="absent" data-student-id="${student.ID_Estudiante}">
                         <i class="fas fa-times"></i>
-                    </button>
-                </td>
-                <td class="status-cell">
-                    <button class="status-btn tardy-btn ${currentStatus === 'tardy' ? 'active' : ''}" 
-                            data-status="tardy" data-student-id="${student.ID_Estudiante}">
-                        <i class="fas fa-clock"></i>
-                    </button>
-                </td>
-                <td class="status-cell">
-                    <button class="status-btn justified-btn ${currentStatus === 'justified' ? 'active' : ''}" 
-                            data-status="justified" data-student-id="${student.ID_Estudiante}">
-                        <i class="fas fa-file-medical"></i>
                     </button>
                 </td>
                 <td class="absences-count">${studentAbsences}/0</td>
@@ -432,13 +407,12 @@ function saveAttendanceBulk() {
     const date = document.getElementById('attendanceDate').value;
     const courseSelect = document.getElementById('attendanceCourseSelect');
     const subjectSelect = document.getElementById('attendanceSubjectSelect');
-    const modality = document.getElementById('attendanceModality').value;
     const notes = document.getElementById('attendanceNotes').value;
     
     const selectedSubjectId = parseInt(subjectSelect.value);
     
     // Validation
-    if (!date || !selectedSubjectId || !modality) {
+    if (!date || !selectedSubjectId) {
         alert('Por favor complete todos los campos requeridos.');
         return;
     }
@@ -453,11 +427,9 @@ function saveAttendanceBulk() {
         if (activeButton) {
             const status = activeButton.dataset.status;
             
-            // Convert status to database format
+            // Convert status to database format (only Y/N according to schema)
             let presente = 'N';
             if (status === 'present') presente = 'Y';
-            else if (status === 'tardy') presente = 'T';
-            else if (status === 'justified') presente = 'J';
             
             // Check if attendance already exists
             const existingIndex = appData.asistencia.findIndex(att => 
@@ -530,7 +502,7 @@ function loadAttendance() {
         
         acc[key].students.push({
             studentName: studentName,
-            status: att.Presente === 'Y' ? 'present' : att.Presente === 'N' ? 'absent' : att.Presente === 'T' ? 'tardy' : 'justified',
+            status: att.Presente === 'Y' ? 'present' : 'absent',
             observaciones: att.Observaciones
         });
         return acc;
