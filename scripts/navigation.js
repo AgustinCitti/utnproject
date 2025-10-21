@@ -67,14 +67,8 @@ function showSection(sectionName) {
         case 'dashboard':
             updateDashboard();
             break;
-        case 'students':
-            loadStudents();
-            break;
-        case 'grades':
-            loadGrades();
-            break;
-        case 'attendance':
-            loadAttendance();
+        case 'student-management':
+            loadUnifiedStudentData();
             break;
         case 'exams':
             loadExams();

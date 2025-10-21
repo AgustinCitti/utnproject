@@ -1,0 +1,173 @@
+---
+alwaysApply: true
+---
+)
+
+🧑‍🎓 Estudiante
+
+Stores basic information about each student.
+
+Main fields:
+
+ID_Estudiante, Nombre, Apellido.
+
+Tema_estudiante_ID_Tema_estudiante: reference to progress tracking per topic.
+
+Relationships:
+
+Many-to-many relationship with Materia through Alumnos_X_Materia.
+
+Linked to Asistencia (attendance records).
+
+Connected to Tema_estudiante to track topic approval status.
+
+🔗 Alumnos_X_Materia
+
+Associative table linking students to subjects.
+
+Main fields:
+
+Materia_ID_materia
+
+Estudiante_ID_Estudiante
+
+ID (auxiliary field)
+
+Relationships:
+
+Foreign key to Materia.
+
+Foreign key to Estudiante.
+
+Defines which students are enrolled in which subjects.
+
+📅 Asistencia
+
+Records attendance of students by date and subject.
+
+Main fields:
+
+ID_Asistencia, Fecha, Presente (Y/N).
+
+Observaciones: optional notes from the teacher.
+
+Materia_ID_materia, Estudiante_ID_Estudiante: foreign keys.
+
+Usage:
+Used to generate attendance and participation reports.
+
+📖 Contenido
+
+List of topics or units for each subject.
+
+Main fields:
+
+ID_contenido, Tema, Estado (e.g., completed, pending).
+
+Materia_ID_materia: reference to the subject it belongs to.
+
+Relationships:
+
+Each Contenido belongs to one Materia.
+
+Linked to Tema_estudiante for student progress tracking.
+
+✅ Tema_estudiante
+
+Represents the learning progress of a student for each topic.
+
+Main fields:
+
+ID_Tema_estudiante, Estado (approved, failed, pending).
+
+Fecha_actualizacion: last modification date.
+
+Contenido_ID_contenido: reference to the corresponding topic.
+
+Relationships:
+
+Foreign key to Contenido.
+
+Indirectly linked to Estudiante.
+
+Used to show which topics each student has completed or still owes.
+
+🧾 Evaluacion
+
+Stores data about evaluations, exams, or assignments.
+
+Main fields:
+
+ID_evaluacion, Titulo, Fecha, Tipo.
+
+Materia_ID_materia: reference to the corresponding subject.
+
+Relationships:
+
+Foreign key to Materia.
+
+Each Evaluacion can have multiple Notas.
+
+🧮 Notas
+
+Stores the grades or marks of students for each evaluation.
+
+Main fields:
+
+ID_Nota, Calificacion, Observacion.
+
+Evaluacion_ID_evaluacion: reference to the related evaluation.
+
+Relationships:
+
+Foreign key to Evaluacion.
+
+Used to calculate averages, generate grade reports, and performance statistics.
+
+🗂️ Archivos
+
+Digital repository for files related to each subject.
+
+Main fields:
+
+ID_archivos, Nombre, Ruta, Tipo.
+
+Materia_ID_materia: subject associated with the file.
+
+Relationships:
+
+Foreign key to Materia.
+
+Usage:
+Used to upload and access past exams, exercises, or class materials.
+
+⏰ Recordatorio
+
+Stores reminders, schedules, or academic events per subject.
+
+Main fields:
+
+ID_recordatorio, Descripcion, Fecha, Tipo.
+
+Materia_ID_materia: related subject.
+
+Relationships:
+
+Foreign key to Materia.
+
+Usage:
+Used for planning, automatic notifications, and reminders about exams or deadlines.
+
+🔄 Relationship summary
+
+Usuarios_docente → Materia (1:N)
+
+Materia → Contenido / Evaluacion / Recordatorio / Archivos / Asistencia (1:N)
+
+Estudiante ↔ Materia (N:M) via Alumnos_X_Materia
+
+Contenido → Tema_estudiante (1:N)
+
+Evaluacion → Notas (1:N)
+
+Tema_estudiante → Estudiante (1:1)

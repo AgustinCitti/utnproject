@@ -23,17 +23,9 @@
                     <i class="fas fa-home"></i>
                     <span data-translate="dashboard">Panel de Control</span>
                 </a>
-                <a href="#students" class="nav-item" data-section="students">
+                <a href="#student-management" class="nav-item" data-section="student-management">
                     <i class="fas fa-users"></i>
-                    <span data-translate="students">Estudiantes</span>
-                </a>
-                <a href="#grades" class="nav-item" data-section="grades">
-                    <i class="fas fa-graduation-cap"></i>
-                    <span data-translate="grades">Calificaciones</span>
-                </a>
-                <a href="#attendance" class="nav-item" data-section="attendance">
-                    <i class="fas fa-calendar-check"></i>
-                    <span data-translate="attendance">Asistencia</span>
+                    <span data-translate="student_management">Gestión de Estudiantes</span>
                 </a>
                 <a href="#exams" class="nav-item" data-section="exams">
                     <i class="fas fa-file-alt"></i>
@@ -160,99 +152,97 @@
                 </div>
             </section>
 
-            <!-- Students Section -->
-            <section id="students" class="content-section">
+            <!-- Unified Student Management Section -->
+            <section id="student-management" class="content-section">
                 <div class="section-header">
-                    <h2 data-translate="student_management">Gestión de Estudiantes</h2>
+                    <h2 data-translate="student_management">Gestión Integral de Estudiantes</h2>
                     <div class="section-actions">
                         <div class="filters">
-                            <select id="courseFilter" class="filter-select">
+                            <select id="unifiedCourseFilter" class="filter-select">
                                 <option value="" data-translate="all_courses">Todos los Cursos</option>
                                 <option value="9th" data-translate="9th_course">9º Curso</option>
                                 <option value="10th" data-translate="10th_course">10º Curso</option>
                                 <option value="11th" data-translate="11th_course">11º Curso</option>
                                 <option value="12th" data-translate="12th_course">12º Curso</option>
                             </select>
-                        </div>
-                        <div class="view-toggle">
-                            <button id="studentsGridViewBtn" class="view-btn active" data-view="grid">
-                                <i class="fas fa-th"></i>
-                            </button>
-                            <button id="studentsListViewBtn" class="view-btn" data-view="list">
-                                <i class="fas fa-list"></i>
-                            </button>
-                        </div>
-                        <button id="addStudentBtn" class="btn-primary">
-                            <i class="fas fa-plus"></i>
-                            <span data-translate="add_student">Agregar Estudiante</span>
-                        </button>
-                    </div>
-                </div>
-                <div class="students-grid" id="studentsGrid">
-                    <!-- Students will be loaded dynamically -->
-                </div>
-                <div class="students-list" id="studentsList" style="display: none;">
-                    <!-- Students list view will be loaded dynamically -->
-                </div>
-            </section>
-
-            <!-- Grades Section -->
-            <section id="grades" class="content-section">
-                <div class="section-header">
-                    <h2 data-translate="grade_management">Gestión de Calificaciones</h2>
-                    <div class="section-actions">
-                        <div class="filters">
-                            <select id="courseFilter" class="filter-select">
-                                <option value="" data-translate="all_courses">Todos los Cursos</option>
+                            <select id="unifiedSubjectFilter" class="filter-select">
+                                <option value="" data-translate="all_subjects">Todas las Materias</option>
                                 <!-- Options will be populated dynamically -->
                             </select>
                         </div>
                         <div class="view-toggle">
-                            <button id="gradesGridViewBtn" class="view-btn active" data-view="grid">
+                            <button id="unifiedGridViewBtn" class="view-btn active" data-view="grid">
                                 <i class="fas fa-th"></i>
                             </button>
-                            <button id="gradesListViewBtn" class="view-btn" data-view="list">
+                            <button id="unifiedListViewBtn" class="view-btn" data-view="list">
                                 <i class="fas fa-list"></i>
                             </button>
                         </div>
-                        <button id="addGradeBtn" class="btn-primary">
-                            <i class="fas fa-plus"></i>
-                            <span data-translate="add_grade">Agregar Calificación</span>
-                        </button>
+                        <div class="action-buttons">
+                            <button id="addStudentBtn" class="btn-primary">
+                                <i class="fas fa-user-plus"></i>
+                                <span data-translate="add_student">Agregar Estudiante</span>
+                            </button>
+                            <button id="addGradeBtn" class="btn-secondary">
+                                <i class="fas fa-graduation-cap"></i>
+                                <span data-translate="add_grade">Agregar Calificación</span>
+                            </button>
+                            <button id="markAttendanceBtn" class="btn-secondary">
+                                <i class="fas fa-calendar-check"></i>
+                                <span data-translate="mark_attendance">Marcar Asistencia</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="grades-container" id="gradesContainer">
-                    <!-- Grades will be loaded dynamically -->
-                </div>
-                <div class="grades-list" id="gradesList" style="display: none;">
-                    <!-- Grades list view will be loaded dynamically -->
-                </div>
-            </section>
 
-            <!-- Attendance Section -->
-            <section id="attendance" class="content-section">
-                <div class="section-header">
-                    <h2 data-translate="attendance_tracking">Seguimiento de Asistencia</h2>
-                    <div class="section-actions">
-                        <div class="view-toggle">
-                            <button id="attendanceGridViewBtn" class="view-btn active" data-view="grid">
-                                <i class="fas fa-th"></i>
-                            </button>
-                            <button id="attendanceListViewBtn" class="view-btn" data-view="list">
-                                <i class="fas fa-list"></i>
-                            </button>
-                        </div>
-                        <button id="markAttendanceBtn" class="btn-primary">
-                            <i class="fas fa-check"></i>
-                            <span data-translate="mark_attendance">Marcar Asistencia</span>
+                <!-- Student Overview Cards -->
+                <div class="unified-student-cards" id="unifiedStudentCards">
+                    <!-- Student cards with integrated grades and attendance will be loaded dynamically -->
+                </div>
+
+                <!-- Detailed List View -->
+                <div class="unified-student-list" id="unifiedStudentList" style="display: none;">
+                    <!-- Detailed student information with grades and attendance will be loaded dynamically -->
+                </div>
+
+                <!-- Quick Stats for Selected Student -->
+                <div class="student-detail-panel" id="studentDetailPanel" style="display: none;">
+                    <div class="panel-header">
+                        <h3 id="selectedStudentName">Student Name</h3>
+                        <button id="closeStudentDetail" class="btn-icon">
+                            <i class="fas fa-times"></i>
                         </button>
                     </div>
-                </div>
-                <div class="attendance-container" id="attendanceContainer">
-                    <!-- Attendance will be loaded dynamically -->
-                </div>
-                <div class="attendance-list" id="attendanceList" style="display: none;">
-                    <!-- Attendance list view will be loaded dynamically -->
+                    <div class="panel-content">
+                        <div class="student-stats">
+                            <div class="stat-item">
+                                <span class="stat-label" data-translate="average_grade">Promedio:</span>
+                                <span class="stat-value" id="studentAverage">0%</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label" data-translate="attendance_rate">Asistencia:</span>
+                                <span class="stat-value" id="studentAttendance">0%</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label" data-translate="total_grades">Calificaciones:</span>
+                                <span class="stat-value" id="studentTotalGrades">0</span>
+                            </div>
+                        </div>
+                        <div class="student-details">
+                            <div class="detail-section">
+                                <h4 data-translate="recent_grades">Calificaciones Recientes</h4>
+                                <div id="studentRecentGrades" class="grades-list">
+                                    <!-- Recent grades will be loaded here -->
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <h4 data-translate="attendance_history">Historial de Asistencia</h4>
+                                <div id="studentAttendanceHistory" class="attendance-list">
+                                    <!-- Attendance history will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -439,6 +429,7 @@
     <script src="../scripts/students.js"></script>
     <script src="../scripts/grades.js"></script>
     <script src="../scripts/attendance.js"></script>
+    <script src="../scripts/unified-student-management.js"></script>
     <script src="../scripts/exams.js"></script>
     <script src="../scripts/repository.js"></script>
     <script src="../scripts/notifications.js"></script>

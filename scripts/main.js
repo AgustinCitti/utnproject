@@ -31,9 +31,7 @@ async function initializeApp() {
     initializeNavigation();
     initializeLogin();
     initializeDashboard();
-    initializeStudents();
-    initializeGrades();
-    initializeAttendance();
+    initializeUnifiedStudentManagement();
     initializeExams();
     initializeRepository();
     initializeNotifications();
