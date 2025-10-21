@@ -3,11 +3,15 @@ function initializeGrades() {
     const addGradeBtn = document.getElementById('addGradeBtn');
     const gradeModal = document.getElementById('gradeModal');
     const gradeForm = document.getElementById('gradeForm');
+    const courseFilter = document.getElementById('courseFilter');
 
     if (addGradeBtn) {
         addGradeBtn.addEventListener('click', () => {
             showModal('gradeModal');
-            populateGradeForm();
+            // Use setTimeout to ensure modal is rendered before populating
+            setTimeout(() => {
+                populateGradeForm();
+            }, 100);
         });
     }
 
@@ -15,6 +19,13 @@ function initializeGrades() {
         gradeForm.addEventListener('submit', (e) => {
             e.preventDefault();
             saveGrade();
+        });
+    }
+
+    // Course filter functionality
+    if (courseFilter) {
+        courseFilter.addEventListener('change', () => {
+            filterGradesByCourse();
         });
     }
 
@@ -27,8 +38,11 @@ function loadGrades() {
     
     if (!gradesContainer || !gradesList) return;
 
+    // Get filtered grades
+    const filteredGrades = getFilteredGrades();
+
     // Grid view
-    gradesContainer.innerHTML = appData.grades.map(grade => {
+    gradesContainer.innerHTML = filteredGrades.map(grade => {
         const student = appData.students.find(s => s.id === grade.studentId);
         const subject = appData.subjects.find(s => s.id === grade.subjectId);
         return `
@@ -70,7 +84,7 @@ function loadGrades() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${appData.grades.map(grade => {
+                    ${filteredGrades.map(grade => {
                         const student = appData.students.find(s => s.id === grade.studentId);
                         const subject = appData.subjects.find(s => s.id === grade.subjectId);
                         const gradeClass = grade.grade >= 80 ? 'grade-excellent' : grade.grade >= 60 ? 'grade-good' : 'grade-poor';
@@ -104,6 +118,19 @@ function loadGrades() {
 function populateGradeForm() {
     const studentSelect = document.getElementById('gradeStudent');
     const subjectSelect = document.getElementById('gradeSubject');
+    const courseFilter = document.getElementById('courseFilter');
+
+    // Check if elements exist
+    if (!studentSelect || !subjectSelect) {
+        console.error('Grade form elements not found');
+        return;
+    }
+
+    // Check if data is loaded
+    if (!appData || !appData.students || !appData.subjects) {
+        console.error('App data not loaded');
+        return;
+    }
 
     // Populate students
     studentSelect.innerHTML = appData.students.map(student => 
@@ -114,6 +141,16 @@ function populateGradeForm() {
     subjectSelect.innerHTML = appData.subjects.map(subject => 
         `<option value="${subject.id}">${subject.name}</option>`
     ).join('');
+
+    // Populate course filter
+    if (courseFilter) {
+        courseFilter.innerHTML = `
+            <option value="" data-translate="all_courses">Todos los Cursos</option>
+            ${appData.subjects.map(subject => 
+                `<option value="${subject.id}">${subject.name}</option>`
+            ).join('')}
+        `;
+    }
 }
 
 function saveGrade() {
@@ -142,14 +179,16 @@ function editGrade(id) {
     const grade = appData.grades.find(g => g.id === id);
     if (!grade) return;
 
-    populateGradeForm();
-    document.getElementById('gradeStudent').value = grade.studentId;
-    document.getElementById('gradeSubject').value = grade.subjectId;
-    document.getElementById('gradeValue').value = grade.grade;
-    document.getElementById('gradeType').value = grade.type;
-    document.getElementById('gradeDescription').value = grade.description || '';
-
     showModal('gradeModal');
+    // Use setTimeout to ensure modal is rendered before populating
+    setTimeout(() => {
+        populateGradeForm();
+        document.getElementById('gradeStudent').value = grade.studentId;
+        document.getElementById('gradeSubject').value = grade.subjectId;
+        document.getElementById('gradeValue').value = grade.grade;
+        document.getElementById('gradeType').value = grade.type;
+        document.getElementById('gradeDescription').value = grade.description || '';
+    }, 100);
 }
 
 function deleteGrade(id) {
@@ -159,4 +198,20 @@ function deleteGrade(id) {
         loadGrades();
         updateDashboard();
     }
+}
+
+// Course filtering functions
+function getFilteredGrades() {
+    const courseFilter = document.getElementById('courseFilter');
+    const selectedCourse = courseFilter ? courseFilter.value : '';
+    
+    if (!selectedCourse) {
+        return appData.grades;
+    }
+    
+    return appData.grades.filter(grade => grade.subjectId === parseInt(selectedCourse));
+}
+
+function filterGradesByCourse() {
+    loadGrades();
 }

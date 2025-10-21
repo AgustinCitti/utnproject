@@ -3,6 +3,7 @@ function initializeStudents() {
     const addStudentBtn = document.getElementById('addStudentBtn');
     const studentModal = document.getElementById('studentModal');
     const studentForm = document.getElementById('studentForm');
+    const courseFilter = document.getElementById('courseFilter');
 
     if (addStudentBtn) {
         addStudentBtn.addEventListener('click', () => {
@@ -18,6 +19,13 @@ function initializeStudents() {
         });
     }
 
+    // Course filter functionality
+    if (courseFilter) {
+        courseFilter.addEventListener('change', () => {
+            filterStudentsByCourse();
+        });
+    }
+
     // Modal close handlers
     setupModalHandlers('studentModal');
 }
@@ -28,8 +36,11 @@ function loadStudents() {
     
     if (!studentsGrid || !studentsList) return;
 
+    // Get filtered students
+    const filteredStudents = getFilteredStudents();
+
     // Grid view
-    studentsGrid.innerHTML = appData.students.map(student => `
+    studentsGrid.innerHTML = filteredStudents.map(student => `
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">${student.firstName} ${student.lastName}</h3>
@@ -45,7 +56,7 @@ function loadStudents() {
             <div class="card-content">
                 <p><strong>Email:</strong> ${student.email}</p>
                 <p><strong>Student ID:</strong> ${student.studentId}</p>
-                <p><strong>Grade:</strong> ${student.grade}</p>
+                <p><strong>Course:</strong> ${student.course}</p>
                 <p><strong>Status:</strong> <span class="status-${student.status}">${student.status}</span></p>
             </div>
         </div>
@@ -60,18 +71,18 @@ function loadStudents() {
                         <th>Name</th>
                         <th>Email</th>
                         <th>ID</th>
-                        <th>Grade</th>
+                        <th>Course</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${appData.students.map(student => `
+                    ${filteredStudents.map(student => `
                         <tr>
                             <td><strong>${student.firstName} ${student.lastName}</strong></td>
                             <td title="${student.email}">${student.email.length > 15 ? student.email.substring(0, 15) + '...' : student.email}</td>
                             <td>${student.studentId}</td>
-                            <td>${student.grade}</td>
+                            <td>${student.course}</td>
                             <td><span class="table-status ${student.status}">${student.status}</span></td>
                             <td>
                                 <div class="table-actions">
@@ -96,7 +107,7 @@ function saveStudent() {
         firstName: document.getElementById('studentFirstName').value,
         lastName: document.getElementById('studentLastName').value,
         email: document.getElementById('studentEmail').value,
-        grade: document.getElementById('studentGrade').value
+        course: document.getElementById('studentCourse').value
     };
 
     const newStudent = {
@@ -122,7 +133,7 @@ function editStudent(id) {
     document.getElementById('studentFirstName').value = student.firstName;
     document.getElementById('studentLastName').value = student.lastName;
     document.getElementById('studentEmail').value = student.email;
-    document.getElementById('studentGrade').value = student.grade;
+    document.getElementById('studentCourse').value = student.course;
 
     showModal('studentModal');
 }
@@ -138,4 +149,20 @@ function deleteStudent(id) {
 
 function clearStudentForm() {
     document.getElementById('studentForm').reset();
+}
+
+// Course filtering functions
+function getFilteredStudents() {
+    const courseFilter = document.getElementById('courseFilter');
+    const selectedCourse = courseFilter ? courseFilter.value : '';
+    
+    if (!selectedCourse) {
+        return appData.students;
+    }
+    
+    return appData.students.filter(student => student.course === selectedCourse);
+}
+
+function filterStudentsByCourse() {
+    loadStudents();
 }

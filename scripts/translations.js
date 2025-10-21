@@ -141,6 +141,14 @@ const translations = {
         "10th_grade": "10º Grado",
         "11th_grade": "11º Grado",
         "12th_grade": "12º Grado",
+        
+        // Course options
+        "all_courses": "Todos los Cursos",
+        "9th_course": "9º Curso",
+        "10th_course": "10º Curso",
+        "11th_course": "11º Curso",
+        "12th_course": "12º Curso",
+        course: "Curso",
         exam: "Examen",
         homework: "Tarea",
         lab: "Laboratorio",
@@ -352,6 +360,14 @@ const translations = {
         "10th_grade": "10th Grade",
         "11th_grade": "11th Grade",
         "12th_grade": "12th Grade",
+        
+        // Course options
+        "all_courses": "All Courses",
+        "9th_course": "9th Course",
+        "10th_course": "10th Course",
+        "11th_course": "11th Course",
+        "12th_course": "12th Course",
+        course: "Course",
         exam: "Exam",
         homework: "Homework",
         lab: "Lab",
