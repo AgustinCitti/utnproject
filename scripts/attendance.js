@@ -93,26 +93,34 @@ function showAttendanceModal() {
                     <input type="date" id="attendanceDate" value="${new Date().toISOString().split('T')[0]}">
                 </div>
                 <div class="form-group">
-                    <label for="attendanceSubject">Subject</label>
-                    <select id="attendanceSubject">
+                    <label for="attendanceSubject">Course/Subject *</label>
+                    <select id="attendanceSubject" required>
+                        <option value="">Select a course...</option>
                         ${appData.subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
                     </select>
                 </div>
-                <div class="attendance-list">
-                    ${appData.students.map(student => `
-                        <div class="attendance-item">
-                            <span>${student.firstName} ${student.lastName}</span>
-                            <select class="attendance-status" data-student-id="${student.id}">
-                                <option value="present">Present</option>
-                                <option value="absent">Absent</option>
-                                <option value="late">Late</option>
-                            </select>
-                        </div>
-                    `).join('')}
+                <div class="form-group">
+                    <label for="attendanceStudent">Student *</label>
+                    <select id="attendanceStudent" required disabled>
+                        <option value="">First select a course...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="attendanceStatus">Attendance Status *</label>
+                    <select id="attendanceStatus" required disabled>
+                        <option value="">Select student first...</option>
+                        <option value="present">Present</option>
+                        <option value="absent">Absent</option>
+                        <option value="late">Late</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="attendanceNotes">Notes (Optional)</label>
+                    <textarea id="attendanceNotes" placeholder="Add any notes about the attendance..."></textarea>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn-secondary close-modal">Cancel</button>
-                    <button type="button" class="btn-primary" onclick="saveAttendance()">Save Attendance</button>
+                    <button type="button" class="btn-primary" onclick="saveAttendance()" disabled id="saveAttendanceBtn">Save Attendance</button>
                 </div>
             </div>
         </div>
@@ -120,28 +128,122 @@ function showAttendanceModal() {
     
     document.body.appendChild(modal);
     setupModalHandlers(modal);
+    setupAttendanceModalHandlers();
+}
+
+function setupAttendanceModalHandlers() {
+    const subjectSelect = document.getElementById('attendanceSubject');
+    const studentSelect = document.getElementById('attendanceStudent');
+    const statusSelect = document.getElementById('attendanceStatus');
+    const saveBtn = document.getElementById('saveAttendanceBtn');
+    
+    // Handle course selection
+    subjectSelect.addEventListener('change', function() {
+        const selectedSubjectId = parseInt(this.value);
+        
+        if (selectedSubjectId) {
+            // Enable student selection and populate with students enrolled in this course
+            studentSelect.disabled = false;
+            studentSelect.innerHTML = '<option value="">Select a student...</option>';
+            
+            // Get students enrolled in this subject
+            const enrolledStudents = appData.students.filter(student => 
+                student.subjects && student.subjects.includes(
+                    appData.subjects.find(s => s.id === selectedSubjectId)?.name
+                )
+            );
+            
+            enrolledStudents.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = `${student.firstName} ${student.lastName}`;
+                studentSelect.appendChild(option);
+            });
+            
+            if (enrolledStudents.length === 0) {
+                studentSelect.innerHTML = '<option value="">No students enrolled in this course</option>';
+                studentSelect.disabled = true;
+            }
+        } else {
+            // Reset student selection
+            studentSelect.disabled = true;
+            studentSelect.innerHTML = '<option value="">First select a course...</option>';
+            statusSelect.disabled = true;
+            statusSelect.innerHTML = '<option value="">Select student first...</option>';
+            saveBtn.disabled = true;
+        }
+    });
+    
+    // Handle student selection
+    studentSelect.addEventListener('change', function() {
+        const selectedStudentId = parseInt(this.value);
+        
+        if (selectedStudentId) {
+            statusSelect.disabled = false;
+            statusSelect.innerHTML = `
+                <option value="">Select status...</option>
+                <option value="present">Present</option>
+                <option value="absent">Absent</option>
+                <option value="late">Late</option>
+            `;
+        } else {
+            statusSelect.disabled = true;
+            statusSelect.innerHTML = '<option value="">Select student first...</option>';
+            saveBtn.disabled = true;
+        }
+    });
+    
+    // Handle status selection
+    statusSelect.addEventListener('change', function() {
+        const selectedStatus = this.value;
+        
+        if (selectedStatus) {
+            saveBtn.disabled = false;
+        } else {
+            saveBtn.disabled = true;
+        }
+    });
 }
 
 function saveAttendance() {
     const date = document.getElementById('attendanceDate').value;
     const subjectId = parseInt(document.getElementById('attendanceSubject').value);
-    const statusElements = document.querySelectorAll('.attendance-status');
+    const studentId = parseInt(document.getElementById('attendanceStudent').value);
+    const status = document.getElementById('attendanceStatus').value;
+    const notes = document.getElementById('attendanceNotes').value;
     
-    statusElements.forEach(element => {
-        const studentId = parseInt(element.dataset.studentId);
-        const status = element.value;
-        
+    // Validation
+    if (!date || !subjectId || !studentId || !status) {
+        alert('Please fill in all required fields.');
+        return;
+    }
+    
+    // Check if attendance already exists for this student, subject, and date
+    const existingAttendance = appData.attendance.find(att => 
+        att.studentId === studentId && 
+        att.subjectId === subjectId && 
+        att.date === date
+    );
+    
+    if (existingAttendance) {
+        if (confirm('Attendance already exists for this student, subject, and date. Do you want to update it?')) {
+            existingAttendance.status = status;
+            existingAttendance.notes = notes;
+        } else {
+            return;
+        }
+    } else {
         const newAttendance = {
             id: Date.now() + Math.random(),
             studentId,
             subjectId,
             date,
             status,
-            notes: ''
+            notes: notes || ''
         };
         
         appData.attendance.push(newAttendance);
-    });
+    }
     
     saveData();
     closeModal(document.querySelector('.modal'));

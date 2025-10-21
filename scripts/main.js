@@ -48,7 +48,7 @@ async function initializeApp() {
 // Data Management
 async function loadData() {
     try {
-        const response = await fetch('data.json');
+        const response = await fetch('../data.json');
         appData = await response.json();
     } catch (error) {
         console.error('Error loading data:', error);
