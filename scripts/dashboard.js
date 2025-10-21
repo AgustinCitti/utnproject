@@ -11,7 +11,7 @@ function updateDashboard() {
 }
 
 function updateStats() {
-    const totalStudents = appData.students.length;
+    const totalStudents = appData.estudiante.length;
     const averageGrade = calculateAverageGrade();
     const attendanceRate = calculateAttendanceRate();
     const pendingNotifications = appData.notifications.filter(n => !n.read).length;
@@ -23,47 +23,48 @@ function updateStats() {
 }
 
 function calculateAverageGrade() {
-    if (appData.grades.length === 0) return 0;
-    const total = appData.grades.reduce((sum, grade) => sum + grade.grade, 0);
-    return Math.round(total / appData.grades.length);
+    if (appData.notas.length === 0) return 0;
+    const total = appData.notas.reduce((sum, grade) => sum + grade.Calificacion, 0);
+    return Math.round(total / appData.notas.length);
 }
 
 function calculateAttendanceRate() {
-    if (appData.attendance.length === 0) return 0;
-    const presentCount = appData.attendance.filter(a => a.status === 'present').length;
-    return Math.round((presentCount / appData.attendance.length) * 100);
+    if (appData.asistencia.length === 0) return 0;
+    const presentCount = appData.asistencia.filter(a => a.Presente === 'Y').length;
+    return Math.round((presentCount / appData.asistencia.length) * 100);
 }
 
 function loadUpcomingClasses() {
     const classesList = document.getElementById('classesList');
     if (!classesList) return;
 
+    // Since we don't have a classes table in the new schema, we'll show upcoming evaluations
     const today = new Date();
-    const upcomingClasses = appData.classes
-        .filter(cls => new Date(cls.date) >= today)
-        .sort((a, b) => new Date(a.date) - new Date(b.date))
+    const upcomingEvaluations = appData.evaluacion
+        .filter(eval => new Date(eval.Fecha) >= today)
+        .sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha))
         .slice(0, 5);
 
-    if (upcomingClasses.length === 0) {
+    if (upcomingEvaluations.length === 0) {
         classesList.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-calendar-alt"></i>
-                <h3>No Upcoming Classes</h3>
-                <p>No classes scheduled for the upcoming days.</p>
+                <h3>No Upcoming Evaluations</h3>
+                <p>No evaluations scheduled for the upcoming days.</p>
             </div>
         `;
-            return;
-        }
+        return;
+    }
 
-    classesList.innerHTML = upcomingClasses.map(cls => {
-        const subject = appData.subjects.find(s => s.id === cls.subjectId);
-        const teacher = appData.teachers.find(t => t.id === cls.teacherId);
+    classesList.innerHTML = upcomingEvaluations.map(eval => {
+        const subject = appData.materia.find(s => s.ID_materia === eval.Materia_ID_materia);
+        const teacher = appData.usuarios_docente.find(t => t.ID_docente === subject?.Usuarios_docente_ID_docente);
         return `
             <div class="class-item">
-                <div class="class-time">${cls.time}</div>
+                <div class="class-time">${eval.Fecha}</div>
                 <div class="class-details">
-                    <h4>${subject ? subject.name : 'Unknown Subject'}</h4>
-                    <p>${cls.room} • ${teacher ? teacher.firstName + ' ' + teacher.lastName : 'Unknown Teacher'}</p>
+                    <h4>${eval.Titulo}</h4>
+                    <p>${subject ? subject.Nombre : 'Unknown Subject'} • ${teacher ? teacher.Nombre_docente + ' ' + teacher.Apellido_docente : 'Unknown Teacher'}</p>
                 </div>
             </div>
         `;

@@ -1041,3 +1041,358 @@
     background-size: 16px;
     padding-right: 40px;
 }
+
+/* Attendance Modal Styles */
+.attendance-modal .modal-content {
+    max-width: 95vw;
+    max-height: 95vh;
+    overflow-y: auto;
+}
+
+.attendance-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.attendance-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.attendance-filters .form-group {
+    margin-bottom: 0;
+}
+
+.attendance-observations {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.attendance-observations label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 500;
+    color: #333;
+}
+
+.attendance-observations textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.attendance-table-container {
+    margin-top: 20px;
+}
+
+.attendance-table-header {
+    margin-bottom: 15px;
+}
+
+.attendance-table-header h4 {
+    margin: 0;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.attendance-table th {
+    background: #667eea;
+    color: white;
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.attendance-table th:first-child,
+.attendance-table th:nth-child(2) {
+    text-align: left;
+}
+
+.attendance-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+.attendance-table tr:hover {
+    background: #f8f9fa;
+}
+
+.student-dni {
+    font-weight: 500;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.student-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.status-column {
+    width: 60px;
+    text-align: center;
+}
+
+.status-cell {
+    text-align: center;
+    padding: 5px;
+}
+
+.status-btn {
+    width: 35px;
+    height: 35px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.status-btn:hover {
+    transform: scale(1.1);
+}
+
+.status-btn.active {
+    border-width: 3px;
+    transform: scale(1.1);
+}
+
+.present-btn {
+    color: #28a745;
+    border-color: #28a745;
+}
+
+.present-btn.active {
+    background: #28a745;
+    color: white;
+}
+
+.absent-btn {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.absent-btn.active {
+    background: #dc3545;
+    color: white;
+}
+
+.tardy-btn {
+    color: #ffc107;
+    border-color: #ffc107;
+}
+
+.tardy-btn.active {
+    background: #ffc107;
+    color: white;
+}
+
+.justified-btn {
+    color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.justified-btn.active {
+    background: #17a2b8;
+    color: white;
+}
+
+.absences-count {
+    text-align: center;
+    font-weight: 500;
+    color: #666;
+}
+
+.student-status {
+    text-align: center;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-badge.habilitado {
+    background: #d4edda;
+    color: #155724;
+}
+
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    padding: 15px 20px;
+    z-index: 10000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    max-width: 300px;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification-success {
+    border-left: 4px solid #28a745;
+}
+
+.notification-error {
+    border-left: 4px solid #dc3545;
+}
+
+.notification-info {
+    border-left: 4px solid #17a2b8;
+}
+
+.notification-content i {
+    font-size: 1.2rem;
+}
+
+.notification-success .notification-content i {
+    color: #28a745;
+}
+
+.notification-error .notification-content i {
+    color: #dc3545;
+}
+
+.notification-info .notification-content i {
+    color: #17a2b8;
+}
+
+/* Attendance View Styles */
+.attendance-view {
+    display: none;
+    margin-top: 20px;
+}
+
+.attendance-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.attendance-filters .form-group {
+    margin-bottom: 0;
+}
+
+.attendance-course-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    padding: 20px;
+    background: #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 2px solid #667eea;
+}
+
+.attendance-course-filters .form-group {
+    margin-bottom: 0;
+}
+
+.attendance-course-filters .form-group:last-child {
+    display: flex;
+    align-items: end;
+}
+
+.attendance-course-filters .btn-primary {
+    width: 100%;
+    justify-content: center;
+}
+
+.attendance-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+/* Responsive Design for Attendance */
+@media (max-width: 768px) {
+    .attendance-modal .modal-content {
+        max-width: 100vw;
+        max-height: 100vh;
+        margin: 0;
+        border-radius: 0;
+    }
+    
+    .attendance-filters {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 15px;
+    }
+    
+    .attendance-table {
+        font-size: 0.8rem;
+    }
+    
+    .attendance-table th,
+    .attendance-table td {
+        padding: 8px 4px;
+    }
+    
+    .status-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 0.8rem;
+    }
+    
+    .student-name {
+        font-size: 0.8rem;
+    }
+    
+    .student-dni {
+        font-size: 0.7rem;
+    }
+    
+    .attendance-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+}

@@ -1,267 +1,397 @@
 {
-  "students": [
+  "usuarios_docente": [
     {
-      "id": 1,
-      "firstName": "Juan",
-      "lastName": "Pérez",
-      "email": "juan.perez@email.com",
-      "studentId": "STU001",
-      "grade": "10th",
-      "subjects": ["Mathematics", "Physics", "Chemistry"],
-      "enrollmentDate": "2024-01-15",
-      "status": "active"
+      "ID_docente": 1,
+      "Nombre_docente": "Ana",
+      "Apellido_docente": "Martínez",
+      "Email_docente": "ana.martinez@school.edu",
+      "Contraseña": "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      "DNI": "12345678",
+      "Telefono": "+54 11 1234-5678",
+      "Especialidad": "Matemática Aplicada",
+      "Titulo_academico": "Ingeniera en Sistemas",
+      "Tipo_usuario": "PROFESOR",
+      "Estado": "ACTIVO"
     },
     {
-      "id": 2,
-      "firstName": "María",
-      "lastName": "González",
-      "email": "maria.gonzalez@email.com",
-      "studentId": "STU002",
-      "grade": "11th",
-      "subjects": ["Mathematics", "Physics", "Biology"],
-      "enrollmentDate": "2024-01-15",
-      "status": "active"
-    },
-    {
-      "id": 3,
-      "firstName": "Carlos",
-      "lastName": "Rodríguez",
-      "email": "carlos.rodriguez@email.com",
-      "studentId": "STU003",
-      "grade": "9th",
-      "subjects": ["Mathematics", "Chemistry", "Biology"],
-      "enrollmentDate": "2024-01-15",
-      "status": "active"
+      "ID_docente": 2,
+      "Nombre_docente": "Luis",
+      "Apellido_docente": "Hernández",
+      "Email_docente": "luis.hernandez@school.edu",
+      "Contraseña": "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      "DNI": "23456789",
+      "Telefono": "+54 11 2345-6789",
+      "Especialidad": "Física",
+      "Titulo_academico": "Doctor en Física",
+      "Tipo_usuario": "PROFESOR_ADJUNTO",
+      "Estado": "ACTIVO"
     }
   ],
-  "teachers": [
+  "materia": [
     {
-      "id": 1,
-      "firstName": "Dr. Ana",
-      "lastName": "Martínez",
-      "email": "ana.martinez@school.edu",
-      "subjects": ["Mathematics", "Physics"],
-      "department": "Science"
+      "ID_materia": 1,
+      "Nombre": "Matemática I",
+      "Curso_division": "10º Curso - División A",
+      "Descripcion": "Álgebra y Geometría Analítica",
+      "Horario": "Lunes y Miércoles 10:00-12:00",
+      "Aula": "Aula 101",
+      "Usuarios_docente_ID_docente": 1,
+      "Estado": "ACTIVA"
     },
     {
-      "id": 2,
-      "firstName": "Prof. Luis",
-      "lastName": "Hernández",
-      "email": "luis.hernandez@school.edu",
-      "subjects": ["Chemistry", "Biology"],
-      "department": "Science"
+      "ID_materia": 2,
+      "Nombre": "Física I",
+      "Curso_division": "10º Curso - División A",
+      "Descripcion": "Mecánica Clásica",
+      "Horario": "Martes y Jueves 14:00-16:00",
+      "Aula": "Laboratorio 1",
+      "Usuarios_docente_ID_docente": 1,
+      "Estado": "ACTIVA"
+    },
+    {
+      "ID_materia": 3,
+      "Nombre": "Química I",
+      "Curso_division": "11º Curso - División A",
+      "Descripcion": "Química General",
+      "Horario": "Lunes y Miércoles 16:00-18:00",
+      "Aula": "Laboratorio 2",
+      "Usuarios_docente_ID_docente": 2,
+      "Estado": "ACTIVA"
+    },
+    {
+      "ID_materia": 4,
+      "Nombre": "Biología I",
+      "Curso_division": "11º Curso - División A",
+      "Descripcion": "Biología General",
+      "Horario": "Martes y Jueves 10:00-12:00",
+      "Aula": "Aula 102",
+      "Usuarios_docente_ID_docente": 2,
+      "Estado": "ACTIVA"
     }
   ],
-  "subjects": [
+  "estudiante": [
     {
-      "id": 1,
-      "name": "Mathematics",
-      "code": "MATH101",
-      "credits": 4,
-      "teacherId": 1
+      "ID_Estudiante": 1,
+      "Nombre": "Juan",
+      "Apellido": "Pérez",
+      "Email": "juan.perez@email.com",
+      "Fecha_nacimiento": "2000-05-15",
+      "Estado": "ACTIVO"
     },
     {
-      "id": 2,
-      "name": "Physics",
-      "code": "PHYS101",
-      "credits": 3,
-      "teacherId": 1
+      "ID_Estudiante": 2,
+      "Nombre": "María",
+      "Apellido": "González",
+      "Email": "maria.gonzalez@email.com",
+      "Fecha_nacimiento": "1999-08-22",
+      "Estado": "ACTIVO"
     },
     {
-      "id": 3,
-      "name": "Chemistry",
-      "code": "CHEM101",
-      "credits": 3,
-      "teacherId": 2
+      "ID_Estudiante": 3,
+      "Nombre": "Carlos",
+      "Apellido": "Rodríguez",
+      "Email": "carlos.rodriguez@email.com",
+      "Fecha_nacimiento": "2001-03-10",
+      "Estado": "ACTIVO"
     },
     {
-      "id": 4,
-      "name": "Biology",
-      "code": "BIO101",
-      "credits": 3,
-      "teacherId": 2
+      "ID_Estudiante": 4,
+      "Nombre": "Ana",
+      "Apellido": "López",
+      "Email": "ana.lopez@email.com",
+      "Fecha_nacimiento": "2000-11-05",
+      "Estado": "ACTIVO"
+    },
+    {
+      "ID_Estudiante": 5,
+      "Nombre": "Pedro",
+      "Apellido": "Martín",
+      "Email": "pedro.martin@email.com",
+      "Fecha_nacimiento": "2001-07-18",
+      "Estado": "ACTIVO"
     }
   ],
-  "grades": [
+  "alumnos_x_materia": [
     {
-      "id": 1,
-      "studentId": 1,
-      "subjectId": 1,
-      "grade": 85,
-      "type": "exam",
-      "date": "2024-01-20",
-      "description": "Midterm Exam"
+      "ID": 1,
+      "Materia_ID_materia": 1,
+      "Estudiante_ID_Estudiante": 1,
+      "Estado": "CURSANDO"
     },
     {
-      "id": 2,
-      "studentId": 1,
-      "subjectId": 1,
-      "grade": 92,
-      "type": "homework",
-      "date": "2024-01-25",
-      "description": "Algebra Assignment"
+      "ID": 2,
+      "Materia_ID_materia": 1,
+      "Estudiante_ID_Estudiante": 2,
+      "Estado": "CURSANDO"
     },
     {
-      "id": 3,
-      "studentId": 2,
-      "subjectId": 1,
-      "grade": 78,
-      "type": "exam",
-      "date": "2024-01-20",
-      "description": "Midterm Exam"
+      "ID": 3,
+      "Materia_ID_materia": 1,
+      "Estudiante_ID_Estudiante": 4,
+      "Estado": "CURSANDO"
     },
     {
-      "id": 4,
-      "studentId": 2,
-      "subjectId": 2,
-      "grade": 88,
-      "type": "lab",
-      "date": "2024-01-22",
-      "description": "Physics Lab Report"
+      "ID": 4,
+      "Materia_ID_materia": 2,
+      "Estudiante_ID_Estudiante": 1,
+      "Estado": "CURSANDO"
+    },
+    {
+      "ID": 5,
+      "Materia_ID_materia": 2,
+      "Estudiante_ID_Estudiante": 2,
+      "Estado": "CURSANDO"
+    },
+    {
+      "ID": 6,
+      "Materia_ID_materia": 3,
+      "Estudiante_ID_Estudiante": 2,
+      "Estado": "CURSANDO"
+    },
+    {
+      "ID": 7,
+      "Materia_ID_materia": 3,
+      "Estudiante_ID_Estudiante": 3,
+      "Estado": "CURSANDO"
+    },
+    {
+      "ID": 8,
+      "Materia_ID_materia": 4,
+      "Estudiante_ID_Estudiante": 3,
+      "Estado": "CURSANDO"
+    },
+    {
+      "ID": 9,
+      "Materia_ID_materia": 4,
+      "Estudiante_ID_Estudiante": 5,
+      "Estado": "CURSANDO"
     }
   ],
-  "attendance": [
+  "evaluacion": [
     {
-      "id": 1,
-      "studentId": 1,
-      "subjectId": 1,
-      "date": "2024-01-15",
-      "status": "present",
-      "notes": ""
+      "ID_evaluacion": 1,
+      "Titulo": "Parcial 1 - Números Reales",
+      "Descripcion": "Evaluación sobre operaciones con números reales",
+      "Fecha": "2024-04-15",
+      "Tipo": "PARCIAL",
+      "Materia_ID_materia": 1,
+      "Estado": "FINALIZADA"
     },
     {
-      "id": 2,
-      "studentId": 1,
-      "subjectId": 1,
-      "date": "2024-01-17",
-      "status": "present",
-      "notes": ""
+      "ID_evaluacion": 2,
+      "Titulo": "Examen Final - Funciones",
+      "Descripcion": "Examen final de funciones lineales",
+      "Fecha": "2024-06-20",
+      "Tipo": "EXAMEN",
+      "Materia_ID_materia": 1,
+      "Estado": "FINALIZADA"
     },
     {
-      "id": 3,
-      "studentId": 1,
-      "subjectId": 1,
-      "date": "2024-01-19",
-      "status": "absent",
-      "notes": "Sick leave"
-    },
-    {
-      "id": 4,
-      "studentId": 2,
-      "subjectId": 1,
-      "date": "2024-01-15",
-      "status": "present",
-      "notes": ""
-    },
-    {
-      "id": 5,
-      "studentId": 2,
-      "subjectId": 1,
-      "date": "2024-01-17",
-      "status": "late",
-      "notes": "Traffic delay"
+      "ID_evaluacion": 3,
+      "Titulo": "Parcial 1 - Cinemática",
+      "Descripcion": "Evaluación de cinemática básica",
+      "Fecha": "2024-04-20",
+      "Tipo": "PARCIAL",
+      "Materia_ID_materia": 2,
+      "Estado": "FINALIZADA"
     }
   ],
-  "exams": [
+  "notas": [
     {
-      "id": 1,
-      "title": "Mathematics Midterm",
-      "subjectId": 1,
-      "date": "2024-01-20",
-      "duration": 90,
-      "type": "written",
-      "description": "Algebra and Geometry concepts",
-      "questions": [
-        {
-          "id": 1,
-          "question": "Solve for x: 2x + 5 = 13",
-          "type": "short_answer",
-          "points": 10
-        },
-        {
-          "id": 2,
-          "question": "Calculate the area of a circle with radius 5cm",
-          "type": "calculation",
-          "points": 15
-        }
-      ],
-      "totalPoints": 100
+      "ID_Nota": 1,
+      "Calificacion": 8.5,
+      "Observacion": "Excelente rendimiento",
+      "Fecha_calificacion": "2024-04-15",
+      "Evaluacion_ID_evaluacion": 1,
+      "Estudiante_ID_Estudiante": 1,
+      "Estado": "DEFINITIVA"
     },
     {
-      "id": 2,
-      "title": "Physics Lab Practical",
-      "subjectId": 2,
-      "date": "2024-01-22",
-      "duration": 120,
-      "type": "practical",
-      "description": "Measurement and data analysis",
-      "questions": [
-        {
-          "id": 1,
-          "question": "Measure the acceleration due to gravity",
-          "type": "practical",
-          "points": 50
-        }
-      ],
-      "totalPoints": 50
+      "ID_Nota": 2,
+      "Calificacion": 7.0,
+      "Observacion": "Buen trabajo",
+      "Fecha_calificacion": "2024-04-15",
+      "Evaluacion_ID_evaluacion": 1,
+      "Estudiante_ID_Estudiante": 2,
+      "Estado": "DEFINITIVA"
+    },
+    {
+      "ID_Nota": 3,
+      "Calificacion": 9.0,
+      "Observacion": "Sobresaliente",
+      "Fecha_calificacion": "2024-04-15",
+      "Evaluacion_ID_evaluacion": 1,
+      "Estudiante_ID_Estudiante": 4,
+      "Estado": "DEFINITIVA"
+    },
+    {
+      "ID_Nota": 4,
+      "Calificacion": 8.0,
+      "Observacion": "Muy bien",
+      "Fecha_calificacion": "2024-06-20",
+      "Evaluacion_ID_evaluacion": 2,
+      "Estudiante_ID_Estudiante": 1,
+      "Estado": "DEFINITIVA"
+    },
+    {
+      "ID_Nota": 5,
+      "Calificacion": 7.5,
+      "Observacion": "Buen resultado",
+      "Fecha_calificacion": "2024-06-20",
+      "Evaluacion_ID_evaluacion": 2,
+      "Estudiante_ID_Estudiante": 2,
+      "Estado": "DEFINITIVA"
+    }
+  ],
+  "asistencia": [
+    {
+      "ID_Asistencia": 1,
+      "Fecha": "2024-03-15",
+      "Presente": "Y",
+      "Observaciones": "",
+      "Materia_ID_materia": 1,
+      "Estudiante_ID_Estudiante": 1
+    },
+    {
+      "ID_Asistencia": 2,
+      "Fecha": "2024-03-15",
+      "Presente": "Y",
+      "Observaciones": "",
+      "Materia_ID_materia": 1,
+      "Estudiante_ID_Estudiante": 2
+    },
+    {
+      "ID_Asistencia": 3,
+      "Fecha": "2024-03-15",
+      "Presente": "N",
+      "Observaciones": "Ausencia justificada",
+      "Materia_ID_materia": 1,
+      "Estudiante_ID_Estudiante": 4
+    },
+    {
+      "ID_Asistencia": 4,
+      "Fecha": "2024-03-18",
+      "Presente": "Y",
+      "Observaciones": "",
+      "Materia_ID_materia": 1,
+      "Estudiante_ID_Estudiante": 1
+    },
+    {
+      "ID_Asistencia": 5,
+      "Fecha": "2024-03-18",
+      "Presente": "T",
+      "Observaciones": "Llegó tarde",
+      "Materia_ID_materia": 1,
+      "Estudiante_ID_Estudiante": 2
+    }
+  ],
+  "contenido": [
+    {
+      "ID_contenido": 1,
+      "Tema": "Números Reales",
+      "Descripcion": "Operaciones con números reales y propiedades",
+      "Estado": "COMPLETADO",
+      "Materia_ID_materia": 1
+    },
+    {
+      "ID_contenido": 2,
+      "Tema": "Funciones Lineales",
+      "Descripcion": "Definición y gráficas de funciones lineales",
+      "Estado": "EN_PROGRESO",
+      "Materia_ID_materia": 1
+    },
+    {
+      "ID_contenido": 3,
+      "Tema": "Cinemática",
+      "Descripcion": "Movimiento rectilíneo uniforme y variado",
+      "Estado": "COMPLETADO",
+      "Materia_ID_materia": 2
+    }
+  ],
+  "tema_estudiante": [
+    {
+      "ID_Tema_estudiante": 1,
+      "Estado": "COMPLETADO",
+      "Fecha_actualizacion": "2024-03-20",
+      "Observaciones": "Aprobado con excelencia",
+      "Contenido_ID_contenido": 1,
+      "Estudiante_ID_Estudiante": 1
+    },
+    {
+      "ID_Tema_estudiante": 2,
+      "Estado": "COMPLETADO",
+      "Fecha_actualizacion": "2024-03-20",
+      "Observaciones": "Aprobado",
+      "Contenido_ID_contenido": 1,
+      "Estudiante_ID_Estudiante": 2
+    },
+    {
+      "ID_Tema_estudiante": 3,
+      "Estado": "EN_PROGRESO",
+      "Fecha_actualizacion": "2024-03-25",
+      "Observaciones": "En desarrollo",
+      "Contenido_ID_contenido": 2,
+      "Estudiante_ID_Estudiante": 1
+    }
+  ],
+  "archivos": [
+    {
+      "ID_archivos": 1,
+      "Nombre": "Guía de Ejercicios - Números Reales",
+      "Ruta": "/archivos/matematica/guia_numeros_reales.pdf",
+      "Tipo": "PDF",
+      "Tamaño": 2048576,
+      "Materia_ID_materia": 1,
+      "Descripcion": "Ejercicios prácticos sobre números reales"
+    },
+    {
+      "ID_archivos": 2,
+      "Nombre": "Presentación - Cinemática",
+      "Ruta": "/archivos/fisica/presentacion_cinematica.pptx",
+      "Tipo": "PPTX",
+      "Tamaño": 5120000,
+      "Materia_ID_materia": 2,
+      "Descripcion": "Presentación sobre conceptos de cinemática"
+    }
+  ],
+  "recordatorio": [
+    {
+      "ID_recordatorio": 1,
+      "Descripcion": "Recordar traer calculadora para el examen",
+      "Fecha": "2024-04-14",
+      "Tipo": "EXAMEN",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 2,
+      "Descripcion": "Entrega del TP1 de Programación",
+      "Fecha": "2024-05-10",
+      "Tipo": "ENTREGA",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
     }
   ],
   "notifications": [
     {
       "id": 1,
-      "title": "New Assignment Posted",
-      "message": "Mathematics homework due next week",
-      "type": "assignment",
-      "date": "2024-01-25",
+      "title": "Nueva Evaluación Programada",
+      "message": "Se ha programado un nuevo parcial para Matemática I",
+      "type": "evaluacion",
+      "date": "2024-04-10",
       "read": false,
       "recipientId": 1
     },
     {
       "id": 2,
-      "title": "Grade Posted",
-      "message": "Your Physics exam grade is now available",
-      "type": "grade",
-      "date": "2024-01-23",
+      "title": "Calificación Publicada",
+      "message": "Tu calificación del Parcial 1 está disponible",
+      "type": "calificacion",
+      "date": "2024-04-16",
       "read": false,
       "recipientId": 1
-    }
-  ],
-  "classes": [
-    {
-      "id": 1,
-      "subjectId": 1,
-      "teacherId": 1,
-      "date": "2024-02-01",
-      "time": "10:00",
-      "room": "Room 101",
-      "duration": 60
-    },
-    {
-      "id": 2,
-      "subjectId": 2,
-      "teacherId": 1,
-      "date": "2024-02-01",
-      "time": "14:00",
-      "room": "Lab 1",
-      "duration": 90
-    },
-    {
-      "id": 3,
-      "subjectId": 3,
-      "teacherId": 2,
-      "date": "2024-02-02",
-      "time": "09:00",
-      "room": "Lab 2",
-      "duration": 120
-    },
-    {
-      "id": 4,
-      "subjectId": 1,
-      "teacherId": 1,
-      "date": "2024-02-03",
-      "time": "11:00",
-      "room": "Room 102",
-      "duration": 60
     }
   ]
 }

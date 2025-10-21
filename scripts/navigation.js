@@ -82,5 +82,8 @@ function showSection(sectionName) {
         case 'reports':
             loadReports();
             break;
+        case 'attendance':
+            loadAttendance();
+            break;
     }
 }

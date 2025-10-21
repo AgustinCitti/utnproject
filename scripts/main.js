@@ -36,6 +36,7 @@ async function initializeApp() {
     initializeRepository();
     initializeNotifications();
     initializeReports();
+    initializeAttendance();
     initializeViewToggles();
     
     // Update UI

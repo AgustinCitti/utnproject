@@ -28,7 +28,9 @@ function initializeUnifiedStudentManagement() {
 
     if (markAttendanceBtn) {
         markAttendanceBtn.addEventListener('click', () => {
-            showAttendanceModal();
+            // Navigate to attendance section
+            showSection('attendance');
+            showAttendanceView();
         });
     }
 
@@ -84,36 +86,36 @@ function loadUnifiedStudentData() {
 
     // Grid view - Student cards with integrated data
     unifiedStudentCards.innerHTML = filteredStudents.map(student => {
-        const studentGrades = appData.grades.filter(g => g.studentId === student.id);
-        const studentAttendance = appData.attendance.filter(a => a.studentId === student.id);
+        const studentGrades = appData.notas.filter(g => g.Estudiante_ID_Estudiante === student.ID_Estudiante);
+        const studentAttendance = appData.asistencia.filter(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante);
         
         const averageGrade = studentGrades.length > 0 
-            ? Math.round(studentGrades.reduce((sum, g) => sum + g.grade, 0) / studentGrades.length)
+            ? Math.round(studentGrades.reduce((sum, g) => sum + g.Calificacion, 0) / studentGrades.length)
             : 0;
         
         const attendanceRate = studentAttendance.length > 0
-            ? Math.round((studentAttendance.filter(a => a.status === 'present').length / studentAttendance.length) * 100)
+            ? Math.round((studentAttendance.filter(a => a.Presente === 'Y').length / studentAttendance.length) * 100)
             : 0;
 
         const recentGrades = studentGrades.slice(-3).reverse();
         const recentAttendance = studentAttendance.slice(-5).reverse();
 
         return `
-            <div class="unified-student-card" onclick="showStudentDetail(${student.id})">
+            <div class="unified-student-card" onclick="showStudentDetail(${student.ID_Estudiante})">
                 <div class="card-header">
                     <div class="student-avatar">
                         <i class="fas fa-user"></i>
                     </div>
                     <div class="student-info">
-                        <h3 class="student-name">${student.firstName} ${student.lastName}</h3>
-                        <p class="student-id">ID: ${student.studentId}</p>
-                        <p class="student-course">${student.course}</p>
+                        <h3 class="student-name">${student.Nombre} ${student.Apellido}</h3>
+                        <p class="student-id">ID: ${student.ID_Estudiante}</p>
+                        <p class="student-course">Estudiante</p>
                     </div>
                     <div class="student-actions">
-                        <button class="btn-icon btn-edit" onclick="event.stopPropagation(); editStudent(${student.id})">
+                        <button class="btn-icon btn-edit" onclick="event.stopPropagation(); editStudent(${student.ID_Estudiante})">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn-icon btn-delete" onclick="event.stopPropagation(); deleteStudent(${student.id})">
+                        <button class="btn-icon btn-delete" onclick="event.stopPropagation(); deleteStudent(${student.ID_Estudiante})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -138,11 +140,11 @@ function loadUnifiedStudentData() {
                             <h4>Calificaciones Recientes</h4>
                             <div class="activity-list">
                                 ${recentGrades.map(grade => {
-                                    const subject = appData.subjects.find(s => s.id === grade.subjectId);
+                                    const evaluation = appData.evaluacion.find(e => e.ID_evaluacion === grade.Evaluacion_ID_evaluacion);
                                     return `
                                         <div class="activity-item">
-                                            <span class="activity-subject">${subject ? subject.name : 'Unknown'}</span>
-                                            <span class="activity-grade grade-${grade.grade >= 80 ? 'excellent' : grade.grade >= 60 ? 'good' : 'poor'}">${grade.grade}</span>
+                                            <span class="activity-subject">${evaluation ? evaluation.Titulo : 'Unknown'}</span>
+                                            <span class="activity-grade grade-${grade.Calificacion >= 8 ? 'excellent' : grade.Calificacion >= 6 ? 'good' : 'poor'}">${grade.Calificacion}</span>
                                         </div>
                                     `;
                                 }).join('')}
@@ -153,12 +155,13 @@ function loadUnifiedStudentData() {
                             <h4>Asistencia Reciente</h4>
                             <div class="activity-list">
                                 ${recentAttendance.map(attendance => {
-                                    const subject = appData.subjects.find(s => s.id === attendance.subjectId);
-                                    const shortDate = attendance.date.split('-').slice(1).join('/');
+                                    const subject = appData.materia.find(s => s.ID_materia === attendance.Materia_ID_materia);
+                                    const shortDate = attendance.Fecha.split('-').slice(1).join('/');
+                                    const status = attendance.Presente === 'Y' ? 'present' : attendance.Presente === 'N' ? 'absent' : attendance.Presente === 'T' ? 'tardy' : 'justified';
                                     return `
                                         <div class="activity-item">
                                             <span class="activity-date">${shortDate}</span>
-                                            <span class="activity-status status-${attendance.status}">${attendance.status}</span>
+                                            <span class="activity-status status-${status}">${status}</span>
                                         </div>
                                     `;
                                 }).join('')}
@@ -188,55 +191,55 @@ function loadUnifiedStudentData() {
                 </thead>
                 <tbody>
                     ${filteredStudents.map(student => {
-                        const studentGrades = appData.grades.filter(g => g.studentId === student.id);
-                        const studentAttendance = appData.attendance.filter(a => a.studentId === student.id);
+                        const studentGrades = appData.notas.filter(g => g.Estudiante_ID_Estudiante === student.ID_Estudiante);
+                        const studentAttendance = appData.asistencia.filter(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante);
                         
                         const averageGrade = studentGrades.length > 0 
-                            ? Math.round(studentGrades.reduce((sum, g) => sum + g.grade, 0) / studentGrades.length)
+                            ? Math.round(studentGrades.reduce((sum, g) => sum + g.Calificacion, 0) / studentGrades.length)
                             : 0;
                         
                         const attendanceRate = studentAttendance.length > 0
-                            ? Math.round((studentAttendance.filter(a => a.status === 'present').length / studentAttendance.length) * 100)
+                            ? Math.round((studentAttendance.filter(a => a.Presente === 'Y').length / studentAttendance.length) * 100)
                             : 0;
 
-                        const lastGrade = studentGrades.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-                        const lastAttendance = studentAttendance.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+                        const lastGrade = studentGrades.sort((a, b) => new Date(b.Fecha_calificacion) - new Date(a.Fecha_calificacion))[0];
+                        const lastAttendance = studentAttendance.sort((a, b) => new Date(b.Fecha) - new Date(a.Fecha))[0];
                         
                         let lastActivity = 'Sin actividad';
                         let lastActivityDate = '';
                         
                         if (lastGrade && lastAttendance) {
-                            const gradeDate = new Date(lastGrade.date);
-                            const attendanceDate = new Date(lastAttendance.date);
+                            const gradeDate = new Date(lastGrade.Fecha_calificacion);
+                            const attendanceDate = new Date(lastAttendance.Fecha);
                             if (gradeDate > attendanceDate) {
                                 lastActivity = 'Calificación';
-                                lastActivityDate = lastGrade.date;
+                                lastActivityDate = lastGrade.Fecha_calificacion;
                             } else {
                                 lastActivity = 'Asistencia';
-                                lastActivityDate = lastAttendance.date;
+                                lastActivityDate = lastAttendance.Fecha;
                             }
                         } else if (lastGrade) {
                             lastActivity = 'Calificación';
-                            lastActivityDate = lastGrade.date;
+                            lastActivityDate = lastGrade.Fecha_calificacion;
                         } else if (lastAttendance) {
                             lastActivity = 'Asistencia';
-                            lastActivityDate = lastAttendance.date;
+                            lastActivityDate = lastAttendance.Fecha;
                         }
 
                         return `
-                            <tr onclick="showStudentDetail(${student.id})" class="clickable-row">
+                            <tr onclick="showStudentDetail(${student.ID_Estudiante})" class="clickable-row">
                                 <td>
                                     <div class="student-cell">
                                         <div class="student-avatar-small">
                                             <i class="fas fa-user"></i>
                                         </div>
                                         <div class="student-info">
-                                            <strong>${student.firstName} ${student.lastName}</strong>
-                                            <small>${student.studentId}</small>
+                                            <strong>${student.Nombre} ${student.Apellido}</strong>
+                                            <small>${student.ID_Estudiante}</small>
                                         </div>
                                     </div>
                                 </td>
-                                <td>${student.course}</td>
+                                <td>Estudiante</td>
                                 <td>
                                     <span class="table-status grade-${averageGrade >= 80 ? 'excellent' : averageGrade >= 60 ? 'good' : 'poor'}">
                                         ${averageGrade}%
@@ -256,10 +259,10 @@ function loadUnifiedStudentData() {
                                 </td>
                                 <td>
                                     <div class="table-actions">
-                                        <button class="btn-icon btn-edit" onclick="event.stopPropagation(); editStudent(${student.id})" title="Editar">
+                                        <button class="btn-icon btn-edit" onclick="event.stopPropagation(); editStudent(${student.ID_Estudiante})" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn-icon btn-delete" onclick="event.stopPropagation(); deleteStudent(${student.id})" title="Eliminar">
+                                        <button class="btn-icon btn-delete" onclick="event.stopPropagation(); deleteStudent(${student.ID_Estudiante})" title="Eliminar">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -279,19 +282,17 @@ function getFilteredUnifiedStudents() {
     const selectedCourse = courseFilter ? courseFilter.value : '';
     const selectedSubject = subjectFilter ? subjectFilter.value : '';
     
-    let filteredStudents = appData.students;
+    let filteredStudents = appData.estudiante;
     
-    // Filter by course
-    if (selectedCourse) {
-        filteredStudents = filteredStudents.filter(student => student.course === selectedCourse);
-    }
+    // Filter by course (if needed - for now show all students)
+    // Note: Course filtering would need to be implemented based on enrollment
     
     // Filter by subject (students who have grades or attendance in this subject)
     if (selectedSubject) {
         const subjectId = parseInt(selectedSubject);
         filteredStudents = filteredStudents.filter(student => {
-            const hasGrades = appData.grades.some(g => g.studentId === student.id && g.subjectId === subjectId);
-            const hasAttendance = appData.attendance.some(a => a.studentId === student.id && a.subjectId === subjectId);
+            const hasGrades = appData.notas.some(g => g.Estudiante_ID_Estudiante === student.ID_Estudiante && g.Evaluacion_ID_evaluacion && appData.evaluacion.find(e => e.ID_evaluacion === g.Evaluacion_ID_evaluacion && e.Materia_ID_materia === subjectId));
+            const hasAttendance = appData.asistencia.some(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante && a.Materia_ID_materia === subjectId);
             return hasGrades || hasAttendance;
         });
     }
@@ -323,29 +324,29 @@ function populateSubjectFilter() {
 
     subjectFilter.innerHTML = `
         <option value="" data-translate="all_subjects">Todas las Materias</option>
-        ${appData.subjects.map(subject => 
-            `<option value="${subject.id}">${subject.name}</option>`
+        ${appData.materia.map(subject => 
+            `<option value="${subject.ID_materia}">${subject.Nombre}</option>`
         ).join('')}
     `;
 }
 
 function showStudentDetail(studentId) {
-    const student = appData.students.find(s => s.id === studentId);
+    const student = appData.estudiante.find(s => s.ID_Estudiante === studentId);
     if (!student) return;
 
-    const studentGrades = appData.grades.filter(g => g.studentId === studentId);
-    const studentAttendance = appData.attendance.filter(a => a.studentId === studentId);
+    const studentGrades = appData.notas.filter(g => g.Estudiante_ID_Estudiante === studentId);
+    const studentAttendance = appData.asistencia.filter(a => a.Estudiante_ID_Estudiante === studentId);
     
     const averageGrade = studentGrades.length > 0 
-        ? Math.round(studentGrades.reduce((sum, g) => sum + g.grade, 0) / studentGrades.length)
+        ? Math.round(studentGrades.reduce((sum, g) => sum + g.Calificacion, 0) / studentGrades.length)
         : 0;
     
     const attendanceRate = studentAttendance.length > 0
-        ? Math.round((studentAttendance.filter(a => a.status === 'present').length / studentAttendance.length) * 100)
+        ? Math.round((studentAttendance.filter(a => a.Presente === 'Y').length / studentAttendance.length) * 100)
         : 0;
 
     // Update panel content
-    document.getElementById('selectedStudentName').textContent = `${student.firstName} ${student.lastName}`;
+    document.getElementById('selectedStudentName').textContent = `${student.Nombre} ${student.Apellido}`;
     document.getElementById('studentAverage').textContent = `${averageGrade}%`;
     document.getElementById('studentAttendance').textContent = `${attendanceRate}%`;
     document.getElementById('studentTotalGrades').textContent = studentGrades.length;
@@ -353,12 +354,12 @@ function showStudentDetail(studentId) {
     // Recent grades
     const recentGrades = studentGrades.slice(-5).reverse();
     document.getElementById('studentRecentGrades').innerHTML = recentGrades.map(grade => {
-        const subject = appData.subjects.find(s => s.id === grade.subjectId);
+        const evaluation = appData.evaluacion.find(e => e.ID_evaluacion === grade.Evaluacion_ID_evaluacion);
         return `
             <div class="grade-item">
-                <span class="grade-subject">${subject ? subject.name : 'Unknown'}</span>
-                <span class="grade-value grade-${grade.grade >= 80 ? 'excellent' : grade.grade >= 60 ? 'good' : 'poor'}">${grade.grade}</span>
-                <span class="grade-date">${grade.date}</span>
+                <span class="grade-subject">${evaluation ? evaluation.Titulo : 'Unknown'}</span>
+                <span class="grade-value grade-${grade.Calificacion >= 8 ? 'excellent' : grade.Calificacion >= 6 ? 'good' : 'poor'}">${grade.Calificacion}</span>
+                <span class="grade-date">${grade.Fecha_calificacion}</span>
             </div>
         `;
     }).join('') || '<p class="no-data">Sin calificaciones</p>';
@@ -366,12 +367,13 @@ function showStudentDetail(studentId) {
     // Attendance history
     const recentAttendance = studentAttendance.slice(-10).reverse();
     document.getElementById('studentAttendanceHistory').innerHTML = recentAttendance.map(attendance => {
-        const subject = appData.subjects.find(s => s.id === attendance.subjectId);
+        const subject = appData.materia.find(s => s.ID_materia === attendance.Materia_ID_materia);
+        const status = attendance.Presente === 'Y' ? 'present' : attendance.Presente === 'N' ? 'absent' : attendance.Presente === 'T' ? 'tardy' : 'justified';
         return `
             <div class="attendance-item">
-                <span class="attendance-date">${attendance.date}</span>
-                <span class="attendance-subject">${subject ? subject.name : 'Unknown'}</span>
-                <span class="attendance-status status-${attendance.status}">${attendance.status}</span>
+                <span class="attendance-date">${attendance.Fecha}</span>
+                <span class="attendance-subject">${subject ? subject.Nombre : 'Unknown'}</span>
+                <span class="attendance-status status-${status}">${status}</span>
             </div>
         `;
     }).join('') || '<p class="no-data">Sin registros de asistencia</p>';
