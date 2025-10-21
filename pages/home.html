@@ -367,60 +367,67 @@
                 </div>
                 
                 <div class="attendance-view" id="attendanceView" style="display: none;">
-                    <div class="attendance-filters">
-                        <div class="form-group">
-                            <label for="attendanceDate" data-translate="date">Fecha: *</label>
-                            <input type="date" id="attendanceDate" required>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title" data-translate="attendance_form">Formulario de Asistencia</h3>
                         </div>
-                        <div class="form-group">
-                            <label for="attendanceNotes" data-translate="observations">Observaciones:</label>
-                            <textarea id="attendanceNotes" placeholder="Agregar observaciones sobre la clase..."></textarea>
-                        </div>
-                    </div>
-                    
-                    <div class="attendance-course-filters">
-                        <div class="form-group">
-                            <label for="attendanceCourseSelect" data-translate="course">Curso: *</label>
-                            <select id="attendanceCourseSelect" required>
-                                <option value="" data-translate="select_course">- Seleccionar -</option>
-                                <option value="9th" data-translate="9th_course">9º Curso</option>
-                                <option value="10th" data-translate="10th_course">10º Curso</option>
-                                <option value="11th" data-translate="11th_course">11º Curso</option>
-                                <option value="12th" data-translate="12th_course">12º Curso</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="attendanceSubjectSelect" data-translate="subject">Materia: *</label>
-                            <select id="attendanceSubjectSelect" required disabled>
-                                <option value="" data-translate="select_subject">- Seleccionar -</option>
-                            </select>
+                        <div class="card-content">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="attendanceDate" data-translate="date">Fecha: *</label>
+                                    <input type="date" id="attendanceDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="attendanceCourseSelect" data-translate="course">Curso: *</label>
+                                    <select id="attendanceCourseSelect" required>
+                                        <option value="" data-translate="select_course">- Seleccionar -</option>
+                                        <option value="9th" data-translate="9th_course">9º Curso</option>
+                                        <option value="10th" data-translate="10th_course">10º Curso</option>
+                                        <option value="11th" data-translate="11th_course">11º Curso</option>
+                                        <option value="12th" data-translate="12th_course">12º Curso</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="attendanceSubjectSelect" data-translate="subject">Materia: *</label>
+                                    <select id="attendanceSubjectSelect" required disabled>
+                                        <option value="" data-translate="select_subject">- Seleccionar -</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="attendanceNotes" data-translate="observations">Observaciones:</label>
+                                <textarea id="attendanceNotes" placeholder="Agregar observaciones sobre la clase..."></textarea>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="attendance-table-container">
-                        <div class="attendance-table-header">
-                            <h4 data-translate="students_attendance">Alumnos: Asistencia</h4>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title" data-translate="students_attendance">Alumnos: Asistencia</h3>
                         </div>
-                        <div class="table-responsive">
-                            <table class="attendance-table" id="attendanceTable">
-                                <thead>
-                                    <tr>
-                                        <th data-translate="student_id">ID Estudiante</th>
-                                        <th data-translate="lastname_firstname">Apellido y nombre</th>
-                                        <th class="status-column" data-translate="present">P</th>
-                                        <th class="status-column" data-translate="absent">A</th>
-                                        <th data-translate="absences">Faltas</th>
-                                        <th data-translate="status">Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="attendanceTableBody">
-                                    <!-- Students will be loaded here -->
-                                </tbody>
-                            </table>
+                        <div class="card-content">
+                            <div class="table-responsive">
+                                <table class="data-table" id="attendanceTable">
+                                    <thead>
+                                        <tr>
+                                            <th data-translate="student_id">ID Estudiante</th>
+                                            <th data-translate="lastname_firstname">Apellido y nombre</th>
+                                            <th class="status-column" data-translate="present">P</th>
+                                            <th class="status-column" data-translate="absent">A</th>
+                                            <th data-translate="absences">Faltas</th>
+                                            <th data-translate="status">Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="attendanceTableBody">
+                                        <!-- Students will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="attendance-actions">
+                    <div class="form-actions">
                         <button type="button" class="btn-secondary" id="cancelAttendanceBtn" data-translate="cancel">Cancelar</button>
                         <button type="button" class="btn-primary" id="saveAttendanceBtn" data-translate="save_attendance">Guardar Asistencia</button>
                     </div>

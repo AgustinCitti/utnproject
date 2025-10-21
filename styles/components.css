@@ -1304,53 +1304,8 @@
     margin-top: 20px;
 }
 
-.attendance-filters {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    padding: 20px;
-    background: #f8f9fa;
-    border-radius: 8px;
+.attendance-view .card {
     margin-bottom: 20px;
-}
-
-.attendance-filters .form-group {
-    margin-bottom: 0;
-}
-
-.attendance-course-filters {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    padding: 20px;
-    background: #e9ecef;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    border: 2px solid #667eea;
-}
-
-.attendance-course-filters .form-group {
-    margin-bottom: 0;
-}
-
-.attendance-course-filters .form-group:last-child {
-    display: flex;
-    align-items: end;
-}
-
-.attendance-course-filters .btn-primary {
-    width: 100%;
-    justify-content: center;
-}
-
-.attendance-actions {
-    display: flex;
-    gap: 15px;
-    justify-content: flex-end;
-    margin-top: 20px;
-    padding: 20px;
-    background: #f8f9fa;
-    border-radius: 8px;
 }
 
 /* Responsive Design for Attendance */
