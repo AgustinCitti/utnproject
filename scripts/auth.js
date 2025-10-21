@@ -37,28 +37,13 @@ function initializeLogin() {
 
 // Landing Page Functions
 function scrollToLogin() {
-    showLoginModal();
+    window.location.href = 'pages/login.html';
 }
 
 function scrollToFeatures() {
     document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
 }
 
-function showLoginModal() {
-    const modal = document.getElementById('loginModal');
-    if (modal) {
-        modal.classList.add('active');
-        setupModalHandlers('loginModal');
-    }
-}
-
-function showRegistrationModal() {
-    const modal = document.getElementById('registrationModal');
-    if (modal) {
-        modal.classList.add('active');
-        setupModalHandlers('registrationModal');
-    }
-}
 
 // Landing page navigation
 function initializeLandingPage() {

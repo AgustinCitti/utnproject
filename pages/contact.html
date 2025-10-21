@@ -51,119 +51,129 @@
     <section class="contact-section">
         <div class="container">
             <div class="contact-header">
-                <h1 data-translate="contact_title">Contact Us</h1>
-                <p data-translate="contact_subtitle">Get in touch with our team. We're here to help you with any questions about EduSync.</p>
+                <h1 data-translate="contact_title">Contact us</h1>
+                <p data-translate="contact_subtitle">Our friendly team would love to hear from you!</p>
             </div>
 
             <div class="contact-content">
-                <!-- Contact Information -->
-                <div class="contact-info">
-                    <div class="info-card">
-                        <div class="info-icon">
-                            <i class="fas fa-map-marker-alt"></i>
-                        </div>
-                        <div class="info-content">
-                            <h3 data-translate="address_title">Address</h3>
-                            <p data-translate="address_text">123 University Street<br>Buenos Aires, Argentina<br>CP 1000</p>
-                        </div>
-                    </div>
-
-                    <div class="info-card">
-                        <div class="info-icon">
-                            <i class="fas fa-phone"></i>
-                        </div>
-                        <div class="info-content">
-                            <h3 data-translate="phone_title">Phone</h3>
-                            <p>+54 11 1234-5678</p>
-                        </div>
-                    </div>
-
-                    <div class="info-card">
-                        <div class="info-icon">
-                            <i class="fas fa-envelope"></i>
-                        </div>
-                        <div class="info-content">
-                            <h3 data-translate="email_title">Email</h3>
-                            <p>contact@edusync.edu.ar</p>
-                        </div>
-                    </div>
-
-                    <div class="info-card">
-                        <div class="info-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="info-content">
-                            <h3 data-translate="hours_title">Business Hours</h3>
-                            <p data-translate="hours_text">Monday - Friday: 9:00 AM - 6:00 PM<br>Saturday: 10:00 AM - 2:00 PM</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Contact Form and Map -->
-                <div class="contact-form-map">
+                <!-- Main Content Area -->
+                <div class="contact-main">
                     <!-- Contact Form -->
                     <div class="contact-form-container">
-                        <h2 data-translate="send_message">Send us a Message</h2>
                         <form id="contactForm" class="contact-form" action="contact_handler.php" method="POST">
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="firstName" data-translate="first_name">First Name</label>
-                                    <input type="text" id="firstName" name="firstName" required>
+                                    <input type="text" id="firstName" name="firstName" placeholder="First name" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="lastName" data-translate="last_name">Last Name</label>
-                                    <input type="text" id="lastName" name="lastName" required>
+                                    <input type="text" id="lastName" name="lastName" placeholder="Last name" required>
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label for="email" data-translate="email">Email Address</label>
-                                <input type="email" id="email" name="email" required>
+                                <input type="email" id="email" name="email" placeholder="you@company.com" required>
                             </div>
 
                             <div class="form-group">
-                                <label for="phone" data-translate="phone">Phone Number</label>
-                                <input type="tel" id="phone" name="phone">
+                                <div class="phone-input">
+                                    <select class="country-code">
+                                        <option value="+54">AR</option>
+                                        <option value="+1">US</option>
+                                        <option value="+44">UK</option>
+                                    </select>
+                                    <input type="tel" id="phone" name="phone" placeholder="+54 (11) 1234-5678">
+                                </div>
                             </div>
 
                             <div class="form-group">
-                                <label for="subject" data-translate="subject">Subject</label>
-                                <select id="subject" name="subject" required>
-                                    <option value="" data-translate="select_subject">Select a subject</option>
-                                    <option value="general" data-translate="general_inquiry">General Inquiry</option>
-                                    <option value="technical" data-translate="technical_support">Technical Support</option>
-                                    <option value="billing" data-translate="billing_question">Billing Question</option>
-                                    <option value="feature" data-translate="feature_request">Feature Request</option>
-                                    <option value="other" data-translate="other">Other</option>
-                                </select>
+                                <textarea id="message" name="message" rows="4" placeholder="Message" required></textarea>
                             </div>
 
-                            <div class="form-group">
-                                <label for="message" data-translate="message">Message</label>
-                                <textarea id="message" name="message" rows="5" required placeholder="Tell us how we can help you..."></textarea>
-                            </div>
-
-                            <div class="form-group checkbox-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" name="newsletter" value="1">
-                                    <span class="checkmark"></span>
-                                    <span data-translate="newsletter_opt">I would like to receive updates about EduSync</span>
-                                </label>
-                            </div>
-
-                            <button type="submit" class="btn-primary contact-submit" data-translate="send_message_btn">
-                                <i class="fas fa-paper-plane"></i>
-                                <span>Send Message</span>
+                            <button type="submit" class="btn-primary contact-submit">
+                                Send message
                             </button>
                         </form>
                     </div>
 
-                    <!-- Google Map -->
-                    <div class="map-container">
-                        <h2 data-translate="find_us">Find Us</h2>
+                    <!-- Map Section -->
+                    <div class="map-section">
                         <div id="googleMap" class="google-map"></div>
-                        <div class="map-info">
-                            <p data-translate="map_info">Visit our office located in the heart of Buenos Aires. We're easily accessible by public transportation.</p>
+                        
+                        <!-- Our Locations -->
+                        <div class="locations-section">
+                            <h3>Our locations</h3>
+                            <h4>Visit our stores</h4>
+                            <p>Find us at these locations.</p>
+                            
+                            <div class="locations-grid">
+                                <div class="location-item">
+                                    <strong>Buenos Aires</strong>
+                                    <span>123 University Street, Buenos Aires, Argentina</span>
+                                </div>
+                                <div class="location-item">
+                                    <strong>Córdoba</strong>
+                                    <span>456 Education Ave, Córdoba, Argentina</span>
+                                </div>
+                                <div class="location-item">
+                                    <strong>Rosario</strong>
+                                    <span>789 Learning Blvd, Rosario, Argentina</span>
+                                </div>
+                                <div class="location-item">
+                                    <strong>Mendoza</strong>
+                                    <span>321 Knowledge St, Mendoza, Argentina</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="contact-sidebar">
+                    <!-- Chat to sales -->
+                    <div class="sidebar-card">
+                        <div class="card-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Chat to sales</h3>
+                            <p>Speak to our friendly team.</p>
+                            <a href="mailto:sales@edusync.edu.ar">sales@edusync.edu.ar</a>
+                        </div>
+                    </div>
+
+                    <!-- Visit us -->
+                    <div class="sidebar-card">
+                        <div class="card-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Visit us</h3>
+                            <p>Visit our office HQ.</p>
+                            <span>123 University Street, Buenos Aires, Argentina</span>
+                        </div>
+                    </div>
+
+                    <!-- Call us -->
+                    <div class="sidebar-card">
+                        <div class="card-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Call us</h3>
+                            <p>Mon-Fri from 8am to 5pm.</p>
+                            <a href="tel:+541112345678">+54 (11) 1234-5678</a>
+                        </div>
+                    </div>
+
+                    <!-- Start your free trial -->
+                    <div class="sidebar-card trial-card">
+                        <div class="card-content">
+                            <h3>Start your free trial</h3>
+                            <p>Join over 4,000+ students already learning with EduSync.</p>
+                            <div class="trial-buttons">
+                                <a href="register.html" class="btn-primary">Get started</a>
+                                <a href="../index.html#features" class="btn-secondary">Learn more</a>
+                            </div>
                         </div>
                     </div>
                 </div>
