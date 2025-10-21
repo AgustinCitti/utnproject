@@ -20,10 +20,10 @@
                 <span>EduSync</span>
             </div>
             <div class="nav-menu" id="navMenu">
-                <a href="../index.html" class="nav-link">Home</a>
-                <a href="../index.html#features" class="nav-link">Features</a>
-                <a href="../index.html#about" class="nav-link">About</a>
-                <a href="contact.html" class="nav-link active">Contact</a>
+                <a href="../index.html" class="nav-link" data-translate="home">Home</a>
+                <a href="../index.html#features" class="nav-link" data-translate="features">Features</a>
+                <a href="../index.html#about" class="nav-link" data-translate="about">About</a>
+                <a href="contact.html" class="nav-link active" data-translate="contact">Contact</a>
                 <a href="login.html" class="nav-btn nav-login">
                     <i class="fas fa-sign-in-alt"></i>
                     <span data-translate="login">Login</span>
@@ -34,8 +34,8 @@
                 </a>
                 <div class="language-selector">
                     <select id="languageSelect" class="language-dropdown">
-                        <option value="es">Español</option>
-                        <option value="en">English</option>
+                        <option value="es" data-translate="español">Español</option>
+                        <option value="en" data-translate="english">English</option>
                     </select>
                 </div>
             </div>
@@ -63,15 +63,15 @@
                         <form id="contactForm" class="contact-form" action="contact_handler.php" method="POST">
                             <div class="form-row">
                                 <div class="form-group">
-                                    <input type="text" id="firstName" name="firstName" placeholder="First name" required>
+                                    <input type="text" id="firstName" name="firstName" placeholder="" data-translate="first_name" required>
                                 </div>
                                 <div class="form-group">
-                                    <input type="text" id="lastName" name="lastName" placeholder="Last name" required>
+                                    <input type="text" id="lastName" name="lastName" placeholder="" data-translate="last_name" required>
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <input type="email" id="email" name="email" placeholder="you@company.com" required>
+                                <input type="email" id="email" name="email" placeholder="you@company.com" data-translate="email" required>
                             </div>
 
                             <div class="form-group">
@@ -81,15 +81,15 @@
                                         <option value="+1">US</option>
                                         <option value="+44">UK</option>
                                     </select>
-                                    <input type="tel" id="phone" name="phone" placeholder="+54 (11) 1234-5678">
+                                    <input type="tel" id="phone" name="phone" placeholder="+54 (11) 1234-5678" data-translate="phone">
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <textarea id="message" name="message" rows="4" placeholder="Message" required></textarea>
+                                <textarea id="message" name="message" rows="4" placeholder="" data-translate="message" required></textarea>
                             </div>
 
-                            <button type="submit" class="btn-primary contact-submit">
+                            <button type="submit" class="btn-primary contact-submit" data-translate="send_message">
                                 Send message
                             </button>
                         </form>
@@ -101,26 +101,26 @@
                         
                         <!-- Our Locations -->
                         <div class="locations-section">
-                            <h3>Our locations</h3>
-                            <h4>Visit our stores</h4>
-                            <p>Find us at these locations.</p>
+                            <h3 data-translate="our_locations">Our locations</h3>
+                            <h4 data-translate="visit_our_stores">Visit our stores</h4>
+                            <p data-translate="find_us_locations">Find us at these locations.</p>
                             
                             <div class="locations-grid">
                                 <div class="location-item">
-                                    <strong>Buenos Aires</strong>
-                                    <span>123 University Street, Buenos Aires, Argentina</span>
+                                    <strong data-translate="buenos_aires">Buenos Aires</strong>
+                                    <span data-translate="buenos_aires_address">123 University Street, Buenos Aires, Argentina</span>
                                 </div>
                                 <div class="location-item">
-                                    <strong>Córdoba</strong>
-                                    <span>456 Education Ave, Córdoba, Argentina</span>
+                                    <strong data-translate="cordoba">Córdoba</strong>
+                                    <span data-translate="cordoba_address">456 Education Ave, Córdoba, Argentina</span>
                                 </div>
                                 <div class="location-item">
-                                    <strong>Rosario</strong>
-                                    <span>789 Learning Blvd, Rosario, Argentina</span>
+                                    <strong data-translate="rosario">Rosario</strong>
+                                    <span data-translate="rosario_address">789 Learning Blvd, Rosario, Argentina</span>
                                 </div>
                                 <div class="location-item">
-                                    <strong>Mendoza</strong>
-                                    <span>321 Knowledge St, Mendoza, Argentina</span>
+                                    <strong data-translate="mendoza">Mendoza</strong>
+                                    <span data-translate="mendoza_address">321 Knowledge St, Mendoza, Argentina</span>
                                 </div>
                             </div>
                         </div>
@@ -135,9 +135,9 @@
                             <i class="fas fa-envelope"></i>
                         </div>
                         <div class="card-content">
-                            <h3>Chat to sales</h3>
-                            <p>Speak to our friendly team.</p>
-                            <a href="mailto:sales@edusync.edu.ar">sales@edusync.edu.ar</a>
+                            <h3 data-translate="chat_to_sales">Chat to sales</h3>
+                            <p data-translate="speak_friendly_team">Speak to our friendly team.</p>
+                            <a href="mailto:sales@edusync.edu.ar" data-translate="sales_email">sales@edusync.edu.ar</a>
                         </div>
                     </div>
 
@@ -147,9 +147,9 @@
                             <i class="fas fa-map-marker-alt"></i>
                         </div>
                         <div class="card-content">
-                            <h3>Visit us</h3>
-                            <p>Visit our office HQ.</p>
-                            <span>123 University Street, Buenos Aires, Argentina</span>
+                            <h3 data-translate="visit_us">Visit us</h3>
+                            <p data-translate="visit_office_hq">Visit our office HQ.</p>
+                            <span data-translate="office_address">123 University Street, Buenos Aires, Argentina</span>
                         </div>
                     </div>
 
@@ -159,20 +159,20 @@
                             <i class="fas fa-phone"></i>
                         </div>
                         <div class="card-content">
-                            <h3>Call us</h3>
-                            <p>Mon-Fri from 8am to 5pm.</p>
-                            <a href="tel:+541112345678">+54 (11) 1234-5678</a>
+                            <h3 data-translate="call_us">Call us</h3>
+                            <p data-translate="mon_fri_hours">Mon-Fri from 8am to 5pm.</p>
+                            <a href="tel:+541112345678" data-translate="phone_number">+54 (11) 1234-5678</a>
                         </div>
                     </div>
 
                     <!-- Start your free trial -->
                     <div class="sidebar-card trial-card">
                         <div class="card-content">
-                            <h3>Start your free trial</h3>
-                            <p>Join over 4,000+ students already learning with EduSync.</p>
+                            <h3 data-translate="start_free_trial">Start your free trial</h3>
+                            <p data-translate="join_students">Join over 4,000+ students already learning with EduSync.</p>
                             <div class="trial-buttons">
-                                <a href="register.html" class="btn-primary">Get started</a>
-                                <a href="../index.html#features" class="btn-secondary">Learn more</a>
+                                <a href="register.html" class="btn-primary" data-translate="get_started">Get started</a>
+                                <a href="../index.html#features" class="btn-secondary" data-translate="learn_more">Learn more</a>
                             </div>
                         </div>
                     </div>
@@ -204,11 +204,12 @@
     <!-- Scripts -->
     <script src="../scripts/translations.js"></script>
     <script src="../scripts/utils.js"></script>
+    <script src="../scripts/auth.js"></script>
+    <script src="../scripts/main.js"></script>
     <script src="../scripts/contact.js"></script>
     
-    <!-- Google Maps API -->
-    <script async defer 
-        src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
-    </script>
+    <!-- Mapbox GL JS -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
 </body>
 </html>

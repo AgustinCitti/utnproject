@@ -1,16 +1,38 @@
 /**
  * Contact Page JavaScript
- * Handles form submission, Google Maps integration, and user interactions
+ * Handles form submission, Mapbox integration, and user interactions
  */
 
 // Global variables
 let map;
-let marker;
 let contactForm;
+
+/**
+ * Get translated text for the current language
+ */
+function getTranslatedText(key) {
+    const currentLanguage = localStorage.getItem('language') || 'es';
+    if (typeof translations !== 'undefined' && translations[currentLanguage] && translations[currentLanguage][key]) {
+        return translations[currentLanguage][key];
+    }
+    // Fallback to English if translation not found
+    if (translations && translations['en'] && translations['en'][key]) {
+        return translations['en'][key];
+    }
+    // Final fallback to key itself
+    return key;
+}
+
+// Mapbox configuration
+const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiYnJld2FwcCIsImEiOiJjbWR3NmpiOWYxejd4MmtvaHUzZHVjdnZ1In0.R8JCFitenAT9HVy9t5vhBw';
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeContactPage();
+    // Initialize language system if available
+    if (typeof initializeLanguage === 'function') {
+        initializeLanguage();
+    }
 });
 
 /**
@@ -23,11 +45,12 @@ function initializeContactPage() {
         setupFormHandling();
     }
     
-    // Initialize Google Maps
-    if (typeof google !== 'undefined' && google.maps) {
+    // Initialize Mapbox
+    if (typeof mapboxgl !== 'undefined') {
+        mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
         initMap();
     } else {
-        // Show loading message if Google Maps API is not loaded
+        // Show loading message if Mapbox GL JS is not loaded
         const mapContainer = document.getElementById('googleMap');
         if (mapContainer) {
             mapContainer.classList.add('loading');
@@ -39,6 +62,9 @@ function initializeContactPage() {
     
     // Setup animations
     setupAnimations();
+    
+    // Initialize form placeholders
+    updateFormPlaceholders();
 }
 
 /**
@@ -84,15 +110,15 @@ async function handleFormSubmission() {
         const result = await response.json();
         
         if (result.success) {
-            showSuccessMessage(result.message);
+            showSuccessMessage(result.message || getTranslatedText('form_success_message'));
             contactForm.reset();
         } else {
-            showErrorMessage(result.message);
+            showErrorMessage(result.message || getTranslatedText('form_error_message'));
         }
         
     } catch (error) {
         console.error('Form submission error:', error);
-        showErrorMessage('An error occurred while sending your message. Please try again.');
+        showErrorMessage(getTranslatedText('form_error_message'));
     } finally {
         // Reset button state
         submitBtn.classList.remove('loading');
@@ -132,25 +158,25 @@ function validateField(field) {
     // Required field validation
     if (field.hasAttribute('required') && !value) {
         isValid = false;
-        errorMessage = `${getFieldLabel(fieldName)} is required.`;
+        errorMessage = getTranslatedText('form_required_field');
     }
     
     // Email validation
     if (fieldName === 'email' && value && !isValidEmail(value)) {
         isValid = false;
-        errorMessage = 'Please enter a valid email address.';
+        errorMessage = getTranslatedText('form_valid_email');
     }
     
     // Phone validation
     if (fieldName === 'phone' && value && !isValidPhone(value)) {
         isValid = false;
-        errorMessage = 'Please enter a valid phone number.';
+        errorMessage = getTranslatedText('form_valid_phone');
     }
     
     // Message length validation
     if (fieldName === 'message' && value && value.length < 10) {
         isValid = false;
-        errorMessage = 'Message must be at least 10 characters long.';
+        errorMessage = getTranslatedText('form_message_length');
     }
     
     if (!isValid) {
@@ -276,67 +302,77 @@ function hideFormMessages() {
 }
 
 /**
- * Initialize Google Maps
+ * Initialize Mapbox Map
  */
 function initMap() {
     // Default location (Buenos Aires, Argentina)
-    const defaultLocation = { lat: -34.6037, lng: -58.3816 };
-    
-    // Map options
-    const mapOptions = {
-        zoom: 15,
-        center: defaultLocation,
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
-        styles: [
-            {
-                featureType: 'poi',
-                elementType: 'labels',
-                stylers: [{ visibility: 'off' }]
-            }
-        ]
-    };
+    const defaultLocation = [-58.3816, -34.6037]; // [lng, lat] for Mapbox
     
     // Create map
-    map = new google.maps.Map(document.getElementById('googleMap'), mapOptions);
+    map = new mapboxgl.Map({
+        container: 'googleMap', // Using existing container ID
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: defaultLocation,
+        zoom: 15
+    });
+    
+    // Add navigation controls
+    map.addControl(new mapboxgl.NavigationControl());
+    
+    // Add geolocate control
+    map.addControl(new mapboxgl.GeolocateControl({
+        positionOptions: {
+            enableHighAccuracy: true
+        },
+        trackUserLocation: true,
+        showUserHeading: true
+    }));
+    
+    // Create a custom marker element
+    const markerElement = document.createElement('div');
+    markerElement.className = 'custom-marker';
+    markerElement.innerHTML = `
+        <div style="
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        ">
+            <i class="fas fa-map-marker-alt" style="color: #fff; font-size: 18px;"></i>
+        </div>
+    `;
     
     // Create marker
-    marker = new google.maps.Marker({
-        position: defaultLocation,
-        map: map,
-        title: 'EduSync Office',
-        icon: {
-            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="20" cy="20" r="18" fill="#667eea" stroke="#fff" stroke-width="2"/>
-                    <path d="M20 8c-4.4 0-8 3.6-8 8 0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8zm0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z" fill="#fff"/>
-                </svg>
-            `),
-            scaledSize: new google.maps.Size(40, 40),
-            anchor: new google.maps.Point(20, 20)
-        }
-    });
+    const marker = new mapboxgl.Marker(markerElement)
+        .setLngLat(defaultLocation)
+        .addTo(map);
     
-    // Create info window
-    const infoWindow = new google.maps.InfoWindow({
-        content: `
-            <div style="padding: 10px; max-width: 200px;">
-                <h3 style="margin: 0 0 10px 0; color: #333;">EduSync Office</h3>
-                <p style="margin: 0; color: #666; font-size: 14px;">
-                    123 University Street<br>
-                    Buenos Aires, Argentina<br>
-                    CP 1000
-                </p>
-                <p style="margin: 10px 0 0 0; color: #667eea; font-size: 12px;">
-                    <i class="fas fa-phone"></i> +54 11 1234-5678
-                </p>
-            </div>
-        `
-    });
+    // Create popup
+    const popup = new mapboxgl.Popup({
+        offset: 25,
+        closeButton: true,
+        closeOnClick: false
+    }).setHTML(`
+        <div style="padding: 10px; max-width: 200px;">
+            <h3 style="margin: 0 0 10px 0; color: #333;">EduSync Office</h3>
+            <p style="margin: 0; color: #666; font-size: 14px;">
+                123 University Street<br>
+                Buenos Aires, Argentina<br>
+                CP 1000
+            </p>
+            <p style="margin: 10px 0 0 0; color: #667eea; font-size: 12px;">
+                <i class="fas fa-phone"></i> +54 11 1234-5678
+            </p>
+        </div>
+    `);
     
-    // Add click listener to marker
-    marker.addListener('click', function() {
-        infoWindow.open(map, marker);
-    });
+    // Add popup to marker
+    marker.setPopup(popup);
     
     // Remove loading class
     const mapContainer = document.getElementById('googleMap');
@@ -382,8 +418,10 @@ function handleLanguageChange() {
     if (languageSelect) {
         languageSelect.addEventListener('change', function() {
             const selectedLanguage = this.value;
-            // Update page language (this would integrate with your translation system)
+            // Update page language
             updatePageLanguage(selectedLanguage);
+            // Update form placeholders
+            updateFormPlaceholders(selectedLanguage);
         });
     }
 }
@@ -392,9 +430,39 @@ function handleLanguageChange() {
  * Update page language
  */
 function updatePageLanguage(language) {
-    // This would integrate with your existing translation system
+    // Update form placeholders
+    updateFormPlaceholders(language);
     console.log('Language changed to:', language);
-    // You can implement language switching logic here
+}
+
+/**
+ * Update form placeholders based on language
+ */
+function updateFormPlaceholders(language) {
+    const currentLanguage = language || localStorage.getItem('language') || 'es';
+    
+    // Update input placeholders
+    const firstNameInput = document.getElementById('firstName');
+    const lastNameInput = document.getElementById('lastName');
+    const emailInput = document.getElementById('email');
+    const phoneInput = document.getElementById('phone');
+    const messageInput = document.getElementById('message');
+    
+    if (firstNameInput) {
+        firstNameInput.placeholder = getTranslatedText('first_name');
+    }
+    if (lastNameInput) {
+        lastNameInput.placeholder = getTranslatedText('last_name');
+    }
+    if (emailInput) {
+        emailInput.placeholder = getTranslatedText('email');
+    }
+    if (phoneInput) {
+        phoneInput.placeholder = getTranslatedText('phone');
+    }
+    if (messageInput) {
+        messageInput.placeholder = getTranslatedText('message');
+    }
 }
 
 /**

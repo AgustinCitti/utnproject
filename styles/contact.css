@@ -162,6 +162,50 @@
     overflow: hidden;
     border: 2px solid #e1e5e9;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+/* Mapbox specific styles */
+.google-map.loading {
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 0.875rem;
+}
+
+.google-map.loading::before {
+    content: 'Loading map...';
+}
+
+/* Custom marker styles */
+.custom-marker {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.custom-marker:hover {
+    transform: scale(1.1);
+}
+
+/* Mapbox controls styling */
+.mapboxgl-ctrl-group {
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.mapboxgl-ctrl-group button {
+    border-radius: 8px !important;
+}
+
+.mapboxgl-popup-content {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.mapboxgl-popup-tip {
+    border-top-color: white !important;
 }
 
 /* Locations Section */
@@ -553,3 +597,5 @@
         animation: none;
     }
 }
+
+

@@ -14,7 +14,7 @@ function initializeLogin() {
             if (username && password) {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('username', username);
-                window.location.href = 'pages/home.html';
+                window.location.href = 'home.html';
             } else {
                 alert('Please enter both username and password');
             }
@@ -123,7 +123,7 @@ function handleLogin() {
         console.log('Login successful, redirecting to home.html');
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('username', username);
-        window.location.href = 'pages/home.html';
+        window.location.href = 'home.html';
     } else {
         console.log('Login failed - missing credentials');
         alert('Please enter both username and password');
