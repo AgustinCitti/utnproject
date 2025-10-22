@@ -14,9 +14,12 @@ async function initializeApp() {
     
     // Check authentication
     if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
-        if (localStorage.getItem('isLoggedIn') === 'true') {
-            window.location.href = 'home.html';
-        }
+        // Allow users to stay on landing page even if logged in
+        // They can manually navigate to home.html if they want
+        console.log('Landing page - user can stay here even if logged in');
+        
+        // Update landing page based on login status
+        updateLandingPageForLoginStatus();
     } else if (window.location.pathname.includes('home.html')) {
         if (localStorage.getItem('isLoggedIn') !== 'true') {
             window.location.href = 'index.html';
@@ -49,6 +52,7 @@ async function loadData() {
     try {
         const response = await fetch('../data.json');
         appData = await response.json();
+        console.log('Data loaded successfully:', appData);
     } catch (error) {
         console.error('Error loading data:', error);
         // Initialize with empty data structure matching database schema
@@ -73,6 +77,66 @@ function saveData() {
     // In a real application, this would save to a database
     // For now, we'll just log the data
     console.log('Data saved:', appData);
+}
+
+// Utility function to clear authentication data
+function clearAuthData() {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('username');
+    console.log('Authentication data cleared');
+    window.location.reload();
+}
+
+// Make it available globally for debugging
+window.clearAuthData = clearAuthData;
+
+// Update landing page based on login status
+function updateLandingPageForLoginStatus() {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const username = localStorage.getItem('username') || 'User';
+    
+    if (isLoggedIn) {
+        // Update the hero section to show welcome message for logged-in users
+        const heroTitle = document.querySelector('.hero-title');
+        const heroButtons = document.querySelector('.hero-buttons');
+        
+        if (heroTitle) {
+            heroTitle.textContent = `Welcome back, ${username}!`;
+        }
+        
+        if (heroButtons) {
+            heroButtons.innerHTML = `
+                <button class="btn-primary btn-large" onclick="window.location.href='pages/home.html'" data-translate="go_to_dashboard">
+                    <span>Go to Dashboard</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <button class="btn-secondary btn-large" onclick="scrollToFeatures()" data-translate="learn_more">Discover</button>
+            `;
+        }
+        
+        // Update navigation to show logout option
+        const navMenu = document.getElementById('navMenu');
+        if (navMenu) {
+            const loginBtn = navMenu.querySelector('.nav-login');
+            const registerBtn = navMenu.querySelector('.nav-register');
+            
+            if (loginBtn) {
+                loginBtn.innerHTML = `
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span data-translate="logout">Logout</span>
+                `;
+                loginBtn.onclick = function() {
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('username');
+                    window.location.reload();
+                };
+            }
+            
+            if (registerBtn) {
+                registerBtn.style.display = 'none';
+            }
+        }
+    }
 }
 
 // Initialize the app when DOM is loaded

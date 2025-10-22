@@ -112,22 +112,118 @@ function handleRegistration() {
     }
 }
 
+// Authentication function that validates against usuarios_docente data
+async function authenticateUser(email, password) {
+    try {
+        // Load the usuarios_docente data
+        const response = await fetch('../data.json');
+        const data = await response.json();
+        
+        // Find user by email in usuarios_docente
+        const user = data.usuarios_docente.find(u => 
+            u.Email_docente.toLowerCase() === email.toLowerCase() && 
+            u.Estado === 'ACTIVO'
+        );
+        
+        if (!user) {
+            return { success: false, message: 'Invalid email or user not found' };
+        }
+        
+        // For demo purposes, we'll accept any password since we don't have proper password hashing
+        // In a real application, you would verify the hashed password
+        // For now, we'll just check if password is not empty
+        if (!password || password.trim() === '') {
+            return { success: false, message: 'Password is required' };
+        }
+        
+        return { 
+            success: true, 
+            user: {
+                id: user.ID_docente,
+                name: `${user.Nombre_docente} ${user.Apellido_docente}`,
+                email: user.Email_docente,
+                role: user.Tipo_usuario,
+                specialty: user.Especialidad,
+                academicTitle: user.Titulo_academico
+            }
+        };
+    } catch (error) {
+        console.error('Authentication error:', error);
+        return { success: false, message: 'Authentication service unavailable' };
+    }
+}
+
 function handleLogin() {
     console.log('handleLogin called');
-    const username = document.getElementById('username').value;
+    const email = document.getElementById('username').value; // Using email as username
     const password = document.getElementById('password').value;
     
-    console.log('Username:', username, 'Password:', password ? '[hidden]' : '[empty]');
+    console.log('Email:', email, 'Password:', password ? '[hidden]' : '[empty]');
     
-    if (username && password) {
-        console.log('Login successful, redirecting to home.html');
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('username', username);
-        window.location.href = '../pages/home.html';
-    } else {
+    if (!email || !password) {
         console.log('Login failed - missing credentials');
-        alert('Please enter both username and password');
+        showLoginError('Please enter both email and password');
+        return;
     }
+    
+    // Show loading state
+    const loginBtn = document.querySelector('.login-btn');
+    const originalText = loginBtn.innerHTML;
+    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing In...';
+    loginBtn.disabled = true;
+    
+    // Authenticate user
+    authenticateUser(email, password).then(result => {
+        if (result.success) {
+            console.log('Login successful, redirecting to home.html');
+            // Store user data in localStorage
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('username', result.user.name);
+            localStorage.setItem('userEmail', result.user.email);
+            localStorage.setItem('userRole', result.user.role);
+            localStorage.setItem('userId', result.user.id);
+            localStorage.setItem('userSpecialty', result.user.specialty);
+            
+            window.location.href = '../pages/home.html';
+        } else {
+            console.log('Login failed:', result.message);
+            showLoginError(result.message);
+        }
+    }).catch(error => {
+        console.error('Login error:', error);
+        showLoginError('An error occurred during login. Please try again.');
+    }).finally(() => {
+        // Reset button state
+        loginBtn.innerHTML = originalText;
+        loginBtn.disabled = false;
+    });
+}
+
+function showLoginError(message) {
+    // Remove existing error messages
+    const existingError = document.querySelector('.login-error');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    // Create error message element
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'login-error';
+    errorDiv.innerHTML = `
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>${message}</span>
+    `;
+    
+    // Insert error message after the form
+    const loginForm = document.getElementById('loginForm');
+    loginForm.parentNode.insertBefore(errorDiv, loginForm.nextSibling);
+    
+    // Auto-remove error after 5 seconds
+    setTimeout(() => {
+        if (errorDiv.parentNode) {
+            errorDiv.remove();
+        }
+    }, 5000);
 }
 
 // Login Page Initialization

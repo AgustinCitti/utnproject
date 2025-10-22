@@ -5,7 +5,7 @@
       "Nombre_docente": "Ana",
       "Apellido_docente": "Martínez",
       "Email_docente": "ana.martinez@school.edu",
-      "Contraseña": "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      "Contraseña": "123456",
       "DNI": "12345678",
       "Telefono": "+54 11 1234-5678",
       "Especialidad": "Matemática Aplicada",
@@ -35,7 +35,7 @@
       "Descripcion": "Álgebra y Geometría Analítica",
       "Horario": "Lunes y Miércoles 10:00-12:00",
       "Aula": "Aula 101",
-      "Usuarios_docente_ID_docente": 1,
+      "Usuarios_docente_ID_docente": 2,
       "Estado": "ACTIVA"
     },
     {
@@ -65,7 +65,7 @@
       "Descripcion": "Biología General",
       "Horario": "Martes y Jueves 10:00-12:00",
       "Aula": "Aula 102",
-      "Usuarios_docente_ID_docente": 2,
+      "Usuarios_docente_ID_docente": 1,
       "Estado": "ACTIVA"
     }
   ],

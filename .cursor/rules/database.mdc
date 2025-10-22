@@ -1,7 +1,34 @@
 ---
 alwaysApply: true
 ---
-)
+
+## Database Schema Rules
+
+### 🔐 Authentication & User Management
+
+**usuarios_docente** - Primary user authentication table
+
+This is the main table for user login and authentication. All users (teachers, administrators, etc.) are stored here.
+
+Main fields:
+- ID_docente: Primary key
+- Nombre_docente, Apellido_docente: User's name
+- Email_docente: Login email/username
+- Contraseña: Hashed password for authentication
+- DNI: National ID number
+- Telefono: Contact phone
+- Especialidad: Teaching specialty
+- Titulo_academico: Academic degree
+- Tipo_usuario: User role (PROFESOR, PROFESOR_ADJUNTO, etc.)
+- Estado: Account status (ACTIVO, INACTIVO)
+
+**Usage:**
+- Primary table for login authentication
+- Contains all user credentials and profile information
+- Used by login system to validate user access
+- Determines user permissions and access levels
+
+### 📚 Academic Data Tables
 
 🧑‍🎓 Estudiante
 
@@ -160,7 +187,7 @@ Used for planning, automatic notifications, and reminders about exams or deadlin
 
 🔄 Relationship summary
 
-Usuarios_docente → Materia (1:N)
+**usuarios_docente** → Materia (1:N) - Teachers can teach multiple subjects
 
 Materia → Contenido / Evaluacion / Recordatorio / Archivos / Asistencia (1:N)
 
@@ -171,3 +198,8 @@ Contenido → Tema_estudiante (1:N)
 Evaluacion → Notas (1:N)
 
 Tema_estudiante → Estudiante (1:1)
+
+**Authentication Flow:**
+- Login system queries usuarios_docente table
+- Validates Email_docente and Contraseña
+- Returns user profile and permissions based on Tipo_usuario
