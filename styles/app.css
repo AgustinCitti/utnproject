@@ -1360,3 +1360,338 @@
         padding: 6px;
     }
 }
+
+/* Reports Dashboard Styles */
+.reports-dashboard {
+    padding: 1rem;
+}
+
+.reports-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.summary-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.summary-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.summary-card:nth-child(1) .summary-icon {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.summary-card:nth-child(2) .summary-icon {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.summary-card:nth-child(3) .summary-icon {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.summary-card:nth-child(4) .summary-icon {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.summary-content h3 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0;
+    color: #2d3748;
+}
+
+.summary-content p {
+    margin: 0;
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.chart-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chart-header h3 {
+    margin: 0;
+    color: #2d3748;
+    font-size: 1.1rem;
+}
+
+.chart-controls select {
+    padding: 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background: white;
+    font-size: 0.9rem;
+}
+
+.chart-container {
+    padding: 1rem;
+    height: 300px;
+    position: relative;
+}
+
+.detailed-reports {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.report-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.report-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f7fafc;
+}
+
+.report-header h3 {
+    margin: 0;
+    color: #2d3748;
+    font-size: 1.1rem;
+}
+
+.report-content {
+    padding: 1.5rem;
+}
+
+.top-students-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.student-rank {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f7fafc;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.student-rank:hover {
+    background: #edf2f7;
+}
+
+.rank-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.student-info {
+    flex: 1;
+}
+
+.student-name {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+}
+
+.student-average {
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+.student-grades-count {
+    color: #a0aec0;
+    font-size: 0.8rem;
+}
+
+.attendance-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.attendance-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f7fafc;
+    border-radius: 6px;
+}
+
+.attendance-bar {
+    flex: 1;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.attendance-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+    transition: width 0.3s ease;
+}
+
+.attendance-percentage {
+    min-width: 50px;
+    text-align: right;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.attendance-details {
+    min-width: 80px;
+    text-align: right;
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+.report-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.report-actions .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.report-actions .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.report-actions .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.report-actions .btn-secondary {
+    background: #f7fafc;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+}
+
+.report-actions .btn-secondary:hover {
+    background: #edf2f7;
+    transform: translateY(-2px);
+}
+
+.report-actions .btn {
+    min-width: 150px;
+    justify-content: center;
+}
+
+.report-actions .btn i {
+    margin-right: 8px;
+}
+
+/* Export loading animation */
+@keyframes exportLoading {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.export-loading {
+    animation: exportLoading 1s linear infinite;
+}
+
+/* Reports Responsive Design */
+@media (max-width: 768px) {
+    .reports-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detailed-reports {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container {
+        height: 250px;
+    }
+
+    .report-actions {
+        flex-direction: column;
+    }
+
+    .attendance-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .student-name {
+        min-width: auto;
+    }
+
+    .attendance-bar {
+        width: 100%;
+    }
+}
