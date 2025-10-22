@@ -11,25 +11,33 @@ function updateDashboard() {
 }
 
 function updateStats() {
-    const totalStudents = appData.estudiante.length;
+    const totalStudents = (appData.estudiante || []).length;
     const averageGrade = calculateAverageGrade();
     const attendanceRate = calculateAttendanceRate();
-    const pendingNotifications = appData.notifications.filter(n => !n.read).length;
+    const pendingNotifications = (appData.notifications || []).filter(n => !n.read).length;
 
-    document.getElementById('totalStudents').textContent = totalStudents;
-    document.getElementById('averageGrade').textContent = `${averageGrade}%`;
-    document.getElementById('attendanceRate').textContent = `${attendanceRate}%`;
-    document.getElementById('pendingNotifications').textContent = pendingNotifications;
+    // Update elements only if they exist on the current page
+    const totalStudentsEl = document.getElementById('totalStudents');
+    if (totalStudentsEl) totalStudentsEl.textContent = totalStudents;
+    
+    const averageGradeEl = document.getElementById('averageGrade');
+    if (averageGradeEl) averageGradeEl.textContent = `${averageGrade}%`;
+    
+    const attendanceRateEl = document.getElementById('attendanceRate');
+    if (attendanceRateEl) attendanceRateEl.textContent = `${attendanceRate}%`;
+    
+    const pendingNotificationsEl = document.getElementById('pendingNotifications');
+    if (pendingNotificationsEl) pendingNotificationsEl.textContent = pendingNotifications;
 }
 
 function calculateAverageGrade() {
-    if (appData.notas.length === 0) return 0;
+    if (!appData.notas || appData.notas.length === 0) return 0;
     const total = appData.notas.reduce((sum, grade) => sum + grade.Calificacion, 0);
     return Math.round(total / appData.notas.length);
 }
 
 function calculateAttendanceRate() {
-    if (appData.asistencia.length === 0) return 0;
+    if (!appData.asistencia || appData.asistencia.length === 0) return 0;
     const presentCount = appData.asistencia.filter(a => a.Presente === 'Y').length;
     return Math.round((presentCount / appData.asistencia.length) * 100);
 }
@@ -40,7 +48,7 @@ function loadUpcomingClasses() {
 
     // Since we don't have a classes table in the new schema, we'll show upcoming evaluations
     const today = new Date();
-    const upcomingEvaluations = appData.evaluacion
+    const upcomingEvaluations = (appData.evaluacion || [])
         .filter(eval => new Date(eval.Fecha) >= today)
         .sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha))
         .slice(0, 5);
@@ -57,8 +65,8 @@ function loadUpcomingClasses() {
     }
 
     classesList.innerHTML = upcomingEvaluations.map(eval => {
-        const subject = appData.materia.find(s => s.ID_materia === eval.Materia_ID_materia);
-        const teacher = appData.usuarios_docente.find(t => t.ID_docente === subject?.Usuarios_docente_ID_docente);
+        const subject = (appData.materia || []).find(s => s.ID_materia === eval.Materia_ID_materia);
+        const teacher = (appData.usuarios_docente || []).find(t => t.ID_docente === subject?.Usuarios_docente_ID_docente);
         return `
             <div class="class-item">
                 <div class="class-time">${eval.Fecha}</div>

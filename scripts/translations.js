@@ -107,6 +107,7 @@ const translations = {
         
         // Sections
         student_management: "Gestión de Estudiantes",
+        subjects_management: "Gestión de Materias",
         grade_management: "Gestión de Calificaciones",
         attendance_tracking: "Seguimiento de Asistencia",
         grade_marking: "Calificación de Estudiantes",
@@ -114,26 +115,42 @@ const translations = {
         
         // Actions
         add_student: "Agregar Estudiante",
+        add_subject: "Agregar Materia",
+        add_content: "Agregar Contenido",
         add_grade: "Agregar Calificación",
         mark_attendance: "Marcar Asistencia",
         mark_grades: "Calificar Estudiantes",
         create_exam: "Crear Examen",
         upload_file: "Subir Archivo",
         mark_all_read: "Marcar Todo como Leído",
+        export_subjects: "Exportar Materias",
         
         // Forms
         add_edit_student: "Agregar/Editar Estudiante",
+        add_edit_subject: "Agregar/Editar Materia",
+        add_edit_content: "Agregar/Editar Contenido",
         first_name: "Nombre",
         last_name: "Apellido",
         email: "Correo Electrónico",
         grade: "Grado",
         student: "Estudiante",
         subject: "Materia",
+        subjects: "Materias",
+        subject_name: "Nombre de la Materia",
+        course_division: "Curso y División",
+        schedule: "Horario",
+        classroom: "Aula",
+        teacher: "Profesor",
+        select_teacher: "Seleccionar Profesor",
+        topic: "Tema",
+        content: "Contenido",
         grade_value: "Calificación (0-100)",
         type: "Tipo",
         description: "Descripción",
         cancel: "Cancelar",
         save_student: "Guardar Estudiante",
+        save_subject: "Guardar Materia",
+        save_content: "Guardar Contenido",
         save_grade: "Guardar Calificación",
         
         // Grade Marking Forms
@@ -225,7 +242,33 @@ const translations = {
         register: "Registrarse",
         language: "Idioma",
         español: "Español",
-        english: "English"
+        english: "English",
+        
+        // Status and Filters
+        active: "Activo",
+        inactive: "Inactivo",
+        finished: "Finalizada",
+        present: "Presente",
+        absent: "Ausente",
+        late: "Tarde",
+        pending: "Pendiente",
+        in_progress: "En Progreso",
+        completed: "Completado",
+        cancelled: "Cancelado",
+        all_status: "Todos los Estados",
+        all_courses: "Todos los Cursos",
+        all_subjects: "Todas las Materias",
+        select_subject: "Seleccionar Materia",
+        select_course: "Seleccionar Curso",
+        
+        // Subject Details
+        subject_info: "Información de la Materia",
+        enrolled_students: "Estudiantes Inscritos",
+        total_students: "Total Estudiantes",
+        total_evaluations: "Total Evaluaciones",
+        total_content: "Total Contenidos",
+        course: "Curso",
+        actions: "Acciones"
     },
     en: {
         // Landing page
@@ -334,31 +377,48 @@ const translations = {
         
         // Sections
         student_management: "Student Management",
+        subjects_management: "Subjects Management",
         grade_management: "Grade Management",
         attendance_tracking: "Attendance Tracking",
         reports_analytics: "Reports & Analytics",
         
         // Actions
         add_student: "Add Student",
+        add_subject: "Add Subject",
+        add_content: "Add Content",
         add_grade: "Add Grade",
         mark_attendance: "Mark Attendance",
         create_exam: "Create Exam",
         upload_file: "Upload File",
         mark_all_read: "Mark All Read",
+        export_subjects: "Export Subjects",
         
         // Forms
         add_edit_student: "Add/Edit Student",
+        add_edit_subject: "Add/Edit Subject",
+        add_edit_content: "Add/Edit Content",
         first_name: "First Name",
         last_name: "Last Name",
         email: "Email",
         grade: "Grade",
         student: "Student",
         subject: "Subject",
+        subjects: "Subjects",
+        subject_name: "Subject Name",
+        course_division: "Course and Division",
+        schedule: "Schedule",
+        classroom: "Classroom",
+        teacher: "Teacher",
+        select_teacher: "Select Teacher",
+        topic: "Topic",
+        content: "Content",
         grade_value: "Grade (0-100)",
         type: "Type",
         description: "Description",
         cancel: "Cancel",
         save_student: "Save Student",
+        save_subject: "Save Subject",
+        save_content: "Save Content",
         save_grade: "Save Grade",
         
         // Grade options
@@ -442,7 +502,33 @@ const translations = {
         register: "Register",
         language: "Language",
         español: "Español",
-        english: "English"
+        english: "English",
+        
+        // Status and Filters
+        active: "Active",
+        inactive: "Inactive",
+        finished: "Finished",
+        present: "Present",
+        absent: "Absent",
+        late: "Late",
+        pending: "Pending",
+        in_progress: "In Progress",
+        completed: "Completed",
+        cancelled: "Cancelled",
+        all_status: "All Status",
+        all_courses: "All Courses",
+        all_subjects: "All Subjects",
+        select_subject: "Select Subject",
+        select_course: "Select Course",
+        
+        // Subject Details
+        subject_info: "Subject Information",
+        enrolled_students: "Enrolled Students",
+        total_students: "Total Students",
+        total_evaluations: "Total Evaluations",
+        total_content: "Total Content",
+        course: "Course",
+        actions: "Actions"
     }
 };
 

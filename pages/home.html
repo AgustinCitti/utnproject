@@ -30,6 +30,10 @@
                     <i class="fas fa-users"></i>
                     <span data-translate="student_management">Gestión de Estudiantes</span>
                 </a>
+                <a href="#subjects-management" class="nav-item" data-section="subjects-management">
+                   
+                    <span data-translate="subjects_management">Gestión de Materias</span>
+                </a>
                 <a href="#notifications" class="nav-item" data-section="notifications">
                     <i class="fas fa-bell"></i>
                     <span data-translate="notifications">Notificaciones</span>
@@ -82,6 +86,10 @@
                         </a>
                     </div>
                 </div>
+                    <a href="#subjects-management" class="nav-link" data-section="subjects-management">
+                     
+                        <span data-translate="subjects_management">Gestión de Materias</span>
+                    </a>
                 <a href="#reports" class="nav-link" data-section="reports">
                     <span data-translate="reports">Reportes</span>
                 </a>
@@ -524,6 +532,100 @@
                 </div>
             </section>
 
+            <!-- Subjects Management Section -->
+            <section id="subjects-management" class="content-section">
+                <div class="section-header">
+                    <h2 data-translate="subjects_management">Gestión de Materias</h2>
+                    <div class="section-actions">
+                        <div class="filters">
+                            <select id="subjectsCourseFilter" class="filter-select">
+                                <option value="" data-translate="all_courses">Todos los Cursos</option>
+                                <option value="9th" data-translate="9th_course">9º Curso</option>
+                                <option value="10th" data-translate="10th_course">10º Curso</option>
+                                <option value="11th" data-translate="11th_course">11º Curso</option>
+                                <option value="12th" data-translate="12th_course">12º Curso</option>
+                            </select>
+                            <select id="subjectsStatusFilter" class="filter-select">
+                                <option value="" data-translate="all_status">Todos los Estados</option>
+                                <option value="ACTIVA" data-translate="active">Activa</option>
+                                <option value="INACTIVA" data-translate="inactive">Inactiva</option>
+                                <option value="FINALIZADA" data-translate="finished">Finalizada</option>
+                            </select>
+                        </div>
+                        <div class="view-toggle">
+                            <button id="subjectsGridViewBtn" class="view-btn" data-view="grid">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button id="subjectsListViewBtn" class="view-btn active" data-view="list">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                        <div class="action-buttons">
+                            <button id="addSubjectBtn" class="btn-primary">
+                                <i class="fas fa-plus"></i>
+                                <span data-translate="add_subject">Agregar Materia</span>
+                            </button>
+                            <button id="exportSubjectsBtn" class="btn-secondary">
+                                <i class="fas fa-download"></i>
+                                <span data-translate="export_subjects">Exportar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subjects Content -->
+                    <!-- Subject Overview Cards -->
+                    <div class="subjects-cards" id="subjectsCards" style="display: none;">
+                        <!-- Subject cards will be loaded dynamically -->
+                    </div>
+
+                    <!-- Detailed List View -->
+                    <div class="subjects-list" id="subjectsList">
+                        <!-- Detailed subject information will be loaded dynamically -->
+                    </div>
+
+                    <!-- Subject Detail Panel -->
+                    <div class="subject-detail-panel" id="subjectDetailPanel" style="display: none;">
+                        <div class="panel-header">
+                            <h3 id="selectedSubjectName">Subject Name</h3>
+                            <button id="closeSubjectDetail" class="btn-icon">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="panel-content">
+                            <div class="subject-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label" data-translate="total_students">Estudiantes:</span>
+                                    <span class="stat-value" id="subjectStudents">0</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label" data-translate="total_evaluations">Evaluaciones:</span>
+                                    <span class="stat-value" id="subjectEvaluations">0</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label" data-translate="total_content">Contenidos:</span>
+                                    <span class="stat-value" id="subjectContent">0</span>
+                                </div>
+                            </div>
+                            <div class="subject-details">
+                                <div class="detail-section">
+                                    <h4 data-translate="subject_info">Información de la Materia</h4>
+                                    <div id="subjectInfo" class="info-list">
+                                        <!-- Subject information will be loaded here -->
+                                    </div>
+                                </div>
+                                <div class="detail-section">
+                                    <h4 data-translate="enrolled_students">Estudiantes Inscritos</h4>
+                                    <div id="subjectEnrolledStudents" class="students-list">
+                                        <!-- Enrolled students will be loaded here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
 
             <!-- Notifications Section -->
             <section id="notifications" class="content-section">
@@ -603,6 +705,59 @@
         </div>
     </div>
 
+    <!-- Subject Modal -->
+    <div id="subjectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-translate="add_edit_subject">Agregar/Editar Materia</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="subjectForm" class="modal-form">
+                <div class="form-group">
+                    <label for="subjectName" data-translate="subject_name">Nombre de la Materia</label>
+                    <input type="text" id="subjectName" required>
+                </div>
+                <div class="form-group">
+                    <label for="subjectCourse" data-translate="course_division">Curso y División</label>
+                    <input type="text" id="subjectCourse" placeholder="Ej: 10º Curso - División A" required>
+                </div>
+                <div class="form-group">
+                    <label for="subjectDescription" data-translate="description">Descripción</label>
+                    <textarea id="subjectDescription" rows="3" placeholder="Descripción de la materia..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="subjectSchedule" data-translate="schedule">Horario</label>
+                        <input type="text" id="subjectSchedule" placeholder="Ej: Lunes y Miércoles 10:00-12:00">
+                    </div>
+                    <div class="form-group">
+                        <label for="subjectClassroom" data-translate="classroom">Aula</label>
+                        <input type="text" id="subjectClassroom" placeholder="Ej: Aula 101">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="subjectTeacher" data-translate="teacher">Profesor</label>
+                    <select id="subjectTeacher" required>
+                        <option value="" data-translate="select_teacher">- Seleccionar Profesor -</option>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="subjectStatus" data-translate="status">Estado</label>
+                    <select id="subjectStatus">
+                        <option value="ACTIVA" data-translate="active">Activa</option>
+                        <option value="INACTIVA" data-translate="inactive">Inactiva</option>
+                        <option value="FINALIZADA" data-translate="finished">Finalizada</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
+                    <button type="submit" class="btn-primary" data-translate="save_subject">Guardar Materia</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <!-- Script Modules -->
     <script src="../scripts/translations.js"></script>
@@ -611,6 +766,7 @@
     <script src="../scripts/auth.js"></script>
     <script src="../scripts/dashboard.js"></script>
     <script src="../scripts/students.js"></script>
+    <script src="../scripts/subjects.js"></script>
     <script src="../scripts/grades.js"></script>
     <script src="../scripts/attendance.js"></script>
     <script src="../scripts/unified-student-management.js"></script>

@@ -291,21 +291,108 @@
       "Tema": "Números Reales",
       "Descripcion": "Operaciones con números reales y propiedades",
       "Estado": "COMPLETADO",
-      "Materia_ID_materia": 1
+      "Materia_ID_materia": 1,
+      "Fecha_creacion": "2024-01-15",
+      "Fecha_actualizacion": "2024-03-20"
     },
     {
       "ID_contenido": 2,
       "Tema": "Funciones Lineales",
       "Descripcion": "Definición y gráficas de funciones lineales",
       "Estado": "EN_PROGRESO",
-      "Materia_ID_materia": 1
+      "Materia_ID_materia": 1,
+      "Fecha_creacion": "2024-02-01",
+      "Fecha_actualizacion": "2024-03-25"
     },
     {
       "ID_contenido": 3,
+      "Tema": "Funciones Cuadráticas",
+      "Descripcion": "Parábolas y ecuaciones cuadráticas",
+      "Estado": "PENDIENTE",
+      "Materia_ID_materia": 1,
+      "Fecha_creacion": "2024-03-01",
+      "Fecha_actualizacion": "2024-03-01"
+    },
+    {
+      "ID_contenido": 4,
       "Tema": "Cinemática",
       "Descripcion": "Movimiento rectilíneo uniforme y variado",
       "Estado": "COMPLETADO",
-      "Materia_ID_materia": 2
+      "Materia_ID_materia": 2,
+      "Fecha_creacion": "2024-01-20",
+      "Fecha_actualizacion": "2024-03-18"
+    },
+    {
+      "ID_contenido": 5,
+      "Tema": "Dinámica",
+      "Descripcion": "Leyes de Newton y fuerzas",
+      "Estado": "EN_PROGRESO",
+      "Materia_ID_materia": 2,
+      "Fecha_creacion": "2024-02-15",
+      "Fecha_actualizacion": "2024-03-22"
+    },
+    {
+      "ID_contenido": 6,
+      "Tema": "Energía y Trabajo",
+      "Descripcion": "Conceptos de energía cinética y potencial",
+      "Estado": "PENDIENTE",
+      "Materia_ID_materia": 2,
+      "Fecha_creacion": "2024-03-10",
+      "Fecha_actualizacion": "2024-03-10"
+    },
+    {
+      "ID_contenido": 7,
+      "Tema": "Estructura Atómica",
+      "Descripcion": "Modelos atómicos y configuración electrónica",
+      "Estado": "COMPLETADO",
+      "Materia_ID_materia": 3,
+      "Fecha_creacion": "2024-01-25",
+      "Fecha_actualizacion": "2024-03-15"
+    },
+    {
+      "ID_contenido": 8,
+      "Tema": "Enlaces Químicos",
+      "Descripcion": "Tipos de enlaces y propiedades de compuestos",
+      "Estado": "EN_PROGRESO",
+      "Materia_ID_materia": 3,
+      "Fecha_creacion": "2024-02-20",
+      "Fecha_actualizacion": "2024-03-28"
+    },
+    {
+      "ID_contenido": 9,
+      "Tema": "Reacciones Químicas",
+      "Descripcion": "Balanceo de ecuaciones y estequiometría",
+      "Estado": "PENDIENTE",
+      "Materia_ID_materia": 3,
+      "Fecha_creacion": "2024-03-05",
+      "Fecha_actualizacion": "2024-03-05"
+    },
+    {
+      "ID_contenido": 10,
+      "Tema": "Célula y Organización",
+      "Descripcion": "Estructura celular y tipos de células",
+      "Estado": "COMPLETADO",
+      "Materia_ID_materia": 4,
+      "Fecha_creacion": "2024-01-30",
+      "Fecha_actualizacion": "2024-03-12"
+    },
+    {
+      "ID_contenido": 11,
+      "Tema": "Genética Básica",
+      "Descripcion": "Herencia y leyes de Mendel",
+      "Estado": "EN_PROGRESO",
+      "Materia_ID_materia": 4,
+      "Fecha_creacion": "2024-02-25",
+      "Fecha_actualizacion": "2024-03-30"
+    },
+    {
+      "ID_contenido": 12,
+      "Tema": "Evolución",
+      "Descripcion": "Teorías evolutivas y selección natural",
+      "Estado": "PENDIENTE",
+      "Materia_ID_materia": 4,
+      "Fecha_creacion": "2024-03-08",
+      "Fecha_actualizacion": "2024-03-08"
     }
   ],
   "tema_estudiante": [
@@ -327,11 +414,131 @@
     },
     {
       "ID_Tema_estudiante": 3,
+      "Estado": "COMPLETADO",
+      "Fecha_actualizacion": "2024-03-20",
+      "Observaciones": "Aprobado",
+      "Contenido_ID_contenido": 1,
+      "Estudiante_ID_Estudiante": 4
+    },
+    {
+      "ID_Tema_estudiante": 4,
       "Estado": "EN_PROGRESO",
       "Fecha_actualizacion": "2024-03-25",
       "Observaciones": "En desarrollo",
       "Contenido_ID_contenido": 2,
       "Estudiante_ID_Estudiante": 1
+    },
+    {
+      "ID_Tema_estudiante": 5,
+      "Estado": "EN_PROGRESO",
+      "Fecha_actualizacion": "2024-03-25",
+      "Observaciones": "Necesita más práctica",
+      "Contenido_ID_contenido": 2,
+      "Estudiante_ID_Estudiante": 2
+    },
+    {
+      "ID_Tema_estudiante": 6,
+      "Estado": "PENDIENTE",
+      "Fecha_actualizacion": "2024-03-01",
+      "Observaciones": "Pendiente de inicio",
+      "Contenido_ID_contenido": 3,
+      "Estudiante_ID_Estudiante": 1
+    },
+    {
+      "ID_Tema_estudiante": 7,
+      "Estado": "COMPLETADO",
+      "Fecha_actualizacion": "2024-03-18",
+      "Observaciones": "Excelente comprensión",
+      "Contenido_ID_contenido": 4,
+      "Estudiante_ID_Estudiante": 1
+    },
+    {
+      "ID_Tema_estudiante": 8,
+      "Estado": "COMPLETADO",
+      "Fecha_actualizacion": "2024-03-18",
+      "Observaciones": "Buen trabajo",
+      "Contenido_ID_contenido": 4,
+      "Estudiante_ID_Estudiante": 2
+    },
+    {
+      "ID_Tema_estudiante": 9,
+      "Estado": "EN_PROGRESO",
+      "Fecha_actualizacion": "2024-03-22",
+      "Observaciones": "Progreso satisfactorio",
+      "Contenido_ID_contenido": 5,
+      "Estudiante_ID_Estudiante": 1
+    },
+    {
+      "ID_Tema_estudiante": 10,
+      "Estado": "EN_PROGRESO",
+      "Fecha_actualizacion": "2024-03-22",
+      "Observaciones": "Requiere más atención",
+      "Contenido_ID_contenido": 5,
+      "Estudiante_ID_Estudiante": 2
+    },
+    {
+      "ID_Tema_estudiante": 11,
+      "Estado": "COMPLETADO",
+      "Fecha_actualizacion": "2024-03-15",
+      "Observaciones": "Dominio completo del tema",
+      "Contenido_ID_contenido": 7,
+      "Estudiante_ID_Estudiante": 2
+    },
+    {
+      "ID_Tema_estudiante": 12,
+      "Estado": "COMPLETADO",
+      "Fecha_actualizacion": "2024-03-15",
+      "Observaciones": "Muy bien",
+      "Contenido_ID_contenido": 7,
+      "Estudiante_ID_Estudiante": 3
+    },
+    {
+      "ID_Tema_estudiante": 13,
+      "Estado": "EN_PROGRESO",
+      "Fecha_actualizacion": "2024-03-28",
+      "Observaciones": "Avanzando bien",
+      "Contenido_ID_contenido": 8,
+      "Estudiante_ID_Estudiante": 2
+    },
+    {
+      "ID_Tema_estudiante": 14,
+      "Estado": "EN_PROGRESO",
+      "Fecha_actualizacion": "2024-03-28",
+      "Observaciones": "Necesita refuerzo",
+      "Contenido_ID_contenido": 8,
+      "Estudiante_ID_Estudiante": 3
+    },
+    {
+      "ID_Tema_estudiante": 15,
+      "Estado": "COMPLETADO",
+      "Fecha_actualizacion": "2024-03-12",
+      "Observaciones": "Excelente",
+      "Contenido_ID_contenido": 10,
+      "Estudiante_ID_Estudiante": 3
+    },
+    {
+      "ID_Tema_estudiante": 16,
+      "Estado": "COMPLETADO",
+      "Fecha_actualizacion": "2024-03-12",
+      "Observaciones": "Muy bueno",
+      "Contenido_ID_contenido": 10,
+      "Estudiante_ID_Estudiante": 5
+    },
+    {
+      "ID_Tema_estudiante": 17,
+      "Estado": "EN_PROGRESO",
+      "Fecha_actualizacion": "2024-03-30",
+      "Observaciones": "Progreso constante",
+      "Contenido_ID_contenido": 11,
+      "Estudiante_ID_Estudiante": 3
+    },
+    {
+      "ID_Tema_estudiante": 18,
+      "Estado": "EN_PROGRESO",
+      "Fecha_actualizacion": "2024-03-30",
+      "Observaciones": "Requiere más tiempo",
+      "Contenido_ID_contenido": 11,
+      "Estudiante_ID_Estudiante": 5
     }
   ],
   "archivos": [
