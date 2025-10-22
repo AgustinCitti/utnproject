@@ -1,12 +1,76 @@
 // Data Processing Component
+
+// Helper functions to get current user and filter data
+function getCurrentUserId() {
+    const userId = localStorage.getItem('userId');
+    return userId ? parseInt(userId) : null;
+}
+
+function getCurrentUserSubjects() {
+    const userId = getCurrentUserId();
+    if (!userId || !window.data || !window.data.materia) return [];
+    
+    return window.data.materia.filter(subject => 
+        subject.Usuarios_docente_ID_docente === userId
+    );
+}
+
+function getCurrentUserStudents() {
+    const userId = getCurrentUserId();
+    if (!userId || !window.data || !window.data.estudiante) return [];
+    
+    const userSubjects = getCurrentUserSubjects();
+    const userSubjectIds = userSubjects.map(subject => subject.ID_materia);
+    
+    // Get students enrolled in user's subjects
+    const enrolledStudentIds = window.data.alumnos_x_materia
+        .filter(enrollment => userSubjectIds.includes(enrollment.Materia_ID_materia))
+        .map(enrollment => enrollment.Estudiante_ID_Estudiante);
+    
+    return window.data.estudiante.filter(student => 
+        enrolledStudentIds.includes(student.ID_Estudiante)
+    );
+}
+
+function getCurrentUserGrades() {
+    const userId = getCurrentUserId();
+    if (!userId || !window.data || !window.data.notas) return [];
+    
+    const userSubjects = getCurrentUserSubjects();
+    const userSubjectIds = userSubjects.map(subject => subject.ID_materia);
+    
+    // Get evaluations for user's subjects
+    const userEvaluations = window.data.evaluacion.filter(evaluation => 
+        userSubjectIds.includes(evaluation.Materia_ID_materia)
+    );
+    const userEvaluationIds = userEvaluations.map(evaluation => evaluation.ID_evaluacion);
+    
+    // Get grades for these evaluations
+    return window.data.notas.filter(nota => 
+        userEvaluationIds.includes(nota.Evaluacion_ID_evaluacion)
+    );
+}
+
+function getCurrentUserAttendance() {
+    const userId = getCurrentUserId();
+    if (!userId || !window.data || !window.data.asistencia) return [];
+    
+    const userSubjects = getCurrentUserSubjects();
+    const userSubjectIds = userSubjects.map(subject => subject.ID_materia);
+    
+    return window.data.asistencia.filter(attendance => 
+        userSubjectIds.includes(attendance.Materia_ID_materia)
+    );
+}
+
 function getGradesDistribution() {
     if (!window.data || !window.data.notas) {
         console.warn('getGradesDistribution: No data available', { data: window.data, notas: window.data?.notas });
         return { labels: [], data: [] };
     }
 
-    // Get filtered grades for current teacher
-    const filteredGrades = getFilteredGradesForTeacher();
+    // Use current user's grades data
+    const filteredGrades = getCurrentUserGrades();
 
     const gradeRanges = [
         { label: '0-2', min: 0, max: 2 },
@@ -35,8 +99,8 @@ function getAttendanceTrends() {
         return { labels: [], data: [] };
     }
 
-    // Get filtered attendance for current teacher
-    const filteredAttendance = getFilteredAttendanceForTeacher();
+    // Use current user's attendance data
+    const filteredAttendance = getCurrentUserAttendance();
 
     // Group attendance by month
     const monthlyAttendance = {};
@@ -68,9 +132,9 @@ function getStudentPerformance() {
         return { labels: [], datasets: [] };
     }
 
-    // Get filtered subjects and students for current teacher
-    const teacherSubjects = getFilteredSubjectsForTeacher();
-    const teacherStudents = getFilteredStudentsForTeacher();
+    // Use current user's subjects and students data
+    const teacherSubjects = getCurrentUserSubjects();
+    const teacherStudents = getCurrentUserStudents();
     const labels = teacherSubjects.map(materia => materia.Nombre);
     
     const datasets = teacherStudents.slice(0, 3).map((student, index) => {
@@ -106,8 +170,8 @@ function getSubjectComparison() {
         return { labels: [], data: [] };
     }
 
-    // Get filtered subjects for current teacher
-    const teacherSubjects = getFilteredSubjectsForTeacher();
+    // Use current user's subjects data
+    const teacherSubjects = getCurrentUserSubjects();
 
     const subjectStats = teacherSubjects.map(materia => {
         const materiaEvaluaciones = window.data.evaluacion.filter(eval => 
@@ -140,8 +204,8 @@ function calculateAverageGrade() {
         return 0;
     }
     
-    // Get filtered grades for current teacher
-    const filteredGrades = getFilteredGradesForTeacher();
+    // Use current user's grades data
+    const filteredGrades = getCurrentUserGrades();
     
     if (filteredGrades.length === 0) {
         return 0;
@@ -158,8 +222,8 @@ function calculateAttendanceRate() {
         return 0;
     }
     
-    // Get filtered attendance for current teacher
-    const filteredAttendance = getFilteredAttendanceForTeacher();
+    // Use current user's attendance data
+    const filteredAttendance = getCurrentUserAttendance();
     
     if (filteredAttendance.length === 0) {
         return 0;
@@ -176,9 +240,9 @@ function getPassingStudents() {
         return 0;
     }
     
-    // Get filtered students and grades for current teacher
-    const teacherStudents = getFilteredStudentsForTeacher();
-    const filteredGrades = getFilteredGradesForTeacher();
+    // Use current user's students and grades data
+    const teacherStudents = getCurrentUserStudents();
+    const filteredGrades = getCurrentUserGrades();
     
     const passingStudents = teacherStudents.filter(student => {
         const studentGrades = filteredGrades.filter(nota => 
@@ -195,68 +259,6 @@ function getPassingStudents() {
     return totalStudents > 0 ? Math.round((passingStudents / totalStudents) * 100) : 0;
 }
 
-// Helper functions to filter data by current teacher
-function getCurrentTeacherId() {
-    const teacherFilter = document.getElementById('reportsTeacherFilter');
-    return teacherFilter ? teacherFilter.value : localStorage.getItem('userId');
-}
-
-function getFilteredSubjectsForTeacher() {
-    const teacherId = getCurrentTeacherId();
-    if (!teacherId) return window.data.materia || [];
-    
-    return window.data.materia.filter(subject => 
-        subject.Usuarios_docente_ID_docente === parseInt(teacherId)
-    );
-}
-
-function getFilteredStudentsForTeacher() {
-    const teacherId = getCurrentTeacherId();
-    if (!teacherId) return window.data.estudiante || [];
-    
-    const teacherSubjects = getFilteredSubjectsForTeacher();
-    const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
-    
-    // Get students enrolled in these subjects
-    const enrolledStudentIds = window.data.alumnos_x_materia
-        .filter(enrollment => teacherSubjectIds.includes(enrollment.Materia_ID_materia))
-        .map(enrollment => enrollment.Estudiante_ID_Estudiante);
-    
-    return window.data.estudiante.filter(student => 
-        enrolledStudentIds.includes(student.ID_Estudiante)
-    );
-}
-
-function getFilteredGradesForTeacher() {
-    const teacherId = getCurrentTeacherId();
-    if (!teacherId) return window.data.notas || [];
-    
-    const teacherSubjects = getFilteredSubjectsForTeacher();
-    const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
-    
-    // Get evaluations for teacher's subjects
-    const teacherEvaluations = window.data.evaluacion.filter(evaluation => 
-        teacherSubjectIds.includes(evaluation.Materia_ID_materia)
-    );
-    const teacherEvaluationIds = teacherEvaluations.map(evaluation => evaluation.ID_evaluacion);
-    
-    // Get grades for these evaluations
-    return window.data.notas.filter(nota => 
-        teacherEvaluationIds.includes(nota.Evaluacion_ID_evaluacion)
-    );
-}
-
-function getFilteredAttendanceForTeacher() {
-    const teacherId = getCurrentTeacherId();
-    if (!teacherId) return window.data.asistencia || [];
-    
-    const teacherSubjects = getFilteredSubjectsForTeacher();
-    const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
-    
-    return window.data.asistencia.filter(attendance => 
-        teacherSubjectIds.includes(attendance.Materia_ID_materia)
-    );
-}
 
 // Export data processing functions
 window.getGradesDistribution = getGradesDistribution;
@@ -266,3 +268,10 @@ window.getSubjectComparison = getSubjectComparison;
 window.calculateAverageGrade = calculateAverageGrade;
 window.calculateAttendanceRate = calculateAttendanceRate;
 window.getPassingStudents = getPassingStudents;
+
+// Export helper functions for user filtering
+window.getCurrentUserId = getCurrentUserId;
+window.getCurrentUserSubjects = getCurrentUserSubjects;
+window.getCurrentUserStudents = getCurrentUserStudents;
+window.getCurrentUserGrades = getCurrentUserGrades;
+window.getCurrentUserAttendance = getCurrentUserAttendance;

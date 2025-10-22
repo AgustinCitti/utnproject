@@ -13,9 +13,9 @@ function generateTopStudentsReport() {
         return;
     }
 
-    // Get filtered students and grades for current teacher
-    const teacherStudents = getFilteredStudentsForTeacher();
-    const filteredGrades = getFilteredGradesForTeacher();
+    // Use current user's students and grades data
+    const teacherStudents = getCurrentUserStudents();
+    const filteredGrades = getCurrentUserGrades();
 
     const studentAverages = teacherStudents.map(student => {
         const studentGrades = filteredGrades.filter(nota => 
@@ -58,9 +58,9 @@ function generateAttendanceReport() {
         return;
     }
 
-    // Get filtered students and attendance for current teacher
-    const teacherStudents = getFilteredStudentsForTeacher();
-    const filteredAttendance = getFilteredAttendanceForTeacher();
+    // Use current user's students and attendance data
+    const teacherStudents = getCurrentUserStudents();
+    const filteredAttendance = getCurrentUserAttendance();
 
     const attendanceStats = teacherStudents.map(student => {
         const studentAttendance = filteredAttendance.filter(record => 
@@ -97,13 +97,14 @@ function generateAttendanceReport() {
 }
 
 function populateFilters() {
-    // Populate subject filters with teacher's subjects
+    // Populate subject filters with current user's subjects
     const gradesFilter = document.getElementById('gradesSubjectFilter');
     const attendanceFilter = document.getElementById('attendanceSubjectFilter');
     
-    const teacherSubjects = getFilteredSubjectsForTeacher();
-    if (teacherSubjects.length > 0) {
-        teacherSubjects.forEach(materia => {
+    // Get current user's subjects
+    const userSubjects = getCurrentUserSubjects();
+    if (userSubjects.length > 0) {
+        userSubjects.forEach(materia => {
             const option = document.createElement('option');
             option.value = materia.ID_materia;
             option.textContent = materia.Nombre;
@@ -113,11 +114,11 @@ function populateFilters() {
         });
     }
 
-    // Populate student filter with teacher's students
+    // Populate student filter with current user's students
     const studentFilter = document.getElementById('performanceStudentFilter');
-    const teacherStudents = getFilteredStudentsForTeacher();
-    if (teacherStudents.length > 0 && studentFilter) {
-        teacherStudents.forEach(student => {
+    const userStudents = getCurrentUserStudents();
+    if (userStudents.length > 0 && studentFilter) {
+        userStudents.forEach(student => {
             const option = document.createElement('option');
             option.value = student.ID_Estudiante;
             option.textContent = `${student.Nombre} ${student.Apellido}`;

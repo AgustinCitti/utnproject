@@ -8,7 +8,6 @@
 function initializeReports() {
     // Initialize reports functionality
     loadReports();
-    populateReportsTeacherFilter();
 }
 
 function loadReports() {
@@ -24,7 +23,7 @@ function loadReports() {
                         <i class="fas fa-users"></i>
                     </div>
                     <div class="summary-content">
-                        <h3>${window.data && window.data.estudiante ? window.data.estudiante.length : 0}</h3>
+                        <h3>${getCurrentUserStudents().length}</h3>
                         <p>Total Students</p>
                     </div>
                 </div>
@@ -173,95 +172,6 @@ function loadReports() {
     }, 100);
 }
 
-// Teacher filtering functions for reports
-function populateReportsTeacherFilter() {
-    const teacherFilter = document.getElementById('reportsTeacherFilter');
-    if (!teacherFilter) return;
-
-    // Get current user ID from localStorage
-    const currentUserId = localStorage.getItem('userId');
-    
-    // Clear existing options except the first one
-    teacherFilter.innerHTML = '<option value="" data-translate="all_teachers">Todos los Profesores</option>';
-    
-    // Add all teachers to the filter
-    if (window.data && window.data.usuarios_docente) {
-        window.data.usuarios_docente.forEach(teacher => {
-            const option = document.createElement('option');
-            option.value = teacher.ID_docente;
-            option.textContent = `${teacher.Nombre_docente} ${teacher.Apellido_docente}`;
-            teacherFilter.appendChild(option);
-        });
-    }
-    
-    // Add event listener for teacher filter changes
-    teacherFilter.addEventListener('change', () => {
-        filterReportsByTeacher();
-    });
-    
-    // If current user is a teacher, set the filter to show only their data by default
-    if (currentUserId) {
-        teacherFilter.value = currentUserId;
-        // Trigger filter update
-        filterReportsByTeacher();
-    }
-}
-
-function filterReportsByTeacher() {
-    const teacherFilter = document.getElementById('reportsTeacherFilter');
-    const selectedTeacher = teacherFilter ? teacherFilter.value : '';
-    
-    // Update all chart filters to only show data for the selected teacher's subjects
-    if (selectedTeacher) {
-        const teacherId = parseInt(selectedTeacher);
-        const teacherSubjects = window.data.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
-        const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
-        
-        // Update subject filters in charts to only show teacher's subjects
-        updateChartFilters(teacherSubjectIds);
-    } else {
-        // Show all subjects if no teacher is selected
-        updateChartFilters([]);
-    }
-    
-    // Refresh all charts and reports
-    if (typeof updateGradesChart === 'function') updateGradesChart();
-    if (typeof updateAttendanceChart === 'function') updateAttendanceChart();
-    if (typeof updatePerformanceChart === 'function') updatePerformanceChart();
-    if (typeof generateDetailedReports === 'function') generateDetailedReports();
-}
-
-function updateChartFilters(teacherSubjectIds) {
-    // Update grades subject filter
-    const gradesFilter = document.getElementById('gradesSubjectFilter');
-    if (gradesFilter) {
-        gradesFilter.innerHTML = '<option value="all">All Subjects</option>';
-        if (teacherSubjectIds.length > 0) {
-            const teacherSubjects = window.data.materia.filter(subject => teacherSubjectIds.includes(subject.ID_materia));
-            teacherSubjects.forEach(subject => {
-                const option = document.createElement('option');
-                option.value = subject.ID_materia;
-                option.textContent = subject.Nombre;
-                gradesFilter.appendChild(option);
-            });
-        }
-    }
-    
-    // Update attendance subject filter
-    const attendanceFilter = document.getElementById('attendanceSubjectFilter');
-    if (attendanceFilter) {
-        attendanceFilter.innerHTML = '<option value="all">All Subjects</option>';
-        if (teacherSubjectIds.length > 0) {
-            const teacherSubjects = window.data.materia.filter(subject => teacherSubjectIds.includes(subject.ID_materia));
-            teacherSubjects.forEach(subject => {
-                const option = document.createElement('option');
-                option.value = subject.ID_materia;
-                option.textContent = subject.Nombre;
-                attendanceFilter.appendChild(option);
-            });
-        }
-    }
-}
 
 // Manual refresh function for debugging
 function refreshReports() {
