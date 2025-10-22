@@ -148,47 +148,7 @@
             <!-- Dashboard Section -->
             <section id="dashboard" class="content-section active">
                 <div class="dashboard-grid">
-                    <!-- Quick Stats -->
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3 id="totalStudents">0</h3>
-                                <p data-translate="total_students">Total Estudiantes</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-graduation-cap"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3 id="averageGrade">0%</h3>
-                                <p data-translate="average_grade">Promedio de Calificaciones</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-calendar-check"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3 id="attendanceRate">0%</h3>
-                                <p data-translate="attendance_rate">Tasa de Asistencia</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-bell"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3 id="pendingNotifications">0</h3>
-                                <p data-translate="notifications">Notificaciones</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Main Content Area (Calendar + Next Classes) -->
+                    <!-- Main Content Area (Calendar + Stats + Next Classes) -->
                     <div class="dashboard-main-content">
                         <!-- Calendar Component -->
                         <div class="calendar-section">
@@ -205,11 +165,45 @@
                             </div>
                         </div>
 
-                        <!-- Next Classes Component -->
-                        <div class="next-classes-section">
-                            <h2 data-translate="upcoming_classes">Próximas Clases</h2>
-                            <div class="classes-list" id="classesList">
-                                <!-- Classes will be loaded dynamically -->
+                        <!-- Right Side Content (Stats + Next Classes) -->
+                        <div class="dashboard-right-content">
+                            <!-- Quick Stats -->
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h3 id="totalStudents">0</h3>
+                                        <p data-translate="total_students">Total Estudiantes</p>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-graduation-cap"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h3 id="averageGrade">0%</h3>
+                                        <p data-translate="average_grade">Promedio de Calificaciones</p>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-calendar-check"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h3 id="attendanceRate">0%</h3>
+                                        <p data-translate="attendance_rate">Tasa de Asistencia</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Next Classes Component -->
+                            <div class="next-classes-section">
+                                <h2 data-translate="upcoming_classes">Próximas Clases</h2>
+                                <div class="classes-list" id="classesList">
+                                    <!-- Classes will be loaded dynamically -->
+                                </div>
                             </div>
                         </div>
                     </div>
