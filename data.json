@@ -25,59 +25,7 @@
       "Titulo_academico": "Doctor en Física",
       "Tipo_usuario": "PROFESOR_ADJUNTO",
       "Estado": "ACTIVO"
-    },
-    {
-      "ID_docente": 3,
-      "Nombre_docente": "Carmen",
-      "Apellido_docente": "Rodríguez",
-      "Email_docente": "carmen.rodriguez@school.edu",
-      "Contraseña": "123456",
-      "DNI": "34567890",
-      "Telefono": "+54 11 3456-7890",
-      "Especialidad": "Química Orgánica",
-      "Titulo_academico": "Doctora en Química",
-      "Tipo_usuario": "PROFESOR",
-      "Estado": "ACTIVO"
-    },
-    {
-      "ID_docente": 4,
-      "Nombre_docente": "Roberto",
-      "Apellido_docente": "Silva",
-      "Email_docente": "roberto.silva@school.edu",
-      "Contraseña": "123456",
-      "DNI": "45678901",
-      "Telefono": "+54 11 4567-8901",
-      "Especialidad": "Biología Molecular",
-      "Titulo_academico": "Doctor en Biología",
-      "Tipo_usuario": "PROFESOR",
-      "Estado": "ACTIVO"
-    },
-    {
-      "ID_docente": 5,
-      "Nombre_docente": "Patricia",
-      "Apellido_docente": "González",
-      "Email_docente": "patricia.gonzalez@school.edu",
-      "Contraseña": "123456",
-      "DNI": "56789012",
-      "Telefono": "+54 11 5678-9012",
-      "Especialidad": "Historia",
-      "Titulo_academico": "Magíster en Historia",
-      "Tipo_usuario": "PROFESOR_ADJUNTO",
-      "Estado": "ACTIVO"
-    },
-    {
-      "ID_docente": 6,
-      "Nombre_docente": "Miguel",
-      "Apellido_docente": "Torres",
-      "Email_docente": "miguel.torres@school.edu",
-      "Contraseña": "123456",
-      "DNI": "67890123",
-      "Telefono": "+54 11 6789-0123",
-      "Especialidad": "Literatura",
-      "Titulo_academico": "Doctor en Letras",
-      "Tipo_usuario": "PROFESOR",
-      "Estado": "ACTIVO"
-    }
+    } 
   ],
   "materia": [
     {
@@ -107,7 +55,7 @@
       "Descripcion": "Química General",
       "Horario": "Lunes y Miércoles 16:00-18:00",
       "Aula": "Laboratorio 2",
-      "Usuarios_docente_ID_docente": 3,
+      "Usuarios_docente_ID_docente": 2,
       "Estado": "ACTIVA"
     },
     {
@@ -117,7 +65,7 @@
       "Descripcion": "Biología General",
       "Horario": "Martes y Jueves 10:00-12:00",
       "Aula": "Aula 102",
-      "Usuarios_docente_ID_docente": 4,
+      "Usuarios_docente_ID_docente": 1,
       "Estado": "ACTIVA"
     },
     {
@@ -127,7 +75,7 @@
       "Descripcion": "Historia de Argentina desde la independencia",
       "Horario": "Lunes y Miércoles 14:00-16:00",
       "Aula": "Aula 103",
-      "Usuarios_docente_ID_docente": 5,
+      "Usuarios_docente_ID_docente": 2,
       "Estado": "ACTIVA"
     },
     {
@@ -137,7 +85,7 @@
       "Descripcion": "Literatura española del siglo XX",
       "Horario": "Martes y Jueves 16:00-18:00",
       "Aula": "Aula 104",
-      "Usuarios_docente_ID_docente": 6,
+      "Usuarios_docente_ID_docente": 2,
       "Estado": "ACTIVA"
     },
     {
