@@ -531,7 +531,41 @@
                     <!-- Grade records will be loaded here -->
                 </div>
             </section>
-
+            <!-- Reports Section -->
+            <section id="reports" class="content-section">
+                <div class="section-header">
+                    <h2 data-translate="reports_analytics">Reportes y Análisis</h2>
+                </div>
+                <div class="reports-container" id="reportsContainer">
+                    <!-- Reports will be loaded dynamically -->
+                </div>
+            </section>
+<!-- Notifications Section -->
+<section id="notifications" class="content-section">
+    <div class="section-header">
+        <h2 data-translate="notifications">Notificaciones</h2>
+        <div class="section-actions">
+            <div class="view-toggle">
+                <button id="notificationsGridViewBtn" class="view-btn active" data-view="grid">
+                    <i class="fas fa-th"></i>
+                </button>
+                <button id="notificationsListViewBtn" class="view-btn" data-view="list">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+            <button id="markAllReadBtn" class="btn-secondary">
+                <i class="fas fa-check-double"></i>
+                <span data-translate="mark_all_read">Marcar Todo como Leído</span>
+            </button>
+        </div>
+    </div>
+    <div class="notifications-container" id="notificationsContainer">
+        <!-- Notifications will be loaded dynamically -->
+    </div>
+    <div class="notifications-list" id="notificationsList" style="display: none;">
+        <!-- Notifications list view will be loaded dynamically -->
+    </div>
+</section>
             <!-- Subjects Management Section -->
             <section id="subjects-management" class="content-section">
                 <div class="section-header">
@@ -627,42 +661,9 @@
 
             </section>
 
-            <!-- Notifications Section -->
-            <section id="notifications" class="content-section">
-                <div class="section-header">
-                    <h2 data-translate="notifications">Notificaciones</h2>
-                    <div class="section-actions">
-                        <div class="view-toggle">
-                            <button id="notificationsGridViewBtn" class="view-btn active" data-view="grid">
-                                <i class="fas fa-th"></i>
-                            </button>
-                            <button id="notificationsListViewBtn" class="view-btn" data-view="list">
-                                <i class="fas fa-list"></i>
-                            </button>
-                        </div>
-                        <button id="markAllReadBtn" class="btn-secondary">
-                            <i class="fas fa-check-double"></i>
-                            <span data-translate="mark_all_read">Marcar Todo como Leído</span>
-                        </button>
-                    </div>
-                </div>
-                <div class="notifications-container" id="notificationsContainer">
-                    <!-- Notifications will be loaded dynamically -->
-                </div>
-                <div class="notifications-list" id="notificationsList" style="display: none;">
-                    <!-- Notifications list view will be loaded dynamically -->
-                </div>
-            </section>
+            
 
-            <!-- Reports Section -->
-            <section id="reports" class="content-section">
-                <div class="section-header">
-                    <h2 data-translate="reports_analytics">Reportes y Análisis</h2>
-                </div>
-                <div class="reports-container" id="reportsContainer">
-                    <!-- Reports will be loaded dynamically -->
-                </div>
-            </section>
+            
 
 
         </main>

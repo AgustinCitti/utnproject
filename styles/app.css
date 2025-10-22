@@ -588,6 +588,9 @@
 .app-main {
     flex: 1;
     padding: 20px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .content-section {
@@ -596,6 +599,13 @@
 
 .content-section.active {
     display: block;
+}
+
+/* Reports Container Specific Styles */
+#reportsContainer {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* Dashboard Styles */
@@ -1383,6 +1393,9 @@
 /* Reports Dashboard Styles */
 .reports-dashboard {
     padding: 1rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .reports-summary {
@@ -1390,6 +1403,8 @@
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
     margin-bottom: 2rem;
+    width: 100%;
+    max-width: 100%;
 }
 
 .summary-card {
@@ -1453,6 +1468,8 @@
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
+    width: 100%;
+    max-width: 100%;
 }
 
 .chart-card {
@@ -1495,6 +1512,8 @@
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
+    width: 100%;
+    max-width: 100%;
 }
 
 .report-card {
@@ -1680,16 +1699,23 @@
 
 /* Reports Responsive Design */
 @media (max-width: 768px) {
+    .reports-dashboard {
+        padding: 0.5rem;
+    }
+    
     .reports-summary {
         grid-template-columns: 1fr;
+        gap: 0.5rem;
     }
 
     .charts-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
 
     .detailed-reports {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
 
     .chart-container {
@@ -1698,6 +1724,7 @@
 
     .report-actions {
         flex-direction: column;
+        gap: 0.5rem;
     }
 
     .attendance-item {
