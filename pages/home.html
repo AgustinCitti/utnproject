@@ -233,6 +233,10 @@
                                 <option value="" data-translate="all_subjects">Todas las Materias</option>
                                 <!-- Options will be populated dynamically -->
                             </select>
+                            <select id="unifiedCourseFilter" class="filter-select">
+                                <option value="" data-translate="all_courses">Todos los Cursos</option>
+                                <!-- Options will be populated dynamically based on user's subjects -->
+                            </select>
                             <select id="unifiedTopicFilter" class="filter-select">
                                 <option value="" data-translate="all_topics">Todos los Temas</option>
                                 <option value="COMPLETADO" data-translate="completed_topics">Temas Completados</option>
@@ -244,6 +248,10 @@
                             <select id="examsSubjectFilter" class="filter-select">
                                 <option value="" data-translate="all_subjects">Todas las Materias</option>
                                 <!-- Options will be populated dynamically -->
+                            </select>
+                            <select id="examsCourseFilter" class="filter-select">
+                                <option value="" data-translate="all_courses">Todos los Cursos</option>
+                                <!-- Options will be populated dynamically based on user's subjects -->
                             </select>
                             <select id="examsDateFilter" class="filter-select">
                                 <option value="" data-translate="all_dates">Todas las Fechas</option>
@@ -594,16 +602,9 @@
                     <h2 data-translate="subjects_management">Gestión de Materias</h2>
                     <div class="section-actions">
                         <div class="filters">
-                            <select id="subjectsTeacherFilter" class="filter-select">
-                                <option value="" data-translate="all_teachers">Todos los Profesores</option>
-                                <!-- Teacher options will be populated dynamically -->
-                            </select>
                             <select id="subjectsCourseFilter" class="filter-select">
                                 <option value="" data-translate="all_courses">Todos los Cursos</option>
-                                <option value="9th" data-translate="9th_course">9º Curso</option>
-                                <option value="10th" data-translate="10th_course">10º Curso</option>
-                                <option value="11th" data-translate="11th_course">11º Curso</option>
-                                <option value="12th" data-translate="12th_course">12º Curso</option>
+                                <!-- Options will be populated dynamically based on user's subjects -->
                             </select>
                             <select id="subjectsStatusFilter" class="filter-select">
                                 <option value="" data-translate="all_status">Todos los Estados</option>

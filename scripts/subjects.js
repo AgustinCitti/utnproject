@@ -5,7 +5,6 @@ function initializeSubjects() {
     const addSubjectBtn = document.getElementById('addSubjectBtn');
     const subjectModal = document.getElementById('subjectModal');
     const subjectForm = document.getElementById('subjectForm');
-    const teacherFilter = document.getElementById('subjectsTeacherFilter');
     const courseFilter = document.getElementById('subjectsCourseFilter');
     const statusFilter = document.getElementById('subjectsStatusFilter');
     const addContentBtn = document.getElementById('addContentBtn');
@@ -43,12 +42,6 @@ function initializeSubjects() {
     }
 
     // Filter functionality
-    if (teacherFilter) {
-        teacherFilter.addEventListener('change', () => {
-            filterSubjects();
-        });
-    }
-
     if (courseFilter) {
         courseFilter.addEventListener('change', () => {
             filterSubjects();
@@ -71,7 +64,7 @@ function initializeSubjects() {
     loadSubjects();
     populateTeacherSelect();
     populateSubjectSelect();
-    populateTeacherFilter();
+    populateCourseFilter();
 }
 
 
@@ -269,28 +262,30 @@ function clearSubjectForm() {
 
 // Filter functions
 function getFilteredSubjects() {
-    const teacherFilter = document.getElementById('subjectsTeacherFilter');
     const courseFilter = document.getElementById('subjectsCourseFilter');
     const statusFilter = document.getElementById('subjectsStatusFilter');
-    const selectedTeacher = teacherFilter ? teacherFilter.value : '';
     const selectedCourse = courseFilter ? courseFilter.value : '';
     const selectedStatus = statusFilter ? statusFilter.value : '';
     
+    // Get current user ID to filter only their subjects
+    const currentUserId = localStorage.getItem('userId');
     let subjects = appData.materia || [];
     
-    // Filter by teacher
-    if (selectedTeacher) {
+    // Filter by current teacher (only show subjects taught by current user)
+    if (currentUserId) {
         subjects = subjects.filter(subject => 
-            subject.Usuarios_docente_ID_docente === parseInt(selectedTeacher)
+            subject.Usuarios_docente_ID_docente === parseInt(currentUserId)
         );
     }
     
+    // Filter by course/division
     if (selectedCourse) {
         subjects = subjects.filter(subject => 
-            subject.Curso_division.toLowerCase().includes(selectedCourse.toLowerCase())
+            subject.Curso_division === selectedCourse
         );
     }
     
+    // Filter by status
     if (selectedStatus) {
         subjects = subjects.filter(subject => subject.Estado === selectedStatus);
     }
@@ -311,37 +306,38 @@ function getSubjectById(subjectId) {
     return appData.materia.find(s => s.ID_materia === subjectId);
 }
 
-// Populate teacher filter dropdown
-function populateTeacherFilter() {
-    const teacherFilter = document.getElementById('subjectsTeacherFilter');
-    if (!teacherFilter) return;
-
-    // Get current user ID from localStorage
-    const currentUserId = localStorage.getItem('userId');
-    
-    // Clear existing options except the first one
-    teacherFilter.innerHTML = '<option value="" data-translate="all_teachers">Todos los Profesores</option>';
-    
-    // Add all teachers to the filter
-    if (appData.usuarios_docente) {
-        appData.usuarios_docente.forEach(teacher => {
-            const option = document.createElement('option');
-            option.value = teacher.ID_docente;
-            option.textContent = `${teacher.Nombre_docente} ${teacher.Apellido_docente}`;
-            teacherFilter.appendChild(option);
-        });
-    }
-    
-    // If current user is a teacher, set the filter to show only their subjects by default
-    if (currentUserId) {
-        teacherFilter.value = currentUserId;
-        // Trigger filter update
-        filterSubjects();
-    }
-}
 
 function getStudentCountBySubject(subjectId) {
     return appData.alumnos_x_materia.filter(axm => axm.Materia_ID_materia === subjectId).length;
+}
+
+// Populate course filter with user's subjects course divisions
+function populateCourseFilter() {
+    const courseFilter = document.getElementById('subjectsCourseFilter');
+    if (!courseFilter) return;
+
+    // Get current user ID
+    const currentUserId = localStorage.getItem('userId');
+    if (!currentUserId) return;
+
+    // Get user's subjects
+    const userSubjects = appData.materia.filter(subject => 
+        subject.Usuarios_docente_ID_docente === parseInt(currentUserId)
+    );
+
+    // Get unique course divisions from user's subjects
+    const courseDivisions = [...new Set(userSubjects.map(subject => subject.Curso_division))];
+    
+    // Clear existing options except the first one
+    courseFilter.innerHTML = '<option value="" data-translate="all_courses">Todos los Cursos</option>';
+    
+    // Add course division options
+    courseDivisions.forEach(division => {
+        const option = document.createElement('option');
+        option.value = division;
+        option.textContent = division;
+        courseFilter.appendChild(option);
+    });
 }
 
 function getEvaluationCountBySubject(subjectId) {

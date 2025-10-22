@@ -16,11 +16,13 @@ function initializeExams() {
     }
 }
 
-// Get filtered exams by subject and date
+// Get filtered exams by subject, course, and date
 function getFilteredExams() {
     const examsSubjectFilter = document.getElementById('examsSubjectFilter');
+    const examsCourseFilter = document.getElementById('examsCourseFilter');
     const examsDateFilter = document.getElementById('examsDateFilter');
     const selectedSubject = examsSubjectFilter ? examsSubjectFilter.value : '';
+    const selectedCourse = examsCourseFilter ? examsCourseFilter.value : '';
     const selectedDate = examsDateFilter ? examsDateFilter.value : '';
     
     // Get current teacher ID
@@ -31,7 +33,13 @@ function getFilteredExams() {
     
     // Filter by current teacher's subjects first
     if (teacherId) {
-        const teacherSubjects = appData.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
+        let teacherSubjects = appData.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
+        
+        // Filter by course/division if selected
+        if (selectedCourse) {
+            teacherSubjects = teacherSubjects.filter(subject => subject.Curso_division === selectedCourse);
+        }
+        
         const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
         filteredExams = filteredExams.filter(exam => teacherSubjectIds.includes(exam.Materia_ID_materia));
     }
