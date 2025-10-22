@@ -53,41 +53,61 @@ function loadNotifications() {
         }))
     ];
 
-    // Grid view
-    notificationsContainer.innerHTML = allNotifications.map(notification => `
-        <div class="card ${notification.read ? 'read' : 'unread'} ${notification.type}">
-            <div class="card-header">
-                <h3 class="card-title">
-                    ${notification.type === 'recordatorio' ? '<i class="fas fa-bell"></i> ' : ''}
-                    ${notification.title}
-                </h3>
-                <span class="notification-date">${notification.date}</span>
-                ${notification.type === 'recordatorio' ? `<span class="priority-badge ${notification.recordatorio.Prioridad.toLowerCase()}">${notification.recordatorio.Prioridad}</span>` : ''}
+    // Grid view - Modern design
+    if (allNotifications.length === 0) {
+        notificationsContainer.innerHTML = `
+            <div class="notifications-empty">
+                <i class="fas fa-bell-slash"></i>
+                <h3>No notifications</h3>
+                <p>You're all caught up! No new notifications at the moment.</p>
             </div>
-            <div class="card-content">
-                <p>${notification.message}</p>
-                ${notification.type === 'recordatorio' ? `
-                    <div class="recordatorio-details">
-                        <span class="recordatorio-type">${getRecordatorioTypeLabel(notification.recordatorio.Tipo)}</span>
-                        <span class="recordatorio-subject">${getSubjectName(notification.recordatorio.Materia_ID_materia)}</span>
+        `;
+    } else {
+        notificationsContainer.innerHTML = allNotifications.map(notification => `
+            <div class="notification-card ${notification.read ? 'read' : 'unread'} ${notification.type}">
+                <div class="notification-header">
+                    <h3 class="notification-title">
+                        ${notification.type === 'recordatorio' ? '<i class="fas fa-bell"></i>' : '<i class="fas fa-info-circle"></i>'}
+                        ${notification.title}
+                    </h3>
+                    <div class="notification-meta">
+                        <span class="notification-date">${notification.date}</span>
+                        ${notification.type === 'recordatorio' ? `<span class="priority-badge ${notification.recordatorio.Prioridad.toLowerCase()}">${notification.recordatorio.Prioridad}</span>` : ''}
                     </div>
-                ` : ''}
+                </div>
+                <div class="notification-content">
+                    <p class="notification-message">${notification.message}</p>
+                    ${notification.type === 'recordatorio' ? `
+                        <div class="recordatorio-details">
+                            <span class="recordatorio-type">${getRecordatorioTypeLabel(notification.recordatorio.Tipo)}</span>
+                            <span class="recordatorio-subject">${getSubjectName(notification.recordatorio.Materia_ID_materia)}</span>
+                        </div>
+                    ` : ''}
+                </div>
                 <div class="notification-actions">
-                    ${!notification.read ? `<button class="btn-icon" onclick="markNotificationRead('${notification.id}')">
+                    ${!notification.read ? `<button class="btn-icon" onclick="markNotificationRead('${notification.id}')" title="Mark as Read">
                         <i class="fas fa-check"></i> Mark as Read
                     </button>` : ''}
-                    <button class="btn-icon btn-delete" onclick="deleteNotification('${notification.id}')">
+                    <button class="btn-icon btn-delete" onclick="deleteNotification('${notification.id}')" title="Delete">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
-        </div>
-    `).join('');
+        `).join('');
+    }
 
-    // List view - Table format
-    notificationsList.innerHTML = `
-        <div class="table-responsive">
-            <table class="data-table">
+    // List view - Modern table format
+    if (allNotifications.length === 0) {
+        notificationsList.innerHTML = `
+            <div class="notifications-empty">
+                <i class="fas fa-bell-slash"></i>
+                <h3>No notifications</h3>
+                <p>You're all caught up! No new notifications at the moment.</p>
+            </div>
+        `;
+    } else {
+        notificationsList.innerHTML = `
+            <table>
                 <thead>
                     <tr>
                         <th>Type</th>
@@ -101,7 +121,7 @@ function loadNotifications() {
                 <tbody>
                     ${allNotifications.map(notification => {
                         const shortDate = notification.date.split('-').slice(1).join('/');
-                        const shortMessage = notification.message.length > 25 ? notification.message.substring(0, 25) + '...' : notification.message;
+                        const shortMessage = notification.message.length > 30 ? notification.message.substring(0, 30) + '...' : notification.message;
                         return `
                             <tr class="${notification.read ? 'read' : 'unread'} ${notification.type}">
                                 <td>
@@ -129,8 +149,8 @@ function loadNotifications() {
                     }).join('')}
                 </tbody>
             </table>
-        </div>
-    `;
+        `;
+    }
 }
 
 function updateNotificationCount() {
@@ -157,8 +177,15 @@ function updateNotificationCount() {
     const recordatorioCount = recordatorios.filter(r => r.Estado === 'PENDIENTE').length;
     const totalCount = notificationCount + recordatorioCount;
     
+    // Update notification count in header
+    const notificationCountElement = document.getElementById('notificationCount');
+    if (notificationCountElement) {
+        notificationCountElement.textContent = totalCount;
+        notificationCountElement.style.display = totalCount > 0 ? 'inline' : 'none';
+    }
+    
     // Update mobile notification badge
-    const mobileBadge = document.getElementById('notificationCount');
+    const mobileBadge = document.getElementById('mobileNotificationCount');
     if (mobileBadge) {
         mobileBadge.textContent = totalCount;
         mobileBadge.style.display = totalCount > 0 ? 'inline' : 'none';

@@ -569,28 +569,34 @@
             </section>
 <!-- Notifications Section -->
 <section id="notifications" class="content-section">
-    <div class="section-header">
-      
-        <div class="section-actions">
+    <div class="notifications-header">
+        <div class="notifications-title">
+            <h2><i class="fas fa-bell"></i> Notifications</h2>
+            <span class="notification-count" id="notificationCount">0</span>
+        </div>
+        <div class="notifications-controls">
             <div class="view-toggle">
-                <button id="notificationsGridViewBtn" class="view-btn active" data-view="grid">
+                <button id="notificationsGridViewBtn" class="view-btn active" data-view="grid" title="Grid View">
                     <i class="fas fa-th"></i>
                 </button>
-                <button id="notificationsListViewBtn" class="view-btn" data-view="list">
+                <button id="notificationsListViewBtn" class="view-btn" data-view="list" title="List View">
                     <i class="fas fa-list"></i>
                 </button>
             </div>
-            <button id="markAllReadBtn" class="btn-secondary">
+            <button id="markAllReadBtn" class="btn-modern">
                 <i class="fas fa-check-double"></i>
-                <span data-translate="mark_all_read">Marcar Todo como Leído</span>
+                <span data-translate="mark_all_read">Mark All Read</span>
             </button>
         </div>
     </div>
-    <div class="notifications-container" id="notificationsContainer">
-        <!-- Notifications will be loaded dynamically -->
-    </div>
-    <div class="notifications-list" id="notificationsList" style="display: none;">
-        <!-- Notifications list view will be loaded dynamically -->
+    
+    <div class="notifications-content">
+        <div class="notifications-grid" id="notificationsContainer">
+            <!-- Notifications will be loaded dynamically -->
+        </div>
+        <div class="notifications-table" id="notificationsList" style="display: none;">
+            <!-- Notifications list view will be loaded dynamically -->
+        </div>
     </div>
 </section>
             <!-- Subjects Management Section -->
