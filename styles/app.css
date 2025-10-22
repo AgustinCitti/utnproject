@@ -889,10 +889,12 @@
     border-radius: 8px;
     overflow: hidden;
     min-height: 400px;
+    height: auto;
 }
 
 .calendar-grid.week-view .calendar-day {
     min-height: 350px;
+    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -916,9 +918,12 @@
 .calendar-grid.week-view .calendar-day .day-events {
     width: 100%;
     flex: 1;
+    min-height: 0;
+    max-height: none;
     display: flex;
     flex-direction: column;
     gap: 4px;
+    overflow-y: auto;
 }
 
 .calendar-grid.week-view .calendar-day .event-item {
@@ -929,6 +934,8 @@
     border-left: 3px solid #667eea;
     cursor: pointer;
     transition: all 0.2s ease;
+    flex-shrink: 0;
+    min-height: auto;
 }
 
 .calendar-grid.week-view .calendar-day .event-item:hover {
@@ -1024,6 +1031,7 @@
 @media (max-width: 768px) {
     .calendar-grid.week-view .calendar-day {
         min-height: 200px;
+        height: 100%;
         padding: 8px 4px;
     }
     
