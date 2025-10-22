@@ -239,10 +239,10 @@
                             </select>
                         </div>
                         <div class="view-toggle">
-                            <button id="unifiedGridViewBtn" class="view-btn active" data-view="grid">
+                            <button id="unifiedGridViewBtn" class="view-btn" data-view="grid">
                                 <i class="fas fa-th"></i>
                             </button>
-                            <button id="unifiedListViewBtn" class="view-btn" data-view="list">
+                            <button id="unifiedListViewBtn" class="view-btn active" data-view="list">
                                 <i class="fas fa-list"></i>
                             </button>
                         </div>
@@ -282,12 +282,12 @@
                 <!-- Students Tab Content -->
                 <div id="studentsTabContent" class="tab-content active">
                     <!-- Student Overview Cards -->
-                    <div class="unified-student-cards" id="unifiedStudentCards">
+                    <div class="unified-student-cards" id="unifiedStudentCards" style="display: none;">
                         <!-- Student cards with integrated grades and attendance will be loaded dynamically -->
                     </div>
 
                     <!-- Detailed List View -->
-                    <div class="unified-student-list" id="unifiedStudentList" style="display: none;">
+                    <div class="unified-student-list" id="unifiedStudentList">
                         <!-- Detailed student information with grades and attendance will be loaded dynamically -->
                     </div>
 
@@ -334,15 +334,178 @@
 
                 <!-- Exams Tab Content -->
                 <div id="examsTabContent" class="tab-content">
-                    <div class="exams-container" id="examsContainer">
+                    <div class="exams-view-controls">
+                        <div class="view-toggle">
+                            <button id="examsGridViewBtn" class="view-btn" data-view="grid">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button id="examsListViewBtn" class="view-btn active" data-view="list">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="exams-container" id="examsContainer" style="display: none;">
                         <!-- Exams will be loaded dynamically -->
                     </div>
-                    <div class="exams-list" id="examsList" style="display: none;">
+                    <div class="exams-list" id="examsList">
                         <!-- Exams list view will be loaded dynamically -->
                     </div>
                 </div>
             </section>
 
+            <!-- Attendance Section -->
+            <section id="attendance" class="content-section">
+                <div class="section-header">
+                    <h2 data-translate="attendance_management">Gestión de Asistencia</h2>
+                    <div class="section-actions">
+                        <button id="cancelAttendanceBtn" class="btn-secondary">
+                            <i class="fas fa-arrow-left"></i>
+                            <span data-translate="back">Volver</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Attendance View (for marking attendance) -->
+                <div id="attendanceView" style="display: none;">
+                    <div class="attendance-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="attendanceDate" data-translate="date">Fecha:</label>
+                                <input type="date" id="attendanceDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="attendanceCourseSelect" data-translate="course">Curso:</label>
+                                <select id="attendanceCourseSelect" required>
+                                    <option value="" data-translate="select_course">- Seleccionar -</option>
+                                    <option value="9th">9º Curso</option>
+                                    <option value="10th">10º Curso</option>
+                                    <option value="11th">11º Curso</option>
+                                    <option value="12th">12º Curso</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="attendanceSubjectSelect" data-translate="subject">Materia:</label>
+                                <select id="attendanceSubjectSelect" required disabled>
+                                    <option value="" data-translate="select_subject">- Seleccionar -</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="attendanceNotes" data-translate="notes">Observaciones:</label>
+                            <textarea id="attendanceNotes" rows="3" placeholder="Notas adicionales..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Students Table for Attendance -->
+                    <div class="attendance-table-container">
+                        <table class="data-table attendance-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Estudiante</th>
+                                    <th data-translate="present">Presente</th>
+                                    <th data-translate="absent">Ausente</th>
+                                    <th data-translate="absences">Faltas</th>
+                                    <th data-translate="status">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Seleccione un curso y materia para ver los estudiantes</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="attendance-actions">
+                        <button id="saveAttendanceBtn" class="btn-primary">
+                            <i class="fas fa-save"></i>
+                            <span data-translate="save_attendance">Guardar Asistencia</span>
+                        </button>
+                        <button id="cancelAttendanceBtn" class="btn-secondary">
+                            <i class="fas fa-times"></i>
+                            <span data-translate="cancel">Cancelar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Attendance List (for viewing attendance records) -->
+                <div id="attendanceList">
+                    <!-- Attendance records will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Grade Marking Section -->
+            <section id="grade-marking" class="content-section">
+                <div class="section-header">
+                    <h2 data-translate="grade_marking">Calificación de Estudiantes</h2>
+                    <div class="section-actions">
+                        <button id="backToStudentsBtn" class="btn-secondary">
+                            <i class="fas fa-arrow-left"></i>
+                            <span data-translate="back">Volver</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grade Marking Form -->
+                <div id="gradeMarkingView" style="display: none;">
+                    <div class="grade-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="gradeEvaluation" data-translate="evaluation">Evaluación:</label>
+                                <select id="gradeEvaluation" required>
+                                    <option value="" data-translate="select_evaluation">- Seleccionar Evaluación -</option>
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="gradeDate" data-translate="date">Fecha:</label>
+                                <input type="date" id="gradeDate" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="gradeNotes" data-translate="notes">Observaciones:</label>
+                            <textarea id="gradeNotes" rows="3" placeholder="Notas adicionales sobre la evaluación..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Students Table for Grade Marking -->
+                    <div class="grade-table-container">
+                        <table class="data-table grade-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Estudiante</th>
+                                    <th data-translate="grade">Calificación</th>
+                                    <th data-translate="status">Estado</th>
+                                    <th data-translate="actions">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gradeTableBody">
+                                <tr>
+                                    <td colspan="5" class="text-center">Seleccione una evaluación para ver los estudiantes</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grade-actions">
+                        <button id="saveGradesBtn" class="btn-primary">
+                            <i class="fas fa-save"></i>
+                            <span data-translate="save_grades">Guardar Calificaciones</span>
+                        </button>
+                        <button id="cancelGradesBtn" class="btn-secondary">
+                            <i class="fas fa-times"></i>
+                            <span data-translate="cancel">Cancelar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grade List (for viewing grade records) -->
+                <div id="gradeMarkingList">
+                    <!-- Grade records will be loaded here -->
+                </div>
+            </section>
 
             <!-- Repository Section -->
             <section id="repository" class="content-section">
@@ -449,49 +612,6 @@
         </div>
     </div>
 
-    <div id="gradeModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 data-translate="add_grade">Agregar Calificación</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <form id="gradeForm" class="modal-form">
-                <div class="form-group">
-                    <label for="gradeStudent" data-translate="student">Estudiante</label>
-                    <select id="gradeStudent" required>
-                        <!-- Options will be populated dynamically -->
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="gradeSubject" data-translate="subject">Materia</label>
-                    <select id="gradeSubject" required>
-                        <!-- Options will be populated dynamically -->
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="gradeValue" data-translate="grade_value">Calificación (0-100)</label>
-                    <input type="number" id="gradeValue" min="0" max="100" required>
-                </div>
-                <div class="form-group">
-                    <label for="gradeType" data-translate="type">Tipo</label>
-                    <select id="gradeType" required>
-                        <option value="exam" data-translate="exam">Examen</option>
-                        <option value="homework" data-translate="homework">Tarea</option>
-                        <option value="lab" data-translate="lab">Laboratorio</option>
-                        <option value="project" data-translate="project">Proyecto</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="gradeDescription" data-translate="description">Descripción</label>
-                    <input type="text" id="gradeDescription">
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
-                    <button type="submit" class="btn-primary" data-translate="save_grade">Guardar Calificación</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- Script Modules -->
     <script src="../scripts/translations.js"></script>
@@ -501,6 +621,7 @@
     <script src="../scripts/dashboard.js"></script>
     <script src="../scripts/students.js"></script>
     <script src="../scripts/grades.js"></script>
+    <script src="../scripts/attendance.js"></script>
     <script src="../scripts/unified-student-management.js"></script>
     <script src="../scripts/exams.js"></script>
     <script src="../scripts/repository.js"></script>

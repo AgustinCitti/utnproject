@@ -211,7 +211,7 @@ function handleStudentManagementSubsection(subsection) {
         btn.classList.remove('active');
     });
     
-    // Show the selected subsection content
+    // Show the selected subsection content and update button visibility
     if (subsection === 'students') {
         const studentsContent = document.getElementById('studentsTabContent');
         if (studentsContent) {
@@ -222,6 +222,9 @@ function handleStudentManagementSubsection(subsection) {
         if (studentsTab) {
             studentsTab.classList.add('active');
         }
+        // Show/hide appropriate action buttons for students
+        document.querySelectorAll('.students-only').forEach(btn => btn.style.display = 'flex');
+        document.querySelectorAll('.exams-only').forEach(btn => btn.style.display = 'none');
     } else if (subsection === 'exams') {
         const examsContent = document.getElementById('examsTabContent');
         if (examsContent) {
@@ -232,6 +235,9 @@ function handleStudentManagementSubsection(subsection) {
         if (examsTab) {
             examsTab.classList.add('active');
         }
+        // Show/hide appropriate action buttons for exams
+        document.querySelectorAll('.students-only').forEach(btn => btn.style.display = 'none');
+        document.querySelectorAll('.exams-only').forEach(btn => btn.style.display = 'flex');
     }
     
     // Update dropdown active state

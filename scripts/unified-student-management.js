@@ -115,7 +115,36 @@ function initializeUnifiedStudentManagement() {
 
     // Modal handlers
     setupModalHandlers('studentModal');
-    setupModalHandlers('gradeModal');
+    
+    // Grade marking functionality
+    const gradeEvaluationSelect = document.getElementById('gradeEvaluation');
+    const saveGradesBtn = document.getElementById('saveGradesBtn');
+    const cancelGradesBtn = document.getElementById('cancelGradesBtn');
+    const backToStudentsBtn = document.getElementById('backToStudentsBtn');
+    
+    if (gradeEvaluationSelect) {
+        gradeEvaluationSelect.addEventListener('change', () => {
+            loadStudentsForGradeMarking();
+        });
+    }
+    
+    if (saveGradesBtn) {
+        saveGradesBtn.addEventListener('click', () => {
+            saveGradesBulk();
+        });
+    }
+    
+    if (cancelGradesBtn) {
+        cancelGradesBtn.addEventListener('click', () => {
+            hideGradeMarkingView();
+        });
+    }
+    
+    if (backToStudentsBtn) {
+        backToStudentsBtn.addEventListener('click', () => {
+            showSection('student-management');
+        });
+    }
 
     // Initialize data
     populateSubjectFilter();
@@ -125,6 +154,12 @@ function initializeUnifiedStudentManagement() {
     // Set initial button visibility (students tab is active by default)
     document.querySelectorAll('.students-only').forEach(btn => btn.style.display = 'flex');
     document.querySelectorAll('.exams-only').forEach(btn => btn.style.display = 'none');
+    
+    // Set list view as default
+    switchToListView();
+    
+    // Set exams list view as default
+    switchToExamsListView();
 }
 
 function loadUnifiedStudentData() {
@@ -646,6 +681,225 @@ function switchToExamsListView() {
     document.getElementById('examsList').style.display = 'block';
     document.getElementById('examsGridViewBtn').classList.remove('active');
     document.getElementById('examsListViewBtn').classList.add('active');
+}
+
+// Grade Marking Functions
+function showGradeMarkingView() {
+    // Navigate to grade marking section and show the grade marking view
+    showSection('grade-marking');
+    
+    const gradeMarkingView = document.getElementById('gradeMarkingView');
+    const gradeMarkingList = document.getElementById('gradeMarkingList');
+    
+    if (gradeMarkingView) {
+        gradeMarkingView.style.display = 'block';
+        if (gradeMarkingList) {
+            gradeMarkingList.style.display = 'none';
+        }
+        
+        // Set current date
+        const dateInput = document.getElementById('gradeDate');
+        if (dateInput) {
+            dateInput.value = new Date().toISOString().split('T')[0];
+        }
+        
+        // Reset form
+        const notesInput = document.getElementById('gradeNotes');
+        if (notesInput) {
+            notesInput.value = '';
+        }
+        
+        const evaluationSelect = document.getElementById('gradeEvaluation');
+        if (evaluationSelect) {
+            evaluationSelect.value = '';
+        }
+        
+        // Clear student table
+        const tableBody = document.getElementById('gradeTableBody');
+        if (tableBody) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Seleccione una evaluación para ver los estudiantes</td></tr>';
+        }
+        
+        // Populate evaluation dropdown
+        populateEvaluationDropdown();
+    }
+}
+
+function populateEvaluationDropdown() {
+    const evaluationSelect = document.getElementById('gradeEvaluation');
+    if (!evaluationSelect) return;
+    
+    evaluationSelect.innerHTML = '<option value="" data-translate="select_evaluation">- Seleccionar Evaluación -</option>';
+    
+    appData.evaluacion.forEach(evaluation => {
+        const subject = appData.materia.find(s => s.ID_materia === evaluation.Materia_ID_materia);
+        const option = document.createElement('option');
+        option.value = evaluation.ID_evaluacion;
+        option.textContent = `${evaluation.Titulo} - ${subject ? subject.Nombre : 'Unknown Subject'}`;
+        evaluationSelect.appendChild(option);
+    });
+}
+
+function loadStudentsForGradeMarking() {
+    const evaluationSelect = document.getElementById('gradeEvaluation');
+    const tableBody = document.getElementById('gradeTableBody');
+    
+    if (!evaluationSelect || !tableBody) return;
+    
+    const selectedEvaluationId = parseInt(evaluationSelect.value);
+    
+    if (!selectedEvaluationId) {
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Seleccione una evaluación para ver los estudiantes</td></tr>';
+        return;
+    }
+    
+    const evaluation = appData.evaluacion.find(e => e.ID_evaluacion === selectedEvaluationId);
+    if (!evaluation) {
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Evaluación no encontrada</td></tr>';
+        return;
+    }
+    
+    // Get students enrolled in this subject
+    const enrolledStudentIds = appData.alumnos_x_materia
+        .filter(enrollment => enrollment.Materia_ID_materia === evaluation.Materia_ID_materia)
+        .map(enrollment => enrollment.Estudiante_ID_Estudiante);
+    
+    const enrolledStudents = appData.estudiante.filter(student => 
+        enrolledStudentIds.includes(student.ID_Estudiante)
+    );
+    
+    if (enrolledStudents.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No hay estudiantes inscritos en esta materia</td></tr>';
+        return;
+    }
+    
+    tableBody.innerHTML = enrolledStudents.map(student => {
+        // Get existing grade for this student and evaluation
+        const existingGrade = appData.notas.find(grade => 
+            grade.Estudiante_ID_Estudiante === student.ID_Estudiante && 
+            grade.Evaluacion_ID_evaluacion === selectedEvaluationId
+        );
+        
+        const currentGrade = existingGrade ? existingGrade.Calificacion : '';
+        const gradeClass = currentGrade >= 80 ? 'excellent' : currentGrade >= 60 ? 'good' : currentGrade > 0 ? 'poor' : '';
+        const status = existingGrade ? 'graded' : 'pending';
+        
+        return `
+            <tr data-student-id="${student.ID_Estudiante}">
+                <td class="student-id">${student.ID_Estudiante}</td>
+                <td class="student-name">${student.Apellido}, ${student.Nombre}</td>
+                <td class="grade-cell">
+                    <input type="number" 
+                           class="grade-input ${gradeClass}" 
+                           min="0" 
+                           max="100" 
+                           value="${currentGrade}"
+                           data-student-id="${student.ID_Estudiante}"
+                           placeholder="0-100">
+                </td>
+                <td class="status-cell">
+                    <span class="grade-status ${status}">${status === 'graded' ? 'Calificado' : 'Pendiente'}</span>
+                </td>
+                <td class="actions-cell">
+                    <button class="btn-icon btn-edit" onclick="editStudentGrade(${student.ID_Estudiante})" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    // Add event listeners to grade inputs
+    setupGradeInputListeners();
+}
+
+function setupGradeInputListeners() {
+    const gradeInputs = document.querySelectorAll('.grade-input');
+    
+    gradeInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const grade = parseInt(this.value);
+            this.classList.remove('excellent', 'good', 'poor');
+            
+            if (grade >= 80) {
+                this.classList.add('excellent');
+            } else if (grade >= 60) {
+                this.classList.add('good');
+            } else if (grade > 0) {
+                this.classList.add('poor');
+            }
+        });
+    });
+}
+
+function saveGradesBulk() {
+    const evaluationSelect = document.getElementById('gradeEvaluation');
+    const dateInput = document.getElementById('gradeDate');
+    const notesInput = document.getElementById('gradeNotes');
+    
+    const selectedEvaluationId = parseInt(evaluationSelect.value);
+    const gradeDate = dateInput.value;
+    const notes = notesInput.value;
+    
+    // Validation
+    if (!selectedEvaluationId || !gradeDate) {
+        alert('Por favor complete todos los campos requeridos.');
+        return;
+    }
+    
+    const tableRows = document.querySelectorAll('#gradeTableBody tr[data-student-id]');
+    let gradesSaved = 0;
+    
+    tableRows.forEach(row => {
+        const studentId = parseInt(row.dataset.studentId);
+        const gradeInput = row.querySelector('.grade-input');
+        const grade = parseInt(gradeInput.value);
+        
+        if (grade >= 0 && grade <= 100) {
+            // Check if grade already exists
+            const existingIndex = appData.notas.findIndex(grade => 
+                grade.Estudiante_ID_Estudiante === studentId && 
+                grade.Evaluacion_ID_evaluacion === selectedEvaluationId
+            );
+            
+            const gradeRecord = {
+                ID_Nota: existingIndex >= 0 ? appData.notas[existingIndex].ID_Nota : Date.now(),
+                Estudiante_ID_Estudiante: studentId,
+                Evaluacion_ID_evaluacion: selectedEvaluationId,
+                Calificacion: grade,
+                Fecha_calificacion: gradeDate,
+                Observacion: notes || ''
+            };
+            
+            if (existingIndex >= 0) {
+                appData.notas[existingIndex] = gradeRecord;
+            } else {
+                appData.notas.push(gradeRecord);
+            }
+            
+            gradesSaved++;
+        }
+    });
+    
+    if (gradesSaved > 0) {
+        saveData();
+        showNotification(`${gradesSaved} calificaciones guardadas exitosamente`, 'success');
+        loadStudentsForGradeMarking(); // Refresh the table
+    } else {
+        alert('No se guardaron calificaciones. Verifique que las calificaciones estén entre 0 y 100.');
+    }
+}
+
+function hideGradeMarkingView() {
+    const gradeMarkingView = document.getElementById('gradeMarkingView');
+    const gradeMarkingList = document.getElementById('gradeMarkingList');
+    
+    if (gradeMarkingView) {
+        gradeMarkingView.style.display = 'none';
+        if (gradeMarkingList) {
+            gradeMarkingList.style.display = 'block';
+        }
+    }
 }
 
 // Override the original load functions to use unified data

@@ -142,7 +142,12 @@
 /* Hide mobile-only elements on desktop */
 @media (min-width: 768px) {
     .mobile-only {
-        display: none;
+        display: none !important;
+    }
+    
+    /* Specifically hide tab navigation on desktop */
+    .tab-navigation.mobile-only {
+        display: none !important;
     }
 }
 
@@ -1016,4 +1021,342 @@
 .notification-date {
     font-size: 0.9rem;
     color: #666;
+}
+
+/* Attendance Section Styles */
+.attendance-form {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.attendance-table-container {
+    margin: 20px 0;
+    overflow-x: auto;
+}
+
+.attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.attendance-table th {
+    background: #f8f9fa;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.attendance-table td {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.status-cell {
+    text-align: center;
+}
+
+.status-btn {
+    background: none;
+    border: 2px solid #dee2e6;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-btn:hover {
+    border-color: #007bff;
+    background: #f8f9fa;
+}
+
+.status-btn.active {
+    background: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+
+.present-btn.active {
+    background: #28a745;
+    border-color: #28a745;
+}
+
+.absent-btn.active {
+    background: #dc3545;
+    border-color: #dc3545;
+}
+
+.absences-count {
+    font-weight: 600;
+    color: #dc3545;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-badge.habilitado {
+    background: #d4edda;
+    color: #155724;
+}
+
+.attendance-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.attendance-summary-card {
+    margin-bottom: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.attendance-summary-card .card-header {
+    background: #f8f9fa;
+    padding: 15px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.attendance-summary-card .card-content {
+    padding: 15px;
+}
+
+.attendance-summary-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.attendance-summary-card li {
+    padding: 5px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.attendance-summary-card li:last-child {
+    border-bottom: none;
+}
+
+.status-badge.present {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.absent {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Responsive adjustments for attendance */
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .attendance-actions {
+        flex-direction: column;
+    }
+    
+    .attendance-table {
+        font-size: 0.9rem;
+    }
+    
+    .status-btn {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+/* Grade Marking Section Styles */
+.grade-form {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.grade-table-container {
+    margin: 20px 0;
+    overflow-x: auto;
+}
+
+.grade-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.grade-table th {
+    background: #f8f9fa;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.grade-table td {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.grade-input {
+    width: 80px;
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.grade-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.grade-input.excellent {
+    background: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+}
+
+.grade-input.good {
+    background: #fff3cd;
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.grade-input.poor {
+    background: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.grade-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.grade-status.graded {
+    background: #d4edda;
+    color: #155724;
+}
+
+.grade-status.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.grade-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.grade-summary-card {
+    margin-bottom: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.grade-summary-card .card-header {
+    background: #f8f9fa;
+    padding: 15px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.grade-summary-card .card-content {
+    padding: 15px;
+}
+
+.grade-summary-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.grade-summary-card li {
+    padding: 5px 0;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.grade-summary-card li:last-child {
+    border-bottom: none;
+}
+
+.grade-value {
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.grade-value.excellent {
+    background: #d4edda;
+    color: #155724;
+}
+
+.grade-value.good {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.grade-value.poor {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Responsive adjustments for grade marking */
+@media (max-width: 768px) {
+    .grade-actions {
+        flex-direction: column;
+    }
+    
+    .grade-table {
+        font-size: 0.9rem;
+    }
+    
+    .grade-input {
+        width: 60px;
+        padding: 6px;
+    }
 }
