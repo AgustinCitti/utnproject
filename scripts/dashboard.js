@@ -207,8 +207,18 @@ function getNextTwoClasses() {
     const teachers = appData.usuarios_docente || [];
     const allClasses = [];
 
+    // Get current user ID to filter subjects
+    const currentUserId = localStorage.getItem('userId');
+    if (!currentUserId) {
+        console.log('No current user found, showing no classes');
+        return [];
+    }
+
     subjects.forEach(subject => {
         if (!subject.Horario || subject.Estado !== 'ACTIVA') return;
+        
+        // Only show classes for subjects assigned to the current user
+        if (subject.Usuarios_docente_ID_docente !== parseInt(currentUserId)) return;
 
         const schedule = parseSchedule(subject.Horario);
         if (!schedule) return;
