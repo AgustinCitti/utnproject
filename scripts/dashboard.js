@@ -430,6 +430,10 @@ function getEvaluationTypeLabel(type) {
 
 // Calendar System
 let calendarInitialized = false;
+let currentView = 'month'; // 'month' or 'week'
+let currentWeekStart = null;
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
 
 function initializeCalendar() {
     if (calendarInitialized) return;
@@ -438,13 +442,19 @@ function initializeCalendar() {
     const calendarGrid = document.getElementById('calendarGrid');
     const prevMonthBtn = document.getElementById('prevMonth');
     const nextMonthBtn = document.getElementById('nextMonth');
+    const toggleButtons = document.querySelectorAll('.toggle-btn');
 
     if (!currentMonthElement || !calendarGrid) return;
 
     calendarInitialized = true;
-    let currentDate = new Date();
-    let currentMonth = currentDate.getMonth();
-    let currentYear = currentDate.getFullYear();
+    // Use global variables for month and year
+    
+    // Initialize current week start (Monday of current week)
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Adjust for Sunday = 0
+    currentWeekStart = new Date(today);
+    currentWeekStart.setDate(today.getDate() + mondayOffset);
 
     const monthNames = {
         es: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -454,10 +464,23 @@ function initializeCalendar() {
     };
 
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayNamesShort = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
     function renderCalendar() {
+        if (currentView === 'month') {
+            renderMonthView();
+        } else {
+            renderWeekView();
+        }
+    }
+    
+    // Make renderCalendar globally accessible
+    window.renderCalendar = renderCalendar;
+
+    function renderMonthView() {
         currentMonthElement.textContent = `${monthNames[currentLanguage][currentMonth]} ${currentYear}`;
         calendarGrid.innerHTML = '';
+        calendarGrid.classList.remove('week-view');
 
         // Add day headers
         dayNames.forEach(day => {
@@ -476,15 +499,57 @@ function initializeCalendar() {
         for (let i = firstDay - 1; i >= 0; i--) {
             const dayElement = document.createElement('div');
             dayElement.className = 'calendar-day other-month';
-            dayElement.textContent = daysInPrevMonth - i;
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = daysInPrevMonth - i;
+            dayElement.appendChild(dayNumber);
             calendarGrid.appendChild(dayElement);
         }
 
         // Add current month's days
         for (let day = 1; day <= daysInMonth; day++) {
+            const dayDate = new Date(currentYear, currentMonth, day);
             const dayElement = document.createElement('div');
             dayElement.className = 'calendar-day';
-            dayElement.textContent = day;
+            
+            // Add day number
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = day;
+            dayElement.appendChild(dayNumber);
+            
+            // Add events container
+            const eventsContainer = document.createElement('div');
+            eventsContainer.className = 'day-events';
+            
+            // Get events for this day
+            const dayEvents = getEventsForDate(dayDate);
+            dayEvents.forEach(event => {
+                const eventElement = document.createElement('div');
+                let className = `event-item ${event.type}`;
+                
+                // Add special styling for recordatorios not belonging to user's subjects
+                if (event.type === 'recordatorio' && event.isUserSubject === false) {
+                    className += ' other-subject';
+                }
+                
+                eventElement.className = className;
+                eventElement.innerHTML = `
+                    <div class="event-time">${event.time}</div>
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-type">${event.typeLabel}</div>
+                    ${event.subject ? `<div class="event-subject">${event.subject}</div>` : ''}
+                `;
+                
+                // Add click interaction
+                eventElement.addEventListener('click', function() {
+                    showEventDetails(event, dayDate);
+                });
+                
+                eventsContainer.appendChild(eventElement);
+            });
+            
+            dayElement.appendChild(eventsContainer);
 
             // Highlight today
             const today = new Date();
@@ -503,17 +568,112 @@ function initializeCalendar() {
         for (let day = 1; day <= remainingCells; day++) {
             const dayElement = document.createElement('div');
             dayElement.className = 'calendar-day other-month';
-            dayElement.textContent = day;
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = day;
+            dayElement.appendChild(dayNumber);
             calendarGrid.appendChild(dayElement);
         }
     }
 
+    function renderWeekView() {
+        const weekEnd = new Date(currentWeekStart);
+        weekEnd.setDate(currentWeekStart.getDate() + 6);
+        
+        const weekStartMonth = currentWeekStart.getMonth();
+        const weekStartYear = currentWeekStart.getFullYear();
+        const weekEndMonth = weekEnd.getMonth();
+        const weekEndYear = weekEnd.getFullYear();
+        
+        let headerText;
+        if (weekStartMonth === weekEndMonth) {
+            headerText = `${monthNames[currentLanguage][weekStartMonth]} ${weekStartYear}`;
+        } else {
+            headerText = `${monthNames[currentLanguage][weekStartMonth]} ${weekStartYear} - ${monthNames[currentLanguage][weekEndMonth]} ${weekEndYear}`;
+        }
+        
+        currentMonthElement.textContent = headerText;
+        calendarGrid.innerHTML = '';
+        calendarGrid.classList.add('week-view');
+
+        // Add day headers
+        dayNamesShort.forEach(day => {
+            const dayHeader = document.createElement('div');
+            dayHeader.className = 'calendar-day-header';
+            dayHeader.textContent = day;
+            calendarGrid.appendChild(dayHeader);
+        });
+
+        // Add week days with events
+        for (let i = 0; i < 7; i++) {
+            const dayDate = new Date(currentWeekStart);
+            dayDate.setDate(currentWeekStart.getDate() + i);
+            
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day';
+            
+            // Add day number
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = dayDate.getDate();
+            dayElement.appendChild(dayNumber);
+            
+            // Add events container
+            const eventsContainer = document.createElement('div');
+            eventsContainer.className = 'day-events';
+            
+            // Get events for this day
+            const dayEvents = getEventsForDate(dayDate);
+            console.log(`Events for ${dayDate.toDateString()}:`, dayEvents);
+            dayEvents.forEach(event => {
+                const eventElement = document.createElement('div');
+                let className = `event-item ${event.type}`;
+                
+                // Add special styling for recordatorios not belonging to user's subjects
+                if (event.type === 'recordatorio' && event.isUserSubject === false) {
+                    className += ' other-subject';
+                }
+                
+                eventElement.className = className;
+                eventElement.innerHTML = `
+                    <div class="event-time">${event.time}</div>
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-type">${event.typeLabel}</div>
+                    ${event.subject ? `<div class="event-subject">${event.subject}</div>` : ''}
+                `;
+                
+                // Add click interaction
+                eventElement.addEventListener('click', function() {
+                    showEventDetails(event, dayDate);
+                });
+                
+                eventsContainer.appendChild(eventElement);
+            });
+            
+            dayElement.appendChild(eventsContainer);
+
+            // Highlight today
+            const today = new Date();
+            if (dayDate.toDateString() === today.toDateString()) {
+                dayElement.classList.add('today');
+            }
+
+            calendarGrid.appendChild(dayElement);
+        }
+    }
+
+    // Navigation button event listeners
     if (prevMonthBtn) {
         prevMonthBtn.addEventListener('click', function() {
-            currentMonth--;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
+            if (currentView === 'month') {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+            } else {
+                // Week view: go to previous week
+                currentWeekStart.setDate(currentWeekStart.getDate() - 7);
             }
             renderCalendar();
         });
@@ -521,16 +681,161 @@ function initializeCalendar() {
 
     if (nextMonthBtn) {
         nextMonthBtn.addEventListener('click', function() {
-            currentMonth++;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
+            if (currentView === 'month') {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+            } else {
+                // Week view: go to next week
+                currentWeekStart.setDate(currentWeekStart.getDate() + 7);
             }
             renderCalendar();
         });
     }
 
+    // Toggle button event listeners
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const view = this.getAttribute('data-view');
+            
+            // Update active button
+            toggleButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update current view
+            currentView = view;
+            
+            // If switching to week view, set current week start to current date
+            if (view === 'week') {
+                const today = new Date();
+                const dayOfWeek = today.getDay();
+                const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+                currentWeekStart = new Date(today);
+                currentWeekStart.setDate(today.getDate() + mondayOffset);
+            }
+            
+            renderCalendar();
+        });
+    });
+
     renderCalendar();
+}
+
+function getEventsForDate(date) {
+    const events = [];
+    const dateStr = formatDateForAPI(date);
+    const currentUserId = localStorage.getItem('userId');
+    
+    if (!currentUserId) {
+        return events;
+    }
+    
+    // Get recordatorios for this date
+    const recordatorios = appData.recordatorio || [];
+    
+    recordatorios.forEach(recordatorio => {
+        if (recordatorio.Fecha === dateStr) {
+            // Get the subject name
+            const subject = appData.materia.find(m => m.ID_materia === recordatorio.Materia_ID_materia);
+            const subjectName = subject ? subject.Nombre : 'Materia no encontrada';
+            
+            // Check if this recordatorio is for a subject taught by the current user
+            const isUserSubject = subject && subject.Usuarios_docente_ID_docente === parseInt(currentUserId);
+            
+            // Always show recordatorios, but with different styling based on ownership
+            events.push({
+                type: 'recordatorio',
+                typeLabel: 'Recordatorio',
+                title: recordatorio.Descripcion,
+                time: getTimeFromRecordatorio(recordatorio),
+                priority: recordatorio.Prioridad,
+                subject: subjectName,
+                isUserSubject: isUserSubject,
+                recordatorioType: recordatorio.Tipo
+            });
+        }
+    });
+    
+    // Get classes for this date
+    const subjects = appData.materia || [];
+    subjects.forEach(subject => {
+        if (subject.Usuarios_docente_ID_docente !== parseInt(currentUserId)) return;
+        
+        const schedule = parseSchedule(subject.Horario);
+        if (!schedule) return;
+        
+        if (schedule.days.includes(date.getDay())) {
+            events.push({
+                type: 'clase',
+                typeLabel: 'Clase',
+                title: subject.Nombre,
+                time: schedule.startTime,
+                subject: subject.Nombre,
+                classroom: subject.Aula || 'Aula por asignar'
+            });
+        }
+    });
+    
+    // Get evaluations for this date
+    const evaluaciones = appData.evaluacion || [];
+    evaluaciones.forEach(evaluacion => {
+        if (evaluacion.Fecha === dateStr) {
+            const subject = appData.materia.find(m => m.ID_materia === evaluacion.Materia_ID_materia);
+            const subjectName = subject ? subject.Nombre : 'Materia no encontrada';
+            
+            events.push({
+                type: 'evaluacion',
+                typeLabel: evaluacion.Tipo,
+                title: evaluacion.Titulo,
+                time: '09:00', // Default time for evaluations
+                subject: subjectName
+            });
+        }
+    });
+    
+    // Sort events by time
+    return events.sort((a, b) => {
+        const timeA = a.time || '00:00';
+        const timeB = b.time || '00:00';
+        return timeA.localeCompare(timeB);
+    });
+}
+
+function formatDateForAPI(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getTimeFromRecordatorio(recordatorio) {
+    // For recordatorios, we'll use a default time based on priority
+    const priorityTimes = {
+        'ALTA': '08:00',
+        'MEDIA': '10:00',
+        'BAJA': '14:00'
+    };
+    return priorityTimes[recordatorio.Prioridad] || '09:00';
+}
+
+function showEventDetails(event, date) {
+    const eventDetails = {
+        recordatorio: () => {
+            alert(`📝 Recordatorio\n\n${event.title}\n\n📅 Fecha: ${formatDate(date)}\n⏰ Hora: ${event.time}\n📚 Materia: ${event.subject}\n🎯 Prioridad: ${event.priority}`);
+        },
+        clase: () => {
+            alert(`📚 Clase\n\n${event.title}\n\n📅 Fecha: ${formatDate(date)}\n⏰ Hora: ${event.time}\n🏫 Aula: ${event.classroom}`);
+        },
+        evaluacion: () => {
+            alert(`📝 Evaluación\n\n${event.title}\n\n📅 Fecha: ${formatDate(date)}\n⏰ Hora: ${event.time}\n📚 Materia: ${event.subject}\n📋 Tipo: ${event.typeLabel}`);
+        }
+    };
+    
+    if (eventDetails[event.type]) {
+        eventDetails[event.type]();
+    }
 }
 
 function updateCalendar() {
@@ -538,3 +843,330 @@ function updateCalendar() {
         initializeCalendar();
     }
 }
+
+// Debug function to test recordatorios
+window.testRecordatorios = function() {
+    console.log('=== RECORDATORIOS DEBUG ===');
+    console.log('Available recordatorios:', appData.recordatorio);
+    console.log('Current user ID from localStorage:', localStorage.getItem('userId'));
+    console.log('Available subjects:', appData.materia);
+    
+    // Show which subjects belong to current user
+    const currentUserId = localStorage.getItem('userId');
+    const userSubjects = appData.materia.filter(m => m.Usuarios_docente_ID_docente === parseInt(currentUserId));
+    console.log('User subjects:', userSubjects);
+    
+    // Test with a specific date that has recordatorios
+    const testDate = new Date('2024-12-20');
+    console.log('Testing with date:', testDate);
+    const events = getEventsForDate(testDate);
+    console.log('Events found:', events);
+    
+    // Test with another date
+    const testDate2 = new Date('2024-12-25');
+    console.log('Testing with date:', testDate2);
+    const events2 = getEventsForDate(testDate2);
+    console.log('Events found:', events2);
+    
+    // Show all recordatorios with their subject assignments
+    console.log('All recordatorios with subjects:');
+    appData.recordatorio.forEach(recordatorio => {
+        const subject = appData.materia.find(m => m.ID_materia === recordatorio.Materia_ID_materia);
+        console.log(`- ${recordatorio.Descripcion} (${recordatorio.Fecha}) -> Subject: ${subject?.Nombre} (Teacher: ${subject?.Usuarios_docente_ID_docente})`);
+    });
+    
+    // Test the notifications system filtering
+    console.log('=== NOTIFICATIONS SYSTEM TEST ===');
+    if (typeof getRecordatoriosForDocente === 'function') {
+        const notificationsRecordatorios = getRecordatoriosForDocente(parseInt(currentUserId));
+        console.log('Recordatorios from notifications system:', notificationsRecordatorios);
+    } else {
+        console.log('getRecordatoriosForDocente function not available');
+    }
+};
+
+// Function to navigate to a specific week with recordatorios
+window.goToWeekWithRecordatorios = function() {
+    // Set the calendar to show the week of December 20, 2024 (which has recordatorios)
+    currentWeekStart = new Date('2024-12-16'); // Monday of that week
+    currentView = 'week';
+    
+    // Update the toggle buttons
+    const toggleButtons = document.querySelectorAll('.toggle-btn');
+    toggleButtons.forEach(btn => btn.classList.remove('active'));
+    const weekButton = document.querySelector('[data-view="week"]');
+    if (weekButton) weekButton.classList.add('active');
+    
+    // Re-render the calendar
+    renderCalendar();
+    
+    console.log('Navigated to week with recordatorios:', currentWeekStart);
+};
+
+// Simple test function to check recordatorios
+window.testSimpleRecordatorios = function() {
+    console.log('=== SIMPLE RECORDATORIOS TEST ===');
+    console.log('All recordatorios in data:', appData.recordatorio);
+    console.log('Current user ID:', localStorage.getItem('userId'));
+    
+    // Test date formatting
+    const testDate = new Date('2024-12-20');
+    const formattedDate = formatDateForAPI(testDate);
+    console.log('Test date:', testDate, 'Formatted:', formattedDate);
+    
+    // Check if any recordatorios match this date
+    const matchingRecordatorios = appData.recordatorio.filter(r => r.Fecha === formattedDate);
+    console.log('Matching recordatorios for 2024-12-20:', matchingRecordatorios);
+    
+    // Test the getEventsForDate function directly
+    const events = getEventsForDate(testDate);
+    console.log('Events returned by getEventsForDate:', events);
+};
+
+// Function to test calendar with recordatorios
+window.testCalendarWithRecordatorios = function() {
+    console.log('=== CALENDAR RECORDATORIOS TEST ===');
+    
+    // Set user ID to 1 (Ana Martínez) for testing
+    localStorage.setItem('userId', '1');
+    console.log('Set user ID to 1 for testing');
+    
+    // Navigate to December 2024 where recordatorios exist
+    currentMonth = 11; // December (0-indexed)
+    currentYear = 2024;
+    currentView = 'month';
+    
+    // Re-render calendar
+    if (typeof renderCalendar === 'function') {
+        renderCalendar();
+    } else {
+        // Re-initialize calendar
+        calendarInitialized = false;
+        initializeCalendar();
+    }
+    
+    console.log('Calendar should now show December 2024 with recordatorios');
+    console.log('Look for recordatorios on dates like 2024-12-20, 2024-12-21, etc.');
+    
+    // Test specific dates with recordatorios
+    const testDates = [
+        new Date('2024-12-20'),
+        new Date('2024-12-21'),
+        new Date('2024-12-22'),
+        new Date('2024-12-24'),
+        new Date('2024-12-25')
+    ];
+    
+    testDates.forEach(date => {
+        const events = getEventsForDate(date);
+        console.log(`Events for ${date.toDateString()}:`, events);
+    });
+};
+
+// Debug function to check recordatorios filtering
+window.debugRecordatorios = function() {
+    console.log('=== RECORDATORIOS DEBUG ===');
+    console.log('Current user ID:', localStorage.getItem('userId'));
+    console.log('All recordatorios:', appData.recordatorio);
+    
+    // Check which subjects belong to current user
+    const currentUserId = parseInt(localStorage.getItem('userId'));
+    const userSubjects = appData.materia.filter(m => m.Usuarios_docente_ID_docente === currentUserId);
+    console.log('User subjects:', userSubjects);
+    
+    // Check recordatorios for December 20, 2024
+    const testDate = new Date('2024-12-20');
+    const dateStr = formatDateForAPI(testDate);
+    console.log('Test date string:', dateStr);
+    
+    const matchingRecordatorios = appData.recordatorio.filter(r => r.Fecha === dateStr);
+    console.log('Recordatorios for 2024-12-20:', matchingRecordatorios);
+    
+    // Check which subjects these recordatorios belong to
+    matchingRecordatorios.forEach(recordatorio => {
+        const subject = appData.materia.find(m => m.ID_materia === recordatorio.Materia_ID_materia);
+        const isUserSubject = subject && subject.Usuarios_docente_ID_docente === currentUserId;
+        console.log(`Recordatorio: ${recordatorio.Descripcion}`);
+        console.log(`  Subject: ${subject?.Nombre} (ID: ${recordatorio.Materia_ID_materia})`);
+        console.log(`  Teacher: ${subject?.Usuarios_docente_ID_docente}`);
+        console.log(`  Is user's subject: ${isUserSubject}`);
+    });
+    
+    // Test getEventsForDate function
+    const events = getEventsForDate(testDate);
+    console.log('Events returned by getEventsForDate:', events);
+};
+
+// Quick function to navigate to December 2024 and show recordatorios
+window.showDecemberRecordatorios = function() {
+    console.log('=== SHOWING DECEMBER 2024 RECORDATORIOS ===');
+    
+    // Set user ID to 1 (Ana Martínez)
+    localStorage.setItem('userId', '1');
+    
+    // Navigate to December 2024
+    currentMonth = 11; // December (0-indexed)
+    currentYear = 2024;
+    currentView = 'month';
+    
+    // Re-render calendar with new date
+    renderCalendar();
+    
+    console.log('Calendar should now show December 2024');
+    console.log('Look for recordatorios on these dates:');
+    console.log('- Dec 20: "Revisar ejercicios de álgebra para la próxima clase"');
+    console.log('- Dec 21: "Calificar exámenes de matemática"');
+    console.log('- Dec 22: "Preparar material para laboratorio de física"');
+    console.log('- Dec 24: "Reunión de coordinación académica"');
+    console.log('- Dec 25: "Examen parcial de mecánica clásica"');
+    console.log('- Dec 26: "Preparar presentación sobre genética"');
+    console.log('- Dec 27: "Preparar material didáctico para física"');
+    console.log('- Dec 28: "Entrega de informe de laboratorio de química"');
+    console.log('- Dec 29: "Revisar protocolos de seguridad en laboratorio"');
+    console.log('- Dec 30: "Examen final de biología"');
+    console.log('- Dec 31: "Evento de cierre de año académico"');
+};
+
+// Function to navigate to a specific month and year
+window.navigateToMonth = function(month, year) {
+    currentMonth = month;
+    currentYear = year;
+    renderCalendar();
+    console.log(`Navigated to ${month + 1}/${year}`);
+};
+
+// Simple function to test recordatorios display
+window.testRecordatoriosDisplay = function() {
+    console.log('=== TESTING RECORDATORIOS DISPLAY ===');
+    
+    // Set user ID
+    localStorage.setItem('userId', '1');
+    
+    // Navigate to December 2024
+    currentMonth = 11; // December
+    currentYear = 2024;
+    
+    // Re-render calendar
+    if (typeof renderCalendar === 'function') {
+        renderCalendar();
+    } else {
+        console.log('renderCalendar function not available, re-initializing calendar');
+        calendarInitialized = false;
+        initializeCalendar();
+    }
+    
+    // Test a specific date with recordatorios
+    const testDate = new Date('2024-12-20');
+    const events = getEventsForDate(testDate);
+    console.log('Events for Dec 20, 2024:', events);
+    
+    console.log('Calendar should now show December 2024 with recordatorios');
+};
+
+// Function to navigate to January 2025 with new recordatorios
+window.showJanuaryRecordatorios = function() {
+    console.log('=== SHOWING JANUARY 2025 RECORDATORIOS ===');
+    
+    // Set user ID
+    localStorage.setItem('userId', '1');
+    
+    // Navigate to January 2025
+    currentMonth = 0; // January (0-indexed)
+    currentYear = 2025;
+    currentView = 'month';
+    
+    // Re-render calendar
+    if (typeof renderCalendar === 'function') {
+        renderCalendar();
+    } else {
+        console.log('renderCalendar function not available, re-initializing calendar');
+        calendarInitialized = false;
+        initializeCalendar();
+    }
+    
+    console.log('Calendar should now show January 2025 with recordatorios');
+    console.log('Look for recordatorios on these dates:');
+    console.log('- Jan 15: "Revisar tareas de matemática para mañana"');
+    console.log('- Jan 16: "Preparar experimento de física para la próxima clase"');
+    console.log('- Jan 17: "Corregir exámenes de química"');
+    console.log('- Jan 18: "Preparar material de biología celular"');
+    console.log('- Jan 20: "Reunión de coordinación de materias"');
+    console.log('- Jan 22: "Examen parcial de matemática"');
+    console.log('- Jan 23: "Laboratorio de física - preparar equipos"');
+    console.log('- Jan 24: "Entrega de informe de química"');
+    console.log('- Jan 25: "Presentación de proyectos de biología"');
+    console.log('- And many more throughout January...');
+};
+
+// Function to navigate to October 2025 with recordatorios
+window.showOctoberRecordatorios = function() {
+    console.log('=== SHOWING OCTOBER 2025 RECORDATORIOS ===');
+    
+    // Set user ID
+    localStorage.setItem('userId', '1');
+    
+    // Navigate to October 2025
+    currentMonth = 9; // October (0-indexed)
+    currentYear = 2025;
+    currentView = 'month';
+    
+    // Re-render calendar
+    if (typeof renderCalendar === 'function') {
+        renderCalendar();
+    } else {
+        console.log('renderCalendar function not available, re-initializing calendar');
+        calendarInitialized = false;
+        initializeCalendar();
+    }
+    
+    console.log('Calendar should now show October 2025 with recordatorios');
+    console.log('Look for recordatorios on these dates:');
+    console.log('- Oct 5: "Preparar examen parcial de matemática"');
+    console.log('- Oct 7: "Revisar ejercicios de física para la próxima clase"');
+    console.log('- Oct 10: "Preparar material de laboratorio de química"');
+    console.log('- Oct 12: "Corregir trabajos de biología"');
+    console.log('- Oct 15: "Reunión de coordinación académica"');
+    console.log('- Oct 18: "Examen parcial de física"');
+    console.log('- Oct 20: "Entrega de informe de química"');
+    console.log('- Oct 22: "Preparar presentación de biología"');
+    console.log('- Oct 25: "Revisar ejercicios de álgebra"');
+    console.log('- Oct 28: "Preparar experimento de física"');
+    console.log('- Oct 30: "Calificar exámenes de química"');
+};
+
+// Function to navigate to November 2025 with recordatorios
+window.showNovemberRecordatorios = function() {
+    console.log('=== SHOWING NOVEMBER 2025 RECORDATORIOS ===');
+    
+    // Set user ID
+    localStorage.setItem('userId', '1');
+    
+    // Navigate to November 2025
+    currentMonth = 10; // November (0-indexed)
+    currentYear = 2025;
+    currentView = 'month';
+    
+    // Re-render calendar
+    if (typeof renderCalendar === 'function') {
+        renderCalendar();
+    } else {
+        console.log('renderCalendar function not available, re-initializing calendar');
+        calendarInitialized = false;
+        initializeCalendar();
+    }
+    
+    console.log('Calendar should now show November 2025 with recordatorios');
+    console.log('Look for recordatorios on these dates:');
+    console.log('- Nov 2: "Preparar material de biología celular"');
+    console.log('- Nov 5: "Revisar ejercicios de cálculo"');
+    console.log('- Nov 8: "Laboratorio de física - preparar equipos"');
+    console.log('- Nov 10: "Entrega de proyecto de química"');
+    console.log('- Nov 12: "Examen final de biología"');
+    console.log('- Nov 15: "Reunión de evaluación de materias"');
+    console.log('- Nov 18: "Preparar examen final de matemática"');
+    console.log('- Nov 20: "Revisar ejercicios de física"');
+    console.log('- Nov 22: "Preparar material didáctico de química"');
+    console.log('- Nov 25: "Actualizar bibliografía de biología"');
+    console.log('- Nov 27: "Revisar ejercicios de álgebra avanzada"');
+    console.log('- Nov 29: "Preparar examen final de física"');
+};

@@ -1854,6 +1854,339 @@
       "Prioridad": "MEDIA",
       "Materia_ID_materia": 1,
       "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 16,
+      "Descripcion": "Revisar tareas de matemática para mañana",
+      "Fecha": "2025-01-15",
+      "Tipo": "CLASE",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 17,
+      "Descripcion": "Preparar experimento de física para la próxima clase",
+      "Fecha": "2025-01-16",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 2,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 18,
+      "Descripcion": "Corregir exámenes de química",
+      "Fecha": "2025-01-17",
+      "Tipo": "CLASE",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 3,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 19,
+      "Descripcion": "Preparar material de biología celular",
+      "Fecha": "2025-01-18",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 4,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 20,
+      "Descripcion": "Reunión de coordinación de materias",
+      "Fecha": "2025-01-20",
+      "Tipo": "REUNION",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 21,
+      "Descripcion": "Examen parcial de matemática",
+      "Fecha": "2025-01-22",
+      "Tipo": "EXAMEN",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 22,
+      "Descripcion": "Laboratorio de física - preparar equipos",
+      "Fecha": "2025-01-23",
+      "Tipo": "CLASE",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 2,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 23,
+      "Descripcion": "Entrega de informe de química",
+      "Fecha": "2025-01-24",
+      "Tipo": "ENTREGA",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 3,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 24,
+      "Descripcion": "Presentación de proyectos de biología",
+      "Fecha": "2025-01-25",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 4,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 25,
+      "Descripcion": "Revisar ejercicios de álgebra avanzada",
+      "Fecha": "2025-01-27",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 26,
+      "Descripcion": "Preparar material didáctico de física",
+      "Fecha": "2025-01-28",
+      "Tipo": "CLASE",
+      "Prioridad": "BAJA",
+      "Materia_ID_materia": 2,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 27,
+      "Descripcion": "Calificar trabajos prácticos de química",
+      "Fecha": "2025-01-29",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 3,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 28,
+      "Descripcion": "Actualizar bibliografía de biología",
+      "Fecha": "2025-01-30",
+      "Tipo": "CLASE",
+      "Prioridad": "BAJA",
+      "Materia_ID_materia": 4,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 29,
+      "Descripcion": "Reunión de evaluación académica",
+      "Fecha": "2025-01-31",
+      "Tipo": "REUNION",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 30,
+      "Descripcion": "Preparar examen parcial de matemática",
+      "Fecha": "2025-10-05",
+      "Tipo": "EXAMEN",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 31,
+      "Descripcion": "Revisar ejercicios de física para la próxima clase",
+      "Fecha": "2025-10-07",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 2,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 32,
+      "Descripcion": "Preparar material de laboratorio de química",
+      "Fecha": "2025-10-10",
+      "Tipo": "CLASE",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 3,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 33,
+      "Descripcion": "Corregir trabajos de biología",
+      "Fecha": "2025-10-12",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 4,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 34,
+      "Descripcion": "Reunión de coordinación académica",
+      "Fecha": "2025-10-15",
+      "Tipo": "REUNION",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 35,
+      "Descripcion": "Examen parcial de física",
+      "Fecha": "2025-10-18",
+      "Tipo": "EXAMEN",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 2,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 36,
+      "Descripcion": "Entrega de informe de química",
+      "Fecha": "2025-10-20",
+      "Tipo": "ENTREGA",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 3,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 37,
+      "Descripcion": "Preparar presentación de biología",
+      "Fecha": "2025-10-22",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 4,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 38,
+      "Descripcion": "Revisar ejercicios de álgebra",
+      "Fecha": "2025-10-25",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 39,
+      "Descripcion": "Preparar experimento de física",
+      "Fecha": "2025-10-28",
+      "Tipo": "CLASE",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 2,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 40,
+      "Descripcion": "Calificar exámenes de química",
+      "Fecha": "2025-10-30",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 3,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 41,
+      "Descripcion": "Preparar material de biología celular",
+      "Fecha": "2025-11-02",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 4,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 42,
+      "Descripcion": "Revisar ejercicios de cálculo",
+      "Fecha": "2025-11-05",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 43,
+      "Descripcion": "Laboratorio de física - preparar equipos",
+      "Fecha": "2025-11-08",
+      "Tipo": "CLASE",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 2,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 44,
+      "Descripcion": "Entrega de proyecto de química",
+      "Fecha": "2025-11-10",
+      "Tipo": "ENTREGA",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 3,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 45,
+      "Descripcion": "Examen final de biología",
+      "Fecha": "2025-11-12",
+      "Tipo": "EXAMEN",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 4,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 46,
+      "Descripcion": "Reunión de evaluación de materias",
+      "Fecha": "2025-11-15",
+      "Tipo": "REUNION",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 47,
+      "Descripcion": "Preparar examen final de matemática",
+      "Fecha": "2025-11-18",
+      "Tipo": "EXAMEN",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 48,
+      "Descripcion": "Revisar ejercicios de física",
+      "Fecha": "2025-11-20",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 2,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 49,
+      "Descripcion": "Preparar material didáctico de química",
+      "Fecha": "2025-11-22",
+      "Tipo": "CLASE",
+      "Prioridad": "BAJA",
+      "Materia_ID_materia": 3,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 50,
+      "Descripcion": "Actualizar bibliografía de biología",
+      "Fecha": "2025-11-25",
+      "Tipo": "CLASE",
+      "Prioridad": "BAJA",
+      "Materia_ID_materia": 4,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 51,
+      "Descripcion": "Revisar ejercicios de álgebra avanzada",
+      "Fecha": "2025-11-27",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 52,
+      "Descripcion": "Preparar examen final de física",
+      "Fecha": "2025-11-29",
+      "Tipo": "EXAMEN",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 2,
+      "Estado": "PENDIENTE"
     }
   ]
 }
