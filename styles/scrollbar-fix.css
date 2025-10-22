@@ -1,0 +1,23 @@
+/* Hide scrollbars on calendar cards while maintaining scroll functionality */
+
+/* Week view calendar day events */
+.calendar-grid.week-view .calendar-day .day-events {
+    /* Hide scrollbars while maintaining scroll functionality */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.calendar-grid.week-view .calendar-day .day-events::-webkit-scrollbar {
+    display: none; /* WebKit browsers */
+}
+
+/* Month view calendar day events */
+.calendar-day .day-events {
+    /* Hide scrollbars while maintaining scroll functionality */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.calendar-day .day-events::-webkit-scrollbar {
+    display: none; /* WebKit browsers */
+}
