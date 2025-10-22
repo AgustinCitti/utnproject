@@ -228,7 +228,7 @@
                 <div class="section-header">
                     <h2 data-translate="student_management">Gestión Integral de Estudiantes</h2>
                     <div class="section-actions">
-                        <div class="filters">
+                        <div class="filters students-only">
                             <select id="unifiedSubjectFilter" class="filter-select">
                                 <option value="" data-translate="all_subjects">Todas las Materias</option>
                                 <!-- Options will be populated dynamically -->
@@ -238,6 +238,20 @@
                                 <option value="COMPLETADO" data-translate="completed_topics">Temas Completados</option>
                                 <option value="EN_PROGRESO" data-translate="in_progress_topics">Temas en Progreso</option>
                                 <option value="PENDIENTE" data-translate="pending_topics">Temas Pendientes</option>
+                            </select>
+                        </div>
+                        <div class="filters exams-only" style="display: none;">
+                            <select id="examsSubjectFilter" class="filter-select">
+                                <option value="" data-translate="all_subjects">Todas las Materias</option>
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                            <select id="examsDateFilter" class="filter-select">
+                                <option value="" data-translate="all_dates">Todas las Fechas</option>
+                                <option value="today" data-translate="today">Hoy</option>
+                                <option value="this_week" data-translate="this_week">Esta Semana</option>
+                                <option value="this_month" data-translate="this_month">Este Mes</option>
+                                <option value="upcoming" data-translate="upcoming">Próximos</option>
+                                <option value="past" data-translate="past">Pasados</option>
                             </select>
                         </div>
                         <div class="view-toggle">
@@ -336,16 +350,6 @@
 
                 <!-- Exams Tab Content -->
                 <div id="examsTabContent" class="tab-content">
-                    <div class="exams-view-controls">
-                        <div class="view-toggle">
-                            <button id="examsGridViewBtn" class="view-btn" data-view="grid">
-                                <i class="fas fa-th"></i>
-                            </button>
-                            <button id="examsListViewBtn" class="view-btn active" data-view="list">
-                                <i class="fas fa-list"></i>
-                            </button>
-                        </div>
-                    </div>
                     <div class="exams-container" id="examsContainer" style="display: none;">
                         <!-- Exams will be loaded dynamically -->
                     </div>

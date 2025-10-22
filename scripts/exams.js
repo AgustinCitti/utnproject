@@ -16,14 +16,78 @@ function initializeExams() {
     }
 }
 
+// Get filtered exams by subject and date
+function getFilteredExams() {
+    const examsSubjectFilter = document.getElementById('examsSubjectFilter');
+    const examsDateFilter = document.getElementById('examsDateFilter');
+    const selectedSubject = examsSubjectFilter ? examsSubjectFilter.value : '';
+    const selectedDate = examsDateFilter ? examsDateFilter.value : '';
+    
+    // Get current teacher ID
+    const currentUserId = localStorage.getItem('userId');
+    const teacherId = currentUserId ? parseInt(currentUserId) : null;
+    
+    let filteredExams = appData.evaluacion || [];
+    
+    // Filter by current teacher's subjects first
+    if (teacherId) {
+        const teacherSubjects = appData.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
+        const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
+        filteredExams = filteredExams.filter(exam => teacherSubjectIds.includes(exam.Materia_ID_materia));
+    }
+    
+    // Filter by subject
+    if (selectedSubject) {
+        const subjectId = parseInt(selectedSubject);
+        filteredExams = filteredExams.filter(exam => exam.Materia_ID_materia === subjectId);
+    }
+    
+    // Filter by date
+    if (selectedDate) {
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        
+        filteredExams = filteredExams.filter(exam => {
+            const examDate = new Date(exam.Fecha + 'T00:00:00'); // Ensure consistent timezone
+            const todayDate = new Date(todayStr + 'T00:00:00');
+            
+            switch (selectedDate) {
+                case 'today':
+                    return exam.Fecha === todayStr;
+                case 'this_week':
+                    const weekStart = new Date(today);
+                    weekStart.setDate(today.getDate() - today.getDay());
+                    weekStart.setHours(0, 0, 0, 0);
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+                    weekEnd.setHours(23, 59, 59, 999);
+                    return examDate >= weekStart && examDate <= weekEnd;
+                case 'this_month':
+                    return examDate.getMonth() === today.getMonth() && examDate.getFullYear() === today.getFullYear();
+                case 'upcoming':
+                    return examDate >= todayDate;
+                case 'past':
+                    return examDate < todayDate;
+                default:
+                    return true;
+            }
+        });
+    }
+    
+    return filteredExams;
+}
+
 function loadExams() {
     const examsContainer = document.getElementById('examsContainer');
     const examsList = document.getElementById('examsList');
     
     if (!examsContainer || !examsList) return;
 
+    // Get filtered exams
+    const filteredExams = getFilteredExams();
+
     // Grid view
-    examsContainer.innerHTML = appData.evaluacion.map(exam => {
+    examsContainer.innerHTML = filteredExams.map(exam => {
         const subject = appData.materia.find(s => s.ID_materia === exam.Materia_ID_materia);
         return `
             <div class="card">
@@ -67,7 +131,7 @@ function loadExams() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${appData.evaluacion.map(exam => {
+                    ${filteredExams.map(exam => {
                         const subject = appData.materia.find(s => s.ID_materia === exam.Materia_ID_materia);
                         const shortDate = exam.Fecha.split('-').slice(1).join('/');
                         return `

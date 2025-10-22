@@ -100,18 +100,24 @@ function initializeUnifiedStudentManagement() {
         });
     }
 
-    // Exams view toggle functionality
-    if (examsGridViewBtn) {
-        examsGridViewBtn.addEventListener('click', () => {
-            switchToExamsGridView();
+    // Exams filter functionality
+    const examsSubjectFilter = document.getElementById('examsSubjectFilter');
+    const examsDateFilter = document.getElementById('examsDateFilter');
+    
+    if (examsSubjectFilter) {
+        examsSubjectFilter.addEventListener('change', () => {
+            loadExams();
         });
     }
 
-    if (examsListViewBtn) {
-        examsListViewBtn.addEventListener('click', () => {
-            switchToExamsListView();
+    if (examsDateFilter) {
+        examsDateFilter.addEventListener('change', () => {
+            loadExams();
         });
     }
+
+    // Exams view toggle functionality - using main toggle buttons
+    // The main toggle buttons (unifiedGridViewBtn, unifiedListViewBtn) will handle both students and exams
 
     // Modal handlers
     setupModalHandlers('studentModal');
@@ -148,6 +154,7 @@ function initializeUnifiedStudentManagement() {
 
     // Initialize data
     populateSubjectFilter();
+    populateExamsSubjectFilter();
     loadUnifiedStudentData();
     loadExams();
     
@@ -157,9 +164,6 @@ function initializeUnifiedStudentManagement() {
     
     // Set list view as default
     switchToListView();
-    
-    // Set exams list view as default
-    switchToExamsListView();
 }
 
 function loadUnifiedStudentData() {
@@ -421,15 +425,43 @@ function filterUnifiedData() {
 }
 
 function switchToGridView() {
-    document.getElementById('unifiedStudentCards').style.display = 'grid';
-    document.getElementById('unifiedStudentList').style.display = 'none';
+    // Handle students view
+    const studentCards = document.getElementById('unifiedStudentCards');
+    const studentList = document.getElementById('unifiedStudentList');
+    if (studentCards && studentList) {
+        studentCards.style.display = 'grid';
+        studentList.style.display = 'none';
+    }
+    
+    // Handle exams view
+    const examsContainer = document.getElementById('examsContainer');
+    const examsList = document.getElementById('examsList');
+    if (examsContainer && examsList) {
+        examsContainer.style.display = 'grid';
+        examsList.style.display = 'none';
+    }
+    
     document.getElementById('unifiedGridViewBtn').classList.add('active');
     document.getElementById('unifiedListViewBtn').classList.remove('active');
 }
 
 function switchToListView() {
-    document.getElementById('unifiedStudentCards').style.display = 'none';
-    document.getElementById('unifiedStudentList').style.display = 'block';
+    // Handle students view
+    const studentCards = document.getElementById('unifiedStudentCards');
+    const studentList = document.getElementById('unifiedStudentList');
+    if (studentCards && studentList) {
+        studentCards.style.display = 'none';
+        studentList.style.display = 'block';
+    }
+    
+    // Handle exams view
+    const examsContainer = document.getElementById('examsContainer');
+    const examsList = document.getElementById('examsList');
+    if (examsContainer && examsList) {
+        examsContainer.style.display = 'none';
+        examsList.style.display = 'block';
+    }
+    
     document.getElementById('unifiedGridViewBtn').classList.remove('active');
     document.getElementById('unifiedListViewBtn').classList.add('active');
 }
@@ -449,6 +481,28 @@ function populateSubjectFilter() {
     }
 
     subjectFilter.innerHTML = `
+        <option value="" data-translate="all_subjects">Todas las Materias</option>
+        ${subjectsToShow.map(subject => 
+            `<option value="${subject.ID_materia}">${subject.Nombre}</option>`
+        ).join('')}
+    `;
+}
+
+function populateExamsSubjectFilter() {
+    const examsSubjectFilter = document.getElementById('examsSubjectFilter');
+    if (!examsSubjectFilter) return;
+
+    // Get current user ID from localStorage
+    const currentUserId = localStorage.getItem('userId');
+    
+    // Filter subjects by current teacher if available
+    let subjectsToShow = appData.materia;
+    if (currentUserId) {
+        const teacherId = parseInt(currentUserId);
+        subjectsToShow = appData.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
+    }
+
+    examsSubjectFilter.innerHTML = `
         <option value="" data-translate="all_subjects">Todas las Materias</option>
         ${subjectsToShow.map(subject => 
             `<option value="${subject.ID_materia}">${subject.Nombre}</option>`
@@ -522,7 +576,7 @@ function switchToStudentsTab() {
     document.getElementById('studentsTabContent').classList.add('active');
     document.getElementById('examsTabContent').classList.remove('active');
     
-    // Show/hide appropriate action buttons
+    // Show/hide appropriate action buttons and filters
     document.querySelectorAll('.students-only').forEach(btn => btn.style.display = 'flex');
     document.querySelectorAll('.exams-only').forEach(btn => btn.style.display = 'none');
 }
@@ -533,7 +587,7 @@ function switchToExamsTab() {
     document.getElementById('studentsTabContent').classList.remove('active');
     document.getElementById('examsTabContent').classList.add('active');
     
-    // Show/hide appropriate action buttons
+    // Show/hide appropriate action buttons and filters
     document.querySelectorAll('.students-only').forEach(btn => btn.style.display = 'none');
     document.querySelectorAll('.exams-only').forEach(btn => btn.style.display = 'flex');
 }
@@ -712,19 +766,7 @@ function deleteExam(id) {
     }
 }
 
-function switchToExamsGridView() {
-    document.getElementById('examsContainer').style.display = 'grid';
-    document.getElementById('examsList').style.display = 'none';
-    document.getElementById('examsGridViewBtn').classList.add('active');
-    document.getElementById('examsListViewBtn').classList.remove('active');
-}
-
-function switchToExamsListView() {
-    document.getElementById('examsContainer').style.display = 'none';
-    document.getElementById('examsList').style.display = 'block';
-    document.getElementById('examsGridViewBtn').classList.remove('active');
-    document.getElementById('examsListViewBtn').classList.add('active');
-}
+// Removed duplicate exam toggle functions - now using unified toggle functions
 
 // Grade Marking Functions
 function showGradeMarkingView() {
@@ -959,22 +1001,62 @@ function loadAttendance() {
 }
 
 
-// Get filtered exams for current teacher
+// Get filtered exams by subject and date
 function getFilteredExams() {
+    const examsSubjectFilter = document.getElementById('examsSubjectFilter');
+    const examsDateFilter = document.getElementById('examsDateFilter');
+    const selectedSubject = examsSubjectFilter ? examsSubjectFilter.value : '';
+    const selectedDate = examsDateFilter ? examsDateFilter.value : '';
+    
     // Get current teacher ID
     const currentUserId = localStorage.getItem('userId');
     const teacherId = currentUserId ? parseInt(currentUserId) : null;
     
     let filteredExams = appData.evaluacion || [];
     
-    // Filter by current teacher (exams for subjects taught by this teacher)
+    // Filter by current teacher's subjects first
     if (teacherId) {
         const teacherSubjects = appData.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
         const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
+        filteredExams = filteredExams.filter(exam => teacherSubjectIds.includes(exam.Materia_ID_materia));
+    }
+    
+    // Filter by subject
+    if (selectedSubject) {
+        const subjectId = parseInt(selectedSubject);
+        filteredExams = filteredExams.filter(exam => exam.Materia_ID_materia === subjectId);
+    }
+    
+    // Filter by date
+    if (selectedDate) {
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
         
-        filteredExams = filteredExams.filter(exam => 
-            teacherSubjectIds.includes(exam.Materia_ID_materia)
-        );
+        filteredExams = filteredExams.filter(exam => {
+            const examDate = new Date(exam.Fecha + 'T00:00:00'); // Ensure consistent timezone
+            const todayDate = new Date(todayStr + 'T00:00:00');
+            
+            switch (selectedDate) {
+                case 'today':
+                    return exam.Fecha === todayStr;
+                case 'this_week':
+                    const weekStart = new Date(today);
+                    weekStart.setDate(today.getDate() - today.getDay());
+                    weekStart.setHours(0, 0, 0, 0);
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+                    weekEnd.setHours(23, 59, 59, 999);
+                    return examDate >= weekStart && examDate <= weekEnd;
+                case 'this_month':
+                    return examDate.getMonth() === today.getMonth() && examDate.getFullYear() === today.getFullYear();
+                case 'upcoming':
+                    return examDate >= todayDate;
+                case 'past':
+                    return examDate < todayDate;
+                default:
+                    return true;
+            }
+        });
     }
     
     return filteredExams;
