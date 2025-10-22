@@ -5,10 +5,10 @@ function initializeCharts() {
     // Destroy existing charts first to prevent canvas reuse errors
     destroyAllCharts();
     
-    // Initialize all charts
-    createGradesChart();
-    createAttendanceChart();
-    createPerformanceChart();
+    // Initialize all charts with default 'all' filter
+    createGradesChart('all');
+    createAttendanceChart('all');
+    createPerformanceChart('all');
     createSubjectChart();
 }
 
@@ -32,7 +32,7 @@ function destroyAllCharts() {
     }
 }
 
-function createGradesChart() {
+function createGradesChart(subjectId = 'all') {
     const ctx = document.getElementById('gradesChart');
     if (!ctx) return;
 
@@ -42,7 +42,7 @@ function createGradesChart() {
         reportsCharts.grades = null;
     }
 
-    const gradesData = getGradesDistribution();
+    const gradesData = getGradesDistribution(subjectId);
     
     reportsCharts.grades = new Chart(ctx, {
         type: 'bar',
@@ -90,7 +90,7 @@ function createGradesChart() {
     });
 }
 
-function createAttendanceChart() {
+function createAttendanceChart(subjectId = 'all') {
     const ctx = document.getElementById('attendanceChart');
     if (!ctx) return;
 
@@ -100,7 +100,7 @@ function createAttendanceChart() {
         reportsCharts.attendance = null;
     }
 
-    const attendanceData = getAttendanceTrends();
+    const attendanceData = getAttendanceTrends(subjectId);
     
     reportsCharts.attendance = new Chart(ctx, {
         type: 'line',
@@ -138,7 +138,7 @@ function createAttendanceChart() {
     });
 }
 
-function createPerformanceChart() {
+function createPerformanceChart(studentId = 'all') {
     const ctx = document.getElementById('performanceChart');
     if (!ctx) return;
 
@@ -148,7 +148,7 @@ function createPerformanceChart() {
         reportsCharts.performance = null;
     }
 
-    const performanceData = getStudentPerformance();
+    const performanceData = getStudentPerformance(studentId);
     
     reportsCharts.performance = new Chart(ctx, {
         type: 'radar',
@@ -220,36 +220,42 @@ function updateGradesChart() {
     const filter = document.getElementById('gradesSubjectFilter');
     const subjectId = filter ? filter.value : 'all';
     
+    console.log('Updating grades chart with subject filter:', subjectId);
+    
     // Destroy and recreate chart to ensure proper updates
     if (reportsCharts.grades) {
         reportsCharts.grades.destroy();
         reportsCharts.grades = null;
     }
-    createGradesChart();
+    createGradesChart(subjectId);
 }
 
 function updateAttendanceChart() {
     const filter = document.getElementById('attendanceSubjectFilter');
     const subjectId = filter ? filter.value : 'all';
     
+    console.log('Updating attendance chart with subject filter:', subjectId);
+    
     // Destroy and recreate chart to ensure proper updates
     if (reportsCharts.attendance) {
         reportsCharts.attendance.destroy();
         reportsCharts.attendance = null;
     }
-    createAttendanceChart();
+    createAttendanceChart(subjectId);
 }
 
 function updatePerformanceChart() {
     const filter = document.getElementById('performanceStudentFilter');
     const studentId = filter ? filter.value : 'all';
     
+    console.log('Updating performance chart with student filter:', studentId);
+    
     // Destroy and recreate chart to ensure proper updates
     if (reportsCharts.performance) {
         reportsCharts.performance.destroy();
         reportsCharts.performance = null;
     }
-    createPerformanceChart();
+    createPerformanceChart(studentId);
 }
 
 // Export chart manager functions

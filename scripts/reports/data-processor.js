@@ -63,14 +63,30 @@ function getCurrentUserAttendance() {
     );
 }
 
-function getGradesDistribution() {
+function getGradesDistribution(subjectId = 'all') {
     if (!window.data || !window.data.notas) {
         console.warn('getGradesDistribution: No data available', { data: window.data, notas: window.data?.notas });
         return { labels: [], data: [] };
     }
 
+    console.log('getGradesDistribution called with subjectId:', subjectId);
+
     // Use current user's grades data
-    const filteredGrades = getCurrentUserGrades();
+    let filteredGrades = getCurrentUserGrades();
+    console.log('Initial filtered grades count:', filteredGrades.length);
+    
+    // Filter by subject if specified
+    if (subjectId !== 'all') {
+        const subjectEvaluations = window.data.evaluacion.filter(eval => 
+            eval.Materia_ID_materia === parseInt(subjectId)
+        );
+        const subjectEvaluationIds = subjectEvaluations.map(eval => eval.ID_evaluacion);
+        
+        filteredGrades = filteredGrades.filter(nota => 
+            subjectEvaluationIds.includes(nota.Evaluacion_ID_evaluacion)
+        );
+        console.log('After subject filter, grades count:', filteredGrades.length);
+    }
 
     const gradeRanges = [
         { label: '0-2', min: 0, max: 2 },
@@ -93,14 +109,21 @@ function getGradesDistribution() {
     };
 }
 
-function getAttendanceTrends() {
+function getAttendanceTrends(subjectId = 'all') {
     if (!window.data || !window.data.asistencia) {
         console.warn('getAttendanceTrends: No data available', { data: window.data, asistencia: window.data?.asistencia });
         return { labels: [], data: [] };
     }
 
     // Use current user's attendance data
-    const filteredAttendance = getCurrentUserAttendance();
+    let filteredAttendance = getCurrentUserAttendance();
+    
+    // Filter by subject if specified
+    if (subjectId !== 'all') {
+        filteredAttendance = filteredAttendance.filter(record => 
+            record.Materia_ID_materia === parseInt(subjectId)
+        );
+    }
 
     // Group attendance by month
     const monthlyAttendance = {};
@@ -127,14 +150,22 @@ function getAttendanceTrends() {
     return { labels, data };
 }
 
-function getStudentPerformance() {
+function getStudentPerformance(studentId = 'all') {
     if (!window.data || !window.data.estudiante || !window.data.notas) {
         return { labels: [], datasets: [] };
     }
 
     // Use current user's subjects and students data
     const teacherSubjects = getCurrentUserSubjects();
-    const teacherStudents = getCurrentUserStudents();
+    let teacherStudents = getCurrentUserStudents();
+    
+    // Filter by specific student if specified
+    if (studentId !== 'all') {
+        teacherStudents = teacherStudents.filter(student => 
+            student.ID_Estudiante === parseInt(studentId)
+        );
+    }
+    
     const labels = teacherSubjects.map(materia => materia.Nombre);
     
     const datasets = teacherStudents.slice(0, 3).map((student, index) => {
