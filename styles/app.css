@@ -1181,6 +1181,77 @@
     color: #666;
 }
 
+/* Recordatorio Styles */
+.card.recordatorio {
+    border-left: 4px solid #ffc107;
+}
+
+.card.recordatorio .card-header {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+}
+
+.priority-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.priority-badge.alta {
+    background: #dc3545;
+    color: white;
+}
+
+.priority-badge.media {
+    background: #ffc107;
+    color: #212529;
+}
+
+.priority-badge.baja {
+    background: #28a745;
+    color: white;
+}
+
+.recordatorio-details {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+.recordatorio-type {
+    background: #e9ecef;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.recordatorio-subject {
+    color: #667eea;
+    font-weight: 500;
+}
+
+.type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.type-badge.recordatorio {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.type-badge.notification {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
 /* Attendance Section Styles */
 .attendance-form {
     background: #f8f9fa;

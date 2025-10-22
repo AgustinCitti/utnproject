@@ -597,6 +597,123 @@
       "Prioridad": "ALTA",
       "Materia_ID_materia": 1,
       "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 3,
+      "Descripcion": "Revisar ejercicios de álgebra para la próxima clase",
+      "Fecha": "2024-12-20",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 4,
+      "Descripcion": "Preparar material para laboratorio de física",
+      "Fecha": "2024-12-22",
+      "Tipo": "CLASE",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 2,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 5,
+      "Descripcion": "Examen parcial de mecánica clásica",
+      "Fecha": "2024-12-25",
+      "Tipo": "EXAMEN",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 2,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 6,
+      "Descripcion": "Revisar experimentos de química para la próxima semana",
+      "Fecha": "2024-12-23",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 3,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 7,
+      "Descripcion": "Entrega de informe de laboratorio de química",
+      "Fecha": "2024-12-28",
+      "Tipo": "ENTREGA",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 3,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 8,
+      "Descripcion": "Preparar presentación sobre genética",
+      "Fecha": "2024-12-26",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 4,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 9,
+      "Descripcion": "Examen final de biología",
+      "Fecha": "2024-12-30",
+      "Tipo": "EXAMEN",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 4,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 10,
+      "Descripcion": "Reunión de coordinación académica",
+      "Fecha": "2024-12-24",
+      "Tipo": "REUNION",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 11,
+      "Descripcion": "Calificar exámenes de matemática",
+      "Fecha": "2024-12-21",
+      "Tipo": "CLASE",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 12,
+      "Descripcion": "Preparar material didáctico para física",
+      "Fecha": "2024-12-27",
+      "Tipo": "CLASE",
+      "Prioridad": "BAJA",
+      "Materia_ID_materia": 2,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 13,
+      "Descripcion": "Revisar protocolos de seguridad en laboratorio",
+      "Fecha": "2024-12-29",
+      "Tipo": "CLASE",
+      "Prioridad": "ALTA",
+      "Materia_ID_materia": 3,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 14,
+      "Descripcion": "Actualizar bibliografía de biología",
+      "Fecha": "2025-01-02",
+      "Tipo": "CLASE",
+      "Prioridad": "BAJA",
+      "Materia_ID_materia": 4,
+      "Estado": "PENDIENTE"
+    },
+    {
+      "ID_recordatorio": 15,
+      "Descripcion": "Evento de cierre de año académico",
+      "Fecha": "2024-12-31",
+      "Tipo": "EVENTO",
+      "Prioridad": "MEDIA",
+      "Materia_ID_materia": 1,
+      "Estado": "PENDIENTE"
     }
   ]
 }
