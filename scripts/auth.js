@@ -14,7 +14,7 @@ function initializeLogin() {
             if (username && password) {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('username', username);
-                window.location.href = 'home.html';
+                window.location.href = '../pages/home.html';
             } else {
                 alert('Please enter both username and password');
             }
@@ -25,7 +25,7 @@ function initializeLogin() {
         logoutBtn.addEventListener('click', function() {
             localStorage.removeItem('isLoggedIn');
             localStorage.removeItem('username');
-            window.location.href = 'index.html';
+            window.location.href = '../index.html';
         });
     }
 
@@ -37,7 +37,7 @@ function initializeLogin() {
 
 // Landing Page Functions
 function scrollToLogin() {
-    window.location.href = 'pages/login.html';
+    window.location.href = '../pages/login.html';
 }
 
 function scrollToFeatures() {
@@ -123,7 +123,7 @@ function handleLogin() {
         console.log('Login successful, redirecting to home.html');
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('username', username);
-        window.location.href = 'home.html';
+        window.location.href = '../pages/home.html';
     } else {
         console.log('Login failed - missing credentials');
         alert('Please enter both username and password');

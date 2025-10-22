@@ -506,6 +506,12 @@ function initializeLanguage() {
         });
     }
     
+    // Set up desktop language selector
+    const desktopLanguageSelect = document.getElementById('desktopLanguageSelect');
+    if (desktopLanguageSelect) {
+        desktopLanguageSelect.value = savedLanguage;
+    }
+    
     // Apply translations
     translatePage(savedLanguage);
 }
