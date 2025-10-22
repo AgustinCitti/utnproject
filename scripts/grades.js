@@ -102,12 +102,12 @@ function loadGrades() {
 
     // Grid view
     gradesContainer.innerHTML = filteredGrades.map(grade => {
-        const student = appData.students.find(s => s.id === grade.studentId);
-        const subject = appData.subjects.find(s => s.id === grade.subjectId);
+        const student = appData.estudiante.find(s => s.ID_Estudiante === grade.studentId);
+        const subject = appData.materia.find(s => s.ID_materia === grade.subjectId);
         return `
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">${student ? student.firstName + ' ' + student.lastName : 'Unknown Student'}</h3>
+                    <h3 class="card-title">${student ? student.Nombre + ' ' + student.Apellido : 'Unknown Student'}</h3>
                     <div class="card-actions">
                         <button class="btn-icon btn-edit" onclick="editGrade(${grade.id})">
                             <i class="fas fa-edit"></i>
@@ -118,7 +118,7 @@ function loadGrades() {
                     </div>
                 </div>
                 <div class="card-content">
-                    <p><strong>Subject:</strong> ${subject ? subject.name : 'Unknown Subject'}</p>
+                    <p><strong>Subject:</strong> ${subject ? subject.Nombre : 'Unknown Subject'}</p>
                     <p><strong>Grade:</strong> ${grade.grade}/100</p>
                     <p><strong>Type:</strong> ${grade.type}</p>
                     <p><strong>Date:</strong> ${grade.date}</p>
@@ -144,14 +144,14 @@ function loadGrades() {
                 </thead>
                 <tbody>
                     ${filteredGrades.map(grade => {
-                        const student = appData.students.find(s => s.id === grade.studentId);
-                        const subject = appData.subjects.find(s => s.id === grade.subjectId);
+                        const student = appData.estudiante.find(s => s.ID_Estudiante === grade.studentId);
+                        const subject = appData.materia.find(s => s.ID_materia === grade.subjectId);
                         const gradeClass = grade.grade >= 80 ? 'grade-excellent' : grade.grade >= 60 ? 'grade-good' : 'grade-poor';
                         const shortDate = grade.date.split('-').slice(1).join('/');
                         return `
                             <tr>
-                                <td><strong>${student ? student.firstName + ' ' + student.lastName : 'Unknown'}</strong></td>
-                                <td>${subject ? subject.name : 'Unknown'}</td>
+                                <td><strong>${student ? student.Nombre + ' ' + student.Apellido : 'Unknown'}</strong></td>
+                                <td>${subject ? subject.Nombre : 'Unknown'}</td>
                                 <td><span class="table-status ${gradeClass}">${grade.grade}</span></td>
                                 <td>${grade.type}</td>
                                 <td>${shortDate}</td>
@@ -186,27 +186,27 @@ function populateGradeForm() {
     }
 
     // Check if data is loaded
-    if (!appData || !appData.students || !appData.subjects) {
+    if (!appData || !appData.estudiante || !appData.materia) {
         console.error('App data not loaded');
         return;
     }
 
     // Populate students
-    studentSelect.innerHTML = appData.students.map(student => 
-        `<option value="${student.id}">${student.firstName} ${student.lastName}</option>`
+    studentSelect.innerHTML = appData.estudiante.map(student => 
+        `<option value="${student.ID_Estudiante}">${student.Nombre} ${student.Apellido}</option>`
     ).join('');
 
     // Populate subjects
-    subjectSelect.innerHTML = appData.subjects.map(subject => 
-        `<option value="${subject.id}">${subject.name}</option>`
+    subjectSelect.innerHTML = appData.materia.map(subject => 
+        `<option value="${subject.ID_materia}">${subject.Nombre}</option>`
     ).join('');
 
     // Populate course filter
     if (courseFilter) {
         courseFilter.innerHTML = `
             <option value="" data-translate="all_courses">Todos los Cursos</option>
-            ${appData.subjects.map(subject => 
-                `<option value="${subject.id}">${subject.name}</option>`
+            ${appData.materia.map(subject => 
+                `<option value="${subject.ID_materia}">${subject.Nombre}</option>`
             ).join('')}
         `;
     }

@@ -43,21 +43,21 @@ function loadStudents() {
     studentsGrid.innerHTML = filteredStudents.map(student => `
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">${student.firstName} ${student.lastName}</h3>
+                <h3 class="card-title">${student.Nombre} ${student.Apellido}</h3>
                 <div class="card-actions">
-                    <button class="btn-icon btn-edit" onclick="editStudent(${student.id})">
+                    <button class="btn-icon btn-edit" onclick="editStudent(${student.ID_Estudiante})">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-icon btn-delete" onclick="deleteStudent(${student.id})">
+                    <button class="btn-icon btn-delete" onclick="deleteStudent(${student.ID_Estudiante})">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
             <div class="card-content">
-                <p><strong>Email:</strong> ${student.email}</p>
-                <p><strong>Student ID:</strong> ${student.studentId}</p>
-                <p><strong>Course:</strong> ${student.course}</p>
-                <p><strong>Status:</strong> <span class="status-${student.status}">${student.status}</span></p>
+                <p><strong>Email:</strong> ${student.Email}</p>
+                <p><strong>Student ID:</strong> ${student.ID_Estudiante}</p>
+                <p><strong>Birth Date:</strong> ${student.Fecha_nacimiento}</p>
+                <p><strong>Status:</strong> <span class="status-${student.Estado.toLowerCase()}">${student.Estado}</span></p>
             </div>
         </div>
     `).join('');
@@ -79,17 +79,17 @@ function loadStudents() {
                 <tbody>
                     ${filteredStudents.map(student => `
                         <tr>
-                            <td><strong>${student.firstName} ${student.lastName}</strong></td>
-                            <td title="${student.email}">${student.email.length > 15 ? student.email.substring(0, 15) + '...' : student.email}</td>
-                            <td>${student.studentId}</td>
-                            <td>${student.course}</td>
-                            <td><span class="table-status ${student.status}">${student.status}</span></td>
+                            <td><strong>${student.Nombre} ${student.Apellido}</strong></td>
+                            <td title="${student.Email}">${student.Email.length > 15 ? student.Email.substring(0, 15) + '...' : student.Email}</td>
+                            <td>${student.ID_Estudiante}</td>
+                            <td>${student.Fecha_nacimiento}</td>
+                            <td><span class="table-status ${student.Estado.toLowerCase()}">${student.Estado}</span></td>
                             <td>
                                 <div class="table-actions">
-                                    <button class="btn-icon btn-edit" onclick="editStudent(${student.id})" title="Edit">
+                                    <button class="btn-icon btn-edit" onclick="editStudent(${student.ID_Estudiante})" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn-icon btn-delete" onclick="deleteStudent(${student.id})" title="Delete">
+                                    <button class="btn-icon btn-delete" onclick="deleteStudent(${student.ID_Estudiante})" title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -111,15 +111,15 @@ function saveStudent() {
     };
 
     const newStudent = {
-        id: Date.now(),
-        ...formData,
-        studentId: `STU${String(Date.now()).slice(-3)}`,
-        subjects: [],
-        enrollmentDate: new Date().toISOString().split('T')[0],
-        status: 'active'
+        ID_Estudiante: Date.now(),
+        Nombre: formData.firstName,
+        Apellido: formData.lastName,
+        Email: formData.email,
+        Fecha_nacimiento: new Date().toISOString().split('T')[0],
+        Estado: 'ACTIVO'
     };
 
-    appData.students.push(newStudent);
+    appData.estudiante.push(newStudent);
     saveData();
     closeModal('studentModal');
     loadStudents();
@@ -127,20 +127,20 @@ function saveStudent() {
 }
 
 function editStudent(id) {
-    const student = appData.students.find(s => s.id === id);
+    const student = appData.estudiante.find(s => s.ID_Estudiante === id);
     if (!student) return;
 
-    document.getElementById('studentFirstName').value = student.firstName;
-    document.getElementById('studentLastName').value = student.lastName;
-    document.getElementById('studentEmail').value = student.email;
-    document.getElementById('studentCourse').value = student.course;
+    document.getElementById('studentFirstName').value = student.Nombre;
+    document.getElementById('studentLastName').value = student.Apellido;
+    document.getElementById('studentEmail').value = student.Email;
+    document.getElementById('studentCourse').value = student.Fecha_nacimiento;
 
     showModal('studentModal');
 }
 
 function deleteStudent(id) {
     if (confirm('Are you sure you want to delete this student?')) {
-        appData.students = appData.students.filter(s => s.id !== id);
+        appData.estudiante = appData.estudiante.filter(s => s.ID_Estudiante !== id);
         saveData();
         loadStudents();
         updateDashboard();
@@ -157,10 +157,10 @@ function getFilteredStudents() {
     const selectedCourse = courseFilter ? courseFilter.value : '';
     
     if (!selectedCourse) {
-        return appData.students;
+        return appData.estudiante;
     }
     
-    return appData.students.filter(student => student.course === selectedCourse);
+    return appData.estudiante.filter(student => student.Fecha_nacimiento === selectedCourse);
 }
 
 function filterStudentsByCourse() {
