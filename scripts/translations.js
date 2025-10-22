@@ -98,9 +98,9 @@ const translations = {
         language: "Idioma",
         
         // Dashboard
-        total_students: "Total Estudiantes",
-        average_grade: "Promedio de Calificaciones",
-        attendance_rate: "Tasa de Asistencia",
+        total_students: "Estudiantes",
+        average_grade: "Calificaciones",
+        attendance_rate: "Asistencia",
         calendar: "Calendario",
         upcoming_classes: "Próximas Clases",
         welcome_user: "¡Bienvenido, Usuario!",
@@ -264,7 +264,7 @@ const translations = {
         // Subject Details
         subject_info: "Información de la Materia",
         enrolled_students: "Estudiantes Inscritos",
-        total_students: "Total Estudiantes",
+        total_students: "Estudiantes",
         total_evaluations: "Total Evaluaciones",
         total_content: "Total Contenidos",
         course: "Curso",

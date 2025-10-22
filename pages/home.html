@@ -183,7 +183,7 @@
                                     </div>
                                     <div class="stat-content">
                                         <h3 id="totalStudents">0</h3>
-                                        <p data-translate="total_students">Total Estudiantes</p>
+                                        <p data-translate="total_students">Estudiantes</p>
                                     </div>
                                 </div>
                                 <div class="stat-card">
@@ -192,7 +192,7 @@
                                     </div>
                                     <div class="stat-content">
                                         <h3 id="averageGrade">0%</h3>
-                                        <p data-translate="average_grade">Promedio de Calificaciones</p>
+                                        <p data-translate="average_grade">Calificaciones</p>
                                     </div>
                                 </div>
                                 <div class="stat-card">
@@ -608,57 +608,72 @@
                 </div>
 
                 <!-- Subjects Content -->
-                    <!-- Subject Overview Cards -->
-                    <div class="subjects-cards" id="subjectsCards" style="display: none;">
-                        <!-- Subject cards will be loaded dynamically -->
-                    </div>
+                <div class="subjects-container" id="subjectsContainer" style="display: none;">
+                    <!-- Subject cards will be loaded dynamically -->
+                </div>
 
-                    <!-- Detailed List View -->
-                    <div class="subjects-list" id="subjectsList">
-                        <!-- Detailed subject information will be loaded dynamically -->
-                    </div>
+                <!-- Detailed List View -->
+                <div class="subjects-list" id="subjectsList">
+                    <!-- Detailed subject information will be loaded dynamically -->
+                </div>
 
-                    <!-- Subject Detail Panel -->
-                    <div class="subject-detail-panel" id="subjectDetailPanel" style="display: none;">
-                        <div class="panel-header">
-                            <h3 id="selectedSubjectName">Subject Name</h3>
-                            <button id="closeSubjectDetail" class="btn-icon">
-                                <i class="fas fa-times"></i>
+                <!-- Subject Details View -->
+                <div id="subjectDetailsView" class="subject-details-view" style="display: none;">
+                    <div class="section-header">
+                        <h2 id="subjectDetailsTitle">Subject Details</h2>
+                        <div class="section-actions">
+                            <button id="exportSubjectDetailsBtn" class="btn-primary" style="display: none;">
+                                <i class="fas fa-download"></i>
+                                <span data-translate="export_details">Export Details</span>
+                            </button>
+                            <button id="backToSubjectsBtn" class="btn-secondary">
+                                <i class="fas fa-arrow-left"></i>
+                                <span data-translate="back_to_subjects">Back to Subjects</span>
                             </button>
                         </div>
-                        <div class="panel-content">
-                            <div class="subject-stats">
-                                <div class="stat-item">
-                                    <span class="stat-label" data-translate="total_students">Estudiantes:</span>
-                                    <span class="stat-value" id="subjectStudents">0</span>
-                                </div>
-                                <div class="stat-item">
-                                    <span class="stat-label" data-translate="total_evaluations">Evaluaciones:</span>
-                                    <span class="stat-value" id="subjectEvaluations">0</span>
-                                </div>
-                                <div class="stat-item">
-                                    <span class="stat-label" data-translate="total_content">Contenidos:</span>
-                                    <span class="stat-value" id="subjectContent">0</span>
-                                </div>
+                    </div>
+                    
+                    <!-- Subject Details Tab Navigation -->
+                    <div class="subject-details-tabs">
+                        <button id="subjectDetailsTab" class="tab-btn active" data-tab="details">
+                            <i class="fas fa-info-circle"></i>
+                            <span data-translate="details">Detalles</span>
+                        </button>
+                        <button id="subjectContentTab" class="tab-btn" data-tab="content">
+                            <i class="fas fa-list"></i>
+                            <span data-translate="content">Contenido</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Subject Details Tab Content -->
+                    <div id="subjectDetailsTabContent" class="tab-content active">
+                        <!-- Subject Info Summary -->
+                        <div class="subject-info-summary" id="subjectInfoSummary">
+                            <!-- Subject information will be loaded here -->
+                        </div>
+                        
+                        <!-- Subject Details Content -->
+                        <div class="subject-details-content" id="subjectDetailsContent">
+                            <!-- Subject statistics, students, evaluations, etc. will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Subject Content Tab Content -->
+                    <div id="subjectContentTabContent" class="tab-content">
+                        <div class="content-management">
+                            <div class="content-header">
+                                <h3 data-translate="subject_content">Contenido de la Materia</h3>
+                                <button id="addContentBtn" class="btn-primary">
+                                    <i class="fas fa-plus"></i>
+                                    <span data-translate="add_content">Agregar Contenido</span>
+                                </button>
                             </div>
-                            <div class="subject-details">
-                                <div class="detail-section">
-                                    <h4 data-translate="subject_info">Información de la Materia</h4>
-                                    <div id="subjectInfo" class="info-list">
-                                        <!-- Subject information will be loaded here -->
-                                    </div>
-                                </div>
-                                <div class="detail-section">
-                                    <h4 data-translate="enrolled_students">Estudiantes Inscritos</h4>
-                                    <div id="subjectEnrolledStudents" class="students-list">
-                                        <!-- Enrolled students will be loaded here -->
-                                    </div>
-                                </div>
+                            <div class="content-list-container" id="subjectContentList">
+                                <!-- Content list will be loaded here -->
                             </div>
                         </div>
                     </div>
                 </div>
-
             </section>
 
             
@@ -754,6 +769,39 @@
                 <div class="form-actions">
                     <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
                     <button type="submit" class="btn-primary" data-translate="save_subject">Guardar Materia</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Content Edit Modal -->
+    <div id="contentEditModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-translate="edit_content">Editar Contenido</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="contentEditForm" class="modal-form">
+                <div class="form-group">
+                    <label for="editContentTopic" data-translate="content_topic">Tema del Contenido</label>
+                    <input type="text" id="editContentTopic" required>
+                </div>
+                <div class="form-group">
+                    <label for="editContentDescription" data-translate="description">Descripción</label>
+                    <textarea id="editContentDescription" rows="3" placeholder="Descripción del contenido..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editContentStatus" data-translate="status">Estado</label>
+                    <select id="editContentStatus" required>
+                        <option value="PENDIENTE" data-translate="pending">Pendiente</option>
+                        <option value="EN_PROGRESO" data-translate="in_progress">En Progreso</option>
+                        <option value="COMPLETADO" data-translate="completed">Completado</option>
+                        <option value="CANCELADO" data-translate="cancelled">Cancelado</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
+                    <button type="submit" class="btn-primary" data-translate="save_content">Guardar Contenido</button>
                 </div>
             </form>
         </div>

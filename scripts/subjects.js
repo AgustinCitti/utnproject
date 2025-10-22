@@ -1,6 +1,5 @@
 // Subjects Management
 let currentSubjectId = null;
-let currentContentId = null;
 
 function initializeSubjects() {
     const addSubjectBtn = document.getElementById('addSubjectBtn');
@@ -56,7 +55,7 @@ function initializeSubjects() {
     }
 
     // View toggle functionality
-    setupViewToggle('subjectsGridViewBtn', 'subjectsListViewBtn', 'subjectsCards', 'subjectsList');
+    setupViewToggle('subjectsGridViewBtn', 'subjectsListViewBtn', 'subjectsContainer', 'subjectsList');
 
     // Modal close handlers
     setupModalHandlers('subjectModal');
@@ -69,30 +68,33 @@ function initializeSubjects() {
 
 
 function loadSubjects() {
-    const subjectsCards = document.getElementById('subjectsCards');
+    const subjectsContainer = document.getElementById('subjectsContainer');
     const subjectsList = document.getElementById('subjectsList');
     
-    if (!subjectsCards || !subjectsList) return;
+    if (!subjectsContainer || !subjectsList) return;
 
     // Get filtered subjects
     const filteredSubjects = getFilteredSubjects();
 
     // Grid view
-    subjectsCards.innerHTML = filteredSubjects.map(subject => {
+    subjectsContainer.innerHTML = filteredSubjects.map(subject => {
         const teacher = getTeacherById(subject.Usuarios_docente_ID_docente);
         const studentCount = getStudentCountBySubject(subject.ID_materia);
         const evaluationCount = getEvaluationCountBySubject(subject.ID_materia);
         const contentCount = getContentCountBySubject(subject.ID_materia);
 
         return `
-            <div class="card" onclick="showSubjectDetail(${subject.ID_materia})">
+            <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">${subject.Nombre}</h3>
                     <div class="card-actions">
-                        <button class="btn-icon btn-edit" onclick="event.stopPropagation(); editSubject(${subject.ID_materia})">
+                        <button class="btn-icon btn-view" onclick="viewSubjectDetails(${subject.ID_materia})" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn-icon btn-edit" onclick="editSubject(${subject.ID_materia})" title="Edit">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn-icon btn-delete" onclick="event.stopPropagation(); deleteSubject(${subject.ID_materia})">
+                        <button class="btn-icon btn-delete" onclick="deleteSubject(${subject.ID_materia})" title="Delete">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -144,7 +146,7 @@ function loadSubjects() {
                         const studentCount = getStudentCountBySubject(subject.ID_materia);
                         
                         return `
-                            <tr onclick="showSubjectDetail(${subject.ID_materia})">
+                            <tr>
                                 <td><strong>${subject.Nombre}</strong></td>
                                 <td>${subject.Curso_division}</td>
                                 <td>${teacher ? `${teacher.Nombre_docente} ${teacher.Apellido_docente}` : 'N/A'}</td>
@@ -154,10 +156,13 @@ function loadSubjects() {
                                 <td>${studentCount}</td>
                                 <td>
                                     <div class="table-actions">
-                                        <button class="btn-icon btn-edit" onclick="event.stopPropagation(); editSubject(${subject.ID_materia})" title="Editar">
+                                        <button class="btn-icon btn-view" onclick="viewSubjectDetails(${subject.ID_materia})" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn-icon btn-edit" onclick="editSubject(${subject.ID_materia})" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn-icon btn-delete" onclick="event.stopPropagation(); deleteSubject(${subject.ID_materia})" title="Eliminar">
+                                        <button class="btn-icon btn-delete" onclick="deleteSubject(${subject.ID_materia})" title="Eliminar">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -343,6 +348,196 @@ function populateSubjectSelect() {
     });
 }
 
+function viewSubjectDetails(subjectId) {
+    // Store the current subject ID for the details view
+    window.currentSubjectId = subjectId;
+    
+    // Hide subjects content and show subject details view
+    const subjectsContainer = document.getElementById('subjectsContainer');
+    const subjectsList = document.getElementById('subjectsList');
+    const subjectDetailsView = document.getElementById('subjectDetailsView');
+    const sectionHeader = document.querySelector('#subjects-management .section-header');
+    
+    if (subjectsContainer) subjectsContainer.style.display = 'none';
+    if (subjectsList) subjectsList.style.display = 'none';
+    if (sectionHeader) sectionHeader.style.display = 'none';
+    if (subjectDetailsView) subjectDetailsView.style.display = 'block';
+    
+    // Load the subject details view
+    loadSubjectDetailsView(subjectId);
+}
+
+function backToSubjects() {
+    // Show subjects content and hide subject details view
+    const subjectsContainer = document.getElementById('subjectsContainer');
+    const subjectsList = document.getElementById('subjectsList');
+    const subjectDetailsView = document.getElementById('subjectDetailsView');
+    const sectionHeader = document.querySelector('#subjects-management .section-header');
+    
+    if (subjectDetailsView) subjectDetailsView.style.display = 'none';
+    if (sectionHeader) sectionHeader.style.display = 'flex';
+    
+    // Show the appropriate view based on current toggle state
+    const gridBtn = document.getElementById('subjectsGridViewBtn');
+    const listBtn = document.getElementById('subjectsListViewBtn');
+    
+    if (gridBtn && gridBtn.classList.contains('active')) {
+        if (subjectsContainer) subjectsContainer.style.display = 'grid';
+        if (subjectsList) subjectsList.style.display = 'none';
+    } else {
+        if (subjectsContainer) subjectsContainer.style.display = 'none';
+        if (subjectsList) subjectsList.style.display = 'block';
+    }
+}
+
+function loadSubjectDetailsView(subjectId) {
+    const subject = getSubjectById(subjectId);
+    if (!subject) return;
+
+    const teacher = getTeacherById(subject.Usuarios_docente_ID_docente);
+    const enrolledStudents = appData.alumnos_x_materia.filter(axm => axm.Materia_ID_materia === subjectId);
+    const students = enrolledStudents.map(axm => 
+        appData.estudiante.find(e => e.ID_Estudiante === axm.Estudiante_ID_Estudiante)
+    ).filter(Boolean);
+    
+    const evaluations = appData.evaluacion.filter(e => e.Materia_ID_materia === subjectId);
+    const content = appData.contenido.filter(c => c.Materia_ID_materia === subjectId);
+
+    // Update title
+    document.getElementById('subjectDetailsTitle').textContent = subject.Nombre;
+
+    // Load details tab content
+    loadSubjectDetailsTab(subject, teacher, students, evaluations);
+    
+    // Load content tab
+    loadSubjectContentTab(subjectId, content);
+}
+
+function loadSubjectDetailsTab(subject, teacher, students, evaluations) {
+    // Subject info summary
+    const subjectInfoSummary = document.getElementById('subjectInfoSummary');
+    if (!subjectInfoSummary) {
+        console.error('subjectInfoSummary element not found');
+        return;
+    }
+    
+    subjectInfoSummary.innerHTML = `
+        <div class="info-card">
+            <div class="info-header">
+                <h3>${subject.Nombre}</h3>
+                <span class="status-badge status-${subject.Estado.toLowerCase()}">${getStatusText(subject.Estado)}</span>
+            </div>
+            <div class="info-content">
+                <div class="info-row">
+                    <span class="info-label">Curso:</span>
+                    <span class="info-value">${subject.Curso_division}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Profesor:</span>
+                    <span class="info-value">${teacher ? `${teacher.Nombre_docente} ${teacher.Apellido_docente}` : 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Horario:</span>
+                    <span class="info-value">${subject.Horario || 'No especificado'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Aula:</span>
+                    <span class="info-value">${subject.Aula || 'No especificada'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Descripción:</span>
+                    <span class="info-value">${subject.Descripcion || 'Sin descripción'}</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Subject details content
+    const subjectDetailsContent = document.getElementById('subjectDetailsContent');
+    if (!subjectDetailsContent) {
+        console.error('subjectDetailsContent element not found');
+        return;
+    }
+    
+    subjectDetailsContent.innerHTML = `
+        <div class="details-grid">
+            <div class="details-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-users"></i> Estudiantes Inscritos (${students.length})</h4>
+                </div>
+                <div class="card-content">
+                    ${students.length > 0 ? `
+                        <div class="students-list">
+                            ${students.map(student => `
+                                <div class="student-item">
+                                    <span class="student-name">${student.Nombre} ${student.Apellido}</span>
+                                    <span class="student-status">${student.Estado || 'Activo'}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '<p class="empty-state">No hay estudiantes inscritos</p>'}
+                </div>
+            </div>
+            
+            <div class="details-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-file-alt"></i> Evaluaciones (${evaluations.length})</h4>
+                </div>
+                <div class="card-content">
+                    ${evaluations.length > 0 ? `
+                        <div class="evaluations-list">
+                            ${evaluations.map(evaluation => `
+                                <div class="evaluation-item">
+                                    <span class="evaluation-title">${evaluation.Titulo}</span>
+                                    <span class="evaluation-date">${evaluation.Fecha}</span>
+                                    <span class="evaluation-type">${evaluation.Tipo}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '<p class="empty-state">No hay evaluaciones registradas</p>'}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function loadSubjectContentTab(subjectId, content) {
+    const contentListContainer = document.getElementById('subjectContentList');
+    if (!contentListContainer) {
+        console.error('subjectContentList element not found');
+        return;
+    }
+    
+    if (content.length > 0) {
+        contentListContainer.innerHTML = content.map(item => `
+            <div class="content-item">
+                <div class="content-info">
+                    <span class="content-topic">${item.Tema}</span>
+                    <span class="content-description">${item.Descripcion || 'Sin descripción'}</span>
+                </div>
+                <div class="content-actions">
+                    <select class="content-status-selector" onchange="changeContentStatus(${item.ID_contenido}, this.value)" title="Cambiar Estado">
+                        <option value="PENDIENTE" ${item.Estado === 'PENDIENTE' ? 'selected' : ''}>Pendiente</option>
+                        <option value="EN_PROGRESO" ${item.Estado === 'EN_PROGRESO' ? 'selected' : ''}>En Progreso</option>
+                        <option value="COMPLETADO" ${item.Estado === 'COMPLETADO' ? 'selected' : ''}>Completado</option>
+                        <option value="CANCELADO" ${item.Estado === 'CANCELADO' ? 'selected' : ''}>Cancelado</option>
+                    </select>
+                    <div class="content-action-buttons">
+                        <button class="btn-icon btn-edit" onclick="editContent(${item.ID_contenido})" title="Editar Contenido">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon btn-delete" onclick="deleteContent(${item.ID_contenido})" title="Eliminar Contenido">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        contentListContainer.innerHTML = '<p class="empty-state">No hay contenidos registrados para esta materia</p>';
+    }
+}
+
 function showSubjectDetail(subjectId) {
     const subject = getSubjectById(subjectId);
     if (!subject) return;
@@ -423,13 +618,183 @@ function setupViewToggle(gridBtnId, listBtnId, gridContainerId, listContainerId)
 
 // Tab toggle functionality
 
+// Tab switching functionality for subject details
+function switchSubjectDetailsTab(tabName) {
+    const detailsTab = document.getElementById('subjectDetailsTab');
+    const contentTab = document.getElementById('subjectContentTab');
+    const detailsContent = document.getElementById('subjectDetailsTabContent');
+    const contentTabContent = document.getElementById('subjectContentTabContent');
+    
+    if (tabName === 'details') {
+        detailsTab.classList.add('active');
+        contentTab.classList.remove('active');
+        detailsContent.classList.add('active');
+        contentTabContent.classList.remove('active');
+    } else if (tabName === 'content') {
+        contentTab.classList.add('active');
+        detailsTab.classList.remove('active');
+        contentTabContent.classList.add('active');
+        detailsContent.classList.remove('active');
+    }
+}
+
 // Event listeners for detail panel
 document.addEventListener('DOMContentLoaded', function() {
     const closeSubjectDetailBtn = document.getElementById('closeSubjectDetail');
     if (closeSubjectDetailBtn) {
         closeSubjectDetailBtn.addEventListener('click', closeSubjectDetail);
     }
+    
+    // Back to subjects button
+    const backToSubjectsBtn = document.getElementById('backToSubjectsBtn');
+    if (backToSubjectsBtn) {
+        backToSubjectsBtn.addEventListener('click', backToSubjects);
+    }
+    
+    // Subject details tab buttons
+    const subjectDetailsTab = document.getElementById('subjectDetailsTab');
+    const subjectContentTab = document.getElementById('subjectContentTab');
+    
+    if (subjectDetailsTab) {
+        subjectDetailsTab.addEventListener('click', () => {
+            switchSubjectDetailsTab('details');
+        });
+    }
+    
+    if (subjectContentTab) {
+        subjectContentTab.addEventListener('click', () => {
+            switchSubjectDetailsTab('content');
+        });
+    }
+    
+    // Add content button
+    const addContentBtn = document.getElementById('addContentBtn');
+    if (addContentBtn) {
+        addContentBtn.addEventListener('click', () => {
+            // For now, just show an alert. You can implement a modal later
+            alert('Función de agregar contenido próximamente disponible');
+        });
+    }
+    
+    // Content edit form
+    const contentEditForm = document.getElementById('contentEditForm');
+    if (contentEditForm) {
+        contentEditForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveContentEdit();
+        });
+    }
+    
+    // Modal close handlers
+    setupModalHandlers('contentEditModal');
 });
+
+// Content Status Functions
+let currentContentId = null;
+
+function changeContentStatus(contentId, newStatus) {
+    // Update content status
+    const contentIndex = appData.contenido.findIndex(c => c.ID_contenido === contentId);
+    if (contentIndex !== -1) {
+        appData.contenido[contentIndex].Estado = newStatus;
+        appData.contenido[contentIndex].Fecha_actualizacion = new Date().toISOString().split('T')[0];
+    }
+    
+    // Update tema_estudiante records for this content
+    const temaEstudianteRecords = appData.tema_estudiante.filter(te => te.Contenido_ID_contenido === contentId);
+    temaEstudianteRecords.forEach(te => {
+        te.Estado = newStatus;
+        te.Fecha_actualizacion = new Date().toISOString().split('T')[0];
+    });
+    
+    // Save data
+    saveData();
+    
+    // Show success message
+    showNotification(`Estado actualizado a: ${getStatusText(newStatus)}`, 'success');
+}
+
+function editContent(contentId) {
+    const content = appData.contenido.find(c => c.ID_contenido === contentId);
+    if (!content) return;
+    
+    currentContentId = contentId;
+    
+    // Populate modal with current content data
+    document.getElementById('editContentTopic').value = content.Tema;
+    document.getElementById('editContentDescription').value = content.Descripcion || '';
+    document.getElementById('editContentStatus').value = content.Estado;
+    
+    // Show modal
+    showModal('contentEditModal');
+}
+
+function saveContentEdit() {
+    if (!currentContentId) return;
+    
+    const topic = document.getElementById('editContentTopic').value;
+    const description = document.getElementById('editContentDescription').value;
+    const status = document.getElementById('editContentStatus').value;
+    
+    // Update content
+    const contentIndex = appData.contenido.findIndex(c => c.ID_contenido === currentContentId);
+    if (contentIndex !== -1) {
+        appData.contenido[contentIndex].Tema = topic;
+        appData.contenido[contentIndex].Descripcion = description;
+        appData.contenido[contentIndex].Estado = status;
+        appData.contenido[contentIndex].Fecha_actualizacion = new Date().toISOString().split('T')[0];
+    }
+    
+    // Update tema_estudiante records for this content
+    const temaEstudianteRecords = appData.tema_estudiante.filter(te => te.Contenido_ID_contenido === currentContentId);
+    temaEstudianteRecords.forEach(te => {
+        te.Estado = status;
+        te.Fecha_actualizacion = new Date().toISOString().split('T')[0];
+    });
+    
+    // Save data
+    saveData();
+    
+    // Close modal
+    closeModal('contentEditModal');
+    
+    // Reload the content tab to show updated content
+    if (window.currentSubjectId) {
+        const content = appData.contenido.filter(c => c.Materia_ID_materia === window.currentSubjectId);
+        loadSubjectContentTab(window.currentSubjectId, content);
+    }
+    
+    // Show success message
+    showNotification('Contenido actualizado correctamente', 'success');
+    
+    currentContentId = null;
+}
+
+function deleteContent(contentId) {
+    const content = appData.contenido.find(c => c.ID_contenido === contentId);
+    if (!content) return;
+    
+    if (confirm(`¿Estás seguro de que quieres eliminar el contenido "${content.Tema}"?`)) {
+        // Remove content
+        appData.contenido = appData.contenido.filter(c => c.ID_contenido !== contentId);
+        
+        // Remove related tema_estudiante records
+        appData.tema_estudiante = appData.tema_estudiante.filter(te => te.Contenido_ID_contenido !== contentId);
+        
+        // Save data
+        saveData();
+        
+        // Reload the content tab to show updated content
+        if (window.currentSubjectId) {
+            const content = appData.contenido.filter(c => c.Materia_ID_materia === window.currentSubjectId);
+            loadSubjectContentTab(window.currentSubjectId, content);
+        }
+        
+        // Show success message
+        showNotification('Contenido eliminado correctamente', 'success');
+    }
+}
+
 
 // Content Progress Functions
 
