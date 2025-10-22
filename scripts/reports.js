@@ -24,7 +24,7 @@ function loadReports() {
                         <i class="fas fa-users"></i>
                     </div>
                     <div class="summary-content">
-                        <h3>${appData.estudiante ? appData.estudiante.length : 0}</h3>
+                        <h3>${window.data && window.data.estudiante ? window.data.estudiante.length : 0}</h3>
                         <p>Total Students</p>
                     </div>
                 </div>
@@ -151,11 +151,25 @@ function loadReports() {
         </div>
     `;
 
-    // Initialize charts after DOM is updated
+    // Initialize charts after DOM is updated and data is loaded
     setTimeout(() => {
-        initializeCharts();
-        populateFilters();
-        generateDetailedReports();
+        // Check if data is available before initializing charts
+        if (window.data && Object.keys(window.data).length > 0) {
+            initializeCharts();
+            populateFilters();
+            generateDetailedReports();
+        } else {
+            console.warn('Data not available yet, retrying in 500ms...');
+            setTimeout(() => {
+                if (window.data && Object.keys(window.data).length > 0) {
+                    initializeCharts();
+                    populateFilters();
+                    generateDetailedReports();
+                } else {
+                    console.error('Data still not available after retry');
+                }
+            }, 500);
+        }
     }, 100);
 }
 
@@ -171,8 +185,8 @@ function populateReportsTeacherFilter() {
     teacherFilter.innerHTML = '<option value="" data-translate="all_teachers">Todos los Profesores</option>';
     
     // Add all teachers to the filter
-    if (appData.usuarios_docente) {
-        appData.usuarios_docente.forEach(teacher => {
+    if (window.data && window.data.usuarios_docente) {
+        window.data.usuarios_docente.forEach(teacher => {
             const option = document.createElement('option');
             option.value = teacher.ID_docente;
             option.textContent = `${teacher.Nombre_docente} ${teacher.Apellido_docente}`;
@@ -200,7 +214,7 @@ function filterReportsByTeacher() {
     // Update all chart filters to only show data for the selected teacher's subjects
     if (selectedTeacher) {
         const teacherId = parseInt(selectedTeacher);
-        const teacherSubjects = appData.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
+        const teacherSubjects = window.data.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
         const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
         
         // Update subject filters in charts to only show teacher's subjects
@@ -223,7 +237,7 @@ function updateChartFilters(teacherSubjectIds) {
     if (gradesFilter) {
         gradesFilter.innerHTML = '<option value="all">All Subjects</option>';
         if (teacherSubjectIds.length > 0) {
-            const teacherSubjects = appData.materia.filter(subject => teacherSubjectIds.includes(subject.ID_materia));
+            const teacherSubjects = window.data.materia.filter(subject => teacherSubjectIds.includes(subject.ID_materia));
             teacherSubjects.forEach(subject => {
                 const option = document.createElement('option');
                 option.value = subject.ID_materia;
@@ -238,7 +252,7 @@ function updateChartFilters(teacherSubjectIds) {
     if (attendanceFilter) {
         attendanceFilter.innerHTML = '<option value="all">All Subjects</option>';
         if (teacherSubjectIds.length > 0) {
-            const teacherSubjects = appData.materia.filter(subject => teacherSubjectIds.includes(subject.ID_materia));
+            const teacherSubjects = window.data.materia.filter(subject => teacherSubjectIds.includes(subject.ID_materia));
             teacherSubjects.forEach(subject => {
                 const option = document.createElement('option');
                 option.value = subject.ID_materia;
@@ -249,6 +263,21 @@ function updateChartFilters(teacherSubjectIds) {
     }
 }
 
+// Manual refresh function for debugging
+function refreshReports() {
+    console.log('Manually refreshing reports...');
+    console.log('Current data state:', window.data);
+    if (window.data && Object.keys(window.data).length > 0) {
+        initializeCharts();
+        populateFilters();
+        generateDetailedReports();
+        console.log('Reports refreshed successfully');
+    } else {
+        console.error('No data available for reports');
+    }
+}
+
 // Export main functions
 window.initializeReports = initializeReports;
 window.loadReports = loadReports;
+window.refreshReports = refreshReports;

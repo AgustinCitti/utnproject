@@ -1,6 +1,7 @@
 // Data Processing Component
 function getGradesDistribution() {
-    if (!appData || !appData.notas) {
+    if (!window.data || !window.data.notas) {
+        console.warn('getGradesDistribution: No data available', { data: window.data, notas: window.data?.notas });
         return { labels: [], data: [] };
     }
 
@@ -29,7 +30,8 @@ function getGradesDistribution() {
 }
 
 function getAttendanceTrends() {
-    if (!appData || !appData.asistencia) {
+    if (!window.data || !window.data.asistencia) {
+        console.warn('getAttendanceTrends: No data available', { data: window.data, asistencia: window.data?.asistencia });
         return { labels: [], data: [] };
     }
 
@@ -62,7 +64,7 @@ function getAttendanceTrends() {
 }
 
 function getStudentPerformance() {
-    if (!appData || !appData.estudiante || !appData.notas) {
+    if (!window.data || !window.data.estudiante || !window.data.notas) {
         return { labels: [], datasets: [] };
     }
 
@@ -72,13 +74,13 @@ function getStudentPerformance() {
     const labels = teacherSubjects.map(materia => materia.Nombre);
     
     const datasets = teacherStudents.slice(0, 3).map((student, index) => {
-        const studentGrades = appData.notas.filter(nota => 
+        const studentGrades = window.data.notas.filter(nota => 
             nota.Estudiante_ID_Estudiante === student.ID_Estudiante
         );
         
         const data = teacherSubjects.map(materia => {
             const materiaGrades = studentGrades.filter(nota => {
-                const evaluacion = appData.evaluacion.find(eval => eval.ID_evaluacion === nota.Evaluacion_ID_evaluacion);
+                const evaluacion = window.data.evaluacion.find(eval => eval.ID_evaluacion === nota.Evaluacion_ID_evaluacion);
                 return evaluacion && evaluacion.Materia_ID_materia === materia.ID_materia;
             });
             
@@ -100,7 +102,7 @@ function getStudentPerformance() {
 }
 
 function getSubjectComparison() {
-    if (!appData || !appData.materia || !appData.notas) {
+    if (!window.data || !window.data.materia || !window.data.notas) {
         return { labels: [], data: [] };
     }
 
@@ -108,11 +110,11 @@ function getSubjectComparison() {
     const teacherSubjects = getFilteredSubjectsForTeacher();
 
     const subjectStats = teacherSubjects.map(materia => {
-        const materiaEvaluaciones = appData.evaluacion.filter(eval => 
+        const materiaEvaluaciones = window.data.evaluacion.filter(eval => 
             eval.Materia_ID_materia === materia.ID_materia
         );
         
-        const materiaNotas = appData.notas.filter(nota => 
+        const materiaNotas = window.data.notas.filter(nota => 
             materiaEvaluaciones.some(eval => eval.ID_evaluacion === nota.Evaluacion_ID_evaluacion)
         );
         
@@ -133,7 +135,8 @@ function getSubjectComparison() {
 }
 
 function calculateAverageGrade() {
-    if (!appData || !appData.notas || appData.notas.length === 0) {
+    if (!window.data || !window.data.notas || window.data.notas.length === 0) {
+        console.warn('calculateAverageGrade: No data available', { data: window.data, notas: window.data?.notas });
         return 0;
     }
     
@@ -150,7 +153,8 @@ function calculateAverageGrade() {
 }
 
 function calculateAttendanceRate() {
-    if (!appData || !appData.asistencia || appData.asistencia.length === 0) {
+    if (!window.data || !window.data.asistencia || window.data.asistencia.length === 0) {
+        console.warn('calculateAttendanceRate: No data available', { data: window.data, asistencia: window.data?.asistencia });
         return 0;
     }
     
@@ -168,7 +172,7 @@ function calculateAttendanceRate() {
 }
 
 function getPassingStudents() {
-    if (!appData || !appData.estudiante || !appData.notas) {
+    if (!window.data || !window.data.estudiante || !window.data.notas) {
         return 0;
     }
     
@@ -199,57 +203,57 @@ function getCurrentTeacherId() {
 
 function getFilteredSubjectsForTeacher() {
     const teacherId = getCurrentTeacherId();
-    if (!teacherId) return appData.materia || [];
+    if (!teacherId) return window.data.materia || [];
     
-    return appData.materia.filter(subject => 
+    return window.data.materia.filter(subject => 
         subject.Usuarios_docente_ID_docente === parseInt(teacherId)
     );
 }
 
 function getFilteredStudentsForTeacher() {
     const teacherId = getCurrentTeacherId();
-    if (!teacherId) return appData.estudiante || [];
+    if (!teacherId) return window.data.estudiante || [];
     
     const teacherSubjects = getFilteredSubjectsForTeacher();
     const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
     
     // Get students enrolled in these subjects
-    const enrolledStudentIds = appData.alumnos_x_materia
+    const enrolledStudentIds = window.data.alumnos_x_materia
         .filter(enrollment => teacherSubjectIds.includes(enrollment.Materia_ID_materia))
         .map(enrollment => enrollment.Estudiante_ID_Estudiante);
     
-    return appData.estudiante.filter(student => 
+    return window.data.estudiante.filter(student => 
         enrolledStudentIds.includes(student.ID_Estudiante)
     );
 }
 
 function getFilteredGradesForTeacher() {
     const teacherId = getCurrentTeacherId();
-    if (!teacherId) return appData.notas || [];
+    if (!teacherId) return window.data.notas || [];
     
     const teacherSubjects = getFilteredSubjectsForTeacher();
     const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
     
     // Get evaluations for teacher's subjects
-    const teacherEvaluations = appData.evaluacion.filter(evaluation => 
+    const teacherEvaluations = window.data.evaluacion.filter(evaluation => 
         teacherSubjectIds.includes(evaluation.Materia_ID_materia)
     );
     const teacherEvaluationIds = teacherEvaluations.map(evaluation => evaluation.ID_evaluacion);
     
     // Get grades for these evaluations
-    return appData.notas.filter(nota => 
+    return window.data.notas.filter(nota => 
         teacherEvaluationIds.includes(nota.Evaluacion_ID_evaluacion)
     );
 }
 
 function getFilteredAttendanceForTeacher() {
     const teacherId = getCurrentTeacherId();
-    if (!teacherId) return appData.asistencia || [];
+    if (!teacherId) return window.data.asistencia || [];
     
     const teacherSubjects = getFilteredSubjectsForTeacher();
     const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
     
-    return appData.asistencia.filter(attendance => 
+    return window.data.asistencia.filter(attendance => 
         teacherSubjectIds.includes(attendance.Materia_ID_materia)
     );
 }

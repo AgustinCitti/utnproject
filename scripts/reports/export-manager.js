@@ -82,7 +82,7 @@ function exportToPDF() {
 
 function generatePDFContent() {
     const currentDate = new Date().toLocaleDateString();
-    const totalStudents = appData.estudiante ? appData.estudiante.length : 0;
+    const totalStudents = window.data && window.data.estudiante ? window.data.estudiante.length : 0;
     const averageGrade = calculateAverageGrade();
     const attendanceRate = calculateAttendanceRate();
     const passingRate = getPassingStudents();
@@ -152,12 +152,12 @@ function generatePDFContent() {
 }
 
 function generateTopStudentsPDF() {
-    if (!appData || !appData.estudiante || !appData.notas) {
+    if (!window.data || !window.data.estudiante || !window.data.notas) {
         return '<p>No data available</p>';
     }
 
-    const studentAverages = appData.estudiante.map(student => {
-        const studentGrades = appData.notas.filter(nota => 
+    const studentAverages = window.data.estudiante.map(student => {
+        const studentGrades = window.data.notas.filter(nota => 
             nota.Estudiante_ID_Estudiante === student.ID_Estudiante
         );
         
@@ -197,12 +197,12 @@ function generateTopStudentsPDF() {
 }
 
 function generateAttendancePDF() {
-    if (!appData || !appData.estudiante || !appData.asistencia) {
+    if (!window.data || !window.data.estudiante || !window.data.asistencia) {
         return '<p>No data available</p>';
     }
 
-    const attendanceStats = appData.estudiante.map(student => {
-        const studentAttendance = appData.asistencia.filter(record => 
+    const attendanceStats = window.data.estudiante.map(student => {
+        const studentAttendance = window.data.asistencia.filter(record => 
             record.Estudiante_ID_Estudiante === student.ID_Estudiante
         );
         
@@ -244,7 +244,7 @@ function generateAttendancePDF() {
 }
 
 function generateGradesDistributionPDF() {
-    if (!appData || !appData.notas) {
+    if (!window.data || !window.data.notas) {
         return '<p>No data available</p>';
     }
 
@@ -257,7 +257,7 @@ function generateGradesDistributionPDF() {
     ];
 
     const distribution = gradeRanges.map(range => {
-        const count = appData.notas.filter(nota => 
+        const count = window.data.notas.filter(nota => 
             nota.Calificacion > range.min && nota.Calificacion <= range.max
         ).length;
         return { range: range.label, count };
@@ -274,7 +274,7 @@ function generateGradesDistributionPDF() {
             </thead>
             <tbody>
                 ${distribution.map(item => {
-                    const percentage = appData.notas.length > 0 ? Math.round((item.count / appData.notas.length) * 100) : 0;
+                    const percentage = window.data.notas.length > 0 ? Math.round((item.count / window.data.notas.length) * 100) : 0;
                     return `
                         <tr>
                             <td style="border: 1px solid #e2e8f0; padding: 12px; font-weight: bold;">${item.range}</td>
@@ -313,12 +313,12 @@ function exportToCSV() {
 }
 
 function generateStudentsCSV() {
-    if (!appData || !appData.estudiante || !appData.notas) {
+    if (!window.data || !window.data.estudiante || !window.data.notas) {
         return 'No data available';
     }
 
-    const studentsData = appData.estudiante.map(student => {
-        const studentGrades = appData.notas.filter(nota => 
+    const studentsData = window.data.estudiante.map(student => {
+        const studentGrades = window.data.notas.filter(nota => 
             nota.Estudiante_ID_Estudiante === student.ID_Estudiante
         );
         
@@ -326,7 +326,7 @@ function generateStudentsCSV() {
             ? studentGrades.reduce((sum, nota) => sum + nota.Calificacion, 0) / studentGrades.length
             : 0;
         
-        const studentAttendance = appData.asistencia ? appData.asistencia.filter(record => 
+        const studentAttendance = window.data.asistencia ? window.data.asistencia.filter(record => 
             record.Estudiante_ID_Estudiante === student.ID_Estudiante
         ) : [];
         
@@ -351,13 +351,13 @@ function generateStudentsCSV() {
 }
 
 function generateAttendanceCSV() {
-    if (!appData || !appData.asistencia || !appData.estudiante || !appData.materia) {
+    if (!window.data || !window.data.asistencia || !window.data.estudiante || !window.data.materia) {
         return 'No data available';
     }
 
-    const attendanceData = appData.asistencia.map(record => {
-        const student = appData.estudiante.find(s => s.ID_Estudiante === record.Estudiante_ID_Estudiante);
-        const materia = appData.materia.find(m => m.ID_materia === record.Materia_ID_materia);
+    const attendanceData = window.data.asistencia.map(record => {
+        const student = window.data.estudiante.find(s => s.ID_Estudiante === record.Estudiante_ID_Estudiante);
+        const materia = window.data.materia.find(m => m.ID_materia === record.Materia_ID_materia);
         
         return {
             'Date': record.Fecha,
@@ -372,14 +372,14 @@ function generateAttendanceCSV() {
 }
 
 function generateGradesCSV() {
-    if (!appData || !appData.notas || !appData.estudiante || !appData.evaluacion || !appData.materia) {
+    if (!window.data || !window.data.notas || !window.data.estudiante || !window.data.evaluacion || !window.data.materia) {
         return 'No data available';
     }
 
-    const gradesData = appData.notas.map(nota => {
-        const student = appData.estudiante.find(s => s.ID_Estudiante === nota.Estudiante_ID_Estudiante);
-        const evaluacion = appData.evaluacion.find(e => e.ID_evaluacion === nota.Evaluacion_ID_evaluacion);
-        const materia = evaluacion ? appData.materia.find(m => m.ID_materia === evaluacion.Materia_ID_materia) : null;
+    const gradesData = window.data.notas.map(nota => {
+        const student = window.data.estudiante.find(s => s.ID_Estudiante === nota.Estudiante_ID_Estudiante);
+        const evaluacion = window.data.evaluacion.find(e => e.ID_evaluacion === nota.Evaluacion_ID_evaluacion);
+        const materia = evaluacion ? window.data.materia.find(m => m.ID_materia === evaluacion.Materia_ID_materia) : null;
         
         return {
             'Student Name': student ? `${student.Nombre} ${student.Apellido}` : 'Unknown',

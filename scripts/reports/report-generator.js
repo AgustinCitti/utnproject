@@ -8,7 +8,7 @@ function generateTopStudentsReport() {
     const container = document.getElementById('topStudentsReport');
     if (!container) return;
 
-    if (!appData || !appData.estudiante || !appData.notas) {
+    if (!window.data || !window.data.estudiante || !window.data.notas) {
         container.innerHTML = '<p>No data available</p>';
         return;
     }
@@ -53,7 +53,7 @@ function generateAttendanceReport() {
     const container = document.getElementById('attendanceReport');
     if (!container) return;
 
-    if (!appData || !appData.estudiante || !appData.asistencia) {
+    if (!window.data || !window.data.estudiante || !window.data.asistencia) {
         container.innerHTML = '<p>No data available</p>';
         return;
     }
