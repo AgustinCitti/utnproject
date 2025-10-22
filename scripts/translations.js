@@ -103,6 +103,9 @@ const translations = {
         attendance_rate: "Asistencia",
         calendar: "Calendario",
         upcoming_classes: "Próximas Clases",
+        no_upcoming_classes: "No hay clases próximas",
+        no_classes_message: "No hay clases programadas para los próximos días.",
+        evaluations_today: "Evaluaciones hoy:",
         welcome_user: "¡Bienvenido, Usuario!",
         
         // Sections
@@ -373,6 +376,9 @@ const translations = {
         attendance_rate: "Attendance Rate",
         calendar: "Calendar",
         upcoming_classes: "Upcoming Classes",
+        no_upcoming_classes: "No upcoming classes",
+        no_classes_message: "No classes scheduled for the upcoming days.",
+        evaluations_today: "Evaluations today:",
         welcome_user: "Welcome, User!",
         
         // Sections

@@ -46,37 +46,236 @@ function loadUpcomingClasses() {
     const classesList = document.getElementById('classesList');
     if (!classesList) return;
 
-    // Since we don't have a classes table in the new schema, we'll show upcoming evaluations
-    const today = new Date();
-    const upcomingEvaluations = (appData.evaluacion || [])
-        .filter(eval => new Date(eval.Fecha) >= today)
-        .sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha))
-        .slice(0, 5);
-
-    if (upcomingEvaluations.length === 0) {
+    const nextClasses = getNextTwoClasses();
+    
+    if (nextClasses.length === 0) {
         classesList.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-calendar-alt"></i>
-                <h3>No Upcoming Evaluations</h3>
-                <p>No evaluations scheduled for the upcoming days.</p>
+                <h3 data-translate="no_upcoming_classes">No hay clases próximas</h3>
+                <p data-translate="no_classes_message">No hay clases programadas para los próximos días.</p>
             </div>
         `;
         return;
     }
 
-    classesList.innerHTML = upcomingEvaluations.map(eval => {
-        const subject = (appData.materia || []).find(s => s.ID_materia === eval.Materia_ID_materia);
-        const teacher = (appData.usuarios_docente || []).find(t => t.ID_docente === subject?.Usuarios_docente_ID_docente);
+    classesList.innerHTML = nextClasses.map(classInfo => {
+        const evaluations = getEvaluationsForDate(classInfo.date);
+        const hasEvaluations = evaluations.length > 0;
+        
         return `
-            <div class="class-item">
-                <div class="class-time">${eval.Fecha}</div>
+            <div class="class-item ${hasEvaluations ? 'has-evaluations' : ''}">
+                <div class="class-header">
+                    <div class="class-time">
+                        <i class="fas fa-calendar-day"></i>
+                        <span>${formatDate(classInfo.date)}</span>
+                    </div>
+                    <div class="class-schedule">
+                        <i class="fas fa-clock"></i>
+                        <span>${classInfo.time}</span>
+                    </div>
+                </div>
                 <div class="class-details">
-                    <h4>${eval.Titulo}</h4>
-                    <p>${subject ? subject.Nombre : 'Unknown Subject'} • ${teacher ? teacher.Nombre_docente + ' ' + teacher.Apellido_docente : 'Unknown Teacher'}</p>
+                    <h4>${classInfo.subjectName}</h4>
+                    <p class="class-info">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        ${classInfo.teacherName}
+                        <span class="classroom">• ${classInfo.classroom}</span>
+                    </p>
+                    ${hasEvaluations ? `
+                        <div class="evaluations">
+                            <div class="evaluation-header">
+                                <i class="fas fa-clipboard-list"></i>
+                                <span data-translate="evaluations_today">Evaluaciones hoy:</span>
+                            </div>
+                            ${evaluations.map(eval => `
+                                <div class="evaluation-item">
+                                    <span class="evaluation-title">${eval.Titulo}</span>
+                                    <span class="evaluation-type">${getEvaluationTypeLabel(eval.Tipo)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         `;
     }).join('');
+}
+
+function getNextTwoClasses() {
+    const today = new Date();
+    const subjects = appData.materia || [];
+    const teachers = appData.usuarios_docente || [];
+    const nextClasses = [];
+
+    subjects.forEach(subject => {
+        if (!subject.Horario || subject.Estado !== 'ACTIVA') return;
+
+        const schedule = parseSchedule(subject.Horario);
+        if (!schedule) return;
+
+        const teacher = teachers.find(t => t.ID_docente === subject.Usuarios_docente_ID_docente);
+        const teacherName = teacher ? `${teacher.Nombre_docente} ${teacher.Apellido_docente}` : 'Profesor no asignado';
+
+        // Find next 2 occurrences of this class
+        const classOccurrences = getNextClassOccurrences(schedule, today, 2);
+        
+        classOccurrences.forEach(occurrence => {
+            nextClasses.push({
+                date: occurrence.date,
+                time: occurrence.time,
+                subjectName: subject.Nombre,
+                teacherName: teacherName,
+                classroom: subject.Aula || 'Aula por asignar',
+                subjectId: subject.ID_materia
+            });
+        });
+    });
+
+    // Sort by date and time, then take first 2
+    return nextClasses
+        .sort((a, b) => {
+            const dateA = new Date(`${a.date} ${a.time}`);
+            const dateB = new Date(`${b.date} ${b.time}`);
+            return dateA - dateB;
+        })
+        .slice(0, 2);
+}
+
+function parseSchedule(horario) {
+    if (!horario) return null;
+
+    // Common patterns for schedule parsing
+    const patterns = [
+        // "Lunes y Miércoles 10:00-12:00"
+        /(lunes|martes|miércoles|jueves|viernes|sábado|domingo)(?:\s+y\s+(lunes|martes|miércoles|jueves|viernes|sábado|domingo))?\s+(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})/i,
+        // "Lunes, Miércoles 13:00-15:00"
+        /(lunes|martes|miércoles|jueves|viernes|sábado|domingo)(?:,\s*(lunes|martes|miércoles|jueves|viernes|sábado|domingo))?\s+(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})/i,
+        // "Lunes 13hs"
+        /(lunes|martes|miércoles|jueves|viernes|sábado|domingo)\s+(\d{1,2})hs/i
+    ];
+
+    for (const pattern of patterns) {
+        const match = horario.match(pattern);
+        if (match) {
+            const dayNames = {
+                'lunes': 1, 'martes': 2, 'miércoles': 3, 'jueves': 4, 
+                'viernes': 5, 'sábado': 6, 'domingo': 0
+            };
+
+            const day1 = dayNames[match[1].toLowerCase()];
+            const day2 = match[2] ? dayNames[match[2].toLowerCase()] : null;
+
+            if (pattern === patterns[2]) {
+                // Format: "Lunes 13hs"
+                const hour = parseInt(match[2]);
+                return {
+                    days: [day1],
+                    startTime: `${hour.toString().padStart(2, '0')}:00`,
+                    endTime: `${(hour + 2).toString().padStart(2, '0')}:00`
+                };
+            } else {
+                // Format with time range
+                const startHour = parseInt(match[3]);
+                const startMin = parseInt(match[4]);
+                const endHour = parseInt(match[5]);
+                const endMin = parseInt(match[6]);
+                
+                return {
+                    days: day2 ? [day1, day2] : [day1],
+                    startTime: `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`,
+                    endTime: `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`
+                };
+            }
+        }
+    }
+
+    return null;
+}
+
+function getNextClassOccurrences(schedule, fromDate, count) {
+    const occurrences = [];
+    const currentDate = new Date(fromDate);
+    
+    // Look ahead up to 4 weeks to find next occurrences
+    for (let week = 0; week < 4 && occurrences.length < count; week++) {
+        for (let day = 0; day < 7; day++) {
+            const checkDate = new Date(currentDate);
+            checkDate.setDate(currentDate.getDate() + (week * 7) + day);
+            
+            if (schedule.days.includes(checkDate.getDay())) {
+                const dateStr = checkDate.toISOString().split('T')[0];
+                const timeStr = schedule.startTime;
+                
+                // Only include future dates
+                if (checkDate >= fromDate) {
+                    occurrences.push({
+                        date: dateStr,
+                        time: timeStr
+                    });
+                    
+                    if (occurrences.length >= count) break;
+                }
+            }
+        }
+    }
+    
+    return occurrences;
+}
+
+function getEvaluationsForDate(date) {
+    const evaluations = appData.evaluacion || [];
+    return evaluations.filter(eval => eval.Fecha === date);
+}
+
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    
+    const dayNames = {
+        es: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+        en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    };
+    
+    const monthNames = {
+        es: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+             'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+        en: ['January', 'February', 'March', 'April', 'May', 'June',
+             'July', 'August', 'September', 'October', 'November', 'December']
+    };
+    
+    if (date.toDateString() === today.toDateString()) {
+        return currentLanguage === 'es' ? 'Hoy' : 'Today';
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+        return currentLanguage === 'es' ? 'Mañana' : 'Tomorrow';
+    } else {
+        return `${dayNames[currentLanguage][date.getDay()]}, ${date.getDate()} ${monthNames[currentLanguage][date.getMonth()]}`;
+    }
+}
+
+function getEvaluationTypeLabel(type) {
+    const labels = {
+        es: {
+            'EXAMEN': 'Examen',
+            'PARCIAL': 'Parcial',
+            'TRABAJO_PRACTICO': 'Trabajo Práctico',
+            'PROYECTO': 'Proyecto',
+            'ORAL': 'Examen Oral',
+            'PRACTICO': 'Examen Práctico'
+        },
+        en: {
+            'EXAMEN': 'Exam',
+            'PARCIAL': 'Midterm',
+            'TRABAJO_PRACTICO': 'Assignment',
+            'PROYECTO': 'Project',
+            'ORAL': 'Oral Exam',
+            'PRACTICO': 'Practical Exam'
+        }
+    };
+    
+    return labels[currentLanguage][type] || type;
 }
 
 // Calendar System

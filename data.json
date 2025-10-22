@@ -194,6 +194,24 @@
       "Tipo": "PARCIAL",
       "Materia_ID_materia": 2,
       "Estado": "FINALIZADA"
+    },
+    {
+      "ID_evaluacion": 4,
+      "Titulo": "Parcial 2 - Álgebra",
+      "Descripcion": "Evaluación de álgebra avanzada",
+      "Fecha": "2024-12-18",
+      "Tipo": "PARCIAL",
+      "Materia_ID_materia": 1,
+      "Estado": "PROGRAMADA"
+    },
+    {
+      "ID_evaluacion": 5,
+      "Titulo": "Examen Final - Física",
+      "Descripcion": "Examen final de física",
+      "Fecha": "2024-12-20",
+      "Tipo": "EXAMEN",
+      "Materia_ID_materia": 2,
+      "Estado": "PROGRAMADA"
     }
   ],
   "notas": [
