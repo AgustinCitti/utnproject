@@ -93,7 +93,7 @@ function initializeUnifiedStudentManagement() {
     if (globalGradeStudentsBtn) {
         globalGradeStudentsBtn.addEventListener('click', () => {
             // Navigate to grade marking section and show the grade marking view
-            showSection('grade-marking');
+            showSection('student-management');
             setTimeout(() => {
                 showGradeMarkingView();
             }, 100);

@@ -44,10 +44,6 @@
                     <i class="fas fa-calendar-check"></i>
                     <span data-translate="attendance">Asistencia</span>
                 </a>
-                <a href="#grade-marking" class="nav-item" data-section="grade-marking">
-                    <i class="fas fa-graduation-cap"></i>
-                    <span data-translate="grade_marking">Calificaciones</span>
-                </a>
                 
                 <!-- Language Selector in Navigation -->
                 <div class="nav-language-selector">
@@ -64,9 +60,56 @@
         </div>
     </div>
 
+    <!-- Desktop Navigation Header -->
+    <header class="landing-header desktop-nav">
+        <nav class="landing-nav">
+            <div class="nav-brand">
+                <i class="fas fa-graduation-cap"></i>
+                <span>EduSync</span>
+            </div>
+            <div class="nav-menu" id="desktopNavMenu">
+                <a href="#dashboard" class="nav-link" data-section="dashboard">
+                    <span data-translate="dashboard">Panel de Control</span>
+                </a>
+                <a href="#student-management" class="nav-link" data-section="student-management">
+                    <span data-translate="student_management">Gestión de Estudiantes</span>
+                </a>
+                <a href="#repository" class="nav-link" data-section="repository">
+                    <span data-translate="repository">Repositorio</span>
+                </a>
+                <a href="#notifications" class="nav-link" data-section="notifications">
+                    <span data-translate="notifications">Notificaciones</span>
+                    <span class="notification-badge" id="desktopNotificationCount">0</span>
+                </a>
+                <a href="#reports" class="nav-link" data-section="reports">
+                    <span data-translate="reports">Reportes</span>
+                </a>
+                <a href="#attendance" class="nav-link" data-section="attendance">
+                    <span data-translate="attendance">Asistencia</span>
+                </a>
+                <div class="language-selector">
+                    <select id="desktopLanguageSelect" class="language-dropdown">
+                        <option value="es">Español</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <div class="user-info">
+                    <button id="desktopLogoutBtn" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="nav-toggle" id="desktopNavToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+    </header>
+
     <div class="app-container">
-        <!-- Header -->
-        <header class="app-header">
+        <!-- Mobile Header -->
+        <header class="app-header mobile-header">
             <div class="header-left">
                 <button id="menuToggle" class="menu-toggle">
                     <i class="fas fa-bars"></i>
@@ -441,102 +484,6 @@
                 </div>
             </section>
 
-            <!-- Grade Marking Section -->
-            <section id="grade-marking" class="content-section">
-                <div class="section-header">
-                    <h2 data-translate="grade_marking">Calificación de Estudiantes</h2>
-                    <div class="section-actions">
-                        <div class="filters">
-                            <select id="gradeMarkingCourseFilter" class="filter-select">
-                                <option value="" data-translate="all_courses">Todos los Cursos</option>
-                                <option value="9th" data-translate="9th_course">9º Curso</option>
-                                <option value="10th" data-translate="10th_course">10º Curso</option>
-                                <option value="11th" data-translate="11th_course">11º Curso</option>
-                                <option value="12th" data-translate="12th_course">12º Curso</option>
-                            </select>
-                            <select id="gradeMarkingSubjectFilter" class="filter-select">
-                                <option value="" data-translate="all_subjects">Todas las Materias</option>
-                                <!-- Options will be populated dynamically -->
-                            </select>
-                        </div>
-                        <button id="markGradesBtn" class="btn-primary">
-                            <i class="fas fa-graduation-cap"></i>
-                            <span data-translate="mark_grades">Calificar Estudiantes</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="grade-marking-view" id="gradeMarkingView" style="display: none;">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title" data-translate="grade_marking_form">Formulario de Calificación</h3>
-                        </div>
-                        <div class="card-content">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="gradeMarkingCourseSelect" data-translate="course">Curso: *</label>
-                                    <select id="gradeMarkingCourseSelect" required>
-                                        <option value="" data-translate="select_course">- Seleccionar -</option>
-                                        <option value="9th" data-translate="9th_course">9º Curso</option>
-                                        <option value="10th" data-translate="10th_course">10º Curso</option>
-                                        <option value="11th" data-translate="11th_course">11º Curso</option>
-                                        <option value="12th" data-translate="12th_course">12º Curso</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="gradeMarkingSubjectSelect" data-translate="subject">Materia: *</label>
-                                    <select id="gradeMarkingSubjectSelect" required disabled>
-                                        <option value="" data-translate="select_subject">- Seleccionar -</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="gradeMarkingExamSelect" data-translate="exam">Evaluación: *</label>
-                                    <select id="gradeMarkingExamSelect" required disabled>
-                                        <option value="" data-translate="select_exam">- Seleccionar -</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="gradeMarkingNotes" data-translate="observations">Observaciones:</label>
-                                <textarea id="gradeMarkingNotes" placeholder="Agregar observaciones sobre la evaluación..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title" data-translate="students_grades">Alumnos: Calificaciones</h3>
-                        </div>
-                        <div class="card-content">
-                            <div class="table-responsive">
-                                <table class="data-table" id="gradeMarkingTable">
-                                    <thead>
-                                        <tr>
-                                            <th data-translate="student_id">ID Estudiante</th>
-                                            <th data-translate="lastname_firstname">Apellido y nombre</th>
-                                            <th data-translate="grade">Calificación</th>
-                                            <th data-translate="status">Estado</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="gradeMarkingTableBody">
-                                        <!-- Students will be loaded here -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary" id="cancelGradeMarkingBtn" data-translate="cancel">Cancelar</button>
-                        <button type="button" class="btn-primary" id="saveGradeMarkingBtn" data-translate="save_grades">Guardar Calificaciones</button>
-                    </div>
-                </div>
-
-                <div class="grade-marking-list" id="gradeMarkingList">
-                    <!-- Grade marking records will be loaded here -->
-                </div>
-            </section>
         </main>
     </div>
 

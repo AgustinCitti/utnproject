@@ -80,10 +80,19 @@ function loadNotifications() {
 
 function updateNotificationCount() {
     const count = appData.notifications.filter(n => !n.read).length;
-    const badge = document.getElementById('notificationCount');
-    if (badge) {
-        badge.textContent = count;
-        badge.style.display = count > 0 ? 'inline' : 'none';
+    
+    // Update mobile notification badge
+    const mobileBadge = document.getElementById('notificationCount');
+    if (mobileBadge) {
+        mobileBadge.textContent = count;
+        mobileBadge.style.display = count > 0 ? 'inline' : 'none';
+    }
+    
+    // Update desktop notification badge
+    const desktopBadge = document.getElementById('desktopNotificationCount');
+    if (desktopBadge) {
+        desktopBadge.textContent = count;
+        desktopBadge.style.display = count > 0 ? 'inline' : 'none';
     }
 }
 

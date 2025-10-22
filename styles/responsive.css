@@ -579,6 +579,31 @@
     }
 }
 
+/* Desktop Navigation Responsive Styles */
+@media (min-width: 769px) {
+    .desktop-nav {
+        display: block;
+    }
+    
+    .mobile-header {
+        display: none;
+    }
+    
+    .app-container {
+        padding-top: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .desktop-nav {
+        display: none;
+    }
+    
+    .mobile-header {
+        display: block;
+    }
+}
+
 /* Responsive Design */
 @media (min-width: 768px) {
     .dashboard-grid {

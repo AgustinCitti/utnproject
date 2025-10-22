@@ -5,18 +5,12 @@ function initializeGrades() {
     const gradeForm = document.getElementById('gradeForm');
     const courseFilter = document.getElementById('courseFilter');
     const markGradesBtn = document.getElementById('markGradesBtn');
-    const gradeMarkingCourseFilter = document.getElementById('gradeMarkingCourseFilter');
-    const gradeMarkingSubjectFilter = document.getElementById('gradeMarkingSubjectFilter');
-    const gradeMarkingCourseSelect = document.getElementById('gradeMarkingCourseSelect');
-    const gradeMarkingSubjectSelect = document.getElementById('gradeMarkingSubjectSelect');
-    const gradeMarkingExamSelect = document.getElementById('gradeMarkingExamSelect');
-    const saveGradeMarkingBtn = document.getElementById('saveGradeMarkingBtn');
-    const cancelGradeMarkingBtn = document.getElementById('cancelGradeMarkingBtn');
+    // Grade marking elements removed - functionality integrated into student management
 
     if (addGradeBtn) {
         addGradeBtn.addEventListener('click', () => {
             // Navigate to grade marking section and show the grade marking view
-            showSection('grade-marking');
+            showSection('student-management');
             setTimeout(() => {
                 showGradeMarkingView();
             }, 100);
@@ -37,56 +31,7 @@ function initializeGrades() {
         });
     }
 
-    // Grade marking functionality
-    if (markGradesBtn) {
-        markGradesBtn.addEventListener('click', () => {
-            showGradeMarkingView();
-        });
-    }
-
-    // Grade marking filters
-    if (gradeMarkingCourseFilter) {
-        gradeMarkingCourseFilter.addEventListener('change', () => {
-            updateGradeMarkingSubjectFilter();
-        });
-    }
-
-    if (gradeMarkingSubjectFilter) {
-        gradeMarkingSubjectFilter.addEventListener('change', () => {
-            loadGradeMarkingRecords();
-        });
-    }
-
-    // Grade marking view filters
-    if (gradeMarkingCourseSelect) {
-        gradeMarkingCourseSelect.addEventListener('change', () => {
-            updateGradeMarkingSubjectSelect();
-        });
-    }
-
-    if (gradeMarkingSubjectSelect) {
-        gradeMarkingSubjectSelect.addEventListener('change', () => {
-            updateGradeMarkingExamSelect();
-        });
-    }
-
-    if (gradeMarkingExamSelect) {
-        gradeMarkingExamSelect.addEventListener('change', () => {
-            loadStudentsForGradeMarking();
-        });
-    }
-
-    if (saveGradeMarkingBtn) {
-        saveGradeMarkingBtn.addEventListener('click', () => {
-            saveGradeMarkingBulk();
-        });
-    }
-
-    if (cancelGradeMarkingBtn) {
-        cancelGradeMarkingBtn.addEventListener('click', () => {
-            hideGradeMarkingView();
-        });
-    }
+    // Grade marking functionality removed - integrated into student management
 
     setupModalHandlers('gradeModal');
 }
@@ -276,7 +221,8 @@ function filterGradesByCourse() {
 }
 
 // Grade Marking Functions
-function showGradeMarkingView() {
+// Grade marking functions removed - functionality integrated into student management
+/*function showGradeMarkingView() {
     const gradeMarkingView = document.getElementById('gradeMarkingView');
     const gradeMarkingList = document.getElementById('gradeMarkingList');
     
@@ -626,4 +572,4 @@ function loadGradeMarkingRecords() {
         `;
         gradeMarkingList.appendChild(gradeCard);
     }
-}
+}*/
