@@ -4,6 +4,9 @@ function getGradesDistribution() {
         return { labels: [], data: [] };
     }
 
+    // Get filtered grades for current teacher
+    const filteredGrades = getFilteredGradesForTeacher();
+
     const gradeRanges = [
         { label: '0-2', min: 0, max: 2 },
         { label: '2-4', min: 2, max: 4 },
@@ -13,7 +16,7 @@ function getGradesDistribution() {
     ];
 
     const distribution = gradeRanges.map(range => {
-        const count = appData.notas.filter(nota => 
+        const count = filteredGrades.filter(nota => 
             nota.Calificacion > range.min && nota.Calificacion <= range.max
         ).length;
         return count;
@@ -30,9 +33,12 @@ function getAttendanceTrends() {
         return { labels: [], data: [] };
     }
 
+    // Get filtered attendance for current teacher
+    const filteredAttendance = getFilteredAttendanceForTeacher();
+
     // Group attendance by month
     const monthlyAttendance = {};
-    appData.asistencia.forEach(record => {
+    filteredAttendance.forEach(record => {
         const date = new Date(record.Fecha);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         
@@ -60,15 +66,17 @@ function getStudentPerformance() {
         return { labels: [], datasets: [] };
     }
 
-    const subjects = appData.materia || [];
-    const labels = subjects.map(materia => materia.Nombre);
+    // Get filtered subjects and students for current teacher
+    const teacherSubjects = getFilteredSubjectsForTeacher();
+    const teacherStudents = getFilteredStudentsForTeacher();
+    const labels = teacherSubjects.map(materia => materia.Nombre);
     
-    const datasets = appData.estudiante.slice(0, 3).map((student, index) => {
+    const datasets = teacherStudents.slice(0, 3).map((student, index) => {
         const studentGrades = appData.notas.filter(nota => 
             nota.Estudiante_ID_Estudiante === student.ID_Estudiante
         );
         
-        const data = subjects.map(materia => {
+        const data = teacherSubjects.map(materia => {
             const materiaGrades = studentGrades.filter(nota => {
                 const evaluacion = appData.evaluacion.find(eval => eval.ID_evaluacion === nota.Evaluacion_ID_evaluacion);
                 return evaluacion && evaluacion.Materia_ID_materia === materia.ID_materia;
@@ -96,7 +104,10 @@ function getSubjectComparison() {
         return { labels: [], data: [] };
     }
 
-    const subjectStats = appData.materia.map(materia => {
+    // Get filtered subjects for current teacher
+    const teacherSubjects = getFilteredSubjectsForTeacher();
+
+    const subjectStats = teacherSubjects.map(materia => {
         const materiaEvaluaciones = appData.evaluacion.filter(eval => 
             eval.Materia_ID_materia === materia.ID_materia
         );
@@ -126,8 +137,15 @@ function calculateAverageGrade() {
         return 0;
     }
     
-    const totalGrades = appData.notas.reduce((sum, nota) => sum + nota.Calificacion, 0);
-    const average = totalGrades / appData.notas.length;
+    // Get filtered grades for current teacher
+    const filteredGrades = getFilteredGradesForTeacher();
+    
+    if (filteredGrades.length === 0) {
+        return 0;
+    }
+    
+    const totalGrades = filteredGrades.reduce((sum, nota) => sum + nota.Calificacion, 0);
+    const average = totalGrades / filteredGrades.length;
     return Math.round(average * 10) / 10;
 }
 
@@ -136,8 +154,15 @@ function calculateAttendanceRate() {
         return 0;
     }
     
-    const totalRecords = appData.asistencia.length;
-    const presentRecords = appData.asistencia.filter(record => record.Presente === 'Y').length;
+    // Get filtered attendance for current teacher
+    const filteredAttendance = getFilteredAttendanceForTeacher();
+    
+    if (filteredAttendance.length === 0) {
+        return 0;
+    }
+    
+    const totalRecords = filteredAttendance.length;
+    const presentRecords = filteredAttendance.filter(record => record.Presente === 'Y').length;
     const attendanceRate = (presentRecords / totalRecords) * 100;
     return Math.round(attendanceRate);
 }
@@ -147,8 +172,12 @@ function getPassingStudents() {
         return 0;
     }
     
-    const passingStudents = appData.estudiante.filter(student => {
-        const studentGrades = appData.notas.filter(nota => 
+    // Get filtered students and grades for current teacher
+    const teacherStudents = getFilteredStudentsForTeacher();
+    const filteredGrades = getFilteredGradesForTeacher();
+    
+    const passingStudents = teacherStudents.filter(student => {
+        const studentGrades = filteredGrades.filter(nota => 
             nota.Estudiante_ID_Estudiante === student.ID_Estudiante
         );
         
@@ -158,8 +187,71 @@ function getPassingStudents() {
         return average >= 6; // Passing grade is 6
     }).length;
     
-    const totalStudents = appData.estudiante.length;
+    const totalStudents = teacherStudents.length;
     return totalStudents > 0 ? Math.round((passingStudents / totalStudents) * 100) : 0;
+}
+
+// Helper functions to filter data by current teacher
+function getCurrentTeacherId() {
+    const teacherFilter = document.getElementById('reportsTeacherFilter');
+    return teacherFilter ? teacherFilter.value : localStorage.getItem('userId');
+}
+
+function getFilteredSubjectsForTeacher() {
+    const teacherId = getCurrentTeacherId();
+    if (!teacherId) return appData.materia || [];
+    
+    return appData.materia.filter(subject => 
+        subject.Usuarios_docente_ID_docente === parseInt(teacherId)
+    );
+}
+
+function getFilteredStudentsForTeacher() {
+    const teacherId = getCurrentTeacherId();
+    if (!teacherId) return appData.estudiante || [];
+    
+    const teacherSubjects = getFilteredSubjectsForTeacher();
+    const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
+    
+    // Get students enrolled in these subjects
+    const enrolledStudentIds = appData.alumnos_x_materia
+        .filter(enrollment => teacherSubjectIds.includes(enrollment.Materia_ID_materia))
+        .map(enrollment => enrollment.Estudiante_ID_Estudiante);
+    
+    return appData.estudiante.filter(student => 
+        enrolledStudentIds.includes(student.ID_Estudiante)
+    );
+}
+
+function getFilteredGradesForTeacher() {
+    const teacherId = getCurrentTeacherId();
+    if (!teacherId) return appData.notas || [];
+    
+    const teacherSubjects = getFilteredSubjectsForTeacher();
+    const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
+    
+    // Get evaluations for teacher's subjects
+    const teacherEvaluations = appData.evaluacion.filter(evaluation => 
+        teacherSubjectIds.includes(evaluation.Materia_ID_materia)
+    );
+    const teacherEvaluationIds = teacherEvaluations.map(evaluation => evaluation.ID_evaluacion);
+    
+    // Get grades for these evaluations
+    return appData.notas.filter(nota => 
+        teacherEvaluationIds.includes(nota.Evaluacion_ID_evaluacion)
+    );
+}
+
+function getFilteredAttendanceForTeacher() {
+    const teacherId = getCurrentTeacherId();
+    if (!teacherId) return appData.asistencia || [];
+    
+    const teacherSubjects = getFilteredSubjectsForTeacher();
+    const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
+    
+    return appData.asistencia.filter(attendance => 
+        teacherSubjectIds.includes(attendance.Materia_ID_materia)
+    );
 }
 
 // Export data processing functions

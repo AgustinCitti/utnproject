@@ -262,6 +262,7 @@ const translations = {
         all_status: "Todos los Estados",
         all_courses: "Todos los Cursos",
         all_subjects: "Todas las Materias",
+        all_teachers: "Todos los Profesores",
         select_subject: "Seleccionar Materia",
         select_course: "Seleccionar Curso",
         
@@ -526,6 +527,7 @@ const translations = {
         all_status: "All Status",
         all_courses: "All Courses",
         all_subjects: "All Subjects",
+        all_teachers: "All Teachers",
         select_subject: "Select Subject",
         select_course: "Select Course",
         

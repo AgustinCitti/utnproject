@@ -2,6 +2,7 @@
 function initializeUnifiedStudentManagement() {
     const addStudentBtn = document.getElementById('addStudentBtn');
     const markAttendanceBtn = document.getElementById('markAttendanceBtn');
+    const unifiedTeacherFilter = document.getElementById('unifiedTeacherFilter');
     const unifiedCourseFilter = document.getElementById('unifiedCourseFilter');
     const unifiedSubjectFilter = document.getElementById('unifiedSubjectFilter');
     const unifiedGridViewBtn = document.getElementById('unifiedGridViewBtn');
@@ -35,6 +36,12 @@ function initializeUnifiedStudentManagement() {
     }
 
     // Filter functionality
+    if (unifiedTeacherFilter) {
+        unifiedTeacherFilter.addEventListener('change', () => {
+            filterUnifiedData();
+        });
+    }
+
     if (unifiedCourseFilter) {
         unifiedCourseFilter.addEventListener('change', () => {
             filterUnifiedData();
@@ -148,6 +155,7 @@ function initializeUnifiedStudentManagement() {
 
     // Initialize data
     populateSubjectFilter();
+    populateUnifiedTeacherFilter();
     loadUnifiedStudentData();
     loadExams();
     
@@ -363,12 +371,30 @@ function loadUnifiedStudentData() {
 }
 
 function getFilteredUnifiedStudents() {
+    const teacherFilter = document.getElementById('unifiedTeacherFilter');
     const courseFilter = document.getElementById('unifiedCourseFilter');
     const subjectFilter = document.getElementById('unifiedSubjectFilter');
+    const selectedTeacher = teacherFilter ? teacherFilter.value : '';
     const selectedCourse = courseFilter ? courseFilter.value : '';
     const selectedSubject = subjectFilter ? subjectFilter.value : '';
     
     let filteredStudents = appData.estudiante;
+    
+    // Filter by teacher (students enrolled in subjects taught by this teacher)
+    if (selectedTeacher) {
+        const teacherId = parseInt(selectedTeacher);
+        const teacherSubjects = appData.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
+        const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
+        
+        // Get students enrolled in these subjects
+        const enrolledStudentIds = appData.alumnos_x_materia
+            .filter(enrollment => teacherSubjectIds.includes(enrollment.Materia_ID_materia))
+            .map(enrollment => enrollment.Estudiante_ID_Estudiante);
+        
+        filteredStudents = filteredStudents.filter(student => 
+            enrolledStudentIds.includes(student.ID_Estudiante)
+        );
+    }
     
     // Filter by course (if needed - for now show all students)
     // Note: Course filtering would need to be implemented based on enrollment
@@ -505,8 +531,11 @@ function loadExams() {
     
     if (!examsContainer || !examsList) return;
 
+    // Get filtered exams
+    const filteredExams = getFilteredExams();
+
     // Grid view
-    examsContainer.innerHTML = appData.evaluacion.map(exam => {
+    examsContainer.innerHTML = filteredExams.map(exam => {
         const subject = appData.materia.find(s => s.ID_materia === exam.Materia_ID_materia);
         return `
             <div class="card">
@@ -547,7 +576,7 @@ function loadExams() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${appData.evaluacion.map(exam => {
+                    ${filteredExams.map(exam => {
                         const subject = appData.materia.find(s => s.ID_materia === exam.Materia_ID_materia);
                         const shortDate = exam.Fecha.split('-').slice(1).join('/');
                         return `
@@ -913,4 +942,54 @@ function loadGrades() {
 
 function loadAttendance() {
     loadUnifiedStudentData();
+}
+
+// Populate teacher filter dropdown for unified student management
+function populateUnifiedTeacherFilter() {
+    const teacherFilter = document.getElementById('unifiedTeacherFilter');
+    if (!teacherFilter) return;
+
+    // Get current user ID from localStorage
+    const currentUserId = localStorage.getItem('userId');
+    
+    // Clear existing options except the first one
+    teacherFilter.innerHTML = '<option value="" data-translate="all_teachers">Todos los Profesores</option>';
+    
+    // Add all teachers to the filter
+    if (appData.usuarios_docente) {
+        appData.usuarios_docente.forEach(teacher => {
+            const option = document.createElement('option');
+            option.value = teacher.ID_docente;
+            option.textContent = `${teacher.Nombre_docente} ${teacher.Apellido_docente}`;
+            teacherFilter.appendChild(option);
+        });
+    }
+    
+    // If current user is a teacher, set the filter to show only their students by default
+    if (currentUserId) {
+        teacherFilter.value = currentUserId;
+        // Trigger filter update
+        filterUnifiedData();
+    }
+}
+
+// Get filtered exams based on teacher filter
+function getFilteredExams() {
+    const teacherFilter = document.getElementById('unifiedTeacherFilter');
+    const selectedTeacher = teacherFilter ? teacherFilter.value : '';
+    
+    let filteredExams = appData.evaluacion || [];
+    
+    // Filter by teacher (exams for subjects taught by this teacher)
+    if (selectedTeacher) {
+        const teacherId = parseInt(selectedTeacher);
+        const teacherSubjects = appData.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
+        const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
+        
+        filteredExams = filteredExams.filter(exam => 
+            teacherSubjectIds.includes(exam.Materia_ID_materia)
+        );
+    }
+    
+    return filteredExams;
 }

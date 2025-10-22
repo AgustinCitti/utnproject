@@ -229,6 +229,10 @@
                     <h2 data-translate="student_management">Gestión Integral de Estudiantes</h2>
                     <div class="section-actions">
                         <div class="filters">
+                            <select id="unifiedTeacherFilter" class="filter-select">
+                                <option value="" data-translate="all_teachers">Todos los Profesores</option>
+                                <!-- Teacher options will be populated dynamically -->
+                            </select>
                             <select id="unifiedCourseFilter" class="filter-select">
                                 <option value="" data-translate="all_courses">Todos los Cursos</option>
                                 <option value="9th" data-translate="9th_course">9º Curso</option>
@@ -388,6 +392,12 @@
                 <div class="section-header">
                     <h2 data-translate="attendance_management">Gestión de Asistencia</h2>
                     <div class="section-actions">
+                        <div class="filters">
+                            <select id="attendanceTeacherFilter" class="filter-select">
+                                <option value="" data-translate="all_teachers">Todos los Profesores</option>
+                                <!-- Teacher options will be populated dynamically -->
+                            </select>
+                        </div>
                         <button id="cancelAttendanceBtn" class="btn-secondary">
                             <i class="fas fa-arrow-left"></i>
                             <span data-translate="back">Volver</span>
@@ -540,6 +550,14 @@
             <section id="reports" class="content-section">
                 <div class="section-header">
                     <h2 data-translate="reports_analytics">Reportes y Análisis</h2>
+                    <div class="section-actions">
+                        <div class="filters">
+                            <select id="reportsTeacherFilter" class="filter-select">
+                                <option value="" data-translate="all_teachers">Todos los Profesores</option>
+                                <!-- Teacher options will be populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 <div class="reports-container" id="reportsContainer">
                     <!-- Reports will be loaded dynamically -->
@@ -577,6 +595,10 @@
                     <h2 data-translate="subjects_management">Gestión de Materias</h2>
                     <div class="section-actions">
                         <div class="filters">
+                            <select id="subjectsTeacherFilter" class="filter-select">
+                                <option value="" data-translate="all_teachers">Todos los Profesores</option>
+                                <!-- Teacher options will be populated dynamically -->
+                            </select>
                             <select id="subjectsCourseFilter" class="filter-select">
                                 <option value="" data-translate="all_courses">Todos los Cursos</option>
                                 <option value="9th" data-translate="9th_course">9º Curso</option>

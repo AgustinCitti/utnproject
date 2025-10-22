@@ -1,6 +1,7 @@
 // Attendance Management
 function initializeAttendance() {
     const markAttendanceBtn = document.getElementById('markAttendanceBtn');
+    const attendanceTeacherFilter = document.getElementById('attendanceTeacherFilter');
     const attendanceCourseFilter = document.getElementById('attendanceCourseFilter');
     const attendanceSubjectFilter = document.getElementById('attendanceSubjectFilter');
     const attendanceCourseSelect = document.getElementById('attendanceCourseSelect');
@@ -15,6 +16,12 @@ function initializeAttendance() {
     }
     
     // Main attendance section filters
+    if (attendanceTeacherFilter) {
+        attendanceTeacherFilter.addEventListener('change', () => {
+            filterAttendanceByTeacher();
+        });
+    }
+    
     if (attendanceCourseFilter) {
         attendanceCourseFilter.addEventListener('change', () => {
             updateSubjectFilter();
@@ -51,6 +58,9 @@ function initializeAttendance() {
             hideAttendanceView();
         });
     }
+    
+    // Initialize teacher filter
+    populateAttendanceTeacherFilter();
 }
 
 function loadAttendance() {
@@ -486,8 +496,11 @@ function loadAttendance() {
     // Clear previous content
     attendanceList.innerHTML = '';
 
+    // Get filtered attendance records
+    const filteredAttendance = getFilteredAttendance();
+
     // Group attendance by date and subject for a more organized view
-    const groupedAttendance = appData.asistencia.reduce((acc, att) => {
+    const groupedAttendance = filteredAttendance.reduce((acc, att) => {
         const key = `${att.Fecha}-${att.Materia_ID_materia}`;
         if (!acc[key]) {
             acc[key] = {
@@ -536,6 +549,59 @@ function loadAttendance() {
         `;
         attendanceList.appendChild(attendanceCard);
     }
+}
+
+// Teacher filtering functions for attendance
+function populateAttendanceTeacherFilter() {
+    const teacherFilter = document.getElementById('attendanceTeacherFilter');
+    if (!teacherFilter) return;
+
+    // Get current user ID from localStorage
+    const currentUserId = localStorage.getItem('userId');
+    
+    // Clear existing options except the first one
+    teacherFilter.innerHTML = '<option value="" data-translate="all_teachers">Todos los Profesores</option>';
+    
+    // Add all teachers to the filter
+    if (appData.usuarios_docente) {
+        appData.usuarios_docente.forEach(teacher => {
+            const option = document.createElement('option');
+            option.value = teacher.ID_docente;
+            option.textContent = `${teacher.Nombre_docente} ${teacher.Apellido_docente}`;
+            teacherFilter.appendChild(option);
+        });
+    }
+    
+    // If current user is a teacher, set the filter to show only their attendance by default
+    if (currentUserId) {
+        teacherFilter.value = currentUserId;
+        // Trigger filter update
+        filterAttendanceByTeacher();
+    }
+}
+
+function getFilteredAttendance() {
+    const teacherFilter = document.getElementById('attendanceTeacherFilter');
+    const selectedTeacher = teacherFilter ? teacherFilter.value : '';
+    
+    let filteredAttendance = appData.asistencia || [];
+    
+    // Filter by teacher (attendance for subjects taught by this teacher)
+    if (selectedTeacher) {
+        const teacherId = parseInt(selectedTeacher);
+        const teacherSubjects = appData.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
+        const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
+        
+        filteredAttendance = filteredAttendance.filter(attendance => 
+            teacherSubjectIds.includes(attendance.Materia_ID_materia)
+        );
+    }
+    
+    return filteredAttendance;
+}
+
+function filterAttendanceByTeacher() {
+    loadAttendance();
 }
 
 function showNotification(message, type = 'info') {

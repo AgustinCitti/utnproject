@@ -13,8 +13,12 @@ function generateTopStudentsReport() {
         return;
     }
 
-    const studentAverages = appData.estudiante.map(student => {
-        const studentGrades = appData.notas.filter(nota => 
+    // Get filtered students and grades for current teacher
+    const teacherStudents = getFilteredStudentsForTeacher();
+    const filteredGrades = getFilteredGradesForTeacher();
+
+    const studentAverages = teacherStudents.map(student => {
+        const studentGrades = filteredGrades.filter(nota => 
             nota.Estudiante_ID_Estudiante === student.ID_Estudiante
         );
         
@@ -54,8 +58,12 @@ function generateAttendanceReport() {
         return;
     }
 
-    const attendanceStats = appData.estudiante.map(student => {
-        const studentAttendance = appData.asistencia.filter(record => 
+    // Get filtered students and attendance for current teacher
+    const teacherStudents = getFilteredStudentsForTeacher();
+    const filteredAttendance = getFilteredAttendanceForTeacher();
+
+    const attendanceStats = teacherStudents.map(student => {
+        const studentAttendance = filteredAttendance.filter(record => 
             record.Estudiante_ID_Estudiante === student.ID_Estudiante
         );
         
@@ -89,12 +97,13 @@ function generateAttendanceReport() {
 }
 
 function populateFilters() {
-    // Populate subject filters
+    // Populate subject filters with teacher's subjects
     const gradesFilter = document.getElementById('gradesSubjectFilter');
     const attendanceFilter = document.getElementById('attendanceSubjectFilter');
     
-    if (appData && appData.materia) {
-        appData.materia.forEach(materia => {
+    const teacherSubjects = getFilteredSubjectsForTeacher();
+    if (teacherSubjects.length > 0) {
+        teacherSubjects.forEach(materia => {
             const option = document.createElement('option');
             option.value = materia.ID_materia;
             option.textContent = materia.Nombre;
@@ -104,10 +113,11 @@ function populateFilters() {
         });
     }
 
-    // Populate student filter
+    // Populate student filter with teacher's students
     const studentFilter = document.getElementById('performanceStudentFilter');
-    if (appData && appData.estudiante && studentFilter) {
-        appData.estudiante.forEach(student => {
+    const teacherStudents = getFilteredStudentsForTeacher();
+    if (teacherStudents.length > 0 && studentFilter) {
+        teacherStudents.forEach(student => {
             const option = document.createElement('option');
             option.value = student.ID_Estudiante;
             option.textContent = `${student.Nombre} ${student.Apellido}`;

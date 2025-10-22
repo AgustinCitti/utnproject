@@ -5,8 +5,9 @@ function initializeSubjects() {
     const addSubjectBtn = document.getElementById('addSubjectBtn');
     const subjectModal = document.getElementById('subjectModal');
     const subjectForm = document.getElementById('subjectForm');
-    const courseFilter = document.getElementById('courseFilter');
-    const statusFilter = document.getElementById('statusFilter');
+    const teacherFilter = document.getElementById('subjectsTeacherFilter');
+    const courseFilter = document.getElementById('subjectsCourseFilter');
+    const statusFilter = document.getElementById('subjectsStatusFilter');
     const addContentBtn = document.getElementById('addContentBtn');
     const contentModal = document.getElementById('contentModal');
     const contentForm = document.getElementById('contentForm');
@@ -42,6 +43,12 @@ function initializeSubjects() {
     }
 
     // Filter functionality
+    if (teacherFilter) {
+        teacherFilter.addEventListener('change', () => {
+            filterSubjects();
+        });
+    }
+
     if (courseFilter) {
         courseFilter.addEventListener('change', () => {
             filterSubjects();
@@ -64,6 +71,7 @@ function initializeSubjects() {
     loadSubjects();
     populateTeacherSelect();
     populateSubjectSelect();
+    populateTeacherFilter();
 }
 
 
@@ -261,12 +269,21 @@ function clearSubjectForm() {
 
 // Filter functions
 function getFilteredSubjects() {
-    const courseFilter = document.getElementById('courseFilter');
-    const statusFilter = document.getElementById('statusFilter');
+    const teacherFilter = document.getElementById('subjectsTeacherFilter');
+    const courseFilter = document.getElementById('subjectsCourseFilter');
+    const statusFilter = document.getElementById('subjectsStatusFilter');
+    const selectedTeacher = teacherFilter ? teacherFilter.value : '';
     const selectedCourse = courseFilter ? courseFilter.value : '';
     const selectedStatus = statusFilter ? statusFilter.value : '';
     
     let subjects = appData.materia || [];
+    
+    // Filter by teacher
+    if (selectedTeacher) {
+        subjects = subjects.filter(subject => 
+            subject.Usuarios_docente_ID_docente === parseInt(selectedTeacher)
+        );
+    }
     
     if (selectedCourse) {
         subjects = subjects.filter(subject => 
@@ -292,6 +309,35 @@ function getTeacherById(teacherId) {
 
 function getSubjectById(subjectId) {
     return appData.materia.find(s => s.ID_materia === subjectId);
+}
+
+// Populate teacher filter dropdown
+function populateTeacherFilter() {
+    const teacherFilter = document.getElementById('subjectsTeacherFilter');
+    if (!teacherFilter) return;
+
+    // Get current user ID from localStorage
+    const currentUserId = localStorage.getItem('userId');
+    
+    // Clear existing options except the first one
+    teacherFilter.innerHTML = '<option value="" data-translate="all_teachers">Todos los Profesores</option>';
+    
+    // Add all teachers to the filter
+    if (appData.usuarios_docente) {
+        appData.usuarios_docente.forEach(teacher => {
+            const option = document.createElement('option');
+            option.value = teacher.ID_docente;
+            option.textContent = `${teacher.Nombre_docente} ${teacher.Apellido_docente}`;
+            teacherFilter.appendChild(option);
+        });
+    }
+    
+    // If current user is a teacher, set the filter to show only their subjects by default
+    if (currentUserId) {
+        teacherFilter.value = currentUserId;
+        // Trigger filter update
+        filterSubjects();
+    }
 }
 
 function getStudentCountBySubject(subjectId) {

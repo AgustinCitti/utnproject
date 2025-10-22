@@ -18,7 +18,7 @@
       "Nombre_docente": "Luis",
       "Apellido_docente": "Hernández",
       "Email_docente": "luis.hernandez@school.edu",
-      "Contraseña": "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      "Contraseña": "123456",
       "DNI": "23456789",
       "Telefono": "+54 11 2345-6789",
       "Especialidad": "Física",
@@ -597,26 +597,6 @@
       "Prioridad": "ALTA",
       "Materia_ID_materia": 1,
       "Estado": "PENDIENTE"
-    }
-  ],
-  "notifications": [
-    {
-      "id": 1,
-      "title": "Nueva Evaluación Programada",
-      "message": "Se ha programado un nuevo parcial para Matemática I",
-      "type": "evaluacion",
-      "date": "2024-04-10",
-      "read": false,
-      "recipientId": 1
-    },
-    {
-      "id": 2,
-      "title": "Calificación Publicada",
-      "message": "Tu calificación del Parcial 1 está disponible",
-      "type": "calificacion",
-      "date": "2024-04-16",
-      "read": false,
-      "recipientId": 1
     }
   ]
 }
