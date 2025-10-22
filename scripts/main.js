@@ -32,7 +32,7 @@ async function initializeApp() {
     initializeLogin();
     initializeDashboard();
     initializeUnifiedStudentManagement();
-    initializeExams();
+    initializeGrades();
     initializeRepository();
     initializeNotifications();
     initializeReports();
@@ -51,16 +51,20 @@ async function loadData() {
         appData = await response.json();
     } catch (error) {
         console.error('Error loading data:', error);
-        // Initialize with empty data structure
+        // Initialize with empty data structure matching database schema
         appData = {
-            students: [],
-            teachers: [],
-            subjects: [],
-            grades: [],
-            attendance: [],
-            exams: [],
-            notifications: [],
-            classes: []
+            usuarios_docente: [],
+            materia: [],
+            estudiante: [],
+            alumnos_x_materia: [],
+            evaluacion: [],
+            notas: [],
+            asistencia: [],
+            contenido: [],
+            tema_estudiante: [],
+            archivos: [],
+            recordatorio: [],
+            notifications: []
         };
     }
 }

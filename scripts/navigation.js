@@ -69,8 +69,6 @@ function showSection(sectionName) {
             break;
         case 'student-management':
             loadUnifiedStudentData();
-            break;
-        case 'exams':
             loadExams();
             break;
         case 'repository':

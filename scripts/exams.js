@@ -16,28 +16,27 @@ function loadExams() {
     if (!examsContainer || !examsList) return;
 
     // Grid view
-    examsContainer.innerHTML = appData.exams.map(exam => {
-        const subject = appData.subjects.find(s => s.id === exam.subjectId);
+    examsContainer.innerHTML = appData.evaluacion.map(exam => {
+        const subject = appData.materia.find(s => s.ID_materia === exam.Materia_ID_materia);
         return `
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">${exam.title}</h3>
+                    <h3 class="card-title">${exam.Titulo}</h3>
                     <div class="card-actions">
-                        <button class="btn-icon btn-edit" onclick="editExam(${exam.id})">
+                        <button class="btn-icon btn-edit" onclick="editExam(${exam.ID_evaluacion})">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn-icon btn-delete" onclick="deleteExam(${exam.id})">
+                        <button class="btn-icon btn-delete" onclick="deleteExam(${exam.ID_evaluacion})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </div>
                 <div class="card-content">
-                    <p><strong>Subject:</strong> ${subject ? subject.name : 'Unknown Subject'}</p>
-                    <p><strong>Date:</strong> ${exam.date}</p>
-                    <p><strong>Duration:</strong> ${exam.duration} minutes</p>
-                    <p><strong>Type:</strong> ${exam.type}</p>
-                    <p><strong>Total Points:</strong> ${exam.totalPoints}</p>
-                    <p><strong>Description:</strong> ${exam.description}</p>
+                    <p><strong>Subject:</strong> ${subject ? subject.Nombre : 'Unknown Subject'}</p>
+                    <p><strong>Date:</strong> ${exam.Fecha}</p>
+                    <p><strong>Type:</strong> ${exam.Tipo}</p>
+                    <p><strong>Status:</strong> ${exam.Estado}</p>
+                    <p><strong>Description:</strong> ${exam.Descripcion || 'No description'}</p>
                 </div>
             </div>
         `;
@@ -53,27 +52,27 @@ function loadExams() {
                         <th>Subject</th>
                         <th>Type</th>
                         <th>Date</th>
-                        <th>Duration</th>
+                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${appData.exams.map(exam => {
-                        const subject = appData.subjects.find(s => s.id === exam.subjectId);
-                        const shortDate = exam.date.split('-').slice(1).join('/');
+                    ${appData.evaluacion.map(exam => {
+                        const subject = appData.materia.find(s => s.ID_materia === exam.Materia_ID_materia);
+                        const shortDate = exam.Fecha.split('-').slice(1).join('/');
                         return `
                             <tr>
-                                <td><strong>${exam.title}</strong></td>
-                                <td>${subject ? subject.name : 'Unknown'}</td>
-                                <td>${exam.type}</td>
+                                <td><strong>${exam.Titulo}</strong></td>
+                                <td>${subject ? subject.Nombre : 'Unknown'}</td>
+                                <td>${exam.Tipo}</td>
                                 <td>${shortDate}</td>
-                                <td>${exam.duration}m</td>
+                                <td>${exam.Estado}</td>
                                 <td>
                                     <div class="table-actions">
-                                        <button class="btn-icon btn-edit" onclick="editExam(${exam.id})" title="Edit">
+                                        <button class="btn-icon btn-edit" onclick="editExam(${exam.ID_evaluacion})" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn-icon btn-delete" onclick="deleteExam(${exam.id})" title="Delete">
+                                        <button class="btn-icon btn-delete" onclick="deleteExam(${exam.ID_evaluacion})" title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -104,7 +103,7 @@ function showExamModal() {
                 <div class="form-group">
                     <label for="examSubject">Subject</label>
                     <select id="examSubject" required>
-                        ${appData.subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+                        ${appData.materia.map(s => `<option value="${s.ID_materia}">${s.Nombre}</option>`).join('')}
                     </select>
                 </div>
                 <div class="form-group">
@@ -143,41 +142,38 @@ function saveExam(event) {
     event.preventDefault();
     
     const newExam = {
-        id: Date.now(),
-        title: document.getElementById('examTitle').value,
-        subjectId: parseInt(document.getElementById('examSubject').value),
-        date: document.getElementById('examDate').value,
-        duration: parseInt(document.getElementById('examDuration').value),
-        type: document.getElementById('examType').value,
-        description: document.getElementById('examDescription').value,
-        questions: [],
-        totalPoints: 100
+        ID_evaluacion: Date.now(),
+        Titulo: document.getElementById('examTitle').value,
+        Materia_ID_materia: parseInt(document.getElementById('examSubject').value),
+        Fecha: document.getElementById('examDate').value,
+        Tipo: document.getElementById('examType').value,
+        Descripcion: document.getElementById('examDescription').value,
+        Estado: 'PROGRAMADA'
     };
     
-    appData.exams.push(newExam);
+    appData.evaluacion.push(newExam);
     saveData();
     closeModal(document.querySelector('.modal'));
     loadExams();
 }
 
 function editExam(id) {
-    const exam = appData.exams.find(e => e.id === id);
+    const exam = appData.evaluacion.find(e => e.ID_evaluacion === id);
     if (!exam) return;
 
     showExamModal();
     
     // Populate form with existing data
-    document.getElementById('examTitle').value = exam.title;
-    document.getElementById('examSubject').value = exam.subjectId;
-    document.getElementById('examDate').value = exam.date;
-    document.getElementById('examDuration').value = exam.duration;
-    document.getElementById('examType').value = exam.type;
-    document.getElementById('examDescription').value = exam.description;
+    document.getElementById('examTitle').value = exam.Titulo;
+    document.getElementById('examSubject').value = exam.Materia_ID_materia;
+    document.getElementById('examDate').value = exam.Fecha;
+    document.getElementById('examType').value = exam.Tipo;
+    document.getElementById('examDescription').value = exam.Descripcion || '';
 }
 
 function deleteExam(id) {
     if (confirm('Are you sure you want to delete this exam?')) {
-        appData.exams = appData.exams.filter(e => e.id !== id);
+        appData.evaluacion = appData.evaluacion.filter(e => e.ID_evaluacion !== id);
         saveData();
         loadExams();
     }
