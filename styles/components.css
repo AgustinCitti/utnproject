@@ -71,6 +71,364 @@
     text-decoration: none;
 }
 
+/* Button Icons */
+.btn-icon {
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+}
+
+.btn-icon:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-view {
+    color: #17a2b8;
+}
+
+.btn-view:hover {
+    background: rgba(23, 162, 184, 0.1);
+    color: #138496;
+}
+
+.btn-edit {
+    color: #ffc107;
+}
+
+.btn-edit:hover {
+    background: rgba(255, 193, 7, 0.1);
+    color: #e0a800;
+}
+
+.btn-delete {
+    color: #dc3545;
+}
+
+.btn-delete:hover {
+    background: rgba(220, 53, 69, 0.1);
+    color: #c82333;
+}
+
+/* Exam Notes Modal */
+.exam-notes-modal {
+    max-width: 800px;
+    width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.exam-notes-modal .modal-body {
+    padding: 20px;
+}
+
+.exam-info {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #667eea;
+}
+
+.exam-info p {
+    margin: 5px 0;
+    font-size: 0.9rem;
+}
+
+.notes-section h4 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.notes-table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.notes-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.notes-table th {
+    background: #f8f9fa;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.notes-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: top;
+}
+
+.notes-table tr:hover {
+    background: #f8f9fa;
+}
+
+.grade-cell {
+    font-weight: 600;
+    text-align: center;
+    min-width: 60px;
+}
+
+.grade-cell.excellent {
+    color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+    border-radius: 4px;
+}
+
+.grade-cell.good {
+    color: #17a2b8;
+    background: rgba(23, 162, 184, 0.1);
+    border-radius: 4px;
+}
+
+.grade-cell.average {
+    color: #ffc107;
+    background: rgba(255, 193, 7, 0.1);
+    border-radius: 4px;
+}
+
+.grade-cell.poor {
+    color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+    border-radius: 4px;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-badge.status-definitiva {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-badge.status-tentativa {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.status-badge.status-pendiente {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+.no-notes {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.no-notes i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.no-notes p {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Table Actions */
+.table-actions {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.card-actions {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+/* Section Header */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 20px;
+}
+
+.section-header h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.section-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Info Grid */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.info-label {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: #333;
+    font-weight: 600;
+}
+
+.info-value.status-programada {
+    color: #17a2b8;
+}
+
+.info-value.status-realizada {
+    color: #28a745;
+}
+
+.info-value.status-cancelada {
+    color: #dc3545;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    min-width: 80px;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.stat-value.excellent {
+    color: #28a745;
+}
+
+.stat-value.good {
+    color: #17a2b8;
+}
+
+.stat-value.average {
+    color: #ffc107;
+}
+
+.stat-value.poor {
+    color: #dc3545;
+}
+
+/* Exam Info Summary */
+.exam-info-summary {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    border-left: 4px solid #667eea;
+}
+
+.exam-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.summary-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.summary-value {
+    color: #333;
+    font-weight: 500;
+}
+
+.summary-value.status-programada {
+    color: #17a2b8;
+}
+
+.summary-value.status-realizada {
+    color: #28a745;
+}
+
+.summary-value.status-cancelada {
+    color: #dc3545;
+}
+
+/* Notes List */
+.notes-list {
+    margin-top: 20px;
+}
+
 .btn-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;

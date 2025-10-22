@@ -88,14 +88,6 @@ function initializeViewToggles() {
         examsListViewBtn.addEventListener('click', () => toggleView('exams', 'list'));
     }
 
-    // Repository view toggle
-    const repositoryGridViewBtn = document.getElementById('repositoryGridViewBtn');
-    const repositoryListViewBtn = document.getElementById('repositoryListViewBtn');
-    
-    if (repositoryGridViewBtn && repositoryListViewBtn) {
-        repositoryGridViewBtn.addEventListener('click', () => toggleView('repository', 'grid'));
-        repositoryListViewBtn.addEventListener('click', () => toggleView('repository', 'list'));
-    }
 
     // Notifications view toggle
     const notificationsGridViewBtn = document.getElementById('notificationsGridViewBtn');

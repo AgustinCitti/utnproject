@@ -19,7 +19,7 @@ This folder contains the refactored JavaScript modules for the EduSync applicati
 - **`exams.js`** - Exam creation and management
 - **`repository.js`** - File repository and upload functionality
 - **`notifications.js`** - Notification system and management
-- **`reports.js`** - Reports generation and analytics
+- **`reports/`** - Reports generation and analytics (modular structure)
 
 ## HTML File Updates
 
@@ -54,7 +54,13 @@ Each HTML file now references only the modules it needs:
 <script src="scripts/exams.js"></script>
 <script src="scripts/repository.js"></script>
 <script src="scripts/notifications.js"></script>
+<!-- Load report components in order -->
+<script src="scripts/reports/data-processor.js"></script>
+<script src="scripts/reports/chart-manager.js"></script>
+<script src="scripts/reports/report-generator.js"></script>
+<script src="scripts/reports/export-manager.js"></script>
 <script src="scripts/reports.js"></script>
+<script src="scripts/reports/index.js"></script>
 <script src="scripts/main.js"></script>
 ```
 

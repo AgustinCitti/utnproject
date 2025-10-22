@@ -188,9 +188,6 @@ function showSection(sectionName, subsection = null) {
             loadUnifiedStudentData();
             loadExams();
             break;
-        case 'repository':
-            loadRepository();
-            break;
         case 'notifications':
             loadNotifications();
             break;

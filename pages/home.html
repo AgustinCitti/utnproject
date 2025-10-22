@@ -30,10 +30,6 @@
                     <i class="fas fa-users"></i>
                     <span data-translate="student_management">Gestión de Estudiantes</span>
                 </a>
-                <a href="#repository" class="nav-item" data-section="repository">
-                    <i class="fas fa-archive"></i>
-                    <span data-translate="repository">Repositorio</span>
-                </a>
                 <a href="#notifications" class="nav-item" data-section="notifications">
                     <i class="fas fa-bell"></i>
                     <span data-translate="notifications">Notificaciones</span>
@@ -86,9 +82,6 @@
                         </a>
                     </div>
                 </div>
-                <a href="#repository" class="nav-link" data-section="repository">
-                    <span data-translate="repository">Repositorio</span>
-                </a>
                 <a href="#reports" class="nav-link" data-section="reports">
                     <span data-translate="reports">Reportes</span>
                 </a>
@@ -354,6 +347,33 @@
                         <!-- Exams list view will be loaded dynamically -->
                     </div>
                 </div>
+
+                <!-- Exam Notes Tab Content -->
+                <div id="examNotesTabContent" class="tab-content">
+                    <div class="section-header">
+                        <h2 id="examNotesTitle">Exam Notes</h2>
+                        <div class="section-actions">
+                            <button id="exportExamNotesBtn" class="btn-primary" style="display: none;">
+                                <i class="fas fa-download"></i>
+                                <span data-translate="export_notes">Export Notes</span>
+                            </button>
+                            <button id="backToExamsBtn" class="btn-secondary">
+                                <i class="fas fa-arrow-left"></i>
+                                <span data-translate="back_to_exams">Back to Exams</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Exam Info Summary -->
+                    <div class="exam-info-summary" id="examInfoSummary">
+                        <!-- Exam information will be loaded here -->
+                    </div>
+                    
+                    <!-- Notes List -->
+                    <div class="notes-list" id="notesList">
+                        <!-- Notes table or empty state will be loaded here -->
+                    </div>
+                </div>
             </section>
 
             <!-- Attendance Section -->
@@ -510,32 +530,6 @@
                 </div>
             </section>
 
-            <!-- Repository Section -->
-            <section id="repository" class="content-section">
-                <div class="section-header">
-                    <h2 data-translate="academic_repository">Repositorio Académico</h2>
-                    <div class="section-actions">
-                        <div class="view-toggle">
-                            <button id="repositoryGridViewBtn" class="view-btn active" data-view="grid">
-                                <i class="fas fa-th"></i>
-                            </button>
-                            <button id="repositoryListViewBtn" class="view-btn" data-view="list">
-                                <i class="fas fa-list"></i>
-                            </button>
-                        </div>
-                        <button id="uploadFileBtn" class="btn-primary">
-                            <i class="fas fa-upload"></i>
-                            <span data-translate="upload_file">Subir Archivo</span>
-                        </button>
-                    </div>
-                </div>
-                <div class="repository-container" id="repositoryContainer">
-                    <!-- Repository files will be loaded dynamically -->
-                </div>
-                <div class="repository-list" id="repositoryList" style="display: none;">
-                    <!-- Repository list view will be loaded dynamically -->
-                </div>
-            </section>
 
             <!-- Notifications Section -->
             <section id="notifications" class="content-section">
@@ -627,9 +621,14 @@
     <script src="../scripts/attendance.js"></script>
     <script src="../scripts/unified-student-management.js"></script>
     <script src="../scripts/exams.js"></script>
-    <script src="../scripts/repository.js"></script>
     <script src="../scripts/notifications.js"></script>
+    <!-- Load report components in order -->
+    <script src="../scripts/reports/data-processor.js"></script>
+    <script src="../scripts/reports/chart-manager.js"></script>
+    <script src="../scripts/reports/report-generator.js"></script>
+    <script src="../scripts/reports/export-manager.js"></script>
     <script src="../scripts/reports.js"></script>
+    <script src="../scripts/reports/index.js"></script>
     <script src="../scripts/main.js"></script>
 </body>
 </html>

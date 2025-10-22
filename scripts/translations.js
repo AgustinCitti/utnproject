@@ -16,8 +16,6 @@ const translations = {
         grade_tracking_desc: "Cálculos automáticos de calificaciones, análisis de rendimiento e informes completos.",
         attendance: "Seguimiento de Asistencia",
         attendance_desc: "Monitoreo de asistencia en tiempo real con seguimiento de estado y cálculos de porcentaje.",
-        exam_repository: "Repositorio de Exámenes",
-        exam_repository_desc: "Gestión centralizada de exámenes con plantillas reutilizables y bancos de preguntas.",
         notifications: "Notificaciones",
         notifications_desc: "Sistema de comunicación integrado para profesores y estudiantes con actualizaciones en tiempo real.",
         mobile_first: "Diseño Mobile-First",
@@ -95,7 +93,6 @@ const translations = {
         grades: "Calificaciones",
         attendance: "Asistencia",
         exams: "Exámenes",
-        repository: "Repositorio",
         notifications: "Notificaciones",
         reports: "Reportes",
         language: "Idioma",
@@ -113,8 +110,6 @@ const translations = {
         grade_management: "Gestión de Calificaciones",
         attendance_tracking: "Seguimiento de Asistencia",
         grade_marking: "Calificación de Estudiantes",
-        exam_repository: "Repositorio de Exámenes",
-        academic_repository: "Repositorio Académico",
         reports_analytics: "Reportes y Análisis",
         
         // Actions
@@ -248,8 +243,6 @@ const translations = {
         grade_tracking_desc: "Automated grade calculations, performance analytics, and comprehensive reporting.",
         attendance: "Attendance Tracking",
         attendance_desc: "Real-time attendance monitoring with status tracking and percentage calculations.",
-        exam_repository: "Exam Repository",
-        exam_repository_desc: "Centralized exam management with reusable templates and question banks.",
         notifications: "Notifications",
         notifications_desc: "Built-in communication system for teachers and students with real-time updates.",
         mobile_first: "Mobile-First Design",
@@ -327,7 +320,6 @@ const translations = {
         grades: "Grades",
         attendance: "Attendance",
         exams: "Exams",
-        repository: "Repository",
         notifications: "Notifications",
         reports: "Reports",
         language: "Language",
@@ -344,8 +336,6 @@ const translations = {
         student_management: "Student Management",
         grade_management: "Grade Management",
         attendance_tracking: "Attendance Tracking",
-        exam_repository: "Exam Repository",
-        academic_repository: "Academic Repository",
         reports_analytics: "Reports & Analytics",
         
         // Actions
