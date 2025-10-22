@@ -176,9 +176,7 @@ function loadUpcomingClasses() {
                 </div>
                 <div class="class-details">
                     <h4>${classInfo.subjectName}</h4>
-                    <p class="class-info">
-                        <i class="fas fa-chalkboard-teacher"></i>
-                        ${classInfo.teacherName}
+                    <p class="class-info">                    
                         <span class="classroom">• ${classInfo.classroom}</span>
                     </p>
                     ${hasEvaluations ? `
