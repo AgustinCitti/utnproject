@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified Button System Examples</title>
+    <link rel="stylesheet" href="styles/app.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            padding: 2rem;
+            background: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .example-section {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .example-section h2 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .code-example {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Unified Button System Examples</h1>
+    
+    <!-- Basic Button Variants -->
+    <div class="example-section">
+        <h2>Basic Button Variants</h2>
+        <div class="button-grid">
+            <button class="btn btn-primary">Primary</button>
+            <button class="btn btn-secondary">Secondary</button>
+            <button class="btn btn-success">Success</button>
+            <button class="btn btn-danger">Danger</button>
+            <button class="btn btn-warning">Warning</button>
+            <button class="btn btn-info">Info</button>
+            <button class="btn btn-light">Light</button>
+            <button class="btn btn-dark">Dark</button>
+        </div>
+        <div class="code-example">
+&lt;button class="btn btn-primary"&gt;Primary&lt;/button&gt;
+&lt;button class="btn btn-secondary"&gt;Secondary&lt;/button&gt;
+&lt;button class="btn btn-success"&gt;Success&lt;/button&gt;
+&lt;button class="btn btn-danger"&gt;Danger&lt;/button&gt;
+        </div>
+    </div>
+
+    <!-- Button Sizes -->
+    <div class="example-section">
+        <h2>Button Sizes</h2>
+        <div class="button-group">
+            <button class="btn btn-primary btn-sm">Small</button>
+            <button class="btn btn-primary">Regular</button>
+            <button class="btn btn-primary btn-lg">Large</button>
+            <button class="btn btn-primary btn-xl">Extra Large</button>
+        </div>
+        <div class="code-example">
+&lt;button class="btn btn-primary btn-sm"&gt;Small&lt;/button&gt;
+&lt;button class="btn btn-primary"&gt;Regular&lt;/button&gt;
+&lt;button class="btn btn-primary btn-lg"&gt;Large&lt;/button&gt;
+&lt;button class="btn btn-primary btn-xl"&gt;Extra Large&lt;/button&gt;
+        </div>
+    </div>
+
+    <!-- Outline Buttons -->
+    <div class="example-section">
+        <h2>Outline Buttons</h2>
+        <div class="button-grid">
+            <button class="btn btn-outline-primary">Outline Primary</button>
+            <button class="btn btn-outline-secondary">Outline Secondary</button>
+            <button class="btn btn-outline-success">Outline Success</button>
+            <button class="btn btn-outline-danger">Outline Danger</button>
+            <button class="btn btn-outline-warning">Outline Warning</button>
+            <button class="btn btn-outline-info">Outline Info</button>
+        </div>
+        <div class="code-example">
+&lt;button class="btn btn-outline-primary"&gt;Outline Primary&lt;/button&gt;
+&lt;button class="btn btn-outline-danger"&gt;Outline Danger&lt;/button&gt;
+        </div>
+    </div>
+
+    <!-- Icon Buttons -->
+    <div class="example-section">
+        <h2>Icon Buttons</h2>
+        <div class="button-group">
+            <button class="btn btn-icon btn-icon-primary">
+                <i class="fas fa-plus"></i>
+            </button>
+            <button class="btn btn-icon btn-icon-success">
+                <i class="fas fa-check"></i>
+            </button>
+            <button class="btn btn-icon btn-icon-danger">
+                <i class="fas fa-trash"></i>
+            </button>
+            <button class="btn btn-icon btn-icon-warning">
+                <i class="fas fa-exclamation"></i>
+            </button>
+            <button class="btn btn-icon btn-icon-info">
+                <i class="fas fa-info"></i>
+            </button>
+        </div>
+        <div class="code-example">
+&lt;button class="btn btn-icon btn-icon-primary"&gt;
+    &lt;i class="fas fa-plus"&gt;&lt;/i&gt;
+&lt;/button&gt;
+&lt;button class="btn btn-icon btn-icon-danger"&gt;
+    &lt;i class="fas fa-trash"&gt;&lt;/i&gt;
+&lt;/button&gt;
+        </div>
+    </div>
+
+    <!-- Buttons with Icons -->
+    <div class="example-section">
+        <h2>Buttons with Icons</h2>
+        <div class="button-group">
+            <button class="btn btn-primary">
+                <i class="fas fa-save"></i>
+                Save
+            </button>
+            <button class="btn btn-success">
+                <i class="fas fa-check"></i>
+                Confirm
+            </button>
+            <button class="btn btn-danger">
+                <i class="fas fa-trash"></i>
+                Delete
+            </button>
+            <button class="btn btn-info">
+                <i class="fas fa-info-circle"></i>
+                Info
+            </button>
+        </div>
+        <div class="code-example">
+&lt;button class="btn btn-primary"&gt;
+    &lt;i class="fas fa-save"&gt;&lt;/i&gt;
+    Save
+&lt;/button&gt;
+        </div>
+    </div>
+
+    <!-- Button Groups -->
+    <div class="example-section">
+        <h2>Button Groups</h2>
+        <div class="btn-group">
+            <button class="btn btn-primary">First</button>
+            <button class="btn btn-primary">Second</button>
+            <button class="btn btn-primary">Third</button>
+        </div>
+        <div class="code-example">
+&lt;div class="btn-group"&gt;
+    &lt;button class="btn btn-primary"&gt;First&lt;/button&gt;
+    &lt;button class="btn btn-primary"&gt;Second&lt;/button&gt;
+    &lt;button class="btn btn-primary"&gt;Third&lt;/button&gt;
+&lt;/div&gt;
+        </div>
+    </div>
+
+    <!-- Button States -->
+    <div class="example-section">
+        <h2>Button States</h2>
+        <div class="button-group">
+            <button class="btn btn-primary">Normal</button>
+            <button class="btn btn-primary btn-loading">Loading</button>
+            <button class="btn btn-primary" disabled>Disabled</button>
+        </div>
+        <div class="code-example">
+&lt;button class="btn btn-primary"&gt;Normal&lt;/button&gt;
+&lt;button class="btn btn-primary btn-loading"&gt;Loading&lt;/button&gt;
+&lt;button class="btn btn-primary" disabled&gt;Disabled&lt;/button&gt;
+        </div>
+    </div>
+
+    <!-- Ghost Buttons -->
+    <div class="example-section">
+        <h2>Ghost Buttons</h2>
+        <div class="button-group">
+            <button class="btn btn-ghost">Ghost Button</button>
+            <button class="btn btn-ghost">
+                <i class="fas fa-heart"></i>
+                Ghost with Icon
+            </button>
+        </div>
+        <div class="code-example">
+&lt;button class="btn btn-ghost"&gt;Ghost Button&lt;/button&gt;
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="example-section">
+        <h2>Floating Action Button</h2>
+        <p>Floating action button is positioned fixed at bottom-right of the screen.</p>
+        <div class="code-example">
+&lt;button class="btn btn-fab"&gt;
+    &lt;i class="fas fa-plus"&gt;&lt;/i&gt;
+&lt;/button&gt;
+        </div>
+    </div>
+
+    <!-- Ripple Effect -->
+    <div class="example-section">
+        <h2>Ripple Effect</h2>
+        <div class="button-group">
+            <button class="btn btn-primary btn-ripple">Ripple Effect</button>
+            <button class="btn btn-success btn-ripple">Another Ripple</button>
+        </div>
+        <div class="code-example">
+&lt;button class="btn btn-primary btn-ripple"&gt;Ripple Effect&lt;/button&gt;
+        </div>
+    </div>
+
+    <!-- Responsive Example -->
+    <div class="example-section">
+        <h2>Responsive Design</h2>
+        <p>Buttons automatically adjust their size and spacing on different screen sizes.</p>
+        <div class="button-grid">
+            <button class="btn btn-primary">Responsive Button 1</button>
+            <button class="btn btn-secondary">Responsive Button 2</button>
+            <button class="btn btn-success">Responsive Button 3</button>
+            <button class="btn btn-danger">Responsive Button 4</button>
+        </div>
+    </div>
+
+    <!-- Floating Action Button (Demo) -->
+    <button class="btn btn-fab">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <script>
+        // Demo functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers for demo
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    if (!this.classList.contains('btn-loading') && !this.disabled) {
+                        // Show loading state for 2 seconds
+                        if (this.textContent.includes('Loading') || this.classList.contains('btn-loading')) {
+                            return;
+                        }
+                        
+                        const originalText = this.innerHTML;
+                        this.classList.add('btn-loading');
+                        this.innerHTML = 'Loading...';
+                        
+                        setTimeout(() => {
+                            this.classList.remove('btn-loading');
+                            this.innerHTML = originalText;
+                        }, 2000);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
