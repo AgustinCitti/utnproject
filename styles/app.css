@@ -1,20 +1,33 @@
-/* Import Unified Button System */
+/* ==========================================================================
+   MAIN APPLICATION STYLES
+   ========================================================================== */
+
+/* Import Unified Button System - Centralized button styling for consistency */
 @import url('./components/buttons.css');
 
-/* App Container */
+/* ==========================================================================
+   LAYOUT CONTAINERS
+   ========================================================================== */
+
+/* Main application container - Provides full viewport height and flex layout */
 .app-container {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
-/* Desktop Navigation Styles */
+/* ==========================================================================
+   DESKTOP NAVIGATION SYSTEM
+   ========================================================================== */
+
+/* Desktop navigation container - Hidden by default, shown on larger screens */
 .desktop-nav {
     display: none;
     width: 100%;
     max-width: 100%;
 }
 
+/* Main navigation wrapper - Centers content with max-width constraint */
 .desktop-nav .landing-nav {
     display: flex;
     justify-content: space-between;
@@ -25,6 +38,7 @@
     width: 100%;
 }
 
+/* Brand/logo section - Contains app name and icon */
 .desktop-nav .nav-brand {
     display: flex;
     align-items: center;
@@ -34,16 +48,19 @@
     color: #667eea;
 }
 
+/* Brand icon styling - Larger icon for brand visibility */
 .desktop-nav .nav-brand i {
     font-size: 2rem;
 }
 
+/* Navigation menu container - Horizontal flex layout for nav items */
 .desktop-nav .nav-menu {
     display: flex;
     align-items: center;
     gap: 1.5rem;
 }
 
+/* Individual navigation links - Styled links with hover effects */
 .desktop-nav .nav-link {
     display: flex;
     align-items: center;
@@ -56,36 +73,46 @@
     position: relative;
 }
 
+/* Navigation link hover state - Color change and background highlight */
 .desktop-nav .nav-link:hover {
     color: #667eea;
     background: #f8f9fa;
 }
 
+/* Active navigation link - Indicates current page/section */
 .desktop-nav .nav-link.active {
     color: #667eea;
     background: #e3f2fd;
 }
 
-/* Desktop Dropdown Navigation */
+/* ==========================================================================
+   DROPDOWN NAVIGATION COMPONENTS
+   ========================================================================== */
+
+/* Dropdown container - Positioned relative for absolute dropdown positioning */
 .desktop-nav .nav-dropdown {
     position: relative;
 }
 
+/* Dropdown toggle button - Clickable element that opens dropdown */
 .desktop-nav .dropdown-toggle {
     display: flex;
     align-items: center;
     gap: 5px;
 }
 
+/* Dropdown toggle icon - Arrow that rotates on hover */
 .desktop-nav .dropdown-toggle i {
     font-size: 0.8rem;
     transition: transform 0.3s ease;
 }
 
+/* Dropdown toggle icon rotation - Visual feedback on hover */
 .desktop-nav .nav-dropdown:hover .dropdown-toggle i {
     transform: rotate(180deg);
 }
 
+/* Dropdown menu container - Hidden by default, shown on hover */
 .desktop-nav .dropdown-menu {
     position: absolute;
     top: 100%;
@@ -102,12 +129,14 @@
     border: 1px solid #e1e5e9;
 }
 
+/* Dropdown menu visibility - Shows on parent hover */
 .desktop-nav .nav-dropdown:hover .dropdown-menu {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
 }
 
+/* Individual dropdown menu items - Styled navigation options */
 .desktop-nav .dropdown-item {
     display: flex;
     align-items: center;
@@ -119,45 +148,58 @@
     border-bottom: 1px solid #f8f9fa;
 }
 
+/* Last dropdown item - Removes bottom border for clean appearance */
 .desktop-nav .dropdown-item:last-child {
     border-bottom: none;
 }
 
+/* Dropdown item hover state - Background and color change */
 .desktop-nav .dropdown-item:hover {
     background: #f8f9fa;
     color: #667eea;
 }
 
+/* Active dropdown item - Indicates current selection */
 .desktop-nav .dropdown-item.active {
     background: #e3f2fd;
     color: #667eea;
     font-weight: 500;
 }
 
+/* Dropdown item icons - Consistent sizing and alignment */
 .desktop-nav .dropdown-item i {
     width: 16px;
     text-align: center;
     font-size: 0.9rem;
 }
 
-/* Mobile-only tab navigation */
+/* ==========================================================================
+   MOBILE NAVIGATION UTILITIES
+   ========================================================================== */
+
+/* Mobile-only elements - Visible on mobile, hidden on desktop */
 .mobile-only {
     display: block;
 }
 
-/* Hide mobile-only elements on desktop */
+/* Desktop responsive behavior - Hides mobile elements on larger screens */
 @media (min-width: 768px) {
     .mobile-only {
         display: none !important;
     }
     
-    /* Specifically hide tab navigation on desktop */
+    /* Specifically hide tab navigation on desktop - Prevents mobile nav on desktop */
     .tab-navigation.mobile-only {
         display: none !important;
     }
 }
 
 
+/* ==========================================================================
+   NOTIFICATION SYSTEM COMPONENTS
+   ========================================================================== */
+
+/* Notification badge - Red circular badge showing unread count */
 .desktop-nav .notification-badge {
     background: #ff4444;
     color: white;
@@ -176,6 +218,7 @@
     font-weight: bold;
 }
 
+/* Notifications icon container - Clickable notification bell */
 .desktop-nav .notifications-icon {
     position: relative;
     display: flex;
@@ -185,25 +228,34 @@
     transition: all 0.3s ease;
 }
 
+/* Notifications icon hover state - Background highlight */
 .desktop-nav .notifications-icon:hover {
     background: #f8f9fa;
     color: #667eea;
 }
 
+/* Notifications icon styling - Bell icon with brand color */
 .desktop-nav .notifications-icon i {
     font-size: 1.1rem;
     color: #667eea;
 }
 
+/* Notifications icon hover effect - Scale animation */
 .desktop-nav .notifications-icon:hover i {
     color: #667eea;
     transform: scale(1.1);
 }
 
+/* ==========================================================================
+   LANGUAGE SELECTOR COMPONENTS
+   ========================================================================== */
+
+/* Language selector container - Positioned relative for dropdown */
 .desktop-nav .language-selector {
     position: relative;
 }
 
+/* Language toggle button - Clickable language switcher */
 .desktop-nav .language-toggle {
     background: none;
     border: none;
@@ -220,47 +272,55 @@
     border-radius: 6px;
 }
 
+/* Language toggle hover state - Background and color change */
 .desktop-nav .language-toggle:hover {
     background: #f8f9fa;
     color: #667eea;
 }
 
+/* Language toggle focus state - Accessibility focus indicator */
 .desktop-nav .language-toggle:focus {
     outline: none;
     background: #f8f9fa;
 }
 
+/* Language toggle icon - Flag or language icon */
 .desktop-nav .language-toggle i {
     font-size: 1.1rem;
     color: #667eea;
 }
 
+/* Language toggle icon hover effect - Scale animation */
 .desktop-nav .language-toggle:hover i {
     color: #667eea;
     transform: scale(1.1);
 }
 
+/* Language toggle text - Current language display */
 .desktop-nav .language-toggle span {
     font-weight: 600;
     font-size: 0.8rem;
     color: #333;
 }
 
+/* Language toggle text hover state - Color change */
 .desktop-nav .language-toggle:hover span {
     color: #667eea;
 }
 
+/* Language dropdown arrow - Chevron that rotates on hover */
 .desktop-nav .language-toggle .fa-chevron-down {
     font-size: 0.7rem;
     margin-left: 4px;
     transition: transform 0.3s ease;
 }
 
+/* Language dropdown arrow rotation - Visual feedback on hover */
 .desktop-nav .language-selector:hover .fa-chevron-down {
     transform: rotate(180deg);
 }
 
-/* Language Dropdown Menu */
+/* Language dropdown menu container - Hidden by default, shown on hover */
 .desktop-nav .language-dropdown-menu {
     position: absolute;
     top: 100%;
@@ -278,12 +338,14 @@
     margin-top: 5px;
 }
 
+/* Language dropdown menu visibility - Shows on parent hover */
 .desktop-nav .language-selector:hover .language-dropdown-menu {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
 }
 
+/* Individual language option - Clickable language selection */
 .desktop-nav .language-option {
     display: flex;
     align-items: center;
@@ -295,30 +357,36 @@
     border-bottom: 1px solid #f8f9fa;
 }
 
+/* Last language option - Removes bottom border for clean appearance */
 .desktop-nav .language-option:last-child {
     border-bottom: none;
 }
 
+/* Language option hover state - Background and color change */
 .desktop-nav .language-option:hover {
     background: #f8f9fa;
     color: #667eea;
 }
 
+/* Active language option - Indicates current language selection */
 .desktop-nav .language-option.active {
     background: #e3f2fd;
     color: #667eea;
     font-weight: 500;
 }
 
+/* Language flag icon - Country flag representation */
 .desktop-nav .language-flag {
     font-size: 1.2rem;
 }
 
+/* Language name text - Language display name */
 .desktop-nav .language-name {
     font-size: 0.9rem;
     font-weight: 500;
 }
 
+/* Language dropdown select - Alternative dropdown implementation */
 .desktop-nav .language-dropdown {
     background: white;
     border: 2px solid #e1e5e9;
@@ -330,22 +398,30 @@
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Language dropdown focus state - Accessibility focus indicator */
 .desktop-nav .language-dropdown:focus {
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* Language dropdown hover state - Border color change */
 .desktop-nav .language-dropdown:hover {
     border-color: #667eea;
 }
 
+/* ==========================================================================
+   USER INTERFACE COMPONENTS
+   ========================================================================== */
+
+/* User info container - Contains user details and logout button */
 .desktop-nav .user-info {
     display: flex;
     align-items: center;
     gap: 15px;
 }
 
+/* Logout button - User session termination button */
 .desktop-nav .logout-btn {
     background: none;
     color: #333;
@@ -360,32 +436,39 @@
     gap: 5px;
 }
 
+/* Logout button hover state - Background and color change to red */
 .desktop-nav .logout-btn:hover {
     background: #f8f9fa;
     color: #dc3545;
 }
 
+/* Logout button icon hover effect - Scale animation */
 .desktop-nav .logout-btn:hover i {
     color: #dc3545;
     transform: scale(1.1);
 }
 
+/* Navigation toggle - Hidden on desktop (mobile-only) */
 .desktop-nav .nav-toggle {
     display: none;
 }
 
-/* Desktop Navigation Bottom Separator */
+/* Desktop navigation bottom separator - Visual separation line */
 .desktop-nav {
     border-bottom: 2px solid #e1e5e9;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* Mobile Header Styles */
+/* ==========================================================================
+   MOBILE NAVIGATION SYSTEM
+   ========================================================================== */
+
+/* Mobile header container - Visible on mobile devices */
 .mobile-header {
     display: block;
 }
 
-/* Mobile Navigation Overlay */
+/* Mobile navigation overlay - Dark background when menu is open */
 .nav-overlay {
     position: fixed;
     top: 0;
@@ -398,10 +481,12 @@
     animation: fadeIn 0.3s ease;
 }
 
+/* Mobile navigation overlay active state - Shows when menu is open */
 .nav-overlay.active {
     display: block;
 }
 
+/* Mobile navigation content - Slide-out menu panel */
 .nav-content {
     position: absolute;
     top: 0;
@@ -414,6 +499,7 @@
     animation: slideIn 0.3s ease forwards;
 }
 
+/* Mobile navigation header - Brand and close button area */
 .nav-header {
     padding: 20px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -423,10 +509,12 @@
     align-items: center;
 }
 
+/* Mobile navigation header title - App name display */
 .nav-header h2 {
     font-size: 1.5rem;
 }
 
+/* Mobile navigation close button - X button to close menu */
 .close-nav {
     background: none;
     border: none;
@@ -436,10 +524,12 @@
     padding: 5px;
 }
 
+/* Mobile navigation menu - Container for navigation items */
 .mobile-nav {
     padding: 20px 0;
 }
 
+/* Mobile navigation item - Individual menu link */
 .nav-item {
     display: flex;
     align-items: center;
@@ -450,22 +540,26 @@
     position: relative;
 }
 
+/* Mobile navigation item hover state - Background highlight */
 .nav-item:hover {
     background: #f8f9fa;
 }
 
+/* Active mobile navigation item - Indicates current page */
 .nav-item.active {
     background: #e3f2fd;
     color: #1976d2;
     border-right: 3px solid #1976d2;
 }
 
+/* Mobile navigation item icon - Menu item icon styling */
 .nav-item i {
     margin-right: 15px;
     width: 20px;
     text-align: center;
 }
 
+/* Mobile notification badge - Red badge for unread notifications */
 .notification-badge {
     background: #ff4444;
     color: white;
@@ -475,13 +569,18 @@
     margin-left: auto;
 }
 
-/* Navigation Language Selector */
+/* ==========================================================================
+   MOBILE LANGUAGE SELECTOR
+   ========================================================================== */
+
+/* Mobile navigation language selector - Language switching in mobile menu */
 .nav-language-selector {
     padding: 15px 20px;
     border-top: 1px solid #e9ecef;
     margin-top: 10px;
 }
 
+/* Mobile language selector label - Language selection label */
 .nav-language-label {
     display: flex;
     align-items: center;
@@ -492,10 +591,12 @@
     font-weight: 500;
 }
 
+/* Mobile language selector label icon - Language icon styling */
 .nav-language-label i {
     color: #667eea;
 }
 
+/* Mobile language dropdown - Language selection dropdown */
 .nav-language-dropdown {
     width: 100%;
     padding: 10px 12px;
@@ -508,17 +609,23 @@
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Mobile language dropdown focus state - Accessibility focus indicator */
 .nav-language-dropdown:focus {
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* Mobile language dropdown hover state - Border color change */
 .nav-language-dropdown:hover {
     border-color: #667eea;
 }
 
-/* App Header */
+/* ==========================================================================
+   APPLICATION HEADER SYSTEM
+   ========================================================================== */
+
+/* Main application header - Sticky header with navigation and user controls */
 .app-header {
     background: white;
     padding: 15px 20px;
@@ -531,12 +638,14 @@
     z-index: 100;
 }
 
+/* Header left section - Contains menu toggle and title */
 .header-left {
     display: flex;
     align-items: center;
     gap: 15px;
 }
 
+/* Mobile menu toggle button - Hamburger menu button */
 .menu-toggle {
     background: none;
     border: none;
@@ -548,27 +657,32 @@
     transition: background-color 0.3s ease;
 }
 
+/* Mobile menu toggle hover state - Background highlight */
 .menu-toggle:hover {
     background: #f8f9fa;
 }
 
+/* Application header title - Page or section title */
 .app-header h1 {
     color: #333;
     font-size: 1.5rem;
     font-weight: 600;
 }
 
+/* Header right section - Contains user info and logout */
 .header-right {
     display: flex;
     align-items: center;
 }
 
+/* User information container - User details and controls */
 .user-info {
     display: flex;
     align-items: center;
     gap: 15px;
 }
 
+/* Logout button - User session termination */
 .logout-btn {
     background: #dc3545;
     color: white;
@@ -583,11 +697,16 @@
     gap: 5px;
 }
 
+/* Logout button hover state - Darker red background */
 .logout-btn:hover {
     background: #c82333;
 }
 
-/* Main Content */
+/* ==========================================================================
+   MAIN CONTENT AREA
+   ========================================================================== */
+
+/* Main application content area - Flexible container for page content */
 .app-main {
     flex: 1;
     padding: 20px;
@@ -596,22 +715,28 @@
     box-sizing: border-box;
 }
 
+/* Content section container - Hidden by default, shown when active */
 .content-section {
     display: none;
 }
 
+/* Active content section - Currently visible page content */
 .content-section.active {
     display: block;
 }
 
-/* Reports Container Specific Styles */
+/* Reports container specific styling - Full width reports area */
 #reportsContainer {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
 }
 
-/* Dashboard Styles */
+/* ==========================================================================
+   DASHBOARD LAYOUT SYSTEM
+   ========================================================================== */
+
+/* Dashboard main grid - Primary layout container for dashboard */
 .dashboard-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -621,7 +746,7 @@
     width: 100%;
 }
 
-/* Dashboard main content wrapper */
+/* Dashboard main content wrapper - Left side content area */
 .dashboard-main-content {
     display: grid;
     grid-template-columns: 1fr;
@@ -630,7 +755,7 @@
     width: 100%;
 }
 
-/* Dashboard right content wrapper */
+/* Dashboard right content wrapper - Right side content area */
 .dashboard-right-content {
     display: flex;
     flex-direction: column;
@@ -639,6 +764,7 @@
     width: 100%;
 }
 
+/* Statistics grid - Grid layout for dashboard statistics cards */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -648,6 +774,7 @@
     width: 100%;
 }
 
+/* Statistics card - Individual dashboard metric card */
 .stat-card {
     background: white;
     border-radius: 12px;
@@ -659,10 +786,12 @@
     transition: transform 0.3s ease;
 }
 
+/* Statistics card hover effect - Subtle lift animation */
 .stat-card:hover {
     transform: translateY(-2px);
 }
 
+/* Statistics card icon - Colored icon for each metric */
 .stat-icon {
     width: 40px;
     height: 40px;
@@ -674,22 +803,27 @@
     color: white;
 }
 
+/* First statistics card icon - Purple gradient for primary metric */
 .stat-card:nth-child(1) .stat-icon {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
+/* Second statistics card icon - Pink gradient for secondary metric */
 .stat-card:nth-child(2) .stat-icon {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
+/* Third statistics card icon - Blue gradient for tertiary metric */
 .stat-card:nth-child(3) .stat-icon {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
 
+/* Fourth statistics card icon - Green gradient for quaternary metric */
 .stat-card:nth-child(4) .stat-icon {
     background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
 }
 
+/* Statistics content title - Large metric value display */
 .stat-content h3 {
     font-size: 1.5rem;
     font-weight: bold;
@@ -697,12 +831,17 @@
     margin-bottom: 3px;
 }
 
+/* Statistics content description - Small metric label */
 .stat-content p {
     color: #666;
     font-size: 0.8rem;
 }
 
-/* Section Headers */
+/* ==========================================================================
+   SECTION HEADERS AND CONTROLS
+   ========================================================================== */
+
+/* Section header container - Title and action controls wrapper */
 .section-header {
     display: flex;
     justify-content: space-between;
@@ -712,25 +851,32 @@
     gap: 15px;
 }
 
+/* Section header title - Large section heading */
 .section-header h2 {
     color: #333;
     font-size: 1.8rem;
     font-weight: 600;
 }
 
+/* Section action controls - Buttons and filters container */
 .section-actions {
     display: flex;
     align-items: center;
     gap: 15px;
 }
 
-/* Filters */
+/* ==========================================================================
+   FILTER AND VIEW CONTROLS
+   ========================================================================== */
+
+/* Filters container - Filter controls wrapper */
 .filters {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
+/* Filter select dropdown - Data filtering dropdown */
 .filter-select {
     padding: 0.5rem 1rem;
     border: 1px solid #ddd;
@@ -742,16 +888,19 @@
     transition: all 0.3s ease;
 }
 
+/* Filter select hover state - Border color change */
 .filter-select:hover {
     border-color: #667eea;
 }
 
+/* Filter select focus state - Accessibility focus indicator */
 .filter-select:focus {
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* View toggle container - Grid/list view switcher */
 .view-toggle {
     display: flex;
     background: #f8f9fa;
@@ -760,6 +909,7 @@
     gap: 2px;
 }
 
+/* View toggle button - Individual view mode button */
 .view-btn {
     background: none;
     border: none;
@@ -773,22 +923,29 @@
     justify-content: center;
 }
 
+/* View toggle button hover state - Background highlight */
 .view-btn:hover {
     background: #e9ecef;
     color: #333;
 }
 
+/* Active view toggle button - Currently selected view mode */
 .view-btn.active {
     background: #667eea;
     color: white;
     box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
 }
 
+/* View toggle button icon - View mode icon */
 .view-btn i {
     font-size: 0.9rem;
 }
 
-/* Grid Layouts */
+/* ==========================================================================
+   CONTENT LAYOUT SYSTEMS
+   ========================================================================== */
+
+/* Grid layout containers - Responsive grid for various content types */
 .students-grid, .grades-container, .attendance-container, 
 .exams-container, .repository-container, .notifications-container {
     display: grid;
@@ -796,18 +953,23 @@
     gap: 20px;
 }
 
-/* List Views */
+/* List view containers - Hidden by default, shown when active */
 .students-list, .grades-list, .attendance-list, 
 .exams-list, .repository-list, .notifications-list {
     display: none;
 }
 
+/* Active list views - Currently visible list content */
 .students-list.active, .grades-list.active, .attendance-list.active, 
 .exams-list.active, .repository-list.active, .notifications-list.active {
     display: block;
 }
 
-/* Calendar Styles */
+/* ==========================================================================
+   CALENDAR SYSTEM
+   ========================================================================== */
+
+/* Calendar section container - Main calendar wrapper */
 .calendar-section {
     background: white;
     border-radius: 12px;
@@ -815,12 +977,14 @@
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
+/* Calendar section title - Calendar heading */
 .calendar-section h2 {
     color: #333;
     margin-bottom: 20px;
     font-size: 1.5rem;
 }
 
+/* Calendar header controls - Navigation and month display */
 .calendar-header {
     display: flex;
     justify-content: space-between;
@@ -828,6 +992,7 @@
     margin-bottom: 20px;
 }
 
+/* Calendar navigation button - Previous/next month buttons */
 .nav-btn {
     background: #667eea;
     color: white;
@@ -839,17 +1004,23 @@
     transition: background-color 0.3s ease;
 }
 
+/* Calendar navigation button hover state - Darker background */
 .nav-btn:hover {
     background: #5a6fd8;
 }
 
+/* Current month display - Month and year text */
 #currentMonth {
     color: #333;
     font-size: 1.2rem;
     margin: 0;
 }
 
-/* Calendar View Toggle */
+/* ==========================================================================
+   CALENDAR VIEW TOGGLE
+   ========================================================================== */
+
+/* Calendar view toggle container - Month/week view switcher */
 .calendar-view-toggle {
     display: flex;
     justify-content: center;
@@ -860,6 +1031,7 @@
     padding: 4px;
 }
 
+/* Calendar view toggle button - Individual view mode button */
 .toggle-btn {
     background: transparent;
     border: none;
@@ -873,18 +1045,24 @@
     flex: 1;
 }
 
+/* Active calendar view toggle button - Currently selected view */
 .toggle-btn.active {
     background: #667eea;
     color: white;
     box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
 }
 
+/* Calendar view toggle button hover state - Background highlight */
 .toggle-btn:hover:not(.active) {
     background: #e9ecef;
     color: #333;
 }
 
-/* Weekly View Styles */
+/* ==========================================================================
+   CALENDAR WEEKLY VIEW
+   ========================================================================== */
+
+/* Calendar weekly view grid - 7-column layout for week display */
 .calendar-grid.week-view {
     grid-template-columns: repeat(7, 1fr);
     gap: 1px;
@@ -895,6 +1073,7 @@
     height: auto;
 }
 
+/* Weekly view calendar day - Individual day container in week view */
 .calendar-grid.week-view .calendar-day {
     min-height: 350px;
     height: 100%;
@@ -908,6 +1087,7 @@
     overflow-y: auto;
 }
 
+/* Weekly view day number - Date display in week view */
 .calendar-grid.week-view .calendar-day .day-number {
     font-weight: bold;
     font-size: 1.1rem;
@@ -918,6 +1098,7 @@
     width: 100%;
 }
 
+/* Weekly view day events - Events container in week view */
 .calendar-grid.week-view .calendar-day .day-events {
     width: 100%;
     flex: 1;
@@ -929,6 +1110,7 @@
     overflow-y: auto;
 }
 
+/* Weekly view event item - Individual event in week view */
 .calendar-grid.week-view .calendar-day .event-item {
     background: #f8f9fa;
     border-radius: 4px;
@@ -941,32 +1123,38 @@
     min-height: auto;
 }
 
+/* Weekly view event item hover state - Background and transform */
 .calendar-grid.week-view .calendar-day .event-item:hover {
     background: #e9ecef;
     transform: translateX(2px);
 }
 
+/* Weekly view reminder event - Yellow styling for reminders */
 .calendar-grid.week-view .calendar-day .event-item.recordatorio {
     border-left-color: #ffc107;
     background: #fff3cd;
 }
 
+/* Weekly view class event - Green styling for classes */
 .calendar-grid.week-view .calendar-day .event-item.clase {
     border-left-color: #28a745;
     background: #d4edda;
 }
 
+/* Weekly view evaluation event - Red styling for evaluations */
 .calendar-grid.week-view .calendar-day .event-item.evaluacion {
     border-left-color: #dc3545;
     background: #f8d7da;
 }
 
+/* Weekly view other subject reminder - Gray styling for other subjects */
 .calendar-grid.week-view .calendar-day .event-item.recordatorio.other-subject {
     border-left-color: #6c757d;
     background: #e9ecef;
     opacity: 0.8;
 }
 
+/* Weekly view event subject - Subject name in event */
 .calendar-grid.week-view .calendar-day .event-item .event-subject {
     font-size: 0.65rem;
     color: #6c757d;
@@ -974,17 +1162,20 @@
     font-style: italic;
 }
 
+/* Weekly view event time - Time display in event */
 .calendar-grid.week-view .calendar-day .event-item .event-time {
     font-weight: 600;
     color: #495057;
     margin-right: 4px;
 }
 
+/* Weekly view event title - Event name display */
 .calendar-grid.week-view .calendar-day .event-item .event-title {
     font-weight: 500;
     color: #212529;
 }
 
+/* Weekly view event type - Event type label */
 .calendar-grid.week-view .calendar-day .event-item .event-type {
     font-size: 0.7rem;
     color: #6c757d;
@@ -992,11 +1183,12 @@
     font-weight: 500;
 }
 
-/* Event item interactions */
+/* Weekly view event item interactions - Positioned for pseudo-elements */
 .calendar-grid.week-view .calendar-day .event-item {
     position: relative;
 }
 
+/* Weekly view event item left border - Color indicator pseudo-element */
 .calendar-grid.week-view .calendar-day .event-item::before {
     content: '';
     position: absolute;
@@ -1007,19 +1199,22 @@
     border-radius: 2px 0 0 2px;
 }
 
+/* Weekly view reminder event border - Yellow left border */
 .calendar-grid.week-view .calendar-day .event-item.recordatorio::before {
     background: #ffc107;
 }
 
+/* Weekly view class event border - Green left border */
 .calendar-grid.week-view .calendar-day .event-item.clase::before {
     background: #28a745;
 }
 
+/* Weekly view evaluation event border - Red left border */
 .calendar-grid.week-view .calendar-day .event-item.evaluacion::before {
     background: #dc3545;
 }
 
-/* Empty state for days with no events */
+/* Weekly view empty state - Message when no events */
 .calendar-grid.week-view .calendar-day .day-events:empty::after {
     content: 'Sin eventos';
     color: #6c757d;
@@ -1030,7 +1225,7 @@
     padding: 20px 0;
 }
 
-/* Responsive adjustments for weekly view */
+/* Weekly view responsive adjustments - Mobile optimization */
 @media (max-width: 768px) {
     .calendar-grid.week-view .calendar-day {
         min-height: 200px;
@@ -1044,6 +1239,7 @@
     }
 }
 
+/* Weekly view day header - Day name header in week view */
 .calendar-grid.week-view .calendar-day-header {
     background: #667eea;
     color: white;
@@ -1053,6 +1249,11 @@
     font-size: 0.9rem;
 }
 
+/* ==========================================================================
+   CALENDAR MONTHLY VIEW
+   ========================================================================== */
+
+/* Calendar grid container - 7-column grid for monthly view */
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -1062,6 +1263,7 @@
     overflow: hidden;
 }
 
+/* Calendar day container - Individual day in monthly view */
 .calendar-day {
     background: white;
     padding: 8px;
@@ -1076,21 +1278,25 @@
     overflow: hidden;
 }
 
+/* Calendar day hover state - Background highlight */
 .calendar-day:hover {
     background: #f8f9fa;
 }
 
+/* Calendar day other month - Days from previous/next month */
 .calendar-day.other-month {
     color: #ccc;
     background: #f8f9fa;
 }
 
+/* Calendar day today - Current date highlighting */
 .calendar-day.today {
     background: #667eea;
     color: white;
     font-weight: bold;
 }
 
+/* Calendar day header - Day name header in monthly view */
 .calendar-day-header {
     background: #667eea;
     color: white;
@@ -1100,7 +1306,11 @@
     font-size: 0.9rem;
 }
 
-/* Month View Event Styles */
+/* ==========================================================================
+   MONTHLY VIEW EVENT STYLES
+   ========================================================================== */
+
+/* Monthly view day number - Date display in monthly view */
 .calendar-day .day-number {
     font-weight: bold;
     font-size: 1rem;
@@ -1110,6 +1320,7 @@
     width: 100%;
 }
 
+/* Monthly view day events - Events container in monthly view */
 .calendar-day .day-events {
     width: 100%;
     flex: 1;
@@ -1120,6 +1331,7 @@
     overflow-y: auto;
 }
 
+/* Monthly view event item - Individual event in monthly view */
 .calendar-day .event-item {
     background: #f8f9fa;
     border-radius: 3px;
@@ -1131,26 +1343,31 @@
     line-height: 1.2;
 }
 
+/* Monthly view event item hover state - Background and transform */
 .calendar-day .event-item:hover {
     background: #e9ecef;
     transform: translateX(1px);
 }
 
+/* Monthly view reminder event - Yellow styling for reminders */
 .calendar-day .event-item.recordatorio {
     border-left-color: #ffc107;
     background: #fff3cd;
 }
 
+/* Monthly view class event - Green styling for classes */
 .calendar-day .event-item.clase {
     border-left-color: #28a745;
     background: #d4edda;
 }
 
+/* Monthly view evaluation event - Red styling for evaluations */
 .calendar-day .event-item.evaluacion {
     border-left-color: #dc3545;
     background: #f8d7da;
 }
 
+/* Monthly view other subject reminder - Gray styling for other subjects */
 .calendar-day .event-item.recordatorio.other-subject {
     border-left-color: #6c757d;
     background: #e9ecef;
@@ -1158,6 +1375,7 @@
     border-style: dashed;
 }
 
+/* Monthly view event subject - Hidden in monthly view for space */
 .calendar-day .event-item .event-subject {
     font-size: 0.6rem;
     color: #6c757d;
@@ -1166,6 +1384,7 @@
     display: none; /* Hide in month view to save space */
 }
 
+/* Monthly view event time - Time display in monthly view */
 .calendar-day .event-item .event-time {
     font-weight: 600;
     color: #495057;
@@ -1173,6 +1392,7 @@
     font-size: 0.6rem;
 }
 
+/* Monthly view event title - Event name with text truncation */
 .calendar-day .event-item .event-title {
     font-weight: 500;
     color: #212529;
@@ -1182,6 +1402,7 @@
     text-overflow: ellipsis;
 }
 
+/* Monthly view event type - Hidden in monthly view for space */
 .calendar-day .event-item .event-type {
     font-size: 0.6rem;
     color: #6c757d;
@@ -1190,7 +1411,7 @@
     display: none; /* Hide in month view to save space */
 }
 
-/* Responsive adjustments for month view */
+/* Monthly view responsive adjustments - Mobile optimization */
 @media (max-width: 768px) {
     .calendar-day {
         min-height: 60px;
@@ -1207,7 +1428,11 @@
     }
 }
 
-/* Next Classes Styles */
+/* ==========================================================================
+   NEXT CLASSES SECTION
+   ========================================================================== */
+
+/* Next classes section container - Upcoming classes display */
 .next-classes-section {
     background: white;
     border-radius: 12px;
@@ -1217,6 +1442,7 @@
     width: 100%;
 }
 
+/* Next classes section title - Section heading */
 .next-classes-section h2 {
     color: #333;
     margin-bottom: 20px;
@@ -1224,12 +1450,14 @@
     font-weight: 600;
 }
 
+/* Classes list container - Vertical list of upcoming classes */
 .classes-list {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
+/* Individual class item - Single upcoming class card */
 .class-item {
     background: #f8f9fa;
     border-radius: 12px;
@@ -1239,20 +1467,24 @@
     position: relative;
 }
 
+/* Class item hover effect - Lift animation and shadow */
 .class-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* Class item with evaluations - Red styling for classes with evaluations */
 .class-item.has-evaluations {
     border-left-color: #e74c3c;
     background: linear-gradient(135deg, #fff5f5 0%, #f8f9fa 100%);
 }
 
+/* Class item with evaluations hover - Red shadow effect */
 .class-item.has-evaluations:hover {
     box-shadow: 0 8px 25px rgba(231, 76, 60, 0.2);
 }
 
+/* Class header section - Time and schedule information */
 .class-header {
     display: flex;
     justify-content: space-between;
@@ -1262,6 +1494,7 @@
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
+/* Class time display - Time information with icon */
 .class-time {
     display: flex;
     align-items: center;
@@ -1271,10 +1504,12 @@
     font-size: 0.95rem;
 }
 
+/* Class time icon - Clock icon styling */
 .class-time i {
     font-size: 1.1rem;
 }
 
+/* Class schedule badge - Schedule information display */
 .class-schedule {
     display: flex;
     align-items: center;
@@ -1286,14 +1521,17 @@
     border-radius: 20px;
 }
 
+/* Class schedule icon - Schedule icon styling */
 .class-schedule i {
     font-size: 0.9rem;
 }
 
+/* Class details section - Class information content */
 .class-details {
     padding: 0 20px 20px 20px;
 }
 
+/* Class details title - Class name heading */
 .class-details h4 {
     color: #333;
     margin: 0 0 8px 0;
@@ -1301,6 +1539,7 @@
     font-weight: 600;
 }
 
+/* Class info container - Additional class information */
 .class-info {
     display: flex;
     align-items: center;
@@ -1310,16 +1549,23 @@
     margin: 0 0 15px 0;
 }
 
+/* Class info icon - Information icon styling */
 .class-info i {
     color: #667eea;
     font-size: 0.9rem;
 }
 
+/* Classroom information - Room/location display */
 .classroom {
     color: #999;
     font-size: 0.85rem;
 }
 
+/* ==========================================================================
+   EVALUATIONS SECTION
+   ========================================================================== */
+
+/* Evaluations container - Class evaluations display */
 .evaluations {
     background: rgba(231, 76, 60, 0.05);
     border: 1px solid rgba(231, 76, 60, 0.2);
@@ -1328,6 +1574,7 @@
     margin-top: 10px;
 }
 
+/* Evaluation header - Section title with icon */
 .evaluation-header {
     display: flex;
     align-items: center;
@@ -1338,10 +1585,12 @@
     margin-bottom: 10px;
 }
 
+/* Evaluation header icon - Warning icon styling */
 .evaluation-header i {
     font-size: 1rem;
 }
 
+/* Individual evaluation item - Single evaluation display */
 .evaluation-item {
     display: flex;
     justify-content: space-between;
@@ -1353,16 +1602,19 @@
     border: 1px solid rgba(231, 76, 60, 0.1);
 }
 
+/* Last evaluation item - Removes bottom margin */
 .evaluation-item:last-child {
     margin-bottom: 0;
 }
 
+/* Evaluation title - Evaluation name display */
 .evaluation-title {
     color: #333;
     font-weight: 500;
     font-size: 0.9rem;
 }
 
+/* Evaluation type badge - Evaluation type indicator */
 .evaluation-type {
     color: #e74c3c;
     font-size: 0.8rem;
@@ -1372,37 +1624,50 @@
     font-weight: 500;
 }
 
+/* ==========================================================================
+   EMPTY STATE COMPONENTS
+   ========================================================================== */
+
+/* Empty state container - Message when no content available */
 .empty-state {
     text-align: center;
     padding: 40px 20px;
     color: #6c757d;
 }
 
+/* Empty state icon - Large icon for visual feedback */
 .empty-state i {
     font-size: 3rem;
     color: #dee2e6;
     margin-bottom: 15px;
 }
 
+/* Empty state title - Main message heading */
 .empty-state h3 {
     color: #495057;
     margin-bottom: 10px;
     font-size: 1.2rem;
 }
 
+/* Empty state description - Additional context message */
 .empty-state p {
     color: #6c757d;
     font-size: 0.9rem;
     margin: 0;
 }
 
-/* Additional Mobile Styles */
+/* ==========================================================================
+   MOBILE ATTENDANCE STYLES
+   ========================================================================== */
+
+/* Mobile attendance list - Scrollable attendance list */
 .attendance-list {
     max-height: 300px;
     overflow-y: auto;
     margin: 20px 0;
 }
 
+/* Mobile attendance item - Individual attendance record */
 .attendance-item {
     display: flex;
     justify-content: space-between;
@@ -1411,10 +1676,12 @@
     border-bottom: 1px solid #e9ecef;
 }
 
+/* Last attendance item - Removes bottom border */
 .attendance-item:last-child {
     border-bottom: none;
 }
 
+/* Attendance status badge - Status indicator */
 .attendance-status {
     padding: 5px 10px;
     border: 1px solid #ddd;
@@ -1422,37 +1689,52 @@
     background: white;
 }
 
+/* Present status - Green styling for present */
 .status-present {
     color: #28a745;
     font-weight: bold;
 }
 
+/* Absent status - Red styling for absent */
 .status-absent {
     color: #dc3545;
     font-weight: bold;
 }
 
+/* Late status - Yellow styling for late */
 .status-late {
     color: #ffc107;
     font-weight: bold;
 }
 
+/* Active status - Green styling for active */
 .status-active {
     color: #28a745;
     font-weight: bold;
 }
 
+/* Inactive status - Gray styling for inactive */
 .status-inactive {
     color: #6c757d;
     font-weight: bold;
 }
 
+/* ==========================================================================
+   NOTIFICATION ACTIONS
+   ========================================================================== */
+
+/* Notification actions container - Action buttons for notifications */
 .notification-actions {
     display: flex;
     gap: 10px;
     margin-top: 10px;
 }
 
+/* ==========================================================================
+   REPORT STATISTICS
+   ========================================================================== */
+
+/* Report statistics grid - Statistics display grid */
 .report-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1460,6 +1742,7 @@
     margin-bottom: 20px;
 }
 
+/* Report statistics item - Individual statistic display */
 .stat-item {
     display: flex;
     justify-content: space-between;
@@ -1469,43 +1752,59 @@
     border-radius: 8px;
 }
 
+/* Report statistics label - Statistic name */
 .stat-label {
     font-weight: 500;
     color: #666;
 }
 
+/* Report statistics value - Statistic value display */
 .stat-value {
     font-weight: bold;
     color: #333;
     font-size: 1.2rem;
 }
 
+/* Report actions container - Action buttons for reports */
 .report-actions {
     margin-top: 20px;
 }
 
+/* ==========================================================================
+   CARD STATES
+   ========================================================================== */
+
+/* Read card state - Dimmed appearance for read items */
 .card.read {
     opacity: 0.7;
 }
 
+/* Unread card state - Blue border for unread items */
 .card.unread {
     border-left: 4px solid #007bff;
 }
 
+/* Notification date - Date display for notifications */
 .notification-date {
     font-size: 0.9rem;
     color: #666;
 }
 
-/* Recordatorio Styles */
+/* ==========================================================================
+   RECORDATORIO (REMINDER) STYLES
+   ========================================================================== */
+
+/* Recordatorio card - Yellow border for reminder cards */
 .card.recordatorio {
     border-left: 4px solid #ffc107;
 }
 
+/* Recordatorio card header - Yellow gradient background */
 .card.recordatorio .card-header {
     background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
 }
 
+/* Priority badge - Priority level indicator */
 .priority-badge {
     padding: 4px 8px;
     border-radius: 12px;
@@ -1514,21 +1813,25 @@
     text-transform: uppercase;
 }
 
+/* High priority badge - Red styling for high priority */
 .priority-badge.alta {
     background: #dc3545;
     color: white;
 }
 
+/* Medium priority badge - Yellow styling for medium priority */
 .priority-badge.media {
     background: #ffc107;
     color: #212529;
 }
 
+/* Low priority badge - Green styling for low priority */
 .priority-badge.baja {
     background: #28a745;
     color: white;
 }
 
+/* Recordatorio details container - Additional reminder information */
 .recordatorio-details {
     display: flex;
     gap: 15px;
@@ -1536,6 +1839,7 @@
     font-size: 0.9rem;
 }
 
+/* Recordatorio type badge - Reminder type indicator */
 .recordatorio-type {
     background: #e9ecef;
     padding: 4px 8px;
@@ -1543,11 +1847,13 @@
     font-weight: 500;
 }
 
+/* Recordatorio subject - Subject name display */
 .recordatorio-subject {
     color: #667eea;
     font-weight: 500;
 }
 
+/* Type badge - Generic type indicator */
 .type-badge {
     display: inline-flex;
     align-items: center;
@@ -1558,17 +1864,23 @@
     font-weight: 600;
 }
 
+/* Recordatorio type badge - Yellow styling for reminders */
 .type-badge.recordatorio {
     background: #fff3cd;
     color: #856404;
 }
 
+/* Notification type badge - Blue styling for notifications */
 .type-badge.notification {
     background: #d1ecf1;
     color: #0c5460;
 }
 
-/* Attendance Section Styles */
+/* ==========================================================================
+   ATTENDANCE SECTION STYLES
+   ========================================================================== */
+
+/* Attendance form container - Form for attendance input */
 .attendance-form {
     background: #f8f9fa;
     padding: 20px;
@@ -1577,6 +1889,7 @@
     border: 1px solid #e9ecef;
 }
 
+/* Form row layout - Responsive grid for form fields */
 .form-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1584,11 +1897,13 @@
     margin-bottom: 15px;
 }
 
+/* Attendance table container - Scrollable table wrapper */
 .attendance-table-container {
     margin: 20px 0;
     overflow-x: auto;
 }
 
+/* Attendance table - Main attendance data table */
 .attendance-table {
     width: 100%;
     border-collapse: collapse;
@@ -1598,6 +1913,7 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* Attendance table header - Table column headers */
 .attendance-table th {
     background: #f8f9fa;
     padding: 12px;
@@ -1606,15 +1922,18 @@
     border-bottom: 2px solid #dee2e6;
 }
 
+/* Attendance table cell - Individual table cells */
 .attendance-table td {
     padding: 12px;
     border-bottom: 1px solid #dee2e6;
 }
 
+/* Status cell - Centered status display */
 .status-cell {
     text-align: center;
 }
 
+/* Status button - Clickable status indicator */
 .status-btn {
     background: none;
     border: 2px solid #dee2e6;
@@ -1628,32 +1947,38 @@
     justify-content: center;
 }
 
+/* Status button hover state - Border and background change */
 .status-btn:hover {
     border-color: #007bff;
     background: #f8f9fa;
 }
 
+/* Active status button - Selected status styling */
 .status-btn.active {
     background: #007bff;
     border-color: #007bff;
     color: white;
 }
 
+/* Present button active state - Green styling for present */
 .present-btn.active {
     background: #28a745;
     border-color: #28a745;
 }
 
+/* Absent button active state - Red styling for absent */
 .absent-btn.active {
     background: #dc3545;
     border-color: #dc3545;
 }
 
+/* Absences count - Red styling for absence count */
 .absences-count {
     font-weight: 600;
     color: #dc3545;
 }
 
+/* Status badge - Status indicator badge */
 .status-badge {
     padding: 4px 8px;
     border-radius: 4px;
@@ -1661,11 +1986,13 @@
     font-weight: 600;
 }
 
+/* Enabled status badge - Green styling for enabled */
 .status-badge.habilitado {
     background: #d4edda;
     color: #155724;
 }
 
+/* Attendance actions container - Action buttons for attendance */
 .attendance-actions {
     display: flex;
     gap: 10px;
@@ -1676,6 +2003,7 @@
     border-radius: 8px;
 }
 
+/* Attendance summary card - Summary information display */
 .attendance-summary-card {
     margin-bottom: 15px;
     border: 1px solid #dee2e6;
@@ -1683,42 +2011,49 @@
     overflow: hidden;
 }
 
+/* Attendance summary card header - Card header styling */
 .attendance-summary-card .card-header {
     background: #f8f9fa;
     padding: 15px;
     border-bottom: 1px solid #dee2e6;
 }
 
+/* Attendance summary card content - Card content area */
 .attendance-summary-card .card-content {
     padding: 15px;
 }
 
+/* Attendance summary card list - Unstyled list for summary items */
 .attendance-summary-card ul {
     list-style: none;
     padding: 0;
     margin: 10px 0;
 }
 
+/* Attendance summary card list item - Individual summary item */
 .attendance-summary-card li {
     padding: 5px 0;
     border-bottom: 1px solid #f0f0f0;
 }
 
+/* Last attendance summary item - Removes bottom border */
 .attendance-summary-card li:last-child {
     border-bottom: none;
 }
 
+/* Present status badge - Green styling for present */
 .status-badge.present {
     background: #d4edda;
     color: #155724;
 }
 
+/* Absent status badge - Red styling for absent */
 .status-badge.absent {
     background: #f8d7da;
     color: #721c24;
 }
 
-/* Responsive adjustments for attendance */
+/* Attendance responsive adjustments - Mobile optimization */
 @media (max-width: 768px) {
     .form-row {
         grid-template-columns: 1fr;
@@ -1738,7 +2073,11 @@
     }
 }
 
-/* Grade Marking Section Styles */
+/* ==========================================================================
+   GRADE MARKING SECTION STYLES
+   ========================================================================== */
+
+/* Grade form container - Form for grade input */
 .grade-form {
     background: #f8f9fa;
     padding: 20px;
@@ -1747,11 +2086,13 @@
     border: 1px solid #e9ecef;
 }
 
+/* Grade table container - Scrollable table wrapper */
 .grade-table-container {
     margin: 20px 0;
     overflow-x: auto;
 }
 
+/* Grade table - Main grade data table */
 .grade-table {
     width: 100%;
     border-collapse: collapse;
@@ -1761,6 +2102,7 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* Grade table header - Table column headers */
 .grade-table th {
     background: #f8f9fa;
     padding: 12px;
@@ -1769,11 +2111,13 @@
     border-bottom: 2px solid #dee2e6;
 }
 
+/* Grade table cell - Individual table cells */
 .grade-table td {
     padding: 12px;
     border-bottom: 1px solid #dee2e6;
 }
 
+/* Grade input field - Grade value input */
 .grade-input {
     width: 80px;
     padding: 8px;
@@ -1783,30 +2127,35 @@
     font-weight: 600;
 }
 
+/* Grade input focus state - Focus indicator */
 .grade-input:focus {
     outline: none;
     border-color: #007bff;
     box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
 }
 
+/* Excellent grade input - Green styling for excellent grades */
 .grade-input.excellent {
     background: #d4edda;
     border-color: #28a745;
     color: #155724;
 }
 
+/* Good grade input - Yellow styling for good grades */
 .grade-input.good {
     background: #fff3cd;
     border-color: #ffc107;
     color: #856404;
 }
 
+/* Poor grade input - Red styling for poor grades */
 .grade-input.poor {
     background: #f8d7da;
     border-color: #dc3545;
     color: #721c24;
 }
 
+/* Grade status badge - Grade status indicator */
 .grade-status {
     padding: 4px 8px;
     border-radius: 4px;
@@ -1814,16 +2163,19 @@
     font-weight: 600;
 }
 
+/* Graded status badge - Green styling for graded */
 .grade-status.graded {
     background: #d4edda;
     color: #155724;
 }
 
+/* Pending status badge - Yellow styling for pending */
 .grade-status.pending {
     background: #fff3cd;
     color: #856404;
 }
 
+/* Grade actions container - Action buttons for grades */
 .grade-actions {
     display: flex;
     gap: 10px;
@@ -1834,6 +2186,7 @@
     border-radius: 8px;
 }
 
+/* Grade summary card - Summary information display */
 .grade-summary-card {
     margin-bottom: 15px;
     border: 1px solid #dee2e6;
@@ -1841,22 +2194,26 @@
     overflow: hidden;
 }
 
+/* Grade summary card header - Card header styling */
 .grade-summary-card .card-header {
     background: #f8f9fa;
     padding: 15px;
     border-bottom: 1px solid #dee2e6;
 }
 
+/* Grade summary card content - Card content area */
 .grade-summary-card .card-content {
     padding: 15px;
 }
 
+/* Grade summary card list - Unstyled list for summary items */
 .grade-summary-card ul {
     list-style: none;
     padding: 0;
     margin: 10px 0;
 }
 
+/* Grade summary card list item - Individual summary item */
 .grade-summary-card li {
     padding: 5px 0;
     border-bottom: 1px solid #f0f0f0;
@@ -1865,32 +2222,37 @@
     align-items: center;
 }
 
+/* Last grade summary item - Removes bottom border */
 .grade-summary-card li:last-child {
     border-bottom: none;
 }
 
+/* Grade value display - Grade value styling */
 .grade-value {
     font-weight: 600;
     padding: 2px 6px;
     border-radius: 3px;
 }
 
+/* Excellent grade value - Green styling for excellent grades */
 .grade-value.excellent {
     background: #d4edda;
     color: #155724;
 }
 
+/* Good grade value - Yellow styling for good grades */
 .grade-value.good {
     background: #fff3cd;
     color: #856404;
 }
 
+/* Poor grade value - Red styling for poor grades */
 .grade-value.poor {
     background: #f8d7da;
     color: #721c24;
 }
 
-/* Responsive adjustments for grade marking */
+/* Grade marking responsive adjustments - Mobile optimization */
 @media (max-width: 768px) {
     .grade-actions {
         flex-direction: column;
@@ -1906,7 +2268,11 @@
     }
 }
 
-/* Reports Dashboard Styles */
+/* ==========================================================================
+   REPORTS DASHBOARD STYLES
+   ========================================================================== */
+
+/* Reports dashboard container - Main reports area */
 .reports-dashboard {
     padding: 1rem;
     width: 100%;
@@ -1914,6 +2280,7 @@
     box-sizing: border-box;
 }
 
+/* Reports summary grid - Statistics cards layout */
 .reports-summary {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1923,6 +2290,7 @@
     max-width: 100%;
 }
 
+/* Summary card - Individual statistics card */
 .summary-card {
     background: white;
     border-radius: 8px;
@@ -1934,11 +2302,13 @@
     transition: transform 0.2s ease;
 }
 
+/* Summary card hover effect - Lift animation */
 .summary-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
+/* Summary icon - Circular icon for statistics */
 .summary-icon {
     width: 60px;
     height: 60px;
@@ -1950,22 +2320,27 @@
     color: white;
 }
 
+/* First summary card icon - Purple gradient */
 .summary-card:nth-child(1) .summary-icon {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
+/* Second summary card icon - Pink gradient */
 .summary-card:nth-child(2) .summary-icon {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
+/* Third summary card icon - Blue gradient */
 .summary-card:nth-child(3) .summary-icon {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
 
+/* Fourth summary card icon - Green gradient */
 .summary-card:nth-child(4) .summary-icon {
     background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
 }
 
+/* Summary content title - Large statistic value */
 .summary-content h3 {
     font-size: 2rem;
     font-weight: bold;
@@ -1973,12 +2348,14 @@
     color: #2d3748;
 }
 
+/* Summary content description - Statistic label */
 .summary-content p {
     margin: 0;
     color: #718096;
     font-size: 0.9rem;
 }
 
+/* Charts grid layout - Responsive grid for charts */
 .charts-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -1988,6 +2365,7 @@
     max-width: 100%;
 }
 
+/* Chart card - Individual chart container */
 .chart-card {
     background: white;
     border-radius: 8px;
@@ -1995,6 +2373,7 @@
     overflow: hidden;
 }
 
+/* Chart header - Chart title and controls */
 .chart-header {
     padding: 1rem 1.5rem;
     border-bottom: 1px solid #e2e8f0;
@@ -2003,12 +2382,14 @@
     align-items: center;
 }
 
+/* Chart header title - Chart name */
 .chart-header h3 {
     margin: 0;
     color: #2d3748;
     font-size: 1.1rem;
 }
 
+/* Chart controls select - Chart filter dropdown */
 .chart-controls select {
     padding: 0.5rem;
     border: 1px solid #e2e8f0;
@@ -2017,12 +2398,14 @@
     font-size: 0.9rem;
 }
 
+/* Chart container - Chart display area */
 .chart-container {
     padding: 1rem;
     height: 300px;
     position: relative;
 }
 
+/* Detailed reports grid - Detailed report cards layout */
 .detailed-reports {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -2032,6 +2415,7 @@
     max-width: 100%;
 }
 
+/* Report card - Individual detailed report container */
 .report-card {
     background: white;
     border-radius: 8px;
@@ -2039,28 +2423,33 @@
     overflow: hidden;
 }
 
+/* Report header - Report title area */
 .report-header {
     padding: 1rem 1.5rem;
     border-bottom: 1px solid #e2e8f0;
     background: #f7fafc;
 }
 
+/* Report header title - Report name */
 .report-header h3 {
     margin: 0;
     color: #2d3748;
     font-size: 1.1rem;
 }
 
+/* Report content - Report data area */
 .report-content {
     padding: 1.5rem;
 }
 
+/* Top students list - Student ranking list */
 .top-students-list {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
+/* Student rank item - Individual student ranking */
 .student-rank {
     display: flex;
     align-items: center;
@@ -2071,10 +2460,12 @@
     transition: background-color 0.2s ease;
 }
 
+/* Student rank hover state - Background highlight */
 .student-rank:hover {
     background: #edf2f7;
 }
 
+/* Rank number - Student ranking number */
 .rank-number {
     width: 40px;
     height: 40px;
@@ -2088,32 +2479,38 @@
     font-size: 1.1rem;
 }
 
+/* Student info container - Student details */
 .student-info {
     flex: 1;
 }
 
+/* Student name - Student name display */
 .student-name {
     font-weight: 600;
     color: #2d3748;
     margin-bottom: 0.25rem;
 }
 
+/* Student average - Student average grade */
 .student-average {
     color: #718096;
     font-size: 0.9rem;
 }
 
+/* Student grades count - Number of grades */
 .student-grades-count {
     color: #a0aec0;
     font-size: 0.8rem;
 }
 
+/* Attendance statistics container - Attendance stats display */
 .attendance-stats {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
+/* Attendance item - Individual attendance statistic */
 .attendance-item {
     display: flex;
     align-items: center;
@@ -2123,6 +2520,7 @@
     border-radius: 6px;
 }
 
+/* Attendance bar - Progress bar background */
 .attendance-bar {
     flex: 1;
     height: 8px;
@@ -2131,12 +2529,14 @@
     overflow: hidden;
 }
 
+/* Attendance fill - Progress bar fill */
 .attendance-fill {
     height: 100%;
     background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
     transition: width 0.3s ease;
 }
 
+/* Attendance percentage - Percentage display */
 .attendance-percentage {
     min-width: 50px;
     text-align: right;
@@ -2144,6 +2544,7 @@
     color: #2d3748;
 }
 
+/* Attendance details - Additional attendance information */
 .attendance-details {
     min-width: 80px;
     text-align: right;
@@ -2151,6 +2552,7 @@
     font-size: 0.9rem;
 }
 
+/* Report actions container - Action buttons for reports */
 .report-actions {
     display: flex;
     gap: 1rem;
@@ -2161,6 +2563,7 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* Report action button - Individual action button */
 .report-actions .btn {
     padding: 0.75rem 1.5rem;
     border-radius: 6px;
@@ -2176,26 +2579,37 @@
 /* Report actions now use unified button system */
 /* .report-actions .btn-primary and .btn-secondary styles are handled by the unified button system */
 
+/* Report action button sizing - Minimum width and centering */
 .report-actions .btn {
     min-width: 150px;
     justify-content: center;
 }
 
+/* Report action button icon - Icon spacing */
 .report-actions .btn i {
     margin-right: 8px;
 }
 
-/* Export loading animation */
+/* ==========================================================================
+   EXPORT ANIMATIONS
+   ========================================================================== */
+
+/* Export loading animation keyframes - Rotating animation */
 @keyframes exportLoading {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
+/* Export loading state - Rotating icon animation */
 .export-loading {
     animation: exportLoading 1s linear infinite;
 }
 
-/* Reports Responsive Design */
+/* ==========================================================================
+   REPORTS RESPONSIVE DESIGN
+   ========================================================================== */
+
+/* Reports responsive adjustments - Mobile optimization */
 @media (max-width: 768px) {
     .reports-dashboard {
         padding: 0.5rem;
@@ -2240,7 +2654,11 @@
     }
 }
 
-/* Modern Notifications Styles */
+/* ==========================================================================
+   MODERN NOTIFICATIONS STYLES
+   ========================================================================== */
+
+/* Notifications header - Header section for notifications */
 .notifications-header {
     display: flex;
     justify-content: space-between;
@@ -2250,12 +2668,14 @@
     border-bottom: 1px solid #e8ecf0;
 }
 
+/* Notifications title container - Title and count display */
 .notifications-title {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
+/* Notifications title - Main heading */
 .notifications-title h2 {
     margin: 0;
     font-size: 1.5rem;
@@ -2266,11 +2686,13 @@
     gap: 0.5rem;
 }
 
+/* Notifications title icon - Bell icon styling */
 .notifications-title h2 i {
     color: #667eea;
     font-size: 1.3rem;
 }
 
+/* Notification count badge - Unread count indicator */
 .notification-count {
     background: #667eea;
     color: white;
@@ -2282,6 +2704,7 @@
     text-align: center;
 }
 
+/* Notifications controls - Action buttons container */
 .notifications-controls {
     display: flex;
     align-items: center;
@@ -2291,16 +2714,19 @@
 /* Modern button styles now use unified button system */
 /* .btn-modern styles are replaced by .btn .btn-primary from the unified system */
 
+/* Notifications content area - Main notifications display */
 .notifications-content {
     margin-top: 1rem;
 }
 
+/* Notifications grid layout - Responsive grid for notification cards */
 .notifications-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 1.5rem;
 }
 
+/* Notifications table container - Table view wrapper */
 .notifications-table {
     background: white;
     border-radius: 12px;
@@ -2308,6 +2734,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+/* Notification card - Individual notification display */
 .notification-card {
     background: white;
     border-radius: 12px;
@@ -2319,21 +2746,25 @@
     overflow: hidden;
 }
 
+/* Notification card hover effect - Lift animation and shadow */
 .notification-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
     border-color: #667eea;
 }
 
+/* Unread notification card - Blue border and gradient background */
 .notification-card.unread {
     border-left: 4px solid #667eea;
     background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
 }
 
+/* Read notification card - Dimmed appearance */
 .notification-card.read {
     opacity: 0.8;
 }
 
+/* Notification card top border - Gradient top border for unread */
 .notification-card::before {
     content: '';
     position: absolute;
@@ -2346,10 +2777,12 @@
     transition: opacity 0.3s ease;
 }
 
+/* Unread notification card top border - Visible gradient border */
 .notification-card.unread::before {
     opacity: 1;
 }
 
+/* Notification header section - Title and metadata area */
 .notification-header {
     display: flex;
     justify-content: space-between;
@@ -2357,6 +2790,7 @@
     margin-bottom: 1rem;
 }
 
+/* Notification title - Notification heading */
 .notification-title {
     font-size: 1.1rem;
     font-weight: 600;
@@ -2367,11 +2801,13 @@
     gap: 0.5rem;
 }
 
+/* Notification title icon - Type icon styling */
 .notification-title i {
     color: #667eea;
     font-size: 0.9rem;
 }
 
+/* Notification metadata - Date and priority information */
 .notification-meta {
     display: flex;
     align-items: center;
@@ -2380,6 +2816,7 @@
     color: #6c757d;
 }
 
+/* Notification date badge - Date display */
 .notification-date {
     background: #f8f9fa;
     padding: 0.25rem 0.75rem;
@@ -2387,6 +2824,7 @@
     font-weight: 500;
 }
 
+/* Priority badge - Priority level indicator */
 .priority-badge {
     padding: 0.25rem 0.75rem;
     border-radius: 6px;
@@ -2396,31 +2834,37 @@
     letter-spacing: 0.5px;
 }
 
+/* High priority badge - Red styling for high priority */
 .priority-badge.alta {
     background: #fee;
     color: #dc3545;
 }
 
+/* Medium priority badge - Yellow styling for medium priority */
 .priority-badge.media {
     background: #fff3cd;
     color: #856404;
 }
 
+/* Low priority badge - Green styling for low priority */
 .priority-badge.baja {
     background: #d4edda;
     color: #155724;
 }
 
+/* Notification content area - Message content */
 .notification-content {
     margin-bottom: 1rem;
 }
 
+/* Notification message - Main notification text */
 .notification-message {
     color: #495057;
     line-height: 1.6;
     margin: 0;
 }
 
+/* Recordatorio details container - Additional reminder information */
 .recordatorio-details {
     display: flex;
     gap: 1rem;
@@ -2431,6 +2875,7 @@
     font-size: 0.85rem;
 }
 
+/* Recordatorio type badge - Reminder type indicator */
 .recordatorio-type {
     background: #667eea;
     color: white;
@@ -2439,6 +2884,7 @@
     font-weight: 500;
 }
 
+/* Recordatorio subject badge - Subject name display */
 .recordatorio-subject {
     background: #e9ecef;
     color: #495057;
@@ -2447,6 +2893,7 @@
     font-weight: 500;
 }
 
+/* Notification actions container - Action buttons for notifications */
 .notification-actions {
     display: flex;
     gap: 0.75rem;
@@ -2458,12 +2905,17 @@
 /* Icon button styles now use unified button system */
 /* .btn-icon styles are replaced by .btn .btn-icon-* variants from the unified system */
 
-/* Table View Styles */
+/* ==========================================================================
+   NOTIFICATIONS TABLE VIEW STYLES
+   ========================================================================== */
+
+/* Notifications table - Main table structure */
 .notifications-table table {
     width: 100%;
     border-collapse: collapse;
 }
 
+/* Notifications table header - Column headers */
 .notifications-table th {
     background: #f8f9fa;
     padding: 1rem;
@@ -2474,21 +2926,25 @@
     font-size: 0.9rem;
 }
 
+/* Notifications table cell - Individual table cells */
 .notifications-table td {
     padding: 1rem;
     border-bottom: 1px solid #f0f2f5;
     vertical-align: middle;
 }
 
+/* Notifications table row hover state - Background highlight */
 .notifications-table tr:hover {
     background: #f8f9fa;
 }
 
+/* Unread notifications table row - Blue border and background */
 .notifications-table tr.unread {
     background: #f8f9ff;
     border-left: 3px solid #667eea;
 }
 
+/* Type badge - Notification type indicator */
 .type-badge {
     display: inline-flex;
     align-items: center;
@@ -2499,16 +2955,19 @@
     font-weight: 500;
 }
 
+/* Recordatorio type badge - Blue styling for reminders */
 .type-badge.recordatorio {
     background: #e3f2fd;
     color: #1976d2;
 }
 
+/* Notification type badge - Purple styling for notifications */
 .type-badge.notification {
     background: #f3e5f5;
     color: #7b1fa2;
 }
 
+/* Table status badge - Read/unread status indicator */
 .table-status {
     padding: 0.25rem 0.75rem;
     border-radius: 6px;
@@ -2516,45 +2975,59 @@
     font-weight: 500;
 }
 
+/* Read table status - Green styling for read */
 .table-status.read {
     background: #d4edda;
     color: #155724;
 }
 
+/* Unread table status - Yellow styling for unread */
 .table-status.unread {
     background: #fff3cd;
     color: #856404;
 }
 
+/* Table actions container - Action buttons in table */
 .table-actions {
     display: flex;
     gap: 0.5rem;
 }
 
-/* Empty State */
+/* ==========================================================================
+   NOTIFICATIONS EMPTY STATE
+   ========================================================================== */
+
+/* Notifications empty state - Message when no notifications */
 .notifications-empty {
     text-align: center;
     padding: 3rem 2rem;
     color: #6c757d;
 }
 
+/* Notifications empty state icon - Large icon for visual feedback */
 .notifications-empty i {
     font-size: 3rem;
     color: #dee2e6;
     margin-bottom: 1rem;
 }
 
+/* Notifications empty state title - Main message heading */
 .notifications-empty h3 {
     margin: 0 0 0.5rem 0;
     color: #495057;
 }
 
+/* Notifications empty state description - Additional context message */
 .notifications-empty p {
     margin: 0;
     font-size: 0.9rem;
 }
 
-/* Responsive Design */
+/* ==========================================================================
+   NOTIFICATIONS RESPONSIVE DESIGN
+   ========================================================================== */
+
+/* Notifications responsive adjustments - Mobile optimization */
 @media (max-width: 768px) {
     .notifications-header {
         flex-direction: column;
