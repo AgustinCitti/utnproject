@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function initializeApp() {
+    console.log('initializeApp called');
+    console.log('Available functions at start:', typeof initializeNavigation, typeof initializeLogin);
+    
     // Initialize language system
     initializeLanguage();
     
@@ -31,7 +34,16 @@ async function initializeApp() {
     await loadData();
     
     // Initialize components
-    initializeNavigation();
+    if (typeof initializeNavigation === 'function') {
+        initializeNavigation();
+    } else {
+        console.error('initializeNavigation function not found - checking window object');
+        if (typeof window.initializeNavigation === 'function') {
+            window.initializeNavigation();
+        } else {
+            console.error('initializeNavigation not found in window object either');
+        }
+    }
     initializeLogin();
     initializeDashboard();
     initializeUnifiedStudentManagement();

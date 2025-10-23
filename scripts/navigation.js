@@ -1,5 +1,6 @@
 // Navigation System
 function initializeNavigation() {
+    console.log('initializeNavigation called');
     const menuToggle = document.getElementById('menuToggle');
     const navOverlay = document.getElementById('navOverlay');
     const closeNav = document.getElementById('closeNav');
@@ -259,3 +260,6 @@ function handleStudentManagementSubsection(subsection) {
         activeDropdownItem.classList.add('active');
     }
 }
+
+// Make function globally available
+window.initializeNavigation = initializeNavigation;
