@@ -21,18 +21,35 @@ function initializeLogin() {
         });
     }
 
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', function() {
-            localStorage.removeItem('isLoggedIn');
-            localStorage.removeItem('username');
-            window.location.href = '../index.html';
-        });
-    }
+    // Logout button is now handled in navigation.js
 
     if (welcomeUser) {
         const username = localStorage.getItem('username') || 'User';
         welcomeUser.textContent = `Welcome, ${username}!`;
     }
+}
+
+// Logout function - clears session and redirects to index
+function logout() {
+    console.log('Logging out user...');
+    
+    // Clear all authentication data from localStorage
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('username');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userSpecialty');
+    
+    // Clear any other session data
+    localStorage.removeItem('currentView');
+    localStorage.removeItem('selectedStudent');
+    localStorage.removeItem('selectedSubject');
+    
+    console.log('Session cleared, redirecting to index...');
+    
+    // Redirect to index page
+    window.location.href = '../index.html';
 }
 
 // Landing Page Functions

@@ -143,9 +143,14 @@ function updateLandingPageForLoginStatus() {
                     <span data-translate="logout">Logout</span>
                 `;
                 loginBtn.onclick = function() {
-                    localStorage.removeItem('isLoggedIn');
-                    localStorage.removeItem('username');
-                    window.location.reload();
+                    if (typeof logout === 'function') {
+                        logout();
+                    } else {
+                        // Fallback if logout function is not available
+                        localStorage.removeItem('isLoggedIn');
+                        localStorage.removeItem('username');
+                        window.location.href = '../index.html';
+                    }
                 };
             }
             

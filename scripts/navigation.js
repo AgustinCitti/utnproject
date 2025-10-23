@@ -133,10 +133,22 @@ function initializeNavigation() {
     const desktopLogoutBtn = document.getElementById('desktopLogoutBtn');
     const mobileLogoutBtn = document.getElementById('logoutBtn');
     
-    if (desktopLogoutBtn && mobileLogoutBtn) {
+    if (desktopLogoutBtn) {
         desktopLogoutBtn.addEventListener('click', () => {
             if (typeof logout === 'function') {
                 logout();
+            } else {
+                console.error('Logout function not found');
+            }
+        });
+    }
+    
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', () => {
+            if (typeof logout === 'function') {
+                logout();
+            } else {
+                console.error('Logout function not found');
             }
         });
     }
