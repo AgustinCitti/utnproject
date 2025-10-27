@@ -2722,8 +2722,23 @@
 /* Notifications grid layout - Responsive grid for notification cards */
 .notifications-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 1.5rem;
+}
+
+/* Enhanced notification card responsiveness */
+.notification-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f0f2f5;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Notifications table container - Table view wrapper */
@@ -2734,16 +2749,12 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-/* Notification card - Individual notification display */
-.notification-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border: 1px solid #f0f2f5;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+/* Notification content area - Flexible content container */
+.notification-content {
+    margin-bottom: 1rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Notification card hover effect - Lift animation and shadow */
@@ -2824,8 +2835,67 @@
     font-weight: 500;
 }
 
-/* Priority badge - Priority level indicator */
+/* Enhanced priority badges with better contrast */
 .priority-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* High priority badge - Red styling for high priority */
+.priority-badge.alta {
+    background: #fee;
+    color: #dc3545;
+    border: 1px solid #f5c6cb;
+}
+
+/* Medium priority badge - Yellow styling for medium priority */
+.priority-badge.media {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+/* Low priority badge - Green styling for low priority */
+.priority-badge.baja {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+/* Enhanced type badges */
+.type-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.type-badge.recordatorio {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.type-badge.notification {
+    background: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+}
+
+/* Enhanced table status badges */
+.table-status {
     padding: 0.25rem 0.75rem;
     border-radius: 6px;
     font-size: 0.75rem;
@@ -2834,22 +2904,14 @@
     letter-spacing: 0.5px;
 }
 
-/* High priority badge - Red styling for high priority */
-.priority-badge.alta {
-    background: #fee;
-    color: #dc3545;
-}
-
-/* Medium priority badge - Yellow styling for medium priority */
-.priority-badge.media {
-    background: #fff3cd;
-    color: #856404;
-}
-
-/* Low priority badge - Green styling for low priority */
-.priority-badge.baja {
+.table-status.read {
     background: #d4edda;
     color: #155724;
+}
+
+.table-status.unread {
+    background: #cce5ff;
+    color: #004085;
 }
 
 /* Notification content area - Message content */
@@ -2900,10 +2962,32 @@
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid #f0f2f5;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
-/* Icon button styles now use unified button system */
-/* .btn-icon styles are replaced by .btn .btn-icon-* variants from the unified system */
+/* Notification actions responsive behavior */
+.notification-actions .btn {
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+}
+
+/* Table actions container - Action buttons in table view */
+.table-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Table actions responsive behavior */
+.table-actions .btn {
+    min-width: auto;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+}
 
 /* ==========================================================================
    NOTIFICATIONS TABLE VIEW STYLES
@@ -3021,6 +3105,41 @@
 .notifications-empty p {
     margin: 0;
     font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   RECORDATORIO DETAIL MODAL STYLES
+   ========================================================================== */
+
+/* Recordatorio detail modal styles */
+.recordatorio-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.detail-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.detail-row label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-row span {
+    color: #2c3e50;
+    font-size: 1rem;
+    line-height: 1.4;
 }
 
 /* ==========================================================================

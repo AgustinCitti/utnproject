@@ -85,12 +85,15 @@ function loadNotifications() {
                     ` : ''}
                 </div>
                 <div class="notification-actions">
-                    ${!notification.read ? `<button class="btn-icon" onclick="markNotificationRead('${notification.id}')" title="Mark as Read">
+                    ${!notification.read ? `<button class="btn btn-sm btn-success" onclick="markNotificationRead('${notification.id}')" title="Mark as Read">
                         <i class="fas fa-check"></i> Mark as Read
                     </button>` : ''}
-                    <button class="btn-icon btn-delete" onclick="deleteNotification('${notification.id}')" title="Delete">
-                        <i class="fas fa-trash"></i>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteNotification('${notification.id}')" title="Delete">
+                        <i class="fas fa-trash"></i> Delete
                     </button>
+                    ${notification.type === 'recordatorio' ? `<button class="btn btn-sm btn-outline-primary" onclick="viewRecordatorio('${notification.recordatorio.ID_recordatorio}')" title="View Details">
+                        <i class="fas fa-eye"></i> View Details
+                    </button>` : ''}
                 </div>
             </div>
         `).join('');
@@ -136,12 +139,15 @@ function loadNotifications() {
                                 <td><span class="table-status ${notification.read ? 'read' : 'unread'}">${notification.read ? 'Read' : 'Unread'}</span></td>
                                 <td>
                                     <div class="table-actions">
-                                        ${!notification.read ? `<button class="btn-icon" onclick="markNotificationRead('${notification.id}')" title="Mark as Read">
+                                        ${!notification.read ? `<button class="btn btn-sm btn-success" onclick="markNotificationRead('${notification.id}')" title="Mark as Read">
                                             <i class="fas fa-check"></i>
                                         </button>` : ''}
-                                        <button class="btn-icon btn-delete" onclick="deleteNotification('${notification.id}')" title="Delete">
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteNotification('${notification.id}')" title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
+                                        ${notification.type === 'recordatorio' ? `<button class="btn btn-sm btn-outline-primary" onclick="viewRecordatorio('${notification.recordatorio.ID_recordatorio}')" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>` : ''}
                                     </div>
                                 </td>
                             </tr>
@@ -441,6 +447,62 @@ function debugRecordatorios() {
         subjects,
         recordatorios
     };
+}
+
+// Function to view recordatorio details
+function viewRecordatorio(recordatorioId) {
+    // Find the recordatorio in the data
+    const recordatorio = appData.recordatorio.find(r => r.ID_recordatorio == recordatorioId);
+    if (!recordatorio) {
+        console.error('Recordatorio not found:', recordatorioId);
+        return;
+    }
+    
+    // Get subject name
+    const subject = appData.materia.find(m => m.ID_materia == recordatorio.Materia_ID_materia);
+    const subjectName = subject ? subject.Nombre : 'Unknown Subject';
+    
+    // Create modal content
+    const modalContent = `
+        <div class="modal-header">
+            <h3><i class="fas fa-bell"></i> Recordatorio Details</h3>
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="recordatorio-detail">
+                <div class="detail-row">
+                    <label>Título:</label>
+                    <span>${recordatorio.Titulo}</span>
+                </div>
+                <div class="detail-row">
+                    <label>Descripción:</label>
+                    <span>${recordatorio.Descripcion}</span>
+                </div>
+                <div class="detail-row">
+                    <label>Materia:</label>
+                    <span>${subjectName}</span>
+                </div>
+                <div class="detail-row">
+                    <label>Tipo:</label>
+                    <span class="type-badge ${recordatorio.Tipo.toLowerCase()}">${getRecordatorioTypeLabel(recordatorio.Tipo)}</span>
+                </div>
+                <div class="detail-row">
+                    <label>Prioridad:</label>
+                    <span class="priority-badge ${recordatorio.Prioridad.toLowerCase()}">${recordatorio.Prioridad}</span>
+                </div>
+                <div class="detail-row">
+                    <label>Fecha de Vencimiento:</label>
+                    <span>${recordatorio.Fecha_vencimiento}</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+        </div>
+    `;
+    
+    // Show modal
+    showModal(modalContent);
 }
 
 // Make debug function globally accessible

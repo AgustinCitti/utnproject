@@ -5,12 +5,14 @@ body {
 
 .landing-header {
     background: white;
-   
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .landing-nav {
@@ -20,6 +22,8 @@ body {
     padding: 1rem 2rem;
     max-width: 1200px;
     margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .nav-brand {
@@ -39,6 +43,9 @@ body {
     display: flex;
     align-items: center;
     gap: 2rem;
+    flex-wrap: wrap;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .nav-link {
@@ -64,6 +71,8 @@ body {
     transition: all 0.3s ease;
     text-decoration: none;
     font-size: 0.9rem;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .nav-login {
@@ -580,9 +589,7 @@ body {
 
 /* Language Selector Styles */
 .language-selector {
-    position: fixed;
-    top: 20px;
-    right: 20px;
+    position: relative;
     z-index: 1000;
 }
 

@@ -1,5 +1,27 @@
+/* Tablet and Medium Screen Styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .landing-nav {
+        padding: 1rem 1.5rem;
+        max-width: 100%;
+    }
+    
+    .nav-menu {
+        gap: 1.5rem;
+    }
+    
+    .nav-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+    
+    .hero {
+        background-position: center center;
+        background-attachment: scroll;
+    }
+}
+
 /* Laptop and Desktop specific styles */
-@media (min-width: 769px) and (max-width: 1440px) {
+@media (min-width: 1025px) and (max-width: 1440px) {
     .hero {
         background-position: center center;
         background-attachment: scroll;
@@ -17,6 +39,12 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .landing-nav {
+        padding: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
     .nav-menu {
         display: none;
         position: absolute;
@@ -27,6 +55,32 @@
         flex-direction: column;
         padding: 1rem;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        box-sizing: border-box;
+        z-index: 1000;
+        gap: 0.5rem;
+        border-radius: 0 0 8px 8px;
+    }
+    
+    .nav-menu .nav-link {
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        transition: background-color 0.3s ease;
+    }
+    
+    .nav-menu .nav-link:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .nav-menu .nav-btn {
+        width: 100%;
+        justify-content: center;
+        margin: 0.25rem 0;
+    }
+    
+    .nav-menu .language-selector {
+        margin: 0.5rem 0;
+        order: 10;
     }
 
     .nav-menu.active {
@@ -35,6 +89,20 @@
 
     .nav-toggle {
         display: flex;
+        order: 3;
+        margin-left: auto;
+    }
+    
+    .nav-brand {
+        order: 1;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .language-selector {
+        order: 2;
+        margin-left: auto;
+        margin-right: 1rem;
     }
 
     .hero {
@@ -91,35 +159,39 @@
 }
 
 @media (max-width: 480px) {
+    .landing-nav {
+        padding: 0.75rem;
+        gap: 0.5rem;
+    }
+    
+    .nav-brand {
+        font-size: 1.2rem;
+    }
+    
+    .nav-brand i {
+        font-size: 1.5rem;
+    }
+    
+    .language-selector {
+        margin-right: 0.5rem;
+    }
+    
+    .language-dropdown {
+        padding: 6px 8px;
+        font-size: 0.8rem;
+    }
+    
+    .nav-toggle span {
+        width: 20px;
+        height: 2px;
+    }
+
     .hero {
         padding: 6rem 1rem 3rem;
-    }
-
-    .hero-title {
-        font-size: 2rem;
-    }
-
-    .hero-buttons {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .btn-large {
-        width: 100%;
-        max-width: 300px;
-    }
-
-    .hero {
         margin: 0.5rem;
         margin-top: 4rem;
         border-radius: 8px;
         min-height: 50vh;
-        padding: 2rem 1rem;
-    }
-
-    .hero-content {
-        padding: 0 0.5rem;
-        gap: 1.5rem;
     }
 
     .hero-title {
@@ -135,6 +207,11 @@
         width: 100%;
         max-width: 300px;
         justify-content: center;
+    }
+
+    .hero-content {
+        padding: 0 0.5rem;
+        gap: 1.5rem;
     }
 
     .features, .about, .registration {
@@ -470,6 +547,29 @@
 
 /* Extra small screens (320px and below) */
 @media (max-width: 320px) {
+    .landing-nav {
+        padding: 0.5rem;
+        gap: 0.25rem;
+    }
+    
+    .nav-brand {
+        font-size: 1rem;
+    }
+    
+    .nav-brand i {
+        font-size: 1.2rem;
+    }
+    
+    .language-dropdown {
+        padding: 4px 6px;
+        font-size: 0.7rem;
+    }
+    
+    .nav-toggle span {
+        width: 18px;
+        height: 2px;
+    }
+    
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 6px;
@@ -678,7 +778,30 @@
     
     .students-grid, .grades-container, .attendance-container, 
     .exams-container, .repository-container, .notifications-container {
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+    
+    /* Enhanced notification responsiveness */
+    .notifications-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+    
+    .notification-card {
+        padding: 1rem;
+        min-height: 180px;
+    }
+    
+    .notification-actions {
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+    }
+    
+    .notification-actions .btn {
+        min-width: 100px;
+        font-size: 0.8rem;
+        padding: 0.5rem 0.75rem;
     }
     
     .app-main {
@@ -749,6 +872,22 @@
     .exams-container, .repository-container, .notifications-container {
         grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
         gap: 25px;
+    }
+    
+    /* Tablet notification responsiveness */
+    .notifications-grid {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.25rem;
+    }
+    
+    .notification-card {
+        padding: 1.25rem;
+        min-height: 190px;
+    }
+    
+    .notification-actions .btn {
+        min-width: 110px;
+        font-size: 0.85rem;
     }
     
     .app-main {
@@ -858,6 +997,63 @@
     .exams-container, .repository-container, .notifications-container {
         grid-template-columns: 1fr;
         gap: 15px;
+    }
+    
+    /* Mobile notification responsiveness */
+    .notifications-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .notification-card {
+        padding: 1rem;
+        min-height: auto;
+        margin-bottom: 1rem;
+    }
+    
+    .notification-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .notification-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .notification-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+    }
+    
+    .notification-actions .btn {
+        min-width: 100%;
+        font-size: 0.9rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Mobile table responsiveness */
+    .notifications-table {
+        overflow-x: auto;
+    }
+    
+    .notifications-table table {
+        min-width: 600px;
+    }
+    
+    .table-actions {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .table-actions .btn {
+        min-width: 100%;
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
     }
     
     .modal-content {
