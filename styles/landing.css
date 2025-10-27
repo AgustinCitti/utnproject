@@ -362,67 +362,166 @@ body {
 /* Registration Section */
 .registration {
     padding: 6rem 2rem;
-    background: white;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.registration::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23667eea" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="%23667eea" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="%23667eea" opacity="0.05"/><circle cx="10" cy="60" r="0.5" fill="%23667eea" opacity="0.05"/><circle cx="90" cy="40" r="0.5" fill="%23667eea" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+    z-index: 1;
 }
 
 .registration-content {
     text-align: center;
-    max-width: 800px;
+    max-width: 600px;
     margin: 0 auto;
+    position: relative;
+    z-index: 2;
 }
 
 .registration-content h2 {
-    font-size: 2.5rem;
+    font-size: 3rem;
     margin-bottom: 1rem;
-    color: #333;
+    color: #2c3e50;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .registration-content p {
-    font-size: 1.1rem;
-    color: #666;
+    font-size: 1.2rem;
+    color: #6c757d;
     margin-bottom: 3rem;
+    line-height: 1.6;
+    font-weight: 400;
 }
 
 .registration-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
+    display: flex;
+    justify-content: center;
     margin-top: 3rem;
 }
 
 .registration-card {
     background: white;
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    padding: 2rem;
-    transition: all 0.3s ease;
+    border-radius: 24px;
+    padding: 3rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    position: relative;
+    overflow: hidden;
+    max-width: 500px;
+    width: 100%;
+}
+
+.registration-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .registration-card:hover {
-    border-color: #667eea;
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 30px 80px rgba(102, 126, 234, 0.2);
+    border-color: rgba(102, 126, 234, 0.3);
 }
 
 .card-header {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    position: relative;
 }
 
 .card-header i {
-    font-size: 3rem;
-    color: #667eea;
-    margin-bottom: 1rem;
+    font-size: 4rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1.5rem;
+    display: block;
+    filter: drop-shadow(0 4px 8px rgba(102, 126, 234, 0.3));
 }
 
 .card-header h3 {
-    font-size: 1.5rem;
-    color: #333;
+    font-size: 2rem;
+    color: #2c3e50;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.5px;
 }
 
 .card-content p {
-    color: #666;
-    margin-bottom: 1.5rem;
-    line-height: 1.6;
+    color: #6c757d;
+    margin-bottom: 2.5rem;
+    line-height: 1.7;
+    font-size: 1.1rem;
+    font-weight: 400;
+}
+
+.registration-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.registration-buttons .btn-primary,
+.registration-buttons .btn-secondary {
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 140px;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.registration-buttons .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.registration-buttons .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+}
+
+.registration-buttons .btn-secondary {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+}
+
+.registration-buttons .btn-secondary:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
 }
 
 .btn-full {
@@ -506,4 +605,68 @@ body {
 
 .language-dropdown:hover {
     border-color: #667eea;
+}
+
+/* Responsive Design for Registration Section */
+@media (max-width: 768px) {
+    .registration {
+        padding: 4rem 1rem;
+    }
+    
+    .registration-content h2 {
+        font-size: 2.2rem;
+    }
+    
+    .registration-content p {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .registration-card {
+        padding: 2rem 1.5rem;
+        margin: 0 1rem;
+    }
+    
+    .card-header i {
+        font-size: 3rem;
+    }
+    
+    .card-header h3 {
+        font-size: 1.5rem;
+    }
+    
+    .card-content p {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .registration-buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .registration-buttons .btn-primary,
+    .registration-buttons .btn-secondary {
+        width: 100%;
+        padding: 1rem 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .registration-content h2 {
+        font-size: 1.8rem;
+    }
+    
+    .registration-card {
+        padding: 1.5rem 1rem;
+        border-radius: 16px;
+    }
+    
+    .card-header i {
+        font-size: 2.5rem;
+    }
+    
+    .card-header h3 {
+        font-size: 1.3rem;
+    }
 }
