@@ -32,20 +32,28 @@ function initializeNavigation() {
     // Handle mobile navigation
     navItems.forEach(item => {
         item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const section = item.dataset.section;
-            showSection(section);
-            navOverlay.classList.remove('active');
+            // Only prevent default for single-page navigation links (those with data-section)
+            if (item.dataset.section) {
+                e.preventDefault();
+                const section = item.dataset.section;
+                showSection(section);
+                navOverlay.classList.remove('active');
+            }
+            // Allow external links to navigate normally
         });
     });
 
     // Handle desktop navigation
     desktopNavItems.forEach(item => {
         item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const section = item.dataset.section;
-            const subsection = item.dataset.subsection;
-            showSection(section, subsection);
+            // Only prevent default for single-page navigation links (those with data-section)
+            if (item.dataset.section) {
+                e.preventDefault();
+                const section = item.dataset.section;
+                const subsection = item.dataset.subsection;
+                showSection(section, subsection);
+            }
+            // Allow external links to navigate normally
         });
     });
 
@@ -53,10 +61,14 @@ function initializeNavigation() {
     const dropdownItems = document.querySelectorAll('.dropdown-item');
     dropdownItems.forEach(item => {
         item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const section = item.dataset.section;
-            const subsection = item.dataset.subsection;
-            showSection(section, subsection);
+            // Only prevent default for single-page navigation links (those with data-section)
+            if (item.dataset.section) {
+                e.preventDefault();
+                const section = item.dataset.section;
+                const subsection = item.dataset.subsection;
+                showSection(section, subsection);
+            }
+            // Allow external links to navigate normally
         });
     });
 

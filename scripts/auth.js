@@ -73,17 +73,21 @@ function initializeLandingPage() {
         });
     }
     
-    // Smooth scrolling for navigation links
+    // Smooth scrolling for navigation links (only for anchor links)
     const navLinks = document.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
-            e.preventDefault();
             const targetId = link.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth' });
+            // Only handle anchor links (starting with #)
+            if (targetId && targetId.startsWith('#')) {
+                e.preventDefault();
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                }
+                navMenu.classList.remove('active');
             }
-            navMenu.classList.remove('active');
+            // Allow external links to navigate normally
         });
     });
     
