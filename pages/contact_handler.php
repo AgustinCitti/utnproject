@@ -8,10 +8,7 @@
 session_start();
 
 // Database configuration
-$host = 'localhost';
-$dbname = 'edusync';
-$username = 'root'; // Change as needed
-$password = ''; // Change as needed
+require_once __DIR__ . '/../config/database.php';
 
 // Email configuration
 $admin_email = 'admin@edusync.edu.ar';
@@ -225,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Database connection
         try {
-            $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
+            $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET, DB_USER, DB_PASS);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
             throw new Exception('Database connection failed. Please try again later.');
