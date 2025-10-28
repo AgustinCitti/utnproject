@@ -125,26 +125,89 @@ function initializeLandingPage() {
     }
 }
 
-function handleRegistration() {
-    console.log('handleRegistration called');
+function showRegisterMessage(message, isSuccess = false) {
+    const form = document.getElementById('registrationForm');
+    if (!form) return;
+
+    // Remove existing messages
+    const existingMessage = form.parentNode.querySelector('.auth-message');
+    if (existingMessage) {
+        existingMessage.remove();
+    }
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `auth-message ${isSuccess ? 'auth-success' : 'auth-error'}`;
+    const icon = isSuccess ? 'fa-check-circle' : 'fa-exclamation-triangle';
+    messageDiv.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+
+    // Insert message before the form
+    form.parentNode.insertBefore(messageDiv, form);
+
+    // Auto-remove message after 5 seconds
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 5000);
+}
+
+async function handleRegistration() {
+    const form = document.getElementById('registrationForm');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnHTML = submitBtn.innerHTML;
+
     const formData = {
         firstName: document.getElementById('regFirstName').value,
         lastName: document.getElementById('regLastName').value,
         email: document.getElementById('regEmail').value,
-        institution: document.getElementById('regInstitution').value,
-        role: document.getElementById('regRole').value
+        password: document.getElementById('regPassword').value,
+        confirmPassword: document.getElementById('regConfirmPassword').value
     };
-    
-    console.log('Registration data:', formData);
-    
-    // In a real application, this would send data to a server
-    alert('Registration submitted successfully! You will be contacted soon.');
-    
-    // Clear form
-    const form = document.getElementById('registrationForm');
-    if (form) {
-        form.reset();
-        console.log('Registration form reset');
+
+    // --- Client-side validation ---
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+        showRegisterMessage('Todos los campos son obligatorios.');
+        return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+        showRegisterMessage('Las contraseñas no coinciden.');
+        return;
+    }
+    if (formData.password.length < 8) {
+        showRegisterMessage('La contraseña debe tener al menos 8 caracteres.');
+        return;
+    }
+
+    // --- Show loading state ---
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando cuenta...';
+    submitBtn.disabled = true;
+
+    try {
+        const response = await fetch('register_handler.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            showRegisterMessage(result.message, true);
+            form.reset();
+            setTimeout(() => {
+                window.location.href = `login.html?email=${encodeURIComponent(formData.email)}`;
+            }, 2000);
+        } else {
+            showRegisterMessage(result.message || 'Ocurrió un error durante el registro.');
+        }
+    } catch (error) {
+        console.error('Registration fetch error:', error);
+        showRegisterMessage('No se pudo conectar con el servidor. Intente más tarde.');
+    } finally {
+        // Reset button state
+        submitBtn.innerHTML = originalBtnHTML;
+        submitBtn.disabled = false;
     }
 }
 
@@ -168,64 +231,30 @@ async function checkUserExists(email) {
 // Enhanced authentication function with better validation
 async function authenticateUser(email, password) {
     try {
-        // Basic input validation
+        // Basic input validation is good, but the backend handles the core logic.
+        // We can rely on the backend for primary validation.
         if (!email || !password) {
             return { success: false, message: 'Please enter both email and password.' };
         }
-        
-        // Email format validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return { success: false, message: 'Please enter a valid email address.' };
-        }
-        
-        // Load the usuarios_docente data
-        const response = await fetch('../data.json');
-        const data = await response.json();
-        
-        // Find user by email in usuarios_docente
-        const user = data.usuarios_docente.find(u => 
-            u.Email_docente.toLowerCase() === email.toLowerCase() && 
-            u.Estado === 'ACTIVO'
-        );
-        
-        if (!user) {
-            // Check if user exists but is inactive
-            const inactiveUser = data.usuarios_docente.find(u => 
-                u.Email_docente.toLowerCase() === email.toLowerCase()
-            );
-            
-            if (inactiveUser) {
-                return { success: false, message: 'Your account is currently inactive. Please contact the administrator.' };
-            } else {
-                return { success: false, message: 'No account found with this email address. Please check your credentials or register for a new account.' };
-            }
-        }
-        
-        // Validate password - check against stored password
-        if (password.trim() === '') {
-            return { success: false, message: 'Password cannot be empty.' };
-        }
-        
-        // Check if password matches (in a real application, this would be hashed)
-        if (user.Contraseña !== password) {
-            return { success: false, message: 'Incorrect password. Please try again.' };
-        }
-        
-        return { 
-            success: true, 
-            user: {
-                id: user.ID_docente,
-                name: `${user.Nombre_docente} ${user.Apellido_docente}`,
-                email: user.Email_docente,
-                role: user.Tipo_usuario,
-                specialty: user.Especialidad,
-                academicTitle: user.Titulo_academico
-            }
-        };
+
+        const response = await fetch('login_handler.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
+
+        const result = await response.json();
+
+        // The backend response structure is designed to be returned directly.
+        // It will contain { success: true, user: {...} } or { success: false, message: '...' }
+        return result;
+
     } catch (error) {
-        console.error('Authentication error:', error);
-        return { success: false, message: 'Unable to connect to authentication service. Please check your internet connection and try again.' };
+        console.error('Authentication fetch error:', error);
+        return { success: false, message: 'Unable to connect to the authentication service. Please try again.' };
     }
 }
 
