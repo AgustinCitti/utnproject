@@ -62,7 +62,7 @@ async function initializeApp() {
 // Data Management
 async function loadData() {
     try {
-        const response = await fetch('../data.json');
+        const response = await fetch('../api/get_data.php');
         appData = await response.json();
         // Also make data available globally for reports
         window.data = appData;
