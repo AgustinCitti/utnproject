@@ -11,13 +11,28 @@ function initializeLogin() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            if (username && password) {
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('username', username);
-                window.location.href = '../pages/home.html';
-            } else {
-                alert('Please enter both username and password');
+            if (!username || !password) {
+                showLoginError('Please enter both email and password');
+                return;
             }
+            
+            // Use the proper authentication function
+            authenticateUser(username, password).then(result => {
+                if (result.success) {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('username', result.user.name);
+                    localStorage.setItem('userEmail', result.user.email);
+                    localStorage.setItem('userRole', result.user.role);
+                    localStorage.setItem('userId', result.user.id);
+                    localStorage.setItem('userSpecialty', result.user.specialty);
+                    window.location.href = '../pages/home.html';
+                } else {
+                    showLoginError(result.message);
+                }
+            }).catch(error => {
+                console.error('Login error:', error);
+                showLoginError('An error occurred during login. Please try again.');
+            });
         });
     }
 
@@ -133,9 +148,37 @@ function handleRegistration() {
     }
 }
 
-// Authentication function that validates against usuarios_docente data
+// Function to check if user exists (for additional validation)
+async function checkUserExists(email) {
+    try {
+        const response = await fetch('../data.json');
+        const data = await response.json();
+        
+        const user = data.usuarios_docente.find(u => 
+            u.Email_docente.toLowerCase() === email.toLowerCase()
+        );
+        
+        return user ? true : false;
+    } catch (error) {
+        console.error('Error checking user existence:', error);
+        return false;
+    }
+}
+
+// Enhanced authentication function with better validation
 async function authenticateUser(email, password) {
     try {
+        // Basic input validation
+        if (!email || !password) {
+            return { success: false, message: 'Please enter both email and password.' };
+        }
+        
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return { success: false, message: 'Please enter a valid email address.' };
+        }
+        
         // Load the usuarios_docente data
         const response = await fetch('../data.json');
         const data = await response.json();
@@ -147,14 +190,26 @@ async function authenticateUser(email, password) {
         );
         
         if (!user) {
-            return { success: false, message: 'Invalid email or user not found' };
+            // Check if user exists but is inactive
+            const inactiveUser = data.usuarios_docente.find(u => 
+                u.Email_docente.toLowerCase() === email.toLowerCase()
+            );
+            
+            if (inactiveUser) {
+                return { success: false, message: 'Your account is currently inactive. Please contact the administrator.' };
+            } else {
+                return { success: false, message: 'No account found with this email address. Please check your credentials or register for a new account.' };
+            }
         }
         
-        // For demo purposes, we'll accept any password since we don't have proper password hashing
-        // In a real application, you would verify the hashed password
-        // For now, we'll just check if password is not empty
-        if (!password || password.trim() === '') {
-            return { success: false, message: 'Password is required' };
+        // Validate password - check against stored password
+        if (password.trim() === '') {
+            return { success: false, message: 'Password cannot be empty.' };
+        }
+        
+        // Check if password matches (in a real application, this would be hashed)
+        if (user.Contraseña !== password) {
+            return { success: false, message: 'Incorrect password. Please try again.' };
         }
         
         return { 
@@ -170,7 +225,7 @@ async function authenticateUser(email, password) {
         };
     } catch (error) {
         console.error('Authentication error:', error);
-        return { success: false, message: 'Authentication service unavailable' };
+        return { success: false, message: 'Unable to connect to authentication service. Please check your internet connection and try again.' };
     }
 }
 

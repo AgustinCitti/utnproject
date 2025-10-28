@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Validation Test - EduSync</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-case {
+            margin: 15px 0;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            background-color: #f8f9fa;
+        }
+        .test-case h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .test-input {
+            margin: 10px 0;
+        }
+        .test-input label {
+            display: inline-block;
+            width: 100px;
+            font-weight: bold;
+        }
+        .test-input input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        .test-button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .test-button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <h1>Login Validation Test - EduSync</h1>
+    
+    <div class="test-container">
+        <h2>Test Cases</h2>
+        <p>This page tests the login validation system to ensure only existing users can log in.</p>
+        
+        <div class="test-case">
+            <h4>Valid User Test</h4>
+            <div class="test-input">
+                <label>Email:</label>
+                <input type="email" id="validEmail" value="ana.martinez@school.edu">
+            </div>
+            <div class="test-input">
+                <label>Password:</label>
+                <input type="password" id="validPassword" value="123456">
+            </div>
+            <button class="test-button" onclick="testValidLogin()">Test Valid Login</button>
+            <div id="validResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-case">
+            <h4>Invalid Email Test</h4>
+            <div class="test-input">
+                <label>Email:</label>
+                <input type="email" id="invalidEmail" value="nonexistent@school.edu">
+            </div>
+            <div class="test-input">
+                <label>Password:</label>
+                <input type="password" id="invalidPassword" value="123456">
+            </div>
+            <button class="test-button" onclick="testInvalidEmail()">Test Invalid Email</button>
+            <div id="invalidEmailResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-case">
+            <h4>Invalid Password Test</h4>
+            <div class="test-input">
+                <label>Email:</label>
+                <input type="email" id="wrongPasswordEmail" value="ana.martinez@school.edu">
+            </div>
+            <div class="test-input">
+                <label>Password:</label>
+                <input type="password" id="wrongPassword" value="wrongpassword">
+            </div>
+            <button class="test-button" onclick="testInvalidPassword()">Test Invalid Password</button>
+            <div id="invalidPasswordResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-case">
+            <h4>Empty Fields Test</h4>
+            <div class="test-input">
+                <label>Email:</label>
+                <input type="email" id="emptyEmail" value="">
+            </div>
+            <div class="test-input">
+                <label>Password:</label>
+                <input type="password" id="emptyPassword" value="">
+            </div>
+            <button class="test-button" onclick="testEmptyFields()">Test Empty Fields</button>
+            <div id="emptyFieldsResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-case">
+            <h4>Invalid Email Format Test</h4>
+            <div class="test-input">
+                <label>Email:</label>
+                <input type="email" id="invalidFormatEmail" value="invalid-email-format">
+            </div>
+            <div class="test-input">
+                <label>Password:</label>
+                <input type="password" id="invalidFormatPassword" value="123456">
+            </div>
+            <button class="test-button" onclick="testInvalidEmailFormat()">Test Invalid Email Format</button>
+            <div id="invalidFormatResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Available Test Users</h2>
+        <div class="info">
+            <p><strong>Valid Users in System:</strong></p>
+            <ul>
+                <li>Email: ana.martinez@school.edu | Password: 123456</li>
+                <li>Email: luis.hernandez@school.edu | Password: 123456</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="scripts/auth.js"></script>
+    <script>
+        function showResult(elementId, message, isSuccess) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${isSuccess ? 'success' : 'error'}`;
+            element.textContent = message;
+        }
+        
+        async function testValidLogin() {
+            const email = document.getElementById('validEmail').value;
+            const password = document.getElementById('validPassword').value;
+            
+            try {
+                const result = await authenticateUser(email, password);
+                if (result.success) {
+                    showResult('validResult', `✅ SUCCESS: Login successful! User: ${result.user.name} (${result.user.email})`, true);
+                } else {
+                    showResult('validResult', `❌ FAILED: ${result.message}`, false);
+                }
+            } catch (error) {
+                showResult('validResult', `❌ ERROR: ${error.message}`, false);
+            }
+        }
+        
+        async function testInvalidEmail() {
+            const email = document.getElementById('invalidEmail').value;
+            const password = document.getElementById('invalidPassword').value;
+            
+            try {
+                const result = await authenticateUser(email, password);
+                if (!result.success) {
+                    showResult('invalidEmailResult', `✅ SUCCESS: Correctly rejected invalid email. Message: ${result.message}`, true);
+                } else {
+                    showResult('invalidEmailResult', `❌ FAILED: Should have rejected invalid email but didn't!`, false);
+                }
+            } catch (error) {
+                showResult('invalidEmailResult', `❌ ERROR: ${error.message}`, false);
+            }
+        }
+        
+        async function testInvalidPassword() {
+            const email = document.getElementById('wrongPasswordEmail').value;
+            const password = document.getElementById('wrongPassword').value;
+            
+            try {
+                const result = await authenticateUser(email, password);
+                if (!result.success) {
+                    showResult('invalidPasswordResult', `✅ SUCCESS: Correctly rejected invalid password. Message: ${result.message}`, true);
+                } else {
+                    showResult('invalidPasswordResult', `❌ FAILED: Should have rejected invalid password but didn't!`, false);
+                }
+            } catch (error) {
+                showResult('invalidPasswordResult', `❌ ERROR: ${error.message}`, false);
+            }
+        }
+        
+        async function testEmptyFields() {
+            const email = document.getElementById('emptyEmail').value;
+            const password = document.getElementById('emptyPassword').value;
+            
+            try {
+                const result = await authenticateUser(email, password);
+                if (!result.success) {
+                    showResult('emptyFieldsResult', `✅ SUCCESS: Correctly rejected empty fields. Message: ${result.message}`, true);
+                } else {
+                    showResult('emptyFieldsResult', `❌ FAILED: Should have rejected empty fields but didn't!`, false);
+                }
+            } catch (error) {
+                showResult('emptyFieldsResult', `❌ ERROR: ${error.message}`, false);
+            }
+        }
+        
+        async function testInvalidEmailFormat() {
+            const email = document.getElementById('invalidFormatEmail').value;
+            const password = document.getElementById('invalidFormatPassword').value;
+            
+            try {
+                const result = await authenticateUser(email, password);
+                if (!result.success) {
+                    showResult('invalidFormatResult', `✅ SUCCESS: Correctly rejected invalid email format. Message: ${result.message}`, true);
+                } else {
+                    showResult('invalidFormatResult', `❌ FAILED: Should have rejected invalid email format but didn't!`, false);
+                }
+            } catch (error) {
+                showResult('invalidFormatResult', `❌ ERROR: ${error.message}`, false);
+            }
+        }
+    </script>
+</body>
+</html>
