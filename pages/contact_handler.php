@@ -7,13 +7,9 @@
 // Start session for CSRF protection
 session_start();
 
-// Database configuration
+// Include master database and contact configuration
 require_once __DIR__ . '/../config/database.php';
-
-// Email configuration
-$admin_email = 'admin@edusync.edu.ar';
-$site_name = 'EduSync';
-$from_email = 'noreply@edusync.edu.ar';
+require_once __DIR__ . '/../config/contact_config.php';
 
 // CSRF token generation
 if (!isset($_SESSION['csrf_token'])) {
@@ -34,9 +30,9 @@ function validate_email($email) {
 }
 
 // Function to send email
-function send_contact_email($to, $subject, $message, $from_name, $from_email) {
-    $headers = "From: $from_name <$from_email>\r\n";
-    $headers .= "Reply-To: $from_email\r\n";
+function send_contact_email($to, $subject, $message) {
+    $headers = "From: " . SITE_NAME . " <" . FROM_EMAIL . ">\r\n";
+    $headers .= "Reply-To: " . FROM_EMAIL . "\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
     $headers .= "X-Mailer: PHP/" . phpversion();
     
@@ -74,7 +70,7 @@ function log_contact_message($pdo, $data) {
 }
 
 // Function to send notification email to admin
-function send_admin_notification($admin_email, $data) {
+function send_admin_notification($data) {
     $subject = "New Contact Form Submission - " . $data['subject'];
     
     $message = "
@@ -133,7 +129,7 @@ function send_admin_notification($admin_email, $data) {
     </body>
     </html>";
     
-    return send_contact_email($admin_email, $subject, $message, $site_name, $from_email);
+    return send_contact_email(ADMIN_EMAIL, $subject, $message);
 }
 
 // Function to send confirmation email to user
@@ -181,7 +177,7 @@ function send_user_confirmation($user_email, $user_name) {
     </body>
     </html>";
     
-    return send_contact_email($user_email, $subject, $message, $site_name, $from_email);
+    return send_contact_email($user_email, $subject, $message);
 }
 
 // Main processing logic
@@ -245,7 +241,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Send emails
-        $admin_sent = send_admin_notification($admin_email, $data);
+        $admin_sent = send_admin_notification($data);
         $user_sent = send_user_confirmation($email, $firstName);
         
         // Prepare response

@@ -4,11 +4,8 @@
  * Centralized configuration for the contact form system
  */
 
-// Database Configuration
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'edusync');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+// Base Database Configuration
+require_once __DIR__ . '/database.php';
 
 // Email Configuration
 define('ADMIN_EMAIL', 'admin@edusync.edu.ar');
