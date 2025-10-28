@@ -1,22 +1,17 @@
-<?php
-/**
- * Contact Form Handler for EduSync
- * Handles form submission, email sending, and database storage
- */
-
-// Start session for CSRF protection
+<?php 
+// inicio de sesión para la protección csrf
 session_start();
 
-// Include master database and contact configuration
+// incluyo la base de datos y la config del formulario de contacto
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/contact_config.php';
 
-// CSRF token generation
+// genero el token csrf si no existe
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// Function to sanitize input
+// función para limpiar los datos del formulario
 function sanitize_input($data) {
     $data = trim($data);
     $data = stripslashes($data);
@@ -24,12 +19,12 @@ function sanitize_input($data) {
     return $data;
 }
 
-// Function to validate email
+// función para validar el formato del mail
 function validate_email($email) {
     return filter_var($email, FILTER_VALIDATE_EMAIL);
 }
 
-// Function to send email
+// función para mandar el mail de contacto
 function send_contact_email($to, $subject, $message) {
     $headers = "From: " . SITE_NAME . " <" . FROM_EMAIL . ">\r\n";
     $headers .= "Reply-To: " . FROM_EMAIL . "\r\n";
@@ -39,7 +34,7 @@ function send_contact_email($to, $subject, $message) {
     return mail($to, $subject, $message, $headers);
 }
 
-// Function to log contact message to database
+// función para guardar el mensaje en la base de datos
 function log_contact_message($pdo, $data) {
     try {
         $sql = "INSERT INTO contact_messages (
@@ -64,19 +59,19 @@ function log_contact_message($pdo, $data) {
             $data['newsletter'] ? 1 : 0
         ]);
     } catch (PDOException $e) {
-        error_log("Database error: " . $e->getMessage());
+        error_log("error en la base de datos: " . $e->getMessage());
         return false;
     }
 }
 
-// Function to send notification email to admin
+// función para mandar un mail al admin con los datos del contacto
 function send_admin_notification($data) {
-    $subject = "New Contact Form Submission - " . $data['subject'];
+    $subject = "nuevo mensaje del formulario de contacto - " . $data['subject'];
     
     $message = "
     <html>
     <head>
-        <title>New Contact Form Submission</title>
+        <title>nuevo mensaje del formulario</title>
         <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -91,39 +86,39 @@ function send_admin_notification($data) {
     <body>
         <div class='container'>
             <div class='header'>
-                <h2>New Contact Form Submission</h2>
-                <p>EduSync Contact System</p>
+                <h2>nuevo mensaje recibido</h2>
+                <p>sistema de contacto edusync</p>
             </div>
             <div class='content'>
                 <div class='field'>
-                    <span class='label'>Name:</span>
+                    <span class='label'>nombre:</span>
                     <span class='value'>{$data['firstName']} {$data['lastName']}</span>
                 </div>
                 <div class='field'>
-                    <span class='label'>Email:</span>
+                    <span class='label'>email:</span>
                     <span class='value'>{$data['email']}</span>
                 </div>
                 <div class='field'>
-                    <span class='label'>Phone:</span>
-                    <span class='value'>" . ($data['phone'] ?: 'Not provided') . "</span>
+                    <span class='label'>teléfono:</span>
+                    <span class='value'>" . ($data['phone'] ?: 'no proporcionado') . "</span>
                 </div>
                 <div class='field'>
-                    <span class='label'>Subject:</span>
+                    <span class='label'>asunto:</span>
                     <span class='value'>" . ucfirst($data['subject']) . "</span>
                 </div>
                 <div class='field'>
-                    <span class='label'>Newsletter:</span>
-                    <span class='value'>" . ($data['newsletter'] ? 'Yes' : 'No') . "</span>
+                    <span class='label'>newsletter:</span>
+                    <span class='value'>" . ($data['newsletter'] ? 'sí' : 'no') . "</span>
                 </div>
                 <div class='field'>
-                    <span class='label'>Message:</span>
+                    <span class='label'>mensaje:</span>
                     <div class='value' style='background: white; padding: 15px; border-radius: 5px; margin-top: 10px;'>
                         " . nl2br(htmlspecialchars($data['message'])) . "
                     </div>
                 </div>
             </div>
             <div class='footer'>
-                <p>This message was sent from the EduSync contact form at " . date('Y-m-d H:i:s') . "</p>
+                <p>este mensaje fue enviado desde el formulario de contacto de edusync el " . date('Y-m-d H:i:s') . "</p>
             </div>
         </div>
     </body>
@@ -132,46 +127,37 @@ function send_admin_notification($data) {
     return send_contact_email(ADMIN_EMAIL, $subject, $message);
 }
 
-// Function to send confirmation email to user
+// función para mandar el mail de confirmación al usuario
 function send_user_confirmation($user_email, $user_name) {
-    $subject = "Thank you for contacting EduSync";
+    $subject = "gracias por contactar con edusync";
     
     $message = "
     <html>
     <head>
-        <title>Thank you for contacting EduSync</title>
+        <title>gracias por tu mensaje</title>
         <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: #667eea; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
             .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
-            .button { 
-                display: inline-block; 
-                background: #667eea; 
-                color: white; 
-                padding: 12px 25px; 
-                text-decoration: none; 
-                border-radius: 5px; 
-                margin: 20px 0;
-            }
             .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
         </style>
     </head>
     <body>
         <div class='container'>
             <div class='header'>
-                <h2>Thank you for contacting EduSync!</h2>
+                <h2>¡gracias por contactarnos, $user_name!</h2>
             </div>
             <div class='content'>
-                <p>Dear $user_name,</p>
-                <p>Thank you for reaching out to us. We have received your message and will get back to you as soon as possible.</p>
-                <p>Our team typically responds within 24 hours during business days.</p>
-                <p>In the meantime, feel free to explore our platform and discover all the features EduSync has to offer.</p>
-                <p>Best regards,<br>The EduSync Team</p>
+                <p>hola $user_name,</p>
+                <p>recibimos tu mensaje y te responderemos lo antes posible.</p>
+                <p>nuestro equipo suele contestar dentro de las 24 horas hábiles.</p>
+                <p>mientras tanto, podés seguir explorando nuestra plataforma y conocer todo lo que ofrece edusync.</p>
+                <p>saludos,<br>el equipo de edusync</p>
             </div>
             <div class='footer'>
-                <p>This is an automated message. Please do not reply to this email.</p>
-                <p>© 2024 EduSync. All rights reserved.</p>
+                <p>este es un mensaje automático, por favor no respondas.</p>
+                <p>© 2024 edusync. todos los derechos reservados.</p>
             </div>
         </div>
     </body>
@@ -180,17 +166,17 @@ function send_user_confirmation($user_email, $user_name) {
     return send_contact_email($user_email, $subject, $message);
 }
 
-// Main processing logic
+// lógica principal del formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $response = array();
     
     try {
-        // Validate CSRF token
+        // valido el token csrf
         if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-            throw new Exception('Invalid security token. Please try again.');
+            throw new Exception('token de seguridad inválido, por favor intentá de nuevo.');
         }
         
-        // Sanitize and validate input
+        // limpio y valido los datos
         $firstName = sanitize_input($_POST['firstName'] ?? '');
         $lastName = sanitize_input($_POST['lastName'] ?? '');
         $email = sanitize_input($_POST['email'] ?? '');
@@ -199,32 +185,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = sanitize_input($_POST['message'] ?? '');
         $newsletter = isset($_POST['newsletter']) ? true : false;
         
-        // Validation
+        // chequeos básicos
         if (empty($firstName) || empty($lastName) || empty($email) || empty($subject) || empty($message)) {
-            throw new Exception('All required fields must be filled.');
+            throw new Exception('todos los campos obligatorios deben completarse.');
         }
         
         if (!validate_email($email)) {
-            throw new Exception('Please enter a valid email address.');
+            throw new Exception('ingresá un correo electrónico válido.');
         }
         
         if (!in_array($subject, ['general', 'technical', 'billing', 'feature', 'other'])) {
-            throw new Exception('Please select a valid subject.');
+            throw new Exception('seleccioná un asunto válido.');
         }
         
         if (strlen($message) < 10) {
-            throw new Exception('Message must be at least 10 characters long.');
+            throw new Exception('el mensaje debe tener al menos 10 caracteres.');
         }
         
-        // Database connection
+        // me conecto a la base de datos
         try {
             $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET, DB_USER, DB_PASS);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
-            throw new Exception('Database connection failed. Please try again later.');
+            throw new Exception('error al conectar con la base de datos. intentá más tarde.');
         }
         
-        // Prepare data for database and email
+        // preparo los datos para la base y el mail
         $data = array(
             'firstName' => $firstName,
             'lastName' => $lastName,
@@ -235,25 +221,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'newsletter' => $newsletter
         );
         
-        // Log to database
+        // guardo el mensaje en la base
         if (!log_contact_message($pdo, $data)) {
-            throw new Exception('Failed to save message. Please try again.');
+            throw new Exception('no se pudo guardar el mensaje, intentá de nuevo.');
         }
         
-        // Send emails
+        // envío los mails
         $admin_sent = send_admin_notification($data);
         $user_sent = send_user_confirmation($email, $firstName);
         
-        // Prepare response
+        // respuesta final
         $response['success'] = true;
-        $response['message'] = 'Thank you for your message! We will get back to you soon.';
+        $response['message'] = '¡gracias por tu mensaje! te responderemos pronto.';
         
-        // Log email status
+        // registro de errores de mail (si fallan)
         if (!$admin_sent) {
-            error_log("Failed to send admin notification email");
+            error_log("no se pudo enviar el mail al admin");
         }
         if (!$user_sent) {
-            error_log("Failed to send user confirmation email");
+            error_log("no se pudo enviar el mail al usuario");
         }
         
     } catch (Exception $e) {
@@ -261,13 +247,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $response['message'] = $e->getMessage();
     }
     
-    // Return JSON response
+    // devuelvo la respuesta en json
     header('Content-Type: application/json');
     echo json_encode($response);
     exit;
 }
 
-// If not POST request, redirect to contact page
+// si no es un post, redirijo al formulario de contacto
 header('Location: contact.html');
 exit;
 ?>
