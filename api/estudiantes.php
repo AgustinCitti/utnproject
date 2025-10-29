@@ -117,13 +117,14 @@ try {
         }
 
         // Insertar nuevo estudiante
-        $sql = "INSERT INTO Estudiante (Nombre, Apellido, Email, Fecha_nacimiento, Estado) 
+        $sql = "INSERT INTO Estudiante (Apellido, Nombre, Email, Fecha_nacimiento, Estado) 
                 VALUES (?, ?, ?, ?, ?)";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
-            $data['Nombre'],
+            
             $data['Apellido'],
+            $data['Nombre'],
             $data['Email'] ?? null,
             $data['Fecha_nacimiento'] ?? null,
             $data['Estado'] ?? 'ACTIVO'

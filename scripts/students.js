@@ -16,10 +16,10 @@ async function saveStudent() {
         alert('El nombre y apellido son obligatorios.');
         return;
     }
-
+    console.log('Datos a enviar:', formData);
     try {
         let response;
-        let url = '../config/estudiantes.php';
+        let url = '../api/estudiantes.php';  
         let method = 'POST';
         let body = JSON.stringify(formData);
 
@@ -28,6 +28,7 @@ async function saveStudent() {
             url += `?id=${editingStudentId}`;
             method = 'PUT';
         }
+        console.log('URL:', url, 'Method:', method);
 
         response = await fetch(url, {
             method: method,
@@ -36,8 +37,9 @@ async function saveStudent() {
             },
             body: body
         });
-
+        console.log('Response status:', response.status); 
         const result = await response.json();
+        console.log('Response data:', result);
 
         if (response.ok && result.success !== false) {
             // Actualizar datos locales recargando desde el servidor
@@ -54,6 +56,7 @@ async function saveStudent() {
             }
             if (typeof loadUnifiedStudentData === 'function') {
                 loadUnifiedStudentData();
+                console.log('Estudiantes después de recargar:', appData.estudiante);
             }
             if (typeof updateDashboard === 'function') {
                 updateDashboard();
@@ -139,8 +142,27 @@ async function deleteStudent(id) {
     }
 }
 
-// Función actualizada para limpiar el formulario
 function clearStudentForm() {
     document.getElementById('studentForm').reset();
     editingStudentId = null;
 }
+
+
+const originalShowModal = window.showModal;
+window.showModal = function(modalId) {
+    originalShowModal(modalId);
+    
+    if (modalId === 'studentModal') {
+        setTimeout(() => {
+            const submitBtn = document.querySelector('#studentForm button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    saveStudent();
+                    return false;
+                };
+            }
+        }, 100);
+    }
+};

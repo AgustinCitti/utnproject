@@ -396,26 +396,30 @@ function getFilteredUnifiedStudents() {
     
     // Start with all students enrolled in subjects taught by current teacher
     let filteredStudents = appData.estudiante;
-    
+
     if (teacherId) {
         // Get subjects taught by current teacher
         let teacherSubjects = appData.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
         
-        // Filter by course/division if selected
-        if (selectedCourse) {
-            teacherSubjects = teacherSubjects.filter(subject => subject.Curso_division === selectedCourse);
+        // Si el profesor tiene materias, filtrar estudiantes inscritos en esas materias
+        if (teacherSubjects.length > 0) {
+            // Filter by course/division if selected
+            if (selectedCourse) {
+                teacherSubjects = teacherSubjects.filter(subject => subject.Curso_division === selectedCourse);
+            }
+            
+            const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
+            
+            // Get students enrolled in these subjects
+            const enrolledStudentIds = appData.alumnos_x_materia
+                .filter(enrollment => teacherSubjectIds.includes(enrollment.Materia_ID_materia))
+                .map(enrollment => enrollment.Estudiante_ID_Estudiante);
+            
+            filteredStudents = filteredStudents.filter(student => 
+                enrolledStudentIds.includes(student.ID_Estudiante)
+            );
         }
-        
-        const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
-        
-        // Get students enrolled in these subjects
-        const enrolledStudentIds = appData.alumnos_x_materia
-            .filter(enrollment => teacherSubjectIds.includes(enrollment.Materia_ID_materia))
-            .map(enrollment => enrollment.Estudiante_ID_Estudiante);
-        
-        filteredStudents = filteredStudents.filter(student => 
-            enrolledStudentIds.includes(student.ID_Estudiante)
-        );
+        // Si el profesor NO tiene materias, mostrar TODOS los estudiantes
     }
     
     // Filter by subject (students enrolled in this subject)
@@ -443,6 +447,7 @@ function getFilteredUnifiedStudents() {
     
     return filteredStudents;
 }
+ 
 
 function filterUnifiedData() {
     loadUnifiedStudentData();
