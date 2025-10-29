@@ -1,168 +1,146 @@
-// Student Management
-function initializeStudents() {
-    const addStudentBtn = document.getElementById('addStudentBtn');
-    const studentModal = document.getElementById('studentModal');
-    const studentForm = document.getElementById('studentForm');
-    const courseFilter = document.getElementById('courseFilter');
+// Variable para almacenar el ID del estudiante que se está editando
+let editingStudentId = null;
 
-    if (addStudentBtn) {
-        addStudentBtn.addEventListener('click', () => {
-            showModal('studentModal');
-            clearStudentForm();
-        });
-    }
-
-    if (studentForm) {
-        studentForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            saveStudent();
-        });
-    }
-
-    // Course filter functionality
-    if (courseFilter) {
-        courseFilter.addEventListener('change', () => {
-            filterStudentsByCourse();
-        });
-    }
-
-    // Modal close handlers
-    setupModalHandlers('studentModal');
-}
-
-function loadStudents() {
-    const studentsGrid = document.getElementById('studentsGrid');
-    const studentsList = document.getElementById('studentsList');
-    
-    if (!studentsGrid || !studentsList) return;
-
-    // Get filtered students
-    const filteredStudents = getFilteredStudents();
-
-    // Grid view
-    studentsGrid.innerHTML = filteredStudents.map(student => `
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">${student.Nombre} ${student.Apellido}</h3>
-                <div class="card-actions">
-                    <button class="btn-icon btn-edit" onclick="editStudent(${student.ID_Estudiante})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-icon btn-delete" onclick="deleteStudent(${student.ID_Estudiante})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="card-content">
-                <p><strong>Email:</strong> ${student.Email}</p>
-                <p><strong>Student ID:</strong> ${student.ID_Estudiante}</p>
-                <p><strong>Birth Date:</strong> ${student.Fecha_nacimiento}</p>
-                <p><strong>Status:</strong> <span class="status-${student.Estado.toLowerCase()}">${student.Estado}</span></p>
-            </div>
-        </div>
-    `).join('');
-
-    // List view - Table format
-    studentsList.innerHTML = `
-        <div class="table-responsive">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>ID</th>
-                        <th>Course</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${filteredStudents.map(student => `
-                        <tr>
-                            <td><strong>${student.Nombre} ${student.Apellido}</strong></td>
-                            <td title="${student.Email}">${student.Email.length > 15 ? student.Email.substring(0, 15) + '...' : student.Email}</td>
-                            <td>${student.ID_Estudiante}</td>
-                            <td>${student.Fecha_nacimiento}</td>
-                            <td><span class="table-status ${student.Estado.toLowerCase()}">${student.Estado}</span></td>
-                            <td>
-                                <div class="table-actions">
-                                    <button class="btn-icon btn-edit" onclick="editStudent(${student.ID_Estudiante})" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn-icon btn-delete" onclick="deleteStudent(${student.ID_Estudiante})" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </div>
-    `;
-}
-
-function saveStudent() {
+// Función actualizada para GUARDAR/CREAR estudiante
+async function saveStudent() {
     const formData = {
-        firstName: document.getElementById('studentFirstName').value,
-        lastName: document.getElementById('studentLastName').value,
-        email: document.getElementById('studentEmail').value,
-        course: document.getElementById('studentCourse').value
-    };
-
-    const newStudent = {
-        ID_Estudiante: Date.now(),
-        Nombre: formData.firstName,
-        Apellido: formData.lastName,
-        Email: formData.email,
-        Fecha_nacimiento: new Date().toISOString().split('T')[0],
+        Nombre: document.getElementById('studentFirstName').value,
+        Apellido: document.getElementById('studentLastName').value,
+        Email: document.getElementById('studentEmail').value || null,
+        Fecha_nacimiento: document.getElementById('studentCourse').value || null,
         Estado: 'ACTIVO'
     };
 
-    appData.estudiante.push(newStudent);
-    saveData();
-    closeModal('studentModal');
-    loadStudents();
-    updateDashboard();
+    // Validación
+    if (!formData.Nombre || !formData.Apellido) {
+        alert('El nombre y apellido son obligatorios.');
+        return;
+    }
+
+    try {
+        let response;
+        let url = '../config/estudiantes.php';
+        let method = 'POST';
+        let body = JSON.stringify(formData);
+
+        // Si estamos editando, usar PUT
+        if (editingStudentId) {
+            url += `?id=${editingStudentId}`;
+            method = 'PUT';
+        }
+
+        response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: body
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success !== false) {
+            // Actualizar datos locales recargando desde el servidor
+            await loadData();
+            
+            // Cerrar modal y limpiar
+            closeModal('studentModal');
+            clearStudentForm();
+            editingStudentId = null;
+            
+            // Recargar vista
+            if (typeof loadStudents === 'function') {
+                loadStudents();
+            }
+            if (typeof loadUnifiedStudentData === 'function') {
+                loadUnifiedStudentData();
+            }
+            if (typeof updateDashboard === 'function') {
+                updateDashboard();
+            }
+            
+            // Mostrar notificación
+            if (typeof showNotification === 'function') {
+                showNotification(
+                    editingStudentId ? 'Estudiante actualizado exitosamente' : 'Estudiante creado exitosamente',
+                    'success'
+                );
+            }
+        } else {
+            alert(result.message || 'Error al guardar el estudiante');
+        }
+    } catch (error) {
+        console.error('Error al guardar estudiante:', error);
+        alert('Error al conectar con el servidor');
+    }
 }
 
+// Función actualizada para EDITAR estudiante
 function editStudent(id) {
     const student = appData.estudiante.find(s => s.ID_Estudiante === id);
-    if (!student) return;
+    if (!student) {
+        alert('Estudiante no encontrado');
+        return;
+    }
 
-    document.getElementById('studentFirstName').value = student.Nombre;
-    document.getElementById('studentLastName').value = student.Apellido;
-    document.getElementById('studentEmail').value = student.Email;
-    document.getElementById('studentCourse').value = student.Fecha_nacimiento;
+    // Guardar ID para el modo edición
+    editingStudentId = id;
+
+    // Llenar formulario con datos del estudiante
+    document.getElementById('studentFirstName').value = student.Nombre || '';
+    document.getElementById('studentLastName').value = student.Apellido || '';
+    document.getElementById('studentEmail').value = student.Email || '';
+    document.getElementById('studentCourse').value = student.Fecha_nacimiento || '';
 
     showModal('studentModal');
 }
 
-function deleteStudent(id) {
-    if (confirm('Are you sure you want to delete this student?')) {
-        appData.estudiante = appData.estudiante.filter(s => s.ID_Estudiante !== id);
-        saveData();
-        loadStudents();
-        updateDashboard();
+// Función actualizada para ELIMINAR estudiante
+async function deleteStudent(id) {
+    if (!confirm('¿Estás seguro de que deseas eliminar este estudiante?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`../api/estudiantes.php?id=${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            // Actualizar datos locales
+            await loadData();
+            
+            // Recargar vista
+            if (typeof loadStudents === 'function') {
+                loadStudents();
+            }
+            if (typeof loadUnifiedStudentData === 'function') {
+                loadUnifiedStudentData();
+            }
+            if (typeof updateDashboard === 'function') {
+                updateDashboard();
+            }
+            
+            // Mostrar notificación
+            if (typeof showNotification === 'function') {
+                showNotification('Estudiante eliminado exitosamente', 'success');
+            }
+        } else {
+            alert(result.message || 'Error al eliminar el estudiante');
+        }
+    } catch (error) {
+        console.error('Error al eliminar estudiante:', error);
+        alert('Error al conectar con el servidor');
     }
 }
 
+// Función actualizada para limpiar el formulario
 function clearStudentForm() {
     document.getElementById('studentForm').reset();
-}
-
-// Course filtering functions
-function getFilteredStudents() {
-    const courseFilter = document.getElementById('courseFilter');
-    const selectedCourse = courseFilter ? courseFilter.value : '';
-    
-    if (!selectedCourse) {
-        return appData.estudiante;
-    }
-    
-    return appData.estudiante.filter(student => student.Fecha_nacimiento === selectedCourse);
-}
-
-function filterStudentsByCourse() {
-    loadStudents();
+    editingStudentId = null;
 }
