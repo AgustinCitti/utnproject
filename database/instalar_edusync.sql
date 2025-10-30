@@ -12,6 +12,7 @@ USE edusync;
 -- ELIMINAR TABLAS EXISTENTES (si existen)
 -- =====================================================
 DROP TABLE IF EXISTS Notificaciones;
+DROP TABLE IF EXISTS Contacto_mensajes;
 DROP TABLE IF EXISTS Recordatorio;
 DROP TABLE IF EXISTS Archivos;
 DROP TABLE IF EXISTS Notas;
@@ -44,6 +45,7 @@ CREATE TABLE Usuarios_docente (
     Ultimo_acceso TIMESTAMP NULL COMMENT 'Última vez que accedió al sistema',
     Estado ENUM('ACTIVO', 'INACTIVO', 'SUSPENDIDO', 'VACACIONES') DEFAULT 'ACTIVO',
     Tipo_usuario ENUM('PROFESOR', 'PROFESOR_ADJUNTO', 'JEFE_TP', 'COORDINADOR') DEFAULT 'PROFESOR',
+    Plan_usuario ENUM('ESTANDAR', 'PREMIUM') DEFAULT 'ESTANDAR' COMMENT 'Plan de suscripción del docente',
     Avatar VARCHAR(255) COMMENT 'Ruta de la imagen de perfil',
     Configuracion JSON COMMENT 'Configuraciones personales del usuario',
     -- Índices para optimización
@@ -52,6 +54,7 @@ CREATE TABLE Usuarios_docente (
     INDEX idx_dni_docente (DNI),
     INDEX idx_estado_docente (Estado),
     INDEX idx_tipo_docente (Tipo_usuario),
+    INDEX idx_plan_usuario (Plan_usuario),
     INDEX idx_especialidad (Especialidad)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -279,6 +282,32 @@ CREATE TABLE Notificaciones (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
+-- 13. TABLA: Contacto_mensajes (Mensajes de contacto y comentarios)
+-- =====================================================
+CREATE TABLE Contacto_mensajes (
+    ID_contacto INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre VARCHAR(50) NOT NULL,
+    Apellido VARCHAR(50) NOT NULL,
+    Email VARCHAR(100) NOT NULL,
+    Telefono VARCHAR(20),
+    Asunto ENUM('GENERAL', 'TECNICO', 'FACTURACION', 'SUGERENCIA', 'OTRO') NOT NULL DEFAULT 'GENERAL',
+    Mensaje TEXT NOT NULL,
+    Origen ENUM('WEB', 'APP', 'EMAIL', 'OTRO') DEFAULT 'WEB',
+    Estado ENUM('NUEVO', 'LEIDO', 'RESPONDIDO', 'CERRADO') DEFAULT 'NUEVO',
+    Fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    Respondido_por INT NULL,
+    Nota_admin TEXT,
+    Fecha_respuesta TIMESTAMP NULL,
+    INDEX idx_email_contacto (Email),
+    INDEX idx_estado_contacto (Estado),
+    INDEX idx_fecha_contacto (Fecha_creacion),
+    INDEX idx_asunto_contacto (Asunto),
+    CONSTRAINT fk_contacto_respondido_por FOREIGN KEY (Respondido_por)
+        REFERENCES Usuarios_docente(ID_docente) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
 -- 13. TABLA: Configuracion (Configuración del Sistema)
 -- =====================================================
 CREATE TABLE Configuracion (
@@ -397,6 +426,55 @@ VALUES
 -- =====================================================
 -- MENSAJE DE INSTALACIÓN EXITOSA
 -- =====================================================
+-- Triggers para límite de materias según plan (se crean al final de la instalación)
+DELIMITER //
+CREATE TRIGGER trg_limite_materias_insert
+    BEFORE INSERT ON Materia
+    FOR EACH ROW
+BEGIN
+    DECLARE v_plan ENUM('ESTANDAR','PREMIUM');
+    DECLARE v_cnt INT DEFAULT 0;
+
+    SELECT Plan_usuario INTO v_plan
+    FROM Usuarios_docente
+    WHERE ID_docente = NEW.Usuarios_docente_ID_docente;
+
+    IF v_plan = 'ESTANDAR' THEN
+        SELECT COUNT(*) INTO v_cnt
+        FROM Materia
+        WHERE Usuarios_docente_ID_docente = NEW.Usuarios_docente_ID_docente;
+
+        IF v_cnt >= 5 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El plan ESTANDAR permite hasta 5 materias por docente.';
+        END IF;
+    END IF;
+END //
+
+CREATE TRIGGER trg_limite_materias_update
+    BEFORE UPDATE ON Materia
+    FOR EACH ROW
+BEGIN
+    IF NEW.Usuarios_docente_ID_docente <> OLD.Usuarios_docente_ID_docente THEN
+        DECLARE v_plan_u ENUM('ESTANDAR','PREMIUM');
+        DECLARE v_cnt_u INT DEFAULT 0;
+
+        SELECT Plan_usuario INTO v_plan_u
+        FROM Usuarios_docente
+        WHERE ID_docente = NEW.Usuarios_docente_ID_docente;
+
+        IF v_plan_u = 'ESTANDAR' THEN
+            SELECT COUNT(*) INTO v_cnt_u
+            FROM Materia
+            WHERE Usuarios_docente_ID_docente = NEW.Usuarios_docente_ID_docente;
+
+            IF v_cnt_u >= 5 THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El plan ESTANDAR permite hasta 5 materias por docente.';
+            END IF;
+        END IF;
+    END IF;
+END //
+DELIMITER ;
+
 SELECT 'EduSync instalado exitosamente!' as Mensaje,
        'Base de datos: edusync' as Base_Datos,
        'Tablas creadas: 13' as Tablas_Creadas,
