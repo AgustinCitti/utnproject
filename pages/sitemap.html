@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSync - Site Map</title>
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/landing.css">
+    <link rel="stylesheet" href="../styles/components.css">
+    <link rel="stylesheet" href="../styles/responsive.css">
+    <link rel="icon" href="../styles/assets/icon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Lightweight page-specific tweaks using existing design tokens */
+        .sitemap-header {
+            background: var(--color-surface, #0b1324);
+            color: var(--color-on-surface, #fff);
+            padding: 24px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .sitemap-header .brand { display:flex; align-items:center; gap:12px; font-weight:600; }
+        .sitemap { padding: 48px 0; margin-top: 88px; }
+        .sitemap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 32px 40px;
+        }
+        .sitemap-group h3 {
+            margin: 0 0 12px;
+            font-size: 1rem;
+            text-transform: none;
+            letter-spacing: .2px;
+            opacity: .9;
+        }
+        .sitemap-links { list-style: none; margin: 0; padding: 0; }
+        .sitemap-links li { margin: 8px 0; }
+        .sitemap-links a { color: var(--color-primary, #8ab4ff); text-decoration: none; }
+        .sitemap-links a:hover { text-decoration: underline; }
+        .sitemap-footer { padding: 24px 0 48px; opacity: .7; font-size: .9rem; }
+    </style>
+    
+</head>
+<body>
+    <!-- Landing Page Header (same as index) -->
+    <header class="landing-header">
+        <nav class="landing-nav">
+            <div class="nav-brand">
+                <img src="../styles/assets/icon.ico" alt="EduSync" style="width:50px;height:50px;">
+                <span>EduSync</span>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="../index.html#features" class="nav-link" data-translate="features">Features</a>
+                <a href="../index.html#about" class="nav-link" data-translate="about">About</a>
+                <a href="contact.html" class="nav-link" data-translate="contact">Contact</a>
+                <a href="login.html" class="nav-btn nav-login">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span data-translate="login">Login</span>
+                </a>
+                <a href="register.html" class="nav-btn nav-register">
+                    <i class="fas fa-user-plus"></i>
+                    <span data-translate="register">Register</span>
+                </a>
+                <div class="language-selector">
+                    <select id="languageSelect" class="language-dropdown">
+                        <option value="es" data-translate="español">Español</option>
+                        <option value="en" data-translate="english">English</option>
+                    </select>
+                </div>
+            </div>
+            <div class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Title -->
+    <section class="sitemap">
+        <div class="container">
+            <h2 class="section-title">Site Map</h2>
+            <div class="sitemap-grid">
+                <div class="sitemap-group">
+                    <h3>About EduSync</h3>
+                    <ul class="sitemap-links">
+                        <li><a href="../index.html#features">Features</a></li>
+                        <li><a href="../index.html#about">About</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div class="sitemap-group">
+                    <h3>Start</h3>
+                    <ul class="sitemap-links">
+                        <li><a href="../index.html">Home (Landing)</a></li>
+                        <li><a href="home.html">Home (App)</a></li>
+                        <li><a href="subjects.html">Subjects</a></li>
+                    </ul>
+                </div>
+
+                <div class="sitemap-group">
+                    <h3>Account</h3>
+                    <ul class="sitemap-links">
+                        <li><a href="login.html">Login</a></li>
+                        <li><a href="register.html">Register</a></li>
+                    </ul>
+                </div>
+
+                <div class="sitemap-group">
+                    <h3>Legal</h3>
+                    <ul class="sitemap-links">
+                        <li><a href="terms.html">Terms</a></li>
+                        <li><a href="privacy.html">Privacy</a></li>
+                    </ul>
+                </div>
+
+                <div class="sitemap-group">
+                    <h3>Developer / Utilities</h3>
+                    <ul class="sitemap-links">
+                        <li><a href="../test-login-validation.html">Test: Login Validation</a></li>
+                        <li><a href="../button-examples.html">Button Examples</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="sitemap-footer">
+                <p>Missing a link? Contact us via <a href="contact.html">Contact</a>.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Simple footer to match site tone -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="../styles/assets/icon.ico" alt="EduSync" style="width:20px;height:20px;">
+                    <span>EduSync</span>
+                </div>
+                <div class="footer-links">
+                    <a href="../index.html#features">Features</a>
+                    <a href="../index.html#about">About</a>
+                    <a href="contact.html">Contact</a>
+                </div>
+                <div class="footer-copyright">
+                    <p>&copy; 2024 EduSync. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- Script Modules -->
+    <script src="../scripts/translations.js"></script>
+    <script src="../scripts/utils.js"></script>
+    <script src="../scripts/auth.js"></script>
+    <script src="../scripts/main.js"></script>
+</body>
+</html>
