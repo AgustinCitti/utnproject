@@ -150,7 +150,6 @@ function initializeNavigation() {
             if (typeof logout === 'function') {
                 logout();
             } else {
-                console.error('Logout function not found');
             }
         });
     }
@@ -160,7 +159,6 @@ function initializeNavigation() {
             if (typeof logout === 'function') {
                 logout();
             } else {
-                console.error('Logout function not found');
             }
         });
     }

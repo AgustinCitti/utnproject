@@ -138,6 +138,15 @@ function updateDateRange() {
     if (!dateRangeElement) return;
     
     if (calendarCurrentView === 'week') {
+        // Initialize calendarWeekStart if it's null
+        if (!calendarWeekStart) {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            calendarWeekStart = new Date(today);
+            calendarWeekStart.setDate(today.getDate() + mondayOffset);
+        }
+        
         const weekEnd = new Date(calendarWeekStart);
         weekEnd.setDate(weekEnd.getDate() + 6);
         
@@ -196,6 +205,15 @@ function renderDaysHeader() {
     const daysHeader = document.getElementById('calendarDaysHeader');
     if (!daysHeader) return;
     
+    // Initialize calendarWeekStart if it's null
+    if (!calendarWeekStart) {
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        calendarWeekStart = new Date(today);
+        calendarWeekStart.setDate(today.getDate() + mondayOffset);
+    }
+    
     daysHeader.innerHTML = '';
     
     const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
@@ -231,6 +249,15 @@ function renderDaysGrid() {
     const daysGrid = document.getElementById('calendarDaysGrid');
     if (!daysGrid) return;
     
+    // Initialize calendarWeekStart if it's null
+    if (!calendarWeekStart) {
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        calendarWeekStart = new Date(today);
+        calendarWeekStart.setDate(today.getDate() + mondayOffset);
+    }
+    
     daysGrid.innerHTML = '';
     
     // Create grid: 7 days x time slots
@@ -263,17 +290,10 @@ function renderDaysGrid() {
 
 function renderEvents() {
     if (!appData) {
-        console.warn('Calendar: appData not loaded yet');
         return;
     }
     
     if (!appData.materia || !appData.usuarios_docente) {
-        console.warn('Calendar: Required data not loaded yet', {
-            hasMateria: !!appData.materia,
-            hasUsuarios: !!appData.usuarios_docente,
-            hasEvaluacion: !!appData.evaluacion,
-            hasRecordatorio: !!appData.recordatorio
-        });
         return;
     }
     
@@ -281,63 +301,36 @@ function renderEvents() {
     const events = getAllEvents();
     
     if (events.length === 0) {
-        console.log('Calendar: No events found. This might be normal if no events exist in the current view period.');
-        console.log('Calendar: Debug info - appData keys:', Object.keys(appData));
         return;
     }
-    
-    console.log('Calendar: Rendering', events.length, 'events');
     
     events.forEach(event => {
         try {
             const eventDate = new Date(event.date);
             if (isNaN(eventDate.getTime())) {
-                console.warn('Calendar: Invalid date for event:', event);
                 return;
             }
             
-            console.log('Calendar: Processing event:', {
-                title: event.title,
-                type: event.type,
-                eventDate: eventDate.toISOString(),
-                eventDateString: eventDate.toLocaleString()
-            });
-            
             const eventDayIndex = getDayIndexInWeek(eventDate);
-            console.log('Calendar: Event day index:', eventDayIndex, 'Week start:', calendarWeekStart?.toISOString());
             
             if (eventDayIndex === -1) {
-                console.log('Calendar: Event not in current week, skipping');
                 return; // Event not in current week
             }
             
             // Find the cell for this event
             const timeSlot = findTimeSlotForEvent(event);
             const formattedDate = formatDateForCell(eventDate);
-            console.log('Calendar: Looking for cell - date:', formattedDate, 'time:', timeSlot);
             
             const cells = document.querySelectorAll(`[data-date="${formattedDate}"]`);
-            console.log('Calendar: Found', cells.length, 'cells for date', formattedDate);
             
             const cell = Array.from(cells).find(c => {
                 const cellTime = c.dataset.time;
-                const matches = cellTime === timeSlot;
-                if (!matches && cells.length > 0) {
-                    console.log('Calendar: Cell time mismatch:', cellTime, 'vs', timeSlot);
-                }
-                return matches;
+                return cellTime === timeSlot;
             });
             
             if (!cell) {
-                console.warn('Calendar: Cell not found for event:', {
-                    date: formattedDate,
-                    time: timeSlot,
-                    availableTimes: Array.from(cells).slice(0, 5).map(c => c.dataset.time)
-                });
                 return;
             }
-            
-            console.log('Calendar: Found cell, rendering event:', event.title);
             
             // Create event element
             const eventElement = document.createElement('div');
@@ -367,7 +360,7 @@ function renderEvents() {
             
             cell.appendChild(eventElement);
         } catch (error) {
-            console.error('Error rendering event:', error, event);
+            // Error rendering event - silently continue
         }
     });
 }
@@ -378,11 +371,8 @@ function getAllEvents() {
     // Get current user
     const currentUser = getCurrentUserForCalendar();
     if (!currentUser) {
-        console.warn('Calendar: No current user found, cannot load events');
         return events;
     }
-    
-    console.log('Calendar: Current user:', currentUser.ID_docente, currentUser.Nombre_docente);
     
     // Get user's subjects
     let userSubjects = [];
@@ -395,16 +385,6 @@ function getAllEvents() {
             parseInt(m.Usuarios_docente_ID_docente) === parseInt(currentUser.ID_docente)
         );
         subjectIds = userSubjects.map(s => s.ID_materia);
-        console.log('Calendar: Found', userSubjects.length, 'subjects for user:', subjectIds);
-        console.log('Calendar: Subject IDs types:', subjectIds.map(id => ({id, type: typeof id})));
-        console.log('Calendar: User subjects details:', userSubjects.map(s => ({
-            id: s.ID_materia,
-            nombre: s.Nombre,
-            docente_id: s.Usuarios_docente_ID_docente,
-            docente_id_type: typeof s.Usuarios_docente_ID_docente
-        })));
-    } else {
-        console.warn('Calendar: appData.materia not available');
     }
     
     // Get notifications
@@ -425,24 +405,6 @@ function getAllEvents() {
     
     // Get exams (evaluaciones) for current user's subjects
     if (appData.evaluacion && appData.materia && subjectIds.length > 0) {
-        console.log('Calendar: Checking exams. Total exams in data:', appData.evaluacion.length);
-        console.log('Calendar: Subject IDs to match (as numbers):', subjectIds.map(id => parseInt(id)));
-        console.log('Calendar: Sample exam data:', appData.evaluacion.slice(0, 3).map(e => ({
-            id: e.ID_evaluacion,
-            materia_id: e.Materia_ID_materia,
-            materia_id_type: typeof e.Materia_ID_materia,
-            titulo: e.Titulo,
-            fecha: e.Fecha
-        })));
-        
-        const examCount = appData.evaluacion.filter(e => {
-            const examMateriaId = e.Materia_ID_materia;
-            // Try both string and number matching
-            return subjectIds.includes(examMateriaId) || 
-                   subjectIds.includes(parseInt(examMateriaId)) ||
-                   subjectIds.includes(String(examMateriaId));
-        }).length;
-        console.log('Calendar: Found', examCount, 'exams for user subjects');
         
         appData.evaluacion.forEach(evaluacion => {
             const examMateriaId = evaluacion.Materia_ID_materia;
@@ -489,20 +451,27 @@ function getAllEvents() {
             
             const schedule = parseScheduleFunc(subject.Horario);
             if (!schedule) {
-                console.log('Calendar: Could not parse schedule for subject:', subject.Nombre, 'Horario:', subject.Horario);
                 return;
             }
             
-            console.log('Calendar: Parsed schedule for', subject.Nombre, ':', schedule);
-            
             // Generate class events for the current week (for week view) or month (for month view)
-            const viewStart = calendarCurrentView === 'week' ? 
-                new Date(calendarWeekStart) : 
-                new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth(), 1);
+            let viewStart, viewEnd;
             
-            const viewEnd = calendarCurrentView === 'week' ? 
-                new Date(calendarWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000) : 
-                new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth() + 1, 0);
+            if (calendarCurrentView === 'week') {
+                // Initialize calendarWeekStart if it's null
+                if (!calendarWeekStart) {
+                    const today = new Date();
+                    const dayOfWeek = today.getDay();
+                    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+                    calendarWeekStart = new Date(today);
+                    calendarWeekStart.setDate(today.getDate() + mondayOffset);
+                }
+                viewStart = new Date(calendarWeekStart);
+                viewEnd = new Date(calendarWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+            } else {
+                viewStart = new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth(), 1);
+                viewEnd = new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth() + 1, 0);
+            }
             
             let classCount = 0;
             // Generate classes for the view period
@@ -526,31 +495,11 @@ function getAllEvents() {
                     classCount++;
                 }
             }
-            if (classCount > 0) {
-                console.log('Calendar: Generated', classCount, 'class events for', subject.Nombre);
-            }
         });
     }
     
     // Get recordatorios for current user's subjects
     if (appData.recordatorio && appData.materia && subjectIds.length > 0) {
-        console.log('Calendar: Checking recordatorios. Total recordatorios in data:', appData.recordatorio.length);
-        console.log('Calendar: Sample recordatorio data:', appData.recordatorio.slice(0, 3).map(r => ({
-            id: r.ID_recordatorio,
-            materia_id: r.Materia_ID_materia,
-            materia_id_type: typeof r.Materia_ID_materia,
-            descripcion: r.Descripcion,
-            fecha: r.Fecha
-        })));
-        
-        const reminderCount = appData.recordatorio.filter(r => {
-            const recMateriaId = r.Materia_ID_materia;
-            // Try both string and number matching
-            return subjectIds.includes(recMateriaId) || 
-                   subjectIds.includes(parseInt(recMateriaId)) ||
-                   subjectIds.includes(String(recMateriaId));
-        }).length;
-        console.log('Calendar: Found', reminderCount, 'recordatorios for user subjects');
         
         appData.recordatorio.forEach(recordatorio => {
             const recMateriaId = recordatorio.Materia_ID_materia;
@@ -585,7 +534,6 @@ function getAllEvents() {
         });
     }
     
-    console.log('Calendar: Total events found:', events.length);
     return events;
 }
 
@@ -604,7 +552,6 @@ function getCurrentUserForCalendar() {
     
     // Fallback implementation
     if (!appData || !appData.usuarios_docente) {
-        console.warn('Calendar: appData or usuarios_docente not available');
         return null;
     }
     
@@ -613,7 +560,6 @@ function getCurrentUserForCalendar() {
     if (userId) {
         const user = appData.usuarios_docente.find(u => u.ID_docente == userId || u.ID_docente == parseInt(userId));
         if (user) {
-            console.log('Calendar: Found user by userId:', user);
             return user;
         }
     }
@@ -623,12 +569,10 @@ function getCurrentUserForCalendar() {
     if (email) {
         const user = appData.usuarios_docente.find(u => u.Email_docente === email);
         if (user) {
-            console.log('Calendar: Found user by email:', user);
             return user;
         }
     }
     
-    console.warn('Calendar: No user found. userId:', userId, 'email:', email);
     return null;
 }
 
@@ -672,19 +616,15 @@ function findTimeSlotForEvent(event) {
     const roundedMinute = minute < 30 ? 0 : 30;
     const timeStr = `${hour.toString().padStart(2, '0')}:${roundedMinute.toString().padStart(2, '0')}`;
     
-    console.log('Calendar: Event time:', hour, ':', minute, '-> rounded to:', timeStr);
-    
     // Find exact match first, then closest
     const exactMatch = TIME_SLOTS.find(slot => slot === timeStr);
     if (exactMatch) {
-        console.log('Calendar: Found exact time slot:', exactMatch);
         return exactMatch;
     }
     
     // Find closest time slot
     const index = TIME_SLOTS.findIndex(slot => slot >= timeStr);
     const slot = TIME_SLOTS[index] || TIME_SLOTS[0];
-    console.log('Calendar: Using closest time slot:', slot);
     return slot;
 }
 
@@ -892,7 +832,6 @@ function showEventDetails(event) {
     const bodyElement = document.getElementById('eventModalBody');
     
     if (!iconElement || !headerElement || !titleElement || !subtitleElement || !bodyElement) {
-        console.error('Calendar: Modal elements not found');
         return;
     }
     

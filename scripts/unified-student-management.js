@@ -24,16 +24,12 @@ function initializeUnifiedStudentManagement() {
     if (addStudentBtn) {
         addStudentBtn.addEventListener('click', () => {
             try {
-                console.log('[unified-student] Botón agregar estudiante clickeado');
                 if (typeof showModal === 'function') {
                     showModal('studentModal');
                 } else {
                     const modal = document.getElementById('studentModal');
                     if (modal) {
                         modal.classList.add('active');
-                        console.log('[unified-student] Modal abierto manualmente');
-                    } else {
-                        console.error('[unified-student] Modal studentModal no encontrado');
                     }
                 }
                 if (typeof clearStudentForm === 'function') {
@@ -43,12 +39,9 @@ function initializeUnifiedStudentManagement() {
                     if (form) form.reset();
                 }
             } catch (e) {
-                console.error('[unified-student] Error al abrir modal de estudiante:', e);
                 alert('Error al abrir el formulario de estudiante');
             }
         });
-    } else {
-        console.warn('[unified-student] Botón addStudentBtn no encontrado');
     }
 
     if (markAttendanceBtn) {

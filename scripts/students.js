@@ -49,7 +49,6 @@ async function saveStudent() {
         alert('El nombre y apellido son obligatorios.');
         return;
     }
-    console.log('Datos a enviar:', formData);
     try {
         let response;
         let url = '../api/estudiantes.php';  
@@ -61,7 +60,6 @@ async function saveStudent() {
             url = `${url}/${editingStudentId}`; // El endpoint lee el ID de la URL segmentada
             method = 'PUT';
         }
-        console.log('URL:', url, 'Method:', method);
 
         response = await fetch(url, {
             method: method,
@@ -70,9 +68,7 @@ async function saveStudent() {
             },
             body: body
         });
-        console.log('Response status:', response.status); 
         const result = await response.json();
-        console.log('Response data:', result);
 
         if (response.ok && result.success !== false) {
             // Obtener el ID del estudiante (diferentes formas según la respuesta)
@@ -88,35 +84,27 @@ async function saveStudent() {
                 }
             }
             
-            console.log('[students] ID del estudiante obtenido:', studentId);
-            console.log('[students] Resultado completo del servidor:', result);
-            console.log('[students] editingStudentId:', editingStudentId);
             
             // Guardar relaciones alumno-materia si hay materias seleccionadas
             const subjectsSelect = document.getElementById('studentSubjects');
             if (!subjectsSelect) {
-                console.warn('[students] Campo studentSubjects no encontrado');
             } else if (!studentId) {
-                console.error('[students] No se pudo obtener el ID del estudiante para guardar relaciones');
                 alert('Estudiante guardado pero no se pudieron guardar las materias. ID no disponible.');
             } else {
                 const selectedSubjects = Array.from(subjectsSelect.selectedOptions)
                     .map(opt => parseInt(opt.value))
                     .filter(id => !isNaN(id));
                 
-                console.log('[students] Materias seleccionadas:', selectedSubjects);
                 
                 if (selectedSubjects.length > 0) {
                     try {
                         // Si estamos editando, primero eliminar las relaciones existentes
                         if (editingStudentId) {
-                            console.log('[students] Eliminando relaciones antiguas para estudiante:', studentId);
                             const deleteResponse = await fetch(`../api/alumnos_x_materia.php?estudianteId=${studentId}`, {
                                 method: 'DELETE',
                                 headers: { 'Content-Type': 'application/json' }
                             });
                             const deleteResult = await deleteResponse.json().catch(() => ({}));
-                            console.log('[students] Resultado de eliminación:', deleteResult);
                         }
                         
                         // Crear nuevas relaciones
@@ -126,7 +114,6 @@ async function saveStudent() {
                             Estado: 'INSCRITO'
                         }));
                         
-                        console.log('[students] Enviando relaciones:', relations);
                         
                         const relationsResponse = await fetch('../api/alumnos_x_materia.php', {
                             method: 'POST',
@@ -135,36 +122,27 @@ async function saveStudent() {
                         });
                         
                         const relationsText = await relationsResponse.text();
-                        console.log('[students] Respuesta raw de relaciones:', relationsText);
                         
                         let relationsData = {};
                         try {
                             relationsData = JSON.parse(relationsText);
-                            console.log('[students] Respuesta parseada de relaciones:', relationsData);
                         } catch (e) {
-                            console.error('[students] Error parseando respuesta de relaciones:', e);
+                            // Error parsing response - silently continue
                         }
                         
                         if (!relationsResponse.ok) {
-                            console.error('[students] Error al guardar relaciones:', relationsText);
                             alert('Estudiante guardado pero hubo un error al guardar las materias. Revisa la consola.');
                         } else {
-                            console.log('[students] Relaciones guardadas exitosamente');
                         }
                     } catch (error) {
-                        console.error('[students] Error al guardar relaciones:', error);
                         alert('Estudiante guardado pero hubo un error al guardar las materias: ' + error.message);
                     }
                 } else {
-                    console.log('[students] No hay materias seleccionadas para guardar');
                 }
             }
             
             // Actualizar datos locales recargando desde el servidor
-            console.log('[students] Recargando datos desde servidor...');
             await loadData();
-            console.log('[students] Datos recargados. Estudiantes:', appData.estudiante?.length || 0);
-            console.log('[students] Relaciones alumno-materia:', appData.alumnos_x_materia?.length || 0);
             
             // Cerrar modal y limpiar
             closeModal('studentModal');
@@ -174,18 +152,14 @@ async function saveStudent() {
             // Recargar vistas con un pequeño delay para asegurar que los datos estén actualizados
             setTimeout(() => {
                 if (typeof loadStudents === 'function') {
-                    console.log('[students] Llamando loadStudents...');
                     loadStudents();
                 }
                 if (typeof loadUnifiedStudentData === 'function') {
-                    console.log('[students] Llamando loadUnifiedStudentData...');
                     loadUnifiedStudentData();
-                    console.log('[students] Estudiantes después de recargar:', appData.estudiante);
                 }
                 if (typeof loadStudentMatrix === 'function') {
                     const matrix = document.getElementById('unifiedStudentMatrix');
                     if (matrix && matrix.style.display !== 'none') {
-                        console.log('[students] Llamando loadStudentMatrix...');
                         loadStudentMatrix();
                     }
                 }
@@ -205,7 +179,6 @@ async function saveStudent() {
             alert(result.message || 'Error al guardar el estudiante');
         }
     } catch (error) {
-        console.error('Error al guardar estudiante:', error);
         alert('Error al conectar con el servidor');
     }
 }
@@ -284,7 +257,6 @@ async function deleteStudent(id) {
             alert(result.message || 'Error al eliminar el estudiante');
         }
     } catch (error) {
-        console.error('Error al eliminar estudiante:', error);
         alert('Error al conectar con el servidor');
     }
 }
@@ -311,7 +283,6 @@ function showNoSubjectsModal() {
                 showNoSubjectsModalInternal(modal);
             } else {
                 // Solo como último recurso, usar alert si después de esperar tampoco existe
-                console.error('[students] Modal noSubjectsModal no encontrado después de esperar');
                 alert('No tienes materias creadas todavía. Por favor, crea una materia primero desde la sección de "Gestión de Materias" antes de agregar estudiantes.');
             }
         }, 100);

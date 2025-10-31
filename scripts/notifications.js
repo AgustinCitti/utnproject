@@ -20,14 +20,12 @@ function loadNotifications() {
 
     // Check if appData is loaded
     if (!appData) {
-        console.error('appData is not loaded');
         return;
     }
 
     // Get current docente user
     const currentUser = getCurrentUser();
     if (!currentUser) {
-        console.log('No current user found');
         return;
     }
 
@@ -162,7 +160,6 @@ function loadNotifications() {
 function updateNotificationCount() {
     // Check if appData is loaded
     if (!appData) {
-        console.error('appData is not loaded');
         return;
     }
     
@@ -207,7 +204,6 @@ function updateNotificationCount() {
 
 function markNotificationRead(id) {
     if (!appData) {
-        console.error('appData is not loaded');
         return;
     }
     
@@ -238,7 +234,6 @@ function markNotificationRead(id) {
 
 function markAllNotificationsRead() {
     if (!appData) {
-        console.error('appData is not loaded');
         return;
     }
     
@@ -254,7 +249,6 @@ function markAllNotificationsRead() {
 
 function deleteNotification(id) {
     if (!appData) {
-        console.error('appData is not loaded');
         return;
     }
     
@@ -311,18 +305,15 @@ function loadRecordatorios() {
 function getRecordatoriosForDocente(docenteId) {
     // Check if appData is loaded
     if (!appData) {
-        console.error('appData is not loaded');
         return [];
     }
     
     // Check if required data exists
     if (!appData.materia) {
-        console.error('appData.materia is not loaded');
         return [];
     }
     
     if (!appData.recordatorio) {
-        console.error('appData.recordatorio is not loaded');
         return [];
     }
     
@@ -409,28 +400,18 @@ function getSubjectName(subjectId) {
 
 // Debug function to test recordatorios
 function debugRecordatorios() {
-    console.log('=== DEBUGGING RECORDATORIOS ===');
-    
     // Check current user
     const currentUser = getCurrentUser();
-    console.log('Current user:', currentUser);
     
     if (!currentUser) {
-        console.log('No current user found. Check localStorage username:', localStorage.getItem('username'));
-        console.log('Available docentes:', appData.usuarios_docente);
         return;
     }
     
     // Check subjects for this docente
     const subjects = appData.materia.filter(m => m.Usuarios_docente_ID_docente === currentUser.ID_docente);
-    console.log('Subjects for docente', currentUser.ID_docente, ':', subjects);
     
     // Check recordatorios
     const recordatorios = getRecordatoriosForDocente(currentUser.ID_docente);
-    console.log('Recordatorios for docente', currentUser.ID_docente, ':', recordatorios);
-    
-    // Check all recordatorios
-    console.log('All recordatorios:', appData.recordatorio);
     
     return {
         currentUser,
@@ -444,7 +425,6 @@ function viewRecordatorio(recordatorioId) {
     // Find the recordatorio in the data
     const recordatorio = appData.recordatorio.find(r => r.ID_recordatorio == recordatorioId);
     if (!recordatorio) {
-        console.error('Recordatorio not found:', recordatorioId);
         return;
     }
     

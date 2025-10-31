@@ -106,7 +106,6 @@ function getGradesDistribution(subjectId = 'all') {
 
 function getAttendanceTrends(subjectId = 'all') {
     if (!window.data || !window.data.asistencia) {
-        console.warn('getAttendanceTrends: No data available', { data: window.data, asistencia: window.data?.asistencia });
         return { labels: [], data: [] };
     }
 

@@ -356,7 +356,6 @@ function saveAttendanceBulk() {
 
 function editAttendance(attendanceId) {
     // Implementation for editing attendance
-    console.log('Edit attendance:', attendanceId);
 }
 
 function deleteAttendance(attendanceId) {

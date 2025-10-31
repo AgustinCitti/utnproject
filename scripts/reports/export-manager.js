@@ -74,7 +74,6 @@ function exportToPDF() {
         document.body.removeChild(reportContainer);
         document.body.removeChild(loadingDiv);
     }).catch(error => {
-        console.error('Error generating PDF:', error);
         document.body.removeChild(loadingDiv);
         alert('Error generating PDF. Please try again.');
     });
@@ -307,7 +306,6 @@ function exportToCSV() {
         // Show success notification
         showExportNotification('CSV files downloaded successfully!', 'success');
     } catch (error) {
-        console.error('Error generating CSV:', error);
         showExportNotification('Error generating CSV files. Please try again.', 'error');
     }
 }

@@ -201,7 +201,6 @@ function setupQuickActions() {
         btn.addEventListener('click', () => {
             const action = btn.getAttribute('data-action');
             if (typeof showSection !== 'function') {
-                console.error('showSection function not found');
                 return;
             }
             switch(action) {
@@ -270,7 +269,6 @@ function loadLatestNotifications() {
 
     // Check if appData is loaded
     if (!appData) {
-        console.error('appData is not loaded');
         return;
     }
 
@@ -510,7 +508,6 @@ function loadUnifiedNotifications() {
 
     // Check if appData is loaded
     if (!appData) {
-        console.error('appData is not loaded');
         unifiedList.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-bell"></i>
@@ -725,13 +722,11 @@ function loadUnifiedNotifications() {
 function loadNextClass() {
     const nextClassList = document.getElementById('nextClassList');
     if (!nextClassList) {
-        console.warn('loadNextClass: nextClassList element not found');
         return;
     }
 
     // Check if appData is loaded
     if (!appData) {
-        console.error('loadNextClass: appData is not loaded');
         nextClassList.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-calendar-check"></i>
@@ -804,7 +799,6 @@ function getNextTwoClasses() {
     // Get current user ID to filter subjects
     const currentUserId = localStorage.getItem('userId');
     if (!currentUserId) {
-        console.warn('getNextTwoClasses: No userId found in localStorage');
         return [];
     }
 
@@ -1512,43 +1506,12 @@ function updateCalendar() {
 
 // Debug function to test recordatorios
 window.testRecordatorios = function() {
-    console.log('=== RECORDATORIOS DEBUG ===');
-    console.log('Available recordatorios:', appData.recordatorio);
-    console.log('Current user ID from localStorage:', localStorage.getItem('userId'));
-    console.log('Available subjects:', appData.materia);
-    
-    // Show which subjects belong to current user
     const currentUserId = localStorage.getItem('userId');
     const userSubjects = appData.materia.filter(m => m.Usuarios_docente_ID_docente === parseInt(currentUserId));
-    console.log('User subjects:', userSubjects);
-    
-    // Test with a specific date that has recordatorios
     const testDate = new Date('2024-12-20');
-    console.log('Testing with date:', testDate);
     const events = getEventsForDate(testDate);
-    console.log('Events found:', events);
-    
-    // Test with another date
     const testDate2 = new Date('2024-12-25');
-    console.log('Testing with date:', testDate2);
     const events2 = getEventsForDate(testDate2);
-    console.log('Events found:', events2);
-    
-    // Show all recordatorios with their subject assignments
-    console.log('All recordatorios with subjects:');
-    appData.recordatorio.forEach(recordatorio => {
-        const subject = appData.materia.find(m => m.ID_materia === recordatorio.Materia_ID_materia);
-        console.log(`- ${recordatorio.Descripcion} (${recordatorio.Fecha}) -> Subject: ${subject?.Nombre} (Teacher: ${subject?.Usuarios_docente_ID_docente})`);
-    });
-    
-    // Test the notifications system filtering
-    console.log('=== NOTIFICATIONS SYSTEM TEST ===');
-    if (typeof getRecordatoriosForDocente === 'function') {
-        const notificationsRecordatorios = getRecordatoriosForDocente(parseInt(currentUserId));
-        console.log('Recordatorios from notifications system:', notificationsRecordatorios);
-    } else {
-        console.log('getRecordatoriosForDocente function not available');
-    }
 };
 
 // Function to navigate to a specific week with recordatorios
@@ -1570,50 +1533,26 @@ window.goToWeekWithRecordatorios = function() {
 
 // Simple test function to check recordatorios
 window.testSimpleRecordatorios = function() {
-    console.log('=== SIMPLE RECORDATORIOS TEST ===');
-    console.log('All recordatorios in data:', appData.recordatorio);
-    console.log('Current user ID:', localStorage.getItem('userId'));
-    
-    // Test date formatting
     const testDate = new Date('2024-12-20');
     const formattedDate = formatDateForAPI(testDate);
-    console.log('Test date:', testDate, 'Formatted:', formattedDate);
-    
-    // Check if any recordatorios match this date
     const matchingRecordatorios = appData.recordatorio.filter(r => r.Fecha === formattedDate);
-    console.log('Matching recordatorios for 2024-12-20:', matchingRecordatorios);
-    
-    // Test the getEventsForDate function directly
     const events = getEventsForDate(testDate);
-    console.log('Events returned by getEventsForDate:', events);
 };
 
 // Function to test calendar with recordatorios
 window.testCalendarWithRecordatorios = function() {
-    console.log('=== CALENDAR RECORDATORIOS TEST ===');
-    
-    // Set user ID to 1 (Ana Martínez) for testing
     localStorage.setItem('userId', '1');
-    console.log('Set user ID to 1 for testing');
-    
-    // Navigate to December 2024 where recordatorios exist
     currentMonth = 11; // December (0-indexed)
     currentYear = 2024;
     currentView = 'month';
     
-    // Re-render calendar
     if (typeof renderCalendar === 'function') {
         renderCalendar();
     } else {
-        // Re-initialize calendar
         calendarInitialized = false;
         initializeCalendar();
     }
     
-    console.log('Calendar should now show December 2024 with recordatorios');
-    console.log('Look for recordatorios on dates like 2024-12-20, 2024-12-21, etc.');
-    
-    // Test specific dates with recordatorios
     const testDates = [
         new Date('2024-12-20'),
         new Date('2024-12-21'),
@@ -1624,72 +1563,32 @@ window.testCalendarWithRecordatorios = function() {
     
     testDates.forEach(date => {
         const events = getEventsForDate(date);
-        console.log(`Events for ${date.toDateString()}:`, events);
     });
 };
 
 // Debug function to check recordatorios filtering
 window.debugRecordatorios = function() {
-    console.log('=== RECORDATORIOS DEBUG ===');
-    console.log('Current user ID:', localStorage.getItem('userId'));
-    console.log('All recordatorios:', appData.recordatorio);
-    
-    // Check which subjects belong to current user
     const currentUserId = parseInt(localStorage.getItem('userId'));
     const userSubjects = appData.materia.filter(m => m.Usuarios_docente_ID_docente === currentUserId);
-    console.log('User subjects:', userSubjects);
-    
-    // Check recordatorios for December 20, 2024
     const testDate = new Date('2024-12-20');
     const dateStr = formatDateForAPI(testDate);
-    console.log('Test date string:', dateStr);
-    
     const matchingRecordatorios = appData.recordatorio.filter(r => r.Fecha === dateStr);
-    console.log('Recordatorios for 2024-12-20:', matchingRecordatorios);
     
-    // Check which subjects these recordatorios belong to
     matchingRecordatorios.forEach(recordatorio => {
         const subject = appData.materia.find(m => m.ID_materia === recordatorio.Materia_ID_materia);
         const isUserSubject = subject && subject.Usuarios_docente_ID_docente === currentUserId;
-        console.log(`Recordatorio: ${recordatorio.Descripcion}`);
-        console.log(`  Subject: ${subject?.Nombre} (ID: ${recordatorio.Materia_ID_materia})`);
-        console.log(`  Teacher: ${subject?.Usuarios_docente_ID_docente}`);
-        console.log(`  Is user's subject: ${isUserSubject}`);
     });
     
-    // Test getEventsForDate function
     const events = getEventsForDate(testDate);
-    console.log('Events returned by getEventsForDate:', events);
 };
 
 // Quick function to navigate to December 2024 and show recordatorios
 window.showDecemberRecordatorios = function() {
-    console.log('=== SHOWING DECEMBER 2024 RECORDATORIOS ===');
-    
-    // Set user ID to 1 (Ana Martínez)
     localStorage.setItem('userId', '1');
-    
-    // Navigate to December 2024
     currentMonth = 11; // December (0-indexed)
     currentYear = 2024;
     currentView = 'month';
-    
-    // Re-render calendar with new date
     renderCalendar();
-    
-    console.log('Calendar should now show December 2024');
-    console.log('Look for recordatorios on these dates:');
-    console.log('- Dec 20: "Revisar ejercicios de álgebra para la próxima clase"');
-    console.log('- Dec 21: "Calificar exámenes de matemática"');
-    console.log('- Dec 22: "Preparar material para laboratorio de física"');
-    console.log('- Dec 24: "Reunión de coordinación académica"');
-    console.log('- Dec 25: "Examen parcial de mecánica clásica"');
-    console.log('- Dec 26: "Preparar presentación sobre genética"');
-    console.log('- Dec 27: "Preparar material didáctico para física"');
-    console.log('- Dec 28: "Entrega de informe de laboratorio de química"');
-    console.log('- Dec 29: "Revisar protocolos de seguridad en laboratorio"');
-    console.log('- Dec 30: "Examen final de biología"');
-    console.log('- Dec 31: "Evento de cierre de año académico"');
 };
 
 // Function to navigate to a specific month and year
@@ -1697,141 +1596,66 @@ window.navigateToMonth = function(month, year) {
     currentMonth = month;
     currentYear = year;
     renderCalendar();
-    console.log(`Navigated to ${month + 1}/${year}`);
 };
 
 // Simple function to test recordatorios display
 window.testRecordatoriosDisplay = function() {
-    console.log('=== TESTING RECORDATORIOS DISPLAY ===');
-    
-    // Set user ID
     localStorage.setItem('userId', '1');
-    
-    // Navigate to December 2024
     currentMonth = 11; // December
     currentYear = 2024;
     
-    // Re-render calendar
     if (typeof renderCalendar === 'function') {
         renderCalendar();
     } else {
-        console.log('renderCalendar function not available, re-initializing calendar');
         calendarInitialized = false;
         initializeCalendar();
     }
     
-    // Test a specific date with recordatorios
     const testDate = new Date('2024-12-20');
     const events = getEventsForDate(testDate);
-    console.log('Events for Dec 20, 2024:', events);
-    
-    console.log('Calendar should now show December 2024 with recordatorios');
 };
 
 // Function to navigate to January 2025 with new recordatorios
 window.showJanuaryRecordatorios = function() {
-    console.log('=== SHOWING JANUARY 2025 RECORDATORIOS ===');
-    
-    // Set user ID
     localStorage.setItem('userId', '1');
-    
-    // Navigate to January 2025
     currentMonth = 0; // January (0-indexed)
     currentYear = 2025;
     currentView = 'month';
     
-    // Re-render calendar
     if (typeof renderCalendar === 'function') {
         renderCalendar();
     } else {
-        console.log('renderCalendar function not available, re-initializing calendar');
         calendarInitialized = false;
         initializeCalendar();
     }
-    
-    console.log('Calendar should now show January 2025 with recordatorios');
-    console.log('Look for recordatorios on these dates:');
-    console.log('- Jan 15: "Revisar tareas de matemática para mañana"');
-    console.log('- Jan 16: "Preparar experimento de física para la próxima clase"');
-    console.log('- Jan 17: "Corregir exámenes de química"');
-    console.log('- Jan 18: "Preparar material de biología celular"');
-    console.log('- Jan 20: "Reunión de coordinación de materias"');
-    console.log('- Jan 22: "Examen parcial de matemática"');
-    console.log('- Jan 23: "Laboratorio de física - preparar equipos"');
-    console.log('- Jan 24: "Entrega de informe de química"');
-    console.log('- Jan 25: "Presentación de proyectos de biología"');
-    console.log('- And many more throughout January...');
 };
 
 // Function to navigate to October 2025 with recordatorios
 window.showOctoberRecordatorios = function() {
-    console.log('=== SHOWING OCTOBER 2025 RECORDATORIOS ===');
-    
-    // Set user ID
     localStorage.setItem('userId', '1');
-    
-    // Navigate to October 2025
     currentMonth = 9; // October (0-indexed)
     currentYear = 2025;
     currentView = 'month';
     
-    // Re-render calendar
     if (typeof renderCalendar === 'function') {
         renderCalendar();
     } else {
-        console.log('renderCalendar function not available, re-initializing calendar');
         calendarInitialized = false;
         initializeCalendar();
     }
-    
-    console.log('Calendar should now show October 2025 with recordatorios');
-    console.log('Look for recordatorios on these dates:');
-    console.log('- Oct 5: "Preparar examen parcial de matemática"');
-    console.log('- Oct 7: "Revisar ejercicios de física para la próxima clase"');
-    console.log('- Oct 10: "Preparar material de laboratorio de química"');
-    console.log('- Oct 12: "Corregir trabajos de biología"');
-    console.log('- Oct 15: "Reunión de coordinación académica"');
-    console.log('- Oct 18: "Examen parcial de física"');
-    console.log('- Oct 20: "Entrega de informe de química"');
-    console.log('- Oct 22: "Preparar presentación de biología"');
-    console.log('- Oct 25: "Revisar ejercicios de álgebra"');
-    console.log('- Oct 28: "Preparar experimento de física"');
-    console.log('- Oct 30: "Calificar exámenes de química"');
 };
 
 // Function to navigate to November 2025 with recordatorios
 window.showNovemberRecordatorios = function() {
-    console.log('=== SHOWING NOVEMBER 2025 RECORDATORIOS ===');
-    
-    // Set user ID
     localStorage.setItem('userId', '1');
-    
-    // Navigate to November 2025
     currentMonth = 10; // November (0-indexed)
     currentYear = 2025;
     currentView = 'month';
     
-    // Re-render calendar
     if (typeof renderCalendar === 'function') {
         renderCalendar();
     } else {
-        console.log('renderCalendar function not available, re-initializing calendar');
         calendarInitialized = false;
         initializeCalendar();
     }
-    
-    console.log('Calendar should now show November 2025 with recordatorios');
-    console.log('Look for recordatorios on these dates:');
-    console.log('- Nov 2: "Preparar material de biología celular"');
-    console.log('- Nov 5: "Revisar ejercicios de cálculo"');
-    console.log('- Nov 8: "Laboratorio de física - preparar equipos"');
-    console.log('- Nov 10: "Entrega de proyecto de química"');
-    console.log('- Nov 12: "Examen final de biología"');
-    console.log('- Nov 15: "Reunión de evaluación de materias"');
-    console.log('- Nov 18: "Preparar examen final de matemática"');
-    console.log('- Nov 20: "Revisar ejercicios de física"');
-    console.log('- Nov 22: "Preparar material didáctico de química"');
-    console.log('- Nov 25: "Actualizar bibliografía de biología"');
-    console.log('- Nov 27: "Revisar ejercicios de álgebra avanzada"');
-    console.log('- Nov 29: "Preparar examen final de física"');
 };

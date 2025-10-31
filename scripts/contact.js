@@ -117,7 +117,6 @@ async function handleFormSubmission() {
         }
         
     } catch (error) {
-        console.error('Form submission error:', error);
         showErrorMessage(getTranslatedText('form_error_message'));
     } finally {
         // Reset button state
@@ -432,7 +431,6 @@ function handleLanguageChange() {
 function updatePageLanguage(language) {
     // Update form placeholders
     updateFormPlaceholders(language);
-    console.log('Language changed to:', language);
 }
 
 /**

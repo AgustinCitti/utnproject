@@ -220,7 +220,6 @@ function updateGradesChart() {
     const filter = document.getElementById('gradesSubjectFilter');
     const subjectId = filter ? filter.value : 'all';
     
-    console.log('Updating grades chart with subject filter:', subjectId);
     
     // Destroy and recreate chart to ensure proper updates
     if (reportsCharts.grades) {
@@ -234,7 +233,6 @@ function updateAttendanceChart() {
     const filter = document.getElementById('attendanceSubjectFilter');
     const subjectId = filter ? filter.value : 'all';
     
-    console.log('Updating attendance chart with subject filter:', subjectId);
     
     // Destroy and recreate chart to ensure proper updates
     if (reportsCharts.attendance) {
@@ -248,7 +246,6 @@ function updatePerformanceChart() {
     const filter = document.getElementById('performanceStudentFilter');
     const studentId = filter ? filter.value : 'all';
     
-    console.log('Updating performance chart with student filter:', studentId);
     
     // Destroy and recreate chart to ensure proper updates
     if (reportsCharts.performance) {

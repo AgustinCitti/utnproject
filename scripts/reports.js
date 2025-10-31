@@ -158,14 +158,12 @@ function loadReports() {
             populateFilters();
             generateDetailedReports();
         } else {
-            console.warn('Data not available yet, retrying in 500ms...');
             setTimeout(() => {
                 if (window.data && Object.keys(window.data).length > 0) {
                     initializeCharts();
                     populateFilters();
                     generateDetailedReports();
                 } else {
-                    console.error('Data still not available after retry');
                 }
             }, 500);
         }
@@ -175,15 +173,11 @@ function loadReports() {
 
 // Manual refresh function for debugging
 function refreshReports() {
-    console.log('Manually refreshing reports...');
-    console.log('Current data state:', window.data);
     if (window.data && Object.keys(window.data).length > 0) {
         initializeCharts();
         populateFilters();
         generateDetailedReports();
-        console.log('Reports refreshed successfully');
     } else {
-        console.error('No data available for reports');
     }
 }
 

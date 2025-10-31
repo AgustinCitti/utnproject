@@ -30,7 +30,6 @@ function initializeLogin() {
                     showLoginError(result.message);
                 }
             }).catch(error => {
-                console.error('Login error:', error);
                 showLoginError('An error occurred during login. Please try again.');
             });
         });
@@ -46,8 +45,6 @@ function initializeLogin() {
 
 // Logout function - clears session and redirects to index
 function logout() {
-    console.log('Logging out user...');
-    
     // Clear all authentication data from localStorage
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('username');
@@ -60,8 +57,6 @@ function logout() {
     localStorage.removeItem('currentView');
     localStorage.removeItem('selectedStudent');
     localStorage.removeItem('selectedSubject');
-    
-    console.log('Session cleared, redirecting to index...');
     
     // Redirect to index page
     window.location.href = '../index.html';
@@ -202,7 +197,6 @@ async function handleRegistration() {
             showRegisterMessage(result.message || 'Ocurrió un error durante el registro.');
         }
     } catch (error) {
-        console.error('Registration fetch error:', error);
         showRegisterMessage('No se pudo conectar con el servidor. Intente más tarde.');
     } finally {
         // Reset button state
@@ -223,7 +217,6 @@ async function checkUserExists(email) {
         
         return user ? true : false;
     } catch (error) {
-        console.error('Error checking user existence:', error);
         return false;
     }
 }
@@ -253,20 +246,15 @@ async function authenticateUser(email, password) {
         return result;
 
     } catch (error) {
-        console.error('Authentication fetch error:', error);
         return { success: false, message: 'Unable to connect to the authentication service. Please try again.' };
     }
 }
 
 function handleLogin() {
-    console.log('handleLogin called');
     const email = document.getElementById('username').value; // Using email as username
     const password = document.getElementById('password').value;
     
-    console.log('Email:', email, 'Password:', password ? '[hidden]' : '[empty]');
-    
     if (!email || !password) {
-        console.log('Login failed - missing credentials');
         showLoginError('Please enter both email and password');
         return;
     }
@@ -280,7 +268,6 @@ function handleLogin() {
     // Authenticate user
     authenticateUser(email, password).then(result => {
         if (result.success) {
-            console.log('Login successful, redirecting to home.html');
             // Store user data in localStorage
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('username', result.user.name);
@@ -291,11 +278,9 @@ function handleLogin() {
             
             window.location.href = '../pages/home.html';
         } else {
-            console.log('Login failed:', result.message);
             showLoginError(result.message);
         }
     }).catch(error => {
-        console.error('Login error:', error);
         showLoginError('An error occurred during login. Please try again.');
     }).finally(() => {
         // Reset button state
@@ -333,20 +318,16 @@ function showLoginError(message) {
 
 // Login Page Initialization
 function initializeLoginPage() {
-    console.log('Initializing login page...');
     // Initialize language system
     initializeLanguage();
     
     // Login form handling
     const loginForm = document.getElementById('loginForm');
-    console.log('Login form found:', !!loginForm);
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
-            console.log('Login form submitted');
             e.preventDefault();
             handleLogin();
         });
-        console.log('Login form event listener attached');
     }
     
     // Social login buttons (placeholder functionality)
@@ -368,20 +349,16 @@ function initializeLoginPage() {
 
 // Register Page Initialization
 function initializeRegisterPage() {
-    console.log('Initializing register page...');
     // Initialize language system
     initializeLanguage();
     
     // Registration form handling
     const registrationForm = document.getElementById('registrationForm');
-    console.log('Registration form found:', !!registrationForm);
     if (registrationForm) {
         registrationForm.addEventListener('submit', (e) => {
-            console.log('Registration form submitted');
             e.preventDefault();
             handleRegistration();
         });
-        console.log('Registration form event listener attached');
     }
     
     // Social login buttons (placeholder functionality)
@@ -403,7 +380,6 @@ function initializeRegisterPage() {
 
 // Auth Page Initialization
 function initializeAuthPage() {
-    console.log('Initializing auth page...');
     // Initialize language system
     initializeLanguage();
     
@@ -412,26 +388,20 @@ function initializeAuthPage() {
     
     // Login form handling
     const loginForm = document.getElementById('loginForm');
-    console.log('Auth page login form found:', !!loginForm);
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
-            console.log('Auth page login form submitted');
             e.preventDefault();
             handleLogin();
         });
-        console.log('Auth page login form event listener attached');
     }
     
     // Registration form handling
     const registrationForm = document.getElementById('registrationForm');
-    console.log('Auth page registration form found:', !!registrationForm);
     if (registrationForm) {
         registrationForm.addEventListener('submit', (e) => {
-            console.log('Auth page registration form submitted');
             e.preventDefault();
             handleRegistration();
         });
-        console.log('Auth page registration form event listener attached');
     }
     
     // Social login buttons (placeholder functionality)
@@ -737,10 +707,8 @@ function initializeSwipeForm() {
 // Legacy form switching functions (kept for backward compatibility)
 function switchToRegister() {
     // This function is now handled by the swipe form functionality
-    console.log('Legacy switchToRegister called - using new swipe functionality');
 }
 
 function switchToLogin() {
     // This function is now handled by the swipe form functionality
-    console.log('Legacy switchToLogin called - using new swipe functionality');
 }
