@@ -238,8 +238,10 @@ function setupQuickActions() {
     const viewFullCalendarBtn = document.getElementById('viewFullCalendarBtn');
     if (viewFullCalendarBtn) {
         viewFullCalendarBtn.addEventListener('click', () => {
-            // Could open a modal with full calendar view
-            console.log('Open full calendar view');
+            // Navigate to calendar section
+            if (typeof showSection === 'function') {
+                showSection('calendar');
+            }
         });
     }
 }

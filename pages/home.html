@@ -651,6 +651,59 @@
         </div>
     </div>
 </section>
+            <!-- Calendar Section -->
+            <section id="calendar" class="content-section">
+                <div class="calendar-header">
+                    <div class="calendar-title-section">
+                        <h2 class="calendar-title" data-translate="calendar">Calendario</h2>
+                    </div>
+                    <div class="calendar-controls">
+                        <div class="view-toggle">
+                            <button id="calendarWeekBtn" class="view-btn active" data-view="week">
+                                <span data-translate="week">Semana</span>
+                            </button>
+                            <button id="calendarMonthBtn" class="view-btn" data-view="month">
+                                <span data-translate="month">Mes</span>
+                            </button>
+                        </div>
+                        <div class="date-navigation">
+                            <button id="calendarPrevBtn" class="nav-btn">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="current-date-range" id="currentDateRange">
+                                Jan 8, 2024 - Jan 14, 2024
+                            </div>
+                            <button id="calendarNextBtn" class="nav-btn">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="calendar-actions">
+                            <button id="calendarTodayBtn" class="action-btn">
+                                <i class="fas fa-calendar-day"></i>
+                                <span data-translate="today">Hoy</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Week View -->
+                <div id="calendarWeekView" class="calendar-week-view">
+                    <div class="calendar-time-column">
+                        <div class="time-header"></div>
+                        <div class="time-slots" id="timeSlots"></div>
+                    </div>
+                    <div class="calendar-days-container">
+                        <div class="calendar-days-header" id="calendarDaysHeader"></div>
+                        <div class="calendar-days-grid" id="calendarDaysGrid"></div>
+                    </div>
+                </div>
+                
+                <!-- Month View -->
+                <div id="calendarMonthView" class="calendar-month-view" style="display: none;">
+                    <div class="calendar-month-grid" id="calendarMonthGrid"></div>
+                </div>
+            </section>
+
             <!-- Subjects Management Section -->
             <section id="subjects-management" class="content-section">
                 <div class="section-header">
@@ -1078,6 +1131,7 @@
     <script src="../scripts/reports/export-manager.js"></script>
     <script src="../scripts/reports.js"></script>
     <script src="../scripts/reports/index.js"></script>
+    <script src="../scripts/calendar.js"></script>
     <script src="../scripts/main.js"></script>
 </body>
 </html>

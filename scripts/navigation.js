@@ -250,6 +250,18 @@ function showSection(sectionName, subsection = null) {
         case 'reports':
             loadReports();
             break;
+        case 'calendar':
+            // Reset calendar initialization to allow re-render
+            if (typeof resetCalendarPage === 'function') {
+                resetCalendarPage();
+            }
+            if (typeof initializeCalendarPage === 'function') {
+                // Delay to ensure section is visible
+                setTimeout(() => {
+                    initializeCalendarPage();
+                }, 100);
+            }
+            break;
     }
 }
 function handleStudentManagementSubsection(subsection) {
