@@ -81,8 +81,8 @@ SELECT
     COUNT(CASE WHEN status = 'replied' THEN 1 END) as replied_messages,
     COUNT(CASE WHEN status = 'closed' THEN 1 END) as closed_messages,
     COUNT(CASE WHEN newsletter_opt = TRUE THEN 1 END) as newsletter_subscribers,
-    COUNT(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 7 DAYS) THEN 1 END) as messages_last_week,
-    COUNT(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 30 DAYS) THEN 1 END) as messages_last_month
+    COUNT(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 END) as messages_last_week,
+    COUNT(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 END) as messages_last_month
 FROM contact_messages;
 
 -- Create a view for recent contact messages
@@ -160,8 +160,8 @@ BEGIN
         COUNT(CASE WHEN status = 'replied' THEN 1 END) as replied_messages,
         COUNT(CASE WHEN status = 'closed' THEN 1 END) as closed_messages,
         COUNT(CASE WHEN newsletter_opt = TRUE THEN 1 END) as newsletter_subscribers,
-        COUNT(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 7 DAYS) THEN 1 END) as messages_last_week,
-        COUNT(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 30 DAYS) THEN 1 END) as messages_last_month,
+        COUNT(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 END) as messages_last_week,
+        COUNT(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 END) as messages_last_month,
         AVG(CASE 
             WHEN status = 'replied' AND replied_at IS NOT NULL 
             THEN TIMESTAMPDIFF(HOUR, created_at, replied_at) 

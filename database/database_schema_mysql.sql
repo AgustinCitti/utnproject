@@ -9,8 +9,15 @@ USE edusync;
 
 -- =====================================================
 -- ELIMINAR TABLAS EXISTENTES (si existen)
+-- IMPORTANTE: Ejecutar TODO este bloque completo juntos
+-- (Desde SET FOREIGN_KEY_CHECKS = 0 hasta SET FOREIGN_KEY_CHECKS = 1)
+-- NO ejecutar solo líneas individuales de DROP TABLE
 -- =====================================================
--- Eliminar tablas en orden inverso para evitar problemas de foreign keys
+
+-- PASO 1: Deshabilitar verificaciones de claves foráneas
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- PASO 2: Eliminar todas las tablas (puede ser en cualquier orden)
 DROP TABLE IF EXISTS Notificaciones;
 DROP TABLE IF EXISTS Contacto_mensajes;
 DROP TABLE IF EXISTS Recordatorio;
@@ -25,6 +32,9 @@ DROP TABLE IF EXISTS Materia;
 DROP TABLE IF EXISTS Estudiante;
 DROP TABLE IF EXISTS Usuarios_docente;
 DROP TABLE IF EXISTS Configuracion;
+
+-- PASO 3: Volver a habilitar verificaciones de claves foráneas
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- =====================================================
 -- 1. TABLA: Usuarios_docente (Docentes)

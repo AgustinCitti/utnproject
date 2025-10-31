@@ -454,10 +454,10 @@ CREATE TRIGGER trg_limite_materias_update
     BEFORE UPDATE ON Materia
     FOR EACH ROW
 BEGIN
-    IF NEW.Usuarios_docente_ID_docente <> OLD.Usuarios_docente_ID_docente THEN
-        DECLARE v_plan_u ENUM('ESTANDAR','PREMIUM');
-        DECLARE v_cnt_u INT DEFAULT 0;
+    DECLARE v_plan_u ENUM('ESTANDAR','PREMIUM');
+    DECLARE v_cnt_u INT DEFAULT 0;
 
+    IF NEW.Usuarios_docente_ID_docente <> OLD.Usuarios_docente_ID_docente THEN
         SELECT Plan_usuario INTO v_plan_u
         FROM Usuarios_docente
         WHERE ID_docente = NEW.Usuarios_docente_ID_docente;
