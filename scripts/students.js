@@ -300,14 +300,28 @@ let noSubjectsModalHandlersSetup = false;
 
 // Función para mostrar el modal de advertencia de "no subjects"
 function showNoSubjectsModal() {
-    const modal = document.getElementById('noSubjectsModal');
+    // Intentar encontrar el modal, con reintentos si no está disponible inmediatamente
+    let modal = document.getElementById('noSubjectsModal');
+    
     if (!modal) {
-        console.error('[students] Modal noSubjectsModal no encontrado');
-        // Fallback a alert si el modal no existe
-        alert('No tienes materias creadas todavía. Por favor, crea una materia primero desde la sección de "Gestión de Materias" antes de agregar estudiantes.');
+        // Esperar un poco y reintentar (puede ser un problema de timing de carga del DOM)
+        setTimeout(() => {
+            modal = document.getElementById('noSubjectsModal');
+            if (modal) {
+                showNoSubjectsModalInternal(modal);
+            } else {
+                // Solo como último recurso, usar alert si después de esperar tampoco existe
+                console.error('[students] Modal noSubjectsModal no encontrado después de esperar');
+                alert('No tienes materias creadas todavía. Por favor, crea una materia primero desde la sección de "Gestión de Materias" antes de agregar estudiantes.');
+            }
+        }, 100);
         return;
     }
     
+    showNoSubjectsModalInternal(modal);
+}
+
+function showNoSubjectsModalInternal(modal) {
     // Configurar handlers solo la primera vez
     if (!noSubjectsModalHandlersSetup) {
         setupNoSubjectsModalHandlers();
@@ -354,7 +368,8 @@ function setupNoSubjectsModalHandlers() {
 }
 
 
-const originalShowModal = window.showModal;
+// Guardar referencia a la función showModal original antes de sobrescribirla
+const originalShowModal = typeof window.showModal === 'function' ? window.showModal : null;
 window.showModal = function(modalId) {
     if (modalId === 'studentModal') {
         // Verificar si el usuario tiene materias antes de abrir el modal
@@ -371,7 +386,16 @@ window.showModal = function(modalId) {
         }
     }
     
-    originalShowModal(modalId);
+    // Llamar a la función original si existe
+    if (originalShowModal && typeof originalShowModal === 'function') {
+        originalShowModal(modalId);
+    } else {
+        // Fallback si no existe la función original
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('active');
+        }
+    }
     
     if (modalId === 'studentModal') {
         // Poblar materias cuando se abre el modal
