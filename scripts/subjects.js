@@ -106,6 +106,23 @@ function initializeSubjects() {
         
         // Agregar el listener
         subjectForm.addEventListener('submit', subjectFormHandler);
+        
+        // Add validation for classroom (aula) field - only allow numbers
+        const classroomInput = document.getElementById('subjectClassroom');
+        if (classroomInput) {
+            classroomInput.addEventListener('input', function(e) {
+                // Remove any non-numeric characters
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+            
+            // Prevent paste of non-numeric content
+            classroomInput.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                const numericOnly = pastedText.replace(/[^0-9]/g, '');
+                this.value = numericOnly;
+            });
+        }
     }
     
     subjectsInitialized = true;
@@ -309,13 +326,22 @@ async function saveSubject() {
 	// Update schedule hidden field before submitting
 	updateScheduleHiddenField();
 
+	const classroomValue = document.getElementById('subjectClassroom').value.trim();
+	const aulaNumber = classroomValue ? parseInt(classroomValue, 10) : null;
+	
+	// Validate aula field - must be a positive number if provided
+	if (classroomValue && (isNaN(aulaNumber) || aulaNumber <= 0)) {
+		alert('El campo Aula debe contener solo números positivos.');
+		return;
+	}
+
 	const payload = {
 		Nombre: document.getElementById('subjectName').value.trim(),
 		Curso_division: curso_division,
 		Usuarios_docente_ID_docente: teacherId,
 		Estado: document.getElementById('subjectStatus').value,
 		Horario: (document.getElementById('subjectSchedule').value || '').trim() || null,
-		Aula: (document.getElementById('subjectClassroom').value || '').trim() || null,
+		Aula: aulaNumber ? aulaNumber.toString() : null,
 		Descripcion: (document.getElementById('subjectDescription').value || '').trim() || null
 	};
 
