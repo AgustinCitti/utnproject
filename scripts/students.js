@@ -295,9 +295,82 @@ function clearStudentForm() {
     populateStudentSubjectsSelect(); // Repoblar las materias
 }
 
+// Variable para trackear si los handlers ya fueron configurados
+let noSubjectsModalHandlersSetup = false;
+
+// Función para mostrar el modal de advertencia de "no subjects"
+function showNoSubjectsModal() {
+    const modal = document.getElementById('noSubjectsModal');
+    if (!modal) {
+        console.error('[students] Modal noSubjectsModal no encontrado');
+        // Fallback a alert si el modal no existe
+        alert('No tienes materias creadas todavía. Por favor, crea una materia primero desde la sección de "Gestión de Materias" antes de agregar estudiantes.');
+        return;
+    }
+    
+    // Configurar handlers solo la primera vez
+    if (!noSubjectsModalHandlersSetup) {
+        setupNoSubjectsModalHandlers();
+        noSubjectsModalHandlersSetup = true;
+    }
+    
+    // Mostrar el modal
+    if (typeof showModal === 'function') {
+        showModal('noSubjectsModal');
+    } else {
+        modal.classList.add('active');
+    }
+}
+
+// Configurar handlers del modal de "no subjects"
+function setupNoSubjectsModalHandlers() {
+    const modal = document.getElementById('noSubjectsModal');
+    if (!modal) return;
+    
+    // Usar la función setupModalHandlers para los botones de cerrar
+    if (typeof setupModalHandlers === 'function') {
+        setupModalHandlers('noSubjectsModal');
+    }
+    
+    // Handler personalizado para el botón de ir a materias
+    const goToSubjectsBtn = document.getElementById('goToSubjectsBtn');
+    if (goToSubjectsBtn) {
+        goToSubjectsBtn.addEventListener('click', () => {
+            // Cerrar el modal
+            closeModal('noSubjectsModal');
+            
+            // Navegar a la sección de materias
+            if (typeof showSection === 'function') {
+                showSection('subjects-management');
+            } else {
+                // Fallback: intentar cambiar la sección manualmente
+                const subjectsSection = document.querySelector('a[data-section="subjects-management"]');
+                if (subjectsSection) {
+                    subjectsSection.click();
+                }
+            }
+        });
+    }
+}
+
 
 const originalShowModal = window.showModal;
 window.showModal = function(modalId) {
+    if (modalId === 'studentModal') {
+        // Verificar si el usuario tiene materias antes de abrir el modal
+        const currentUserId = parseInt(localStorage.getItem('userId') || '0');
+        const teacherSubjects = (appData.materia || []).filter(m => 
+            m.Usuarios_docente_ID_docente === currentUserId && 
+            (m.Estado === 'ACTIVA' || !m.Estado)
+        );
+        
+        if (teacherSubjects.length === 0) {
+            // Mostrar modal de advertencia en lugar de alert
+            showNoSubjectsModal();
+            return; // No abrir el modal de estudiante
+        }
+    }
+    
     originalShowModal(modalId);
     
     if (modalId === 'studentModal') {

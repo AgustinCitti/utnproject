@@ -843,6 +843,36 @@
         </div>
     </div>
 
+    <!-- No Subjects Warning Modal -->
+    <div id="noSubjectsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle" style="color: #ffc107; margin-right: 10px;"></i> Materias Requeridas</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-form" style="padding: 20px;">
+                <div class="form-group" style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 3rem; color: #ffc107; margin-bottom: 15px;">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <p style="font-size: 1.1rem; color: #333; line-height: 1.6; margin-bottom: 10px;">
+                        No tienes materias creadas todavía.
+                    </p>
+                    <p style="color: #666; line-height: 1.6;">
+                        Para agregar estudiantes, primero necesitas crear al menos una materia desde la sección de <strong>"Gestión de Materias"</strong>.
+                    </p>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
+                    <button type="button" class="btn-primary" id="goToSubjectsBtn">
+                        <i class="fas fa-book"></i>
+                        <span>Ir a Gestión de Materias</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Script Modules -->
     <script src="../scripts/translations.js"></script>

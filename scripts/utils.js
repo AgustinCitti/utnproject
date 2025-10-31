@@ -3,6 +3,9 @@ function showModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.add('active');
+        console.log('[showModal] Modal', modalId, 'mostrado. Clase active agregada.');
+    } else {
+        console.error('[showModal] Modal con ID', modalId, 'no encontrado en el DOM');
     }
 }
 
