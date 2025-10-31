@@ -18,18 +18,52 @@ function initializeSubjects() {
     const contentModal = document.getElementById('contentModal');
     const contentForm = document.getElementById('contentForm');
 
+    // Helper function to setup and show modal
+    function setupAndShowModal(modalId) {
+        const el = document.getElementById(modalId);
+        if (!el) return false;
+        
+        if (typeof setupModalHandlers === 'function') {
+            setupModalHandlers(modalId);
+        }
+        
+        if (typeof showModal === 'function') {
+            showModal(modalId);
+        } else {
+            el.classList.add('active');
+        }
+        return true;
+    }
+
     // Subject management (con fallback seguro)
     if (addSubjectBtn) {
         addSubjectBtn.addEventListener('click', () => {
             try {
                 console.log('[subjects] Botón agregar materia clickeado');
                 
-                // Verificar que el modal existe
-                const modalElement = document.getElementById('subjectModal');
+                // Verificar que el modal existe - verificar múltiples veces si es necesario
+                let modalElement = document.getElementById('subjectModal');
+                
                 if (!modalElement) {
-                    console.error('[subjects] Modal subjectModal no encontrado en el DOM');
-                    alert('Error: No se encontró el formulario de materia. Por favor, recarga la página.');
+                    // Try again after a short delay (in case DOM is updating)
+                    console.warn('[subjects] Modal not found initially, checking again...');
+                    setTimeout(() => {
+                        modalElement = document.getElementById('subjectModal');
+                        if (!modalElement) {
+                            console.error('[subjects] Modal subjectModal no encontrado en el DOM después de reintento');
+                            console.error('[subjects] All modals in DOM:', Array.from(document.querySelectorAll('.modal')).map(m => m.id));
+                            alert('Error: No se encontró el formulario de materia. Por favor, recarga la página.');
+                            return;
+                        }
+                        // If found on retry, proceed with opening
+                        setupAndShowModal('subjectModal');
+                    }, 100);
                     return;
+                }
+                
+                // Ensure modal handlers are set up (in case they were lost)
+                if (typeof setupModalHandlers === 'function') {
+                    setupModalHandlers('subjectModal');
                 }
                 
                 // Abrir el modal
@@ -124,9 +158,11 @@ function initializeSubjects() {
     // Modal close handlers
     setupModalHandlers('subjectModal');
 
+    // Schedule selector: Day buttons event listeners
+    setupScheduleSelector();
+
     // Load initial data
     loadSubjects();
-    populateTeacherSelect();
     populateSubjectSelect();
     populateCourseFilter();
 }
@@ -242,8 +278,13 @@ function loadSubjects() {
 
 
 async function saveSubject() {
-	const teacherEl = document.getElementById('subjectTeacher');
-	const teacherId = teacherEl && teacherEl.value ? parseInt(teacherEl.value) : parseInt(localStorage.getItem('userId') || '0');
+	// Always use the logged-in user as the professor
+	const teacherId = parseInt(localStorage.getItem('userId') || '0');
+	
+	if (!teacherId) {
+		alert('Error: No se encontró el ID de usuario. Por favor, inicia sesión nuevamente.');
+		return;
+	}
 
 	// Obtener curso y división por separado
 	const courseValue = document.getElementById('subjectCourse').value;
@@ -253,6 +294,9 @@ async function saveSubject() {
 	const curso_division = courseValue && divisionValue 
 		? `${courseValue}º Curso - División ${divisionValue}`
 		: '';
+
+	// Update schedule hidden field before submitting
+	updateScheduleHiddenField();
 
 	const payload = {
 		Nombre: document.getElementById('subjectName').value.trim(),
@@ -265,7 +309,7 @@ async function saveSubject() {
 	};
 
 	if (!payload.Nombre || !curso_division || !payload.Usuarios_docente_ID_docente) {
-		alert('Completá Nombre, Curso, División y Profesor.');
+		alert('Completá Nombre, Curso y División.');
 		return;
 	}
 
@@ -390,10 +434,16 @@ function editSubject(id) {
     }
     
     document.getElementById('subjectDescription').value = subject.Descripcion || '';
-    document.getElementById('subjectSchedule').value = subject.Horario || '';
     document.getElementById('subjectClassroom').value = subject.Aula || '';
-    document.getElementById('subjectTeacher').value = subject.Usuarios_docente_ID_docente;
+    // Note: Teacher is always the logged-in user, so we don't set it in edit mode
     document.getElementById('subjectStatus').value = subject.Estado;
+
+    // Populate schedule selector
+    if (subject.Horario) {
+        populateScheduleSelector(subject.Horario);
+    } else {
+        resetScheduleSelector();
+    }
 
     showModal('subjectModal');
 }
@@ -452,7 +502,211 @@ function clearSubjectForm() {
     if (form) {
         form.reset();
     }
+    // Reset schedule selector
+    resetScheduleSelector();
     currentSubjectId = null;
+}
+
+// Schedule Selector Functions
+let selectedDaysList = []; // Array to store selected days
+
+function setupScheduleSelector() {
+    // Add day button event listener
+    const addDayBtn = document.getElementById('addDayBtn');
+    if (addDayBtn) {
+        addDayBtn.addEventListener('click', addSelectedDay);
+    }
+
+    // Time selectors event listeners
+    const startHourSelect = document.getElementById('subjectScheduleHour');
+    const endHourSelect = document.getElementById('subjectScheduleEndHour');
+    
+    if (startHourSelect) {
+        startHourSelect.addEventListener('change', updateScheduleHiddenField);
+    }
+    if (endHourSelect) {
+        endHourSelect.addEventListener('change', updateScheduleHiddenField);
+    }
+}
+
+function addSelectedDay() {
+    const daySelect = document.getElementById('subjectScheduleDays');
+    if (!daySelect || !daySelect.value) {
+        return; // No day selected
+    }
+
+    const selectedDay = daySelect.value.toLowerCase();
+    
+    // Check if day is already selected
+    if (selectedDaysList.includes(selectedDay)) {
+        return; // Already added
+    }
+
+    // Add to selected days list
+    selectedDaysList.push(selectedDay);
+    
+    // Render selected days
+    renderSelectedDays();
+    
+    // Update schedule
+    updateScheduleHiddenField();
+    
+    // Reset dropdown to first option
+    daySelect.value = '';
+}
+
+function removeSelectedDay(dayToRemove) {
+    selectedDaysList = selectedDaysList.filter(day => day !== dayToRemove);
+    renderSelectedDays();
+    updateScheduleHiddenField();
+}
+
+function renderSelectedDays() {
+    const container = document.getElementById('selectedDaysContainer');
+    if (!container) return;
+
+    if (selectedDaysList.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = selectedDaysList.map(day => {
+        const dayName = day.charAt(0).toUpperCase() + day.slice(1);
+        return `
+            <div class="day-chip" data-day="${day}">
+                <span>${dayName}</span>
+                <button type="button" class="remove-day-btn" data-day="${day}" title="Eliminar ${dayName}">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    }).join('');
+    
+    // Attach event listeners to remove buttons
+    container.querySelectorAll('.remove-day-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const dayToRemove = this.getAttribute('data-day');
+            removeSelectedDay(dayToRemove);
+        });
+    });
+}
+
+function updateScheduleHiddenField() {
+    // Get selected days (capitalize first letter)
+    const selectedDays = selectedDaysList.map(day => 
+        day.charAt(0).toUpperCase() + day.slice(1)
+    );
+
+    // Get time values
+    const startHour = document.getElementById('subjectScheduleHour')?.value || '';
+    const endHour = document.getElementById('subjectScheduleEndHour')?.value || '';
+
+    // Build schedule string
+    let scheduleString = '';
+    
+    if (selectedDays.length > 0) {
+        scheduleString = selectedDays.join(', ');
+    }
+    
+    if (startHour && endHour) {
+        if (scheduleString) {
+            scheduleString += ` ${startHour}-${endHour}`;
+        } else {
+            scheduleString = `${startHour}-${endHour}`;
+        }
+    } else if (startHour) {
+        if (scheduleString) {
+            scheduleString += ` ${startHour}`;
+        } else {
+            scheduleString = startHour;
+        }
+    }
+
+    // Update hidden field
+    const hiddenField = document.getElementById('subjectSchedule');
+    if (hiddenField) {
+        hiddenField.value = scheduleString || '';
+    }
+}
+
+function resetScheduleSelector() {
+    // Clear selected days list
+    selectedDaysList = [];
+    
+    // Clear day select dropdown
+    const daySelect = document.getElementById('subjectScheduleDays');
+    if (daySelect) {
+        daySelect.value = '';
+    }
+    
+    // Clear selected days display
+    renderSelectedDays();
+
+    // Reset time selects
+    const startHourSelect = document.getElementById('subjectScheduleHour');
+    const endHourSelect = document.getElementById('subjectScheduleEndHour');
+    
+    if (startHourSelect) startHourSelect.value = '';
+    if (endHourSelect) endHourSelect.value = '';
+    
+    // Clear hidden field
+    const hiddenField = document.getElementById('subjectSchedule');
+    if (hiddenField) hiddenField.value = '';
+}
+
+function parseScheduleString(scheduleString) {
+    if (!scheduleString) {
+        return { days: [], startHour: '', endHour: '' };
+    }
+
+    const lowerSchedule = scheduleString.toLowerCase();
+    const days = [];
+    const dayNames = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+
+    // Extract days
+    dayNames.forEach(day => {
+        if (lowerSchedule.includes(day)) {
+            days.push(day);
+        }
+    });
+
+    // Extract time range (format: HH:MM-HH:MM or just HH:MM)
+    const timeRegex = /(\d{1,2}:\d{2})(?:\s*-\s*(\d{1,2}:\d{2}))?/;
+    const timeMatch = scheduleString.match(timeRegex);
+    
+    let startHour = '';
+    let endHour = '';
+    
+    if (timeMatch) {
+        startHour = timeMatch[1];
+        endHour = timeMatch[2] || '';
+    }
+
+    return { days, startHour, endHour };
+}
+
+function populateScheduleSelector(scheduleString) {
+    const { days, startHour, endHour } = parseScheduleString(scheduleString);
+
+    // Populate selected days list
+    selectedDaysList = [...days];
+    
+    // Render selected days
+    renderSelectedDays();
+
+    // Set time selects
+    const startHourSelect = document.getElementById('subjectScheduleHour');
+    const endHourSelect = document.getElementById('subjectScheduleEndHour');
+    
+    if (startHourSelect && startHour) {
+        startHourSelect.value = startHour;
+    }
+    if (endHourSelect && endHour) {
+        endHourSelect.value = endHour;
+    }
+
+    // Update hidden field
+    updateScheduleHiddenField();
 }
 
 
@@ -558,28 +812,7 @@ function getStatusText(status) {
     return statusMap[status] || status;
 }
 
-function populateTeacherSelect() {
-    const teacherSelect = document.getElementById('subjectTeacher');
-    if (!teacherSelect) {
-        console.warn('[subjects] select de profesor no encontrado');
-        return;
-    }
-
-    teacherSelect.innerHTML = '<option value="" data-translate="select_teacher">- Seleccionar Profesor -</option>';
-    
-    // Verificar que los datos estén disponibles
-    if (!appData || !appData.usuarios_docente || !Array.isArray(appData.usuarios_docente)) {
-        console.warn('[subjects] Datos de profesores no disponibles aún');
-        return;
-    }
-    
-    appData.usuarios_docente.forEach(teacher => {
-        const option = document.createElement('option');
-        option.value = teacher.ID_docente;
-        option.textContent = `${teacher.Nombre_docente} ${teacher.Apellido_docente}`;
-        teacherSelect.appendChild(option);
-    });
-}
+// populateTeacherSelect() function removed - professor is now always the logged-in user
 
 function populateSubjectSelect() {
     const subjectSelect = document.getElementById('contentSubject');

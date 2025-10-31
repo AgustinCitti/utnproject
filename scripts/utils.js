@@ -2,41 +2,87 @@
 function showModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
+        // Ensure the modal is visible
+        modal.style.display = '';
         modal.classList.add('active');
         console.log('[showModal] Modal', modalId, 'mostrado. Clase active agregada.');
+        
+        // Ensure modal handlers are set up
+        if (typeof setupModalHandlers === 'function') {
+            setupModalHandlers(modalId);
+        }
     } else {
         console.error('[showModal] Modal con ID', modalId, 'no encontrado en el DOM');
+        console.error('[showModal] Document body:', document.body);
+        console.error('[showModal] Available modals:', document.querySelectorAll('.modal'));
     }
 }
 
 function closeModal(modal) {
+    let modalElement = null;
+    
     if (typeof modal === 'string') {
-        const modalElement = document.getElementById(modal);
-        if (modalElement) {
-            modalElement.classList.remove('active');
-        }
+        modalElement = document.getElementById(modal);
     } else if (modal) {
-        modal.remove();
+        modalElement = modal;
+    }
+    
+    if (modalElement) {
+        // Just hide the modal instead of removing it from DOM
+        modalElement.classList.remove('active');
+        console.log('[closeModal] Modal closed, element still in DOM:', document.getElementById(modalElement.id) !== null);
+    } else {
+        console.error('[closeModal] Modal element not found');
     }
 }
 
+// Store modal handlers to prevent duplicates - using WeakMap to avoid memory leaks
+const modalHandlers = new WeakMap();
+
 function setupModalHandlers(modalId) {
     const modal = typeof modalId === 'string' ? document.getElementById(modalId) : modalId;
-    if (!modal) return;
+    if (!modal) {
+        console.error('[setupModalHandlers] Modal not found:', modalId);
+        return;
+    }
 
-    const closeButtons = modal.querySelectorAll('.close-modal');
-    closeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            closeModal(modal);
-        });
-    });
+    // Check if handlers are already set up for this modal instance
+    if (modalHandlers.has(modal)) {
+        console.log('[setupModalHandlers] Handlers already set up for modal:', modalId);
+        return; // Don't add duplicate handlers
+    }
 
-    // Close modal when clicking outside
-    modal.addEventListener('click', (e) => {
+    // Create new handlers
+    const closeBtnElements = modal.querySelectorAll('.close-modal');
+    
+    // Handler function for backdrop clicks (closing when clicking outside)
+    const backdropHandler = (e) => {
+        // Only close if clicking directly on the modal backdrop (not on modal-content or its children)
         if (e.target === modal) {
             closeModal(modal);
         }
+    };
+    
+    const buttonHandlers = [];
+    
+    // Setup close button handlers
+    closeBtnElements.forEach(button => {
+        const handler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeModal(modal);
+        };
+        button.addEventListener('click', handler);
+        buttonHandlers.push({ button, handler });
     });
+
+    // Setup backdrop click handler
+    modal.addEventListener('click', backdropHandler);
+    
+    // Store handlers for reference (though we won't remove them since modal shouldn't be removed)
+    modalHandlers.set(modal, { closeButtons: buttonHandlers, backdropHandler });
+    
+    console.log('[setupModalHandlers] Handlers set up for modal:', modalId);
 }
 
 // Utility Functions

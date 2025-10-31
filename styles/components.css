@@ -1848,6 +1848,143 @@
     padding-right: 40px;
 }
 
+/* Schedule Selector Styles */
+.schedule-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+.schedule-sub-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.day-selector-group {
+    width: 100%;
+}
+
+.day-selector-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.day-selector-wrapper .time-select {
+    flex: 1;
+    margin: 0;
+    width: auto;
+}
+
+.day-selector-wrapper .btn {
+    flex-shrink: 0;
+    min-width: 48px;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+
+.selected-days-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    min-height: 30px;
+}
+
+.day-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #667eea;
+    color: white;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.day-chip .remove-day-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    line-height: 1;
+}
+
+.day-chip .remove-day-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.time-selector-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.time-select {
+    flex: 1;
+    min-width: 140px;
+    padding: 12px 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: white;
+    transition: border-color 0.3s ease;
+}
+
+.time-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.time-separator {
+    font-size: 1.2rem;
+    color: #666;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+/* Responsive Design for Schedule Selector */
+@media (max-width: 768px) {
+    .time-selector-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .time-select {
+        width: 100%;
+        min-width: 100%;
+    }
+    
+    .time-separator {
+        display: none;
+    }
+}
+
 /* Attendance Modal Styles */
 .attendance-modal .modal-content {
     max-width: 95vw;

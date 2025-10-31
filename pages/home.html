@@ -873,22 +873,110 @@
                     <label for="subjectDescription" data-translate="description">Descripción</label>
                     <textarea id="subjectDescription" rows="3" placeholder="Descripción de la materia..."></textarea>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="subjectSchedule" data-translate="schedule">Horario</label>
-                        <input type="text" id="subjectSchedule" placeholder="Ej: Lunes y Miércoles 10:00-12:00">
-                    </div>
-                    <div class="form-group">
-                        <label for="subjectClassroom" data-translate="classroom">Aula</label>
-                        <input type="text" id="subjectClassroom" placeholder="Ej: Aula 101">
+                <div class="form-group">
+                    <label data-translate="schedule">Horario</label>
+                    <div class="schedule-selector">
+                        <div class="day-selector-group">
+                            <label class="schedule-sub-label">Días:</label>
+                            <div class="day-selector-wrapper">
+                                <select id="subjectScheduleDays" class="time-select">
+                                    <option value="">Seleccionar día</option>
+                                    <option value="lunes">Lunes</option>
+                                    <option value="martes">Martes</option>
+                                    <option value="miércoles">Miércoles</option>
+                                    <option value="jueves">Jueves</option>
+                                    <option value="viernes">Viernes</option>
+                                    <option value="sábado">Sábado</option>
+                                    <option value="domingo">Domingo</option>
+                                </select>
+                                <button type="button" id="addDayBtn" class="btn btn-primary" title="Agregar día">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <div class="selected-days-container" id="selectedDaysContainer">
+                                <!-- Selected days will be displayed here -->
+                            </div>
+                        </div>
+                        <div class="time-selector-group">
+                            <label class="schedule-sub-label">Hora:</label>
+                            <select id="subjectScheduleHour" class="time-select">
+                                <option value="">Seleccionar hora inicio</option>
+                                <option value="07:00">07:00</option>
+                                <option value="07:30">07:30</option>
+                                <option value="08:00">08:00</option>
+                                <option value="08:30">08:30</option>
+                                <option value="09:00">09:00</option>
+                                <option value="09:30">09:30</option>
+                                <option value="10:00">10:00</option>
+                                <option value="10:30">10:30</option>
+                                <option value="11:00">11:00</option>
+                                <option value="11:30">11:30</option>
+                                <option value="12:00">12:00</option>
+                                <option value="12:30">12:30</option>
+                                <option value="13:00">13:00</option>
+                                <option value="13:30">13:30</option>
+                                <option value="14:00">14:00</option>
+                                <option value="14:30">14:30</option>
+                                <option value="15:00">15:00</option>
+                                <option value="15:30">15:30</option>
+                                <option value="16:00">16:00</option>
+                                <option value="16:30">16:30</option>
+                                <option value="17:00">17:00</option>
+                                <option value="17:30">17:30</option>
+                                <option value="18:00">18:00</option>
+                                <option value="18:30">18:30</option>
+                                <option value="19:00">19:00</option>
+                                <option value="19:30">19:30</option>
+                                <option value="20:00">20:00</option>
+                                <option value="20:30">20:30</option>
+                                <option value="21:00">21:00</option>
+                                <option value="21:30">21:30</option>
+                                <option value="22:00">22:00</option>
+                            </select>
+                            <span class="time-separator">-</span>
+                            <select id="subjectScheduleEndHour" class="time-select">
+                                <option value="">Seleccionar hora fin</option>
+                                <option value="07:00">07:00</option>
+                                <option value="07:30">07:30</option>
+                                <option value="08:00">08:00</option>
+                                <option value="08:30">08:30</option>
+                                <option value="09:00">09:00</option>
+                                <option value="09:30">09:30</option>
+                                <option value="10:00">10:00</option>
+                                <option value="10:30">10:30</option>
+                                <option value="11:00">11:00</option>
+                                <option value="11:30">11:30</option>
+                                <option value="12:00">12:00</option>
+                                <option value="12:30">12:30</option>
+                                <option value="13:00">13:00</option>
+                                <option value="13:30">13:30</option>
+                                <option value="14:00">14:00</option>
+                                <option value="14:30">14:30</option>
+                                <option value="15:00">15:00</option>
+                                <option value="15:30">15:30</option>
+                                <option value="16:00">16:00</option>
+                                <option value="16:30">16:30</option>
+                                <option value="17:00">17:00</option>
+                                <option value="17:30">17:30</option>
+                                <option value="18:00">18:00</option>
+                                <option value="18:30">18:30</option>
+                                <option value="19:00">19:00</option>
+                                <option value="19:30">19:30</option>
+                                <option value="20:00">20:00</option>
+                                <option value="20:30">20:30</option>
+                                <option value="21:00">21:00</option>
+                                <option value="21:30">21:30</option>
+                                <option value="22:00">22:00</option>
+                                <option value="22:30">22:30</option>
+                                <option value="23:00">23:00</option>
+                            </select>
+                        </div>
+                        <input type="hidden" id="subjectSchedule" name="subjectSchedule">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="subjectTeacher" data-translate="teacher">Profesor</label>
-                    <select id="subjectTeacher" required>
-                        <option value="" data-translate="select_teacher">- Seleccionar Profesor -</option>
-                        <!-- Options will be populated dynamically -->
-                    </select>
+                    <label for="subjectClassroom" data-translate="classroom">Aula</label>
+                    <input type="text" id="subjectClassroom" placeholder="Ej: Aula 101">
                 </div>
                 <div class="form-group">
                     <label for="subjectStatus" data-translate="status">Estado</label>
