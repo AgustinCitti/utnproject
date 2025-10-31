@@ -28,6 +28,10 @@ $method = $_SERVER['REQUEST_METHOD'];
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uriSegments = explode('/', trim($uri, '/'));
 $id = isset($uriSegments[2]) && is_numeric($uriSegments[2]) ? (int)$uriSegments[2] : null;
+// Fallback: aceptar ?id= en query string para compatibilidad
+if (!$id && isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $id = (int)$_GET['id'];
+}
 
 try {
     // Crear conexión PDO
