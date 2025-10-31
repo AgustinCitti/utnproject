@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="../styles/responsive.css">
     <link rel="stylesheet" href="../styles/scrollbar-fix.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="../styles/assets/icon.ico" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -64,7 +65,7 @@
     <header class="landing-header desktop-nav">
         <nav class="landing-nav">
             <div class="nav-brand">
-                <i class="fas fa-graduation-cap"></i>
+                <img src="../styles/assets/icon.ico" alt="EduSync" style="width:50px;height:50px;">
                 <span>EduSync</span>
             </div>
             <div class="nav-menu" id="desktopNavMenu">
@@ -240,11 +241,14 @@
                             </select>
                         </div>
                         <div class="view-toggle">
-                            <button id="unifiedGridViewBtn" class="view-btn" data-view="grid">
+                            <button id="unifiedGridViewBtn" class="view-btn" data-view="grid" title="Vista de Tarjetas">
                                 <i class="fas fa-th"></i>
                             </button>
-                            <button id="unifiedListViewBtn" class="view-btn active" data-view="list">
+                            <button id="unifiedListViewBtn" class="view-btn active" data-view="list" title="Vista de Lista">
                                 <i class="fas fa-list"></i>
+                            </button>
+                            <button id="unifiedMatrixViewBtn" class="view-btn" data-view="matrix" title="Vista de Matriz: Alumnos por Materias">
+                                <i class="fas fa-table"></i>
                             </button>
                         </div>
                         <div class="action-buttons" id="globalActionButtons">
@@ -290,6 +294,11 @@
                     <!-- Detailed List View -->
                     <div class="unified-student-list" id="unifiedStudentList">
                         <!-- Detailed student information with grades and attendance will be loaded dynamically -->
+                    </div>
+
+                    <!-- Matrix View: Students by Subjects -->
+                    <div class="unified-student-matrix" id="unifiedStudentMatrix" style="display: none;">
+                        <!-- Cross-table: Students (rows) x Subjects (columns) will be loaded dynamically -->
                     </div>
 
                     <!-- Quick Stats for Selected Student -->
@@ -689,7 +698,7 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <i class="fas fa-graduation-cap"></i>
+                    <img src="../styles/assets/icon.ico" alt="EduSync" style="width:20px;height:20px;">
                     <span>EduSync</span>
                 </div>
                 <div class="footer-links">
@@ -733,9 +742,16 @@
                         <option value="12th" data-translate="12th_course">12º Curso</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label for="studentSubjects" data-translate="subjects">Materias</label>
+                    <select id="studentSubjects" multiple size="5" style="min-height: 120px;">
+                        <!-- Se poblará dinámicamente con las materias del docente actual -->
+                    </select>
+                    <small style="display: block; margin-top: 5px; color: #666;">Mantené presionada la tecla Ctrl (o Cmd en Mac) para seleccionar múltiples materias</small>
+                </div>
                 <div class="form-actions">
                     <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
-                    <button type="submit" class="btn-primary" data-translate="save_student">Guardar Estudiante</button>
+                    <button type="button" class="btn-primary" data-translate="save_student" onclick="saveStudent(); event.preventDefault(); return false;">Guardar Estudiante</button>
                 </div>
             </form>
         </div>

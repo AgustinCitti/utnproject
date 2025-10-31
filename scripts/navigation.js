@@ -210,8 +210,12 @@ function showSection(sectionName, subsection = null) {
             updateDashboard();
             break;
         case 'student-management':
-            loadUnifiedStudentData();
-            loadExams();
+            if (typeof loadUnifiedStudentData === 'function') {
+                loadUnifiedStudentData();
+            }
+            if (typeof loadExams === 'function') {
+                loadExams();
+            }
             break;
         case 'notifications':
             loadNotifications();
@@ -221,7 +225,6 @@ function showSection(sectionName, subsection = null) {
             break;
     }
 }
-
 function handleStudentManagementSubsection(subsection) {
     // Hide all tab content
     document.querySelectorAll('.tab-content').forEach(content => {

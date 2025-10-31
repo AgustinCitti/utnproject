@@ -1,8 +1,18 @@
 // Subjects Management
 let currentSubjectId = null;
+let isSubmitting = false; // Flag para prevenir doble submit
+let subjectsInitialized = false; // Flag para prevenir múltiples inicializaciones
+let subjectFormHandler = null; // Referencia al manejador del formulario
 
 function initializeSubjects() {
+    // Prevenir múltiples inicializaciones
+    if (subjectsInitialized) {
+        console.log('[subjects] Ya inicializado, omitiendo...');
+        return;
+    }
+    console.log('[subjects] Inicializando gestión de materias...');
     const addSubjectBtn = document.getElementById('addSubjectBtn');
+    console.log('[subjects] addSubjectBtn encontrado:', !!addSubjectBtn);
     const subjectModal = document.getElementById('subjectModal');
     const subjectForm = document.getElementById('subjectForm');
     const courseFilter = document.getElementById('subjectsCourseFilter');
@@ -11,20 +21,65 @@ function initializeSubjects() {
     const contentModal = document.getElementById('contentModal');
     const contentForm = document.getElementById('contentForm');
 
-    // Subject management
+    // Subject management (con fallback seguro)
     if (addSubjectBtn) {
         addSubjectBtn.addEventListener('click', () => {
-            showModal('subjectModal');
-            clearSubjectForm();
+            try {
+                console.log('[subjects] Botón agregar materia clickeado');
+                if (typeof showModal === 'function') {
+                    showModal('subjectModal');
+                } else {
+                    const el = document.getElementById('subjectModal');
+                    if (el) {
+                        el.classList.add('active');
+                        console.log('[subjects] Modal abierto manualmente');
+                    } else {
+                        console.error('[subjects] Modal subjectModal no encontrado');
+                    }
+                }
+                if (typeof clearSubjectForm === 'function') {
+                    clearSubjectForm();
+                } else {
+                    const form = document.getElementById('subjectForm');
+                    if (form) form.reset();
+                    currentSubjectId = null;
+                }
+            } catch (e) {
+                console.error('[subjects] Error al abrir modal de materia:', e);
+                alert('Error al abrir el formulario de materia');
+            }
         });
+    } else {
+        console.warn('[subjects] Botón addSubjectBtn no encontrado en el DOM');
     }
 
     if (subjectForm) {
-        subjectForm.addEventListener('submit', (e) => {
+        // Remover listener anterior si existe
+        if (subjectFormHandler) {
+            subjectForm.removeEventListener('submit', subjectFormHandler);
+        }
+        
+        // Crear nueva función manejadora
+        subjectFormHandler = (e) => {
             e.preventDefault();
-            saveSubject();
-        });
+            e.stopPropagation(); // Prevenir propagación
+            
+            if (isSubmitting) {
+                console.warn('[subjects] Submit ya en proceso, ignorando...');
+                return;
+            }
+            
+            saveSubject().catch(err => {
+                console.error('[subjects] saveSubject error:', err);
+                alert(err.message || 'Error guardando la materia');
+            });
+        };
+        
+        // Agregar el listener
+        subjectForm.addEventListener('submit', subjectFormHandler);
     }
+    
+    subjectsInitialized = true;
 
     // Content management
     if (addContentBtn) {
@@ -66,7 +121,6 @@ function initializeSubjects() {
     populateSubjectSelect();
     populateCourseFilter();
 }
-
 
 function loadSubjects() {
     const subjectsContainer = document.getElementById('subjectsContainer');
@@ -178,45 +232,105 @@ function loadSubjects() {
 }
 
 
-function saveSubject() {
-    const formData = {
-        name: document.getElementById('subjectName').value,
-        course: document.getElementById('subjectCourse').value,
-        description: document.getElementById('subjectDescription').value,
-        schedule: document.getElementById('subjectSchedule').value,
-        classroom: document.getElementById('subjectClassroom').value,
-        teacher: document.getElementById('subjectTeacher').value,
-        status: document.getElementById('subjectStatus').value
-    };
+async function saveSubject() {
+	const teacherEl = document.getElementById('subjectTeacher');
+	const teacherId = teacherEl && teacherEl.value ? parseInt(teacherEl.value) : parseInt(localStorage.getItem('userId') || '0');
 
-    const subjectData = {
-        ID_materia: currentSubjectId || Date.now(),
-        Nombre: formData.name,
-        Curso_division: formData.course,
-        Descripcion: formData.description,
-        Horario: formData.schedule,
-        Aula: formData.classroom,
-        Usuarios_docente_ID_docente: parseInt(formData.teacher),
-        Estado: formData.status,
-        Fecha_creacion: new Date().toISOString().split('T')[0]
-    };
+	const payload = {
+		Nombre: document.getElementById('subjectName').value.trim(),
+		Curso_division: document.getElementById('subjectCourse').value.trim(),
+		Usuarios_docente_ID_docente: teacherId,
+		Estado: document.getElementById('subjectStatus').value,
+		Horario: (document.getElementById('subjectSchedule').value || '').trim() || null,
+		Aula: (document.getElementById('subjectClassroom').value || '').trim() || null,
+		Descripcion: (document.getElementById('subjectDescription').value || '').trim() || null
+	};
 
-    if (currentSubjectId) {
-        // Update existing subject
-        const index = appData.materia.findIndex(s => s.ID_materia === currentSubjectId);
-        if (index !== -1) {
-            appData.materia[index] = subjectData;
-        }
-    } else {
-        // Add new subject
-        appData.materia.push(subjectData);
-    }
+	if (!payload.Nombre || !payload.Curso_division || !payload.Usuarios_docente_ID_docente) {
+		alert('Completá Nombre, Curso y Profesor.');
+		return;
+	}
 
-    saveData();
-    closeModal('subjectModal');
-    loadSubjects();
-    updateDashboard();
-    currentSubjectId = null;
+	// Prevenir doble submit
+	if (isSubmitting) {
+		console.warn('[subjects] Ya hay un submit en proceso, ignorando...');
+		return;
+	}
+
+	isSubmitting = true;
+	const submitBtn = document.querySelector('#subjectForm button[type="submit"]');
+	const originalBtnText = submitBtn ? submitBtn.textContent : '';
+	
+	try {
+		// Deshabilitar botón durante el proceso
+		if (submitBtn) {
+			submitBtn.disabled = true;
+			submitBtn.textContent = 'Guardando...';
+		}
+		if (currentSubjectId) {
+			// UPDATE con PUT
+			const res = await fetch(`../api/materia.php?id=${currentSubjectId}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify(payload)
+			});
+			const data = await res.json().catch(() => ({}));
+			if (!res.ok) throw new Error(data.message || 'No se pudo actualizar la materia');
+		} else {
+			// CREATE con POST
+			console.log('[subjects] Enviando payload:', payload);
+			const res = await fetch('../api/materia.php', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify(payload)
+			});
+			
+			let data = {};
+			const text = await res.text();
+			console.log('[subjects] Respuesta raw del servidor:', text);
+			try {
+				data = JSON.parse(text);
+				console.log('[subjects] Respuesta parseada:', data);
+			} catch (e) {
+				console.error('[subjects] Error parseando JSON:', e);
+				console.error('[subjects] Texto recibido:', text);
+				throw new Error(`Error del servidor (${res.status}): ${text.substring(0, 200)}`);
+			}
+			
+			if (!res.ok) {
+				const errorMsg = data.error ? `${data.message || 'Error'}: ${data.error}` : (data.message || 'No se pudo crear la materia');
+				console.error('[subjects] Error completo:', { status: res.status, data, file: data.file, line: data.line });
+				throw new Error(errorMsg);
+			}
+		}
+
+		if (typeof loadData === 'function') await loadData(); // recarga desde backend
+		closeModal('subjectModal');
+		loadSubjects();
+		populateCourseFilter();
+		if (typeof populateSubjectFilter === 'function') populateSubjectFilter();
+		if (typeof populateExamsSubjectFilter === 'function') populateExamsSubjectFilter();
+		if (typeof populateUnifiedCourseFilter === 'function') populateUnifiedCourseFilter();
+		if (typeof loadUnifiedStudentData === 'function') loadUnifiedStudentData();
+		updateDashboard();
+		currentSubjectId = null;
+		alert('Materia guardada correctamente');
+	} catch (err) {
+		console.error('[subjects] saveSubject error completo:', err);
+		console.error('[subjects] Stack trace:', err.stack);
+		const errorMsg = err.message || 'Error al guardar la materia';
+		alert(`Error: ${errorMsg}\n\nRevisa la consola para más detalles.`);
+	} finally {
+		// Rehabilitar botón y flag
+		isSubmitting = false;
+		const submitBtn = document.querySelector('#subjectForm button[type="submit"]');
+		if (submitBtn) {
+			submitBtn.disabled = false;
+			if (originalBtnText) submitBtn.textContent = originalBtnText;
+		}
+	}
 }
 
 
@@ -237,19 +351,50 @@ function editSubject(id) {
 }
 
 
-function deleteSubject(id) {
-    if (confirm('¿Estás seguro de que quieres eliminar esta materia?')) {
-        appData.materia = appData.materia.filter(s => s.ID_materia !== id);
-        // Also remove related data
-        appData.alumnos_x_materia = appData.alumnos_x_materia.filter(axm => axm.Materia_ID_materia !== id);
-        appData.contenido = appData.contenido.filter(c => c.Materia_ID_materia !== id);
-        appData.evaluacion = appData.evaluacion.filter(e => e.Materia_ID_materia !== id);
-        appData.asistencia = appData.asistencia.filter(a => a.Materia_ID_materia !== id);
+async function deleteSubject(id) {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta materia?')) {
+        return;
+    }
+    
+    try {
+        console.log('[subjects] Eliminando materia ID:', id);
+        const res = await fetch(`../api/materia.php?id=${id}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            credentials: 'include'
+        });
         
-        saveData();
+        const text = await res.text();
+        let data = {};
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.error('[subjects] Error parseando respuesta:', text);
+            throw new Error(`Error del servidor (${res.status})`);
+        }
+        
+        if (!res.ok) {
+            throw new Error(data.message || 'No se pudo eliminar la materia');
+        }
+        
+        // Recargar datos desde el backend
+        if (typeof loadData === 'function') {
+            await loadData();
+        }
+        
+        // Actualizar UI
         loadSubjects();
-        loadContent();
-        updateDashboard();
+        populateCourseFilter();
+        if (typeof populateSubjectFilter === 'function') populateSubjectFilter();
+        if (typeof populateExamsSubjectFilter === 'function') populateExamsSubjectFilter();
+        if (typeof populateUnifiedCourseFilter === 'function') populateUnifiedCourseFilter();
+        if (typeof loadUnifiedStudentData === 'function') loadUnifiedStudentData();
+        if (typeof updateDashboard === 'function') updateDashboard();
+        
+        alert('Materia eliminada correctamente');
+    } catch (err) {
+        console.error('[subjects] Error al eliminar materia:', err);
+        alert(err.message || 'Error al eliminar la materia');
     }
 }
 

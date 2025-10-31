@@ -28,6 +28,10 @@ $method = $_SERVER['REQUEST_METHOD'];
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uriSegments = explode('/', trim($uri, '/'));
 $id = isset($uriSegments[2]) && is_numeric($uriSegments[2]) ? (int)$uriSegments[2] : null;
+// Fallback: aceptar ?id= en query string para compatibilidad
+if (!$id && isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $id = (int)$_GET['id'];
+}
 
 try {
     // Crear conexión PDO
@@ -117,13 +121,14 @@ try {
         }
 
         // Insertar nuevo estudiante
-        $sql = "INSERT INTO Estudiante (Nombre, Apellido, Email, Fecha_nacimiento, Estado) 
+        $sql = "INSERT INTO Estudiante (Apellido, Nombre, Email, Fecha_nacimiento, Estado) 
                 VALUES (?, ?, ?, ?, ?)";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
-            $data['Nombre'],
+            
             $data['Apellido'],
+            $data['Nombre'],
             $data['Email'] ?? null,
             $data['Fecha_nacimiento'] ?? null,
             $data['Estado'] ?? 'ACTIVO'
