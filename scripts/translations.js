@@ -110,6 +110,9 @@ const translations = {
         no_classes_message: "No hay clases programadas para los próximos días.",
         latest_notifications: "Últimas Notificaciones",
         no_notifications_message: "No hay notificaciones recientes.",
+        notifications_and_classes: "Notificaciones y Próximas Clases",
+        loading_data: "Cargando datos...",
+        no_items_message: "No hay notificaciones, recordatorios ni clases próximas.",
         evaluations_today: "Evaluaciones hoy:",
         welcome_user: "¡Bienvenido, Usuario!",
         
@@ -389,6 +392,9 @@ const translations = {
         no_classes_message: "No classes scheduled for the upcoming days.",
         latest_notifications: "Latest Notifications",
         no_notifications_message: "No recent notifications.",
+        notifications_and_classes: "Notifications and Upcoming Classes",
+        loading_data: "Loading data...",
+        no_items_message: "No notifications, reminders, or upcoming classes.",
         evaluations_today: "Evaluations today:",
         welcome_user: "Welcome, User!",
         

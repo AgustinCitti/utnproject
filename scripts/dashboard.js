@@ -1,45 +1,22 @@
 // Dashboard System
 function initializeDashboard() {
     initializeCalendar();
-    loadLatestNotifications();
-    loadNextClass();
+    loadUnifiedNotifications();
     setupQuickActions();
     
-    // Refresh latest notifications and next class every minute to keep them current
+    // Refresh unified notifications every minute to keep them current
     setInterval(() => {
-        loadLatestNotifications();
-        loadNextClass();
+        loadUnifiedNotifications();
         updateStats(); // Also update stats periodically
     }, 60000); // 60 seconds
     
     // Make functions globally accessible for testing
     window.loadLatestNotifications = loadLatestNotifications;
+    window.loadUnifiedNotifications = loadUnifiedNotifications;
     window.loadNextClass = loadNextClass;
     window.getNextTwoClasses = getNextTwoClasses;
     window.debugNextClass = function() {
-        console.log('=== DEBUG NEXT CLASS ===');
-        console.log('Current userId:', localStorage.getItem('userId'));
-        console.log('appData loaded:', !!appData);
-        console.log('Total subjects:', appData.materia?.length || 0);
-        
-        const currentUserId = localStorage.getItem('userId');
-        if (currentUserId) {
-            const userSubjects = (appData.materia || []).filter(m => 
-                m.Usuarios_docente_ID_docente === parseInt(currentUserId)
-            );
-            console.log('User subjects:', userSubjects.length);
-            userSubjects.forEach(subject => {
-                console.log(`- "${subject.Nombre}" (Estado: ${subject.Estado}, Horario: "${subject.Horario || 'N/A'}")`);
-                if (subject.Horario) {
-                    const parsed = parseSchedule(subject.Horario);
-                    console.log(`  Parsed:`, parsed);
-                }
-            });
-        }
-        
-        const nextClasses = getNextTwoClasses();
-        console.log('Next classes found:', nextClasses.length);
-        console.log('Next classes:', nextClasses);
+        // Debug functionality removed for security
     };
     
     // Test function to verify the logic
@@ -63,8 +40,7 @@ function initializeDashboard() {
 function updateDashboard() {
     updateStats();
     updateCalendar();
-    loadLatestNotifications();
-    loadNextClass();
+    loadUnifiedNotifications();
     
     // Re-initialize calendar if dashboard is visible
     const dashboardSection = document.getElementById('dashboard');
@@ -301,7 +277,6 @@ function loadLatestNotifications() {
     // Get current user
     const currentUser = getCurrentUser();
     if (!currentUser) {
-        console.log('No current user found');
         classesList.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-bell"></i>
@@ -523,6 +498,230 @@ function getCurrentUser() {
     return null;
 }
 
+// Unified function to load notifications, recordatorios, and upcoming classes
+function loadUnifiedNotifications() {
+    const unifiedList = document.getElementById('unifiedNotificationsList');
+    if (!unifiedList) {
+        // Fallback: try the old IDs if unified ID doesn't exist
+        loadLatestNotifications();
+        loadNextClass();
+        return;
+    }
+
+    // Check if appData is loaded
+    if (!appData) {
+        console.error('appData is not loaded');
+        unifiedList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-bell"></i>
+                <h3 data-translate="loading_data">Cargando datos...</h3>
+            </div>
+        `;
+        return;
+    }
+
+    // Get current user
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+        unifiedList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-bell"></i>
+                <h3 data-translate="no_notifications_message">No hay notificaciones recientes.</h3>
+            </div>
+        `;
+        return;
+    }
+
+    // Get recordatorios for current docente's subjects
+    let recordatorios = [];
+    if (typeof getRecordatoriosForDocente === 'function') {
+        recordatorios = getRecordatoriosForDocente(currentUser.ID_docente);
+    } else if (appData.recordatorio && appData.materia) {
+        const docenteSubjects = appData.materia.filter(m => m.Usuarios_docente_ID_docente === currentUser.ID_docente);
+        const subjectIds = docenteSubjects.map(s => s.ID_materia);
+        recordatorios = appData.recordatorio.filter(r => subjectIds.includes(r.Materia_ID_materia));
+    }
+
+    // Get notifications for current user
+    let notifications = [];
+    if (appData.notifications && typeof shouldShowNotification === 'function') {
+        notifications = appData.notifications.filter(n => shouldShowNotification(n, currentUser.ID_docente));
+    } else if (appData.notifications) {
+        notifications = appData.notifications.filter(n => 
+            n.Destinatario_tipo === 'TODOS' || 
+            (n.Destinatario_tipo === 'DOCENTE' && n.Destinatario_id === currentUser.ID_docente)
+        );
+    }
+
+    // Get upcoming classes
+    const upcomingClasses = typeof getNextTwoClasses === 'function' ? getNextTwoClasses() : [];
+
+    // Combine all items into a unified array
+    const allItems = [];
+    
+    // Add recordatorios
+    recordatorios.forEach(recordatorio => {
+        const subject = appData.materia ? appData.materia.find(m => m.ID_materia === recordatorio.Materia_ID_materia) : null;
+        const subjectName = subject ? subject.Nombre : 'Materia no encontrada';
+        
+        const sortDateValue = recordatorio.Fecha_creacion || recordatorio.Fecha;
+        const dateObj = sortDateValue ? new Date(sortDateValue) : new Date();
+        
+        allItems.push({
+            type: 'recordatorio',
+            id: recordatorio.ID_recordatorio,
+            title: getRecordatorioTitleForDashboard(recordatorio),
+            description: recordatorio.Descripcion,
+            date: dateObj,
+            dateStr: recordatorio.Fecha,
+            tipo: recordatorio.Tipo,
+            prioridad: recordatorio.Prioridad,
+            subjectName: subjectName,
+            data: recordatorio
+        });
+    });
+    
+    // Add notifications
+    notifications.forEach(notification => {
+        const dateObj = notification.Fecha_creacion ? new Date(notification.Fecha_creacion) : new Date();
+        
+        allItems.push({
+            type: 'notification',
+            id: notification.ID_notificacion,
+            title: notification.Titulo,
+            description: notification.Mensaje,
+            date: dateObj,
+            tipo: notification.Tipo,
+            estado: notification.Estado,
+            data: notification
+        });
+    });
+
+    // Add upcoming classes
+    upcomingClasses.forEach((upcomingClass, index) => {
+        const classDate = new Date(upcomingClass.dateTime);
+        const evaluations = typeof getEvaluationsForDate === 'function' ? getEvaluationsForDate(upcomingClass.date) : [];
+        
+        allItems.push({
+            type: 'upcoming_class',
+            id: `class_${upcomingClass.subjectId}_${upcomingClass.date}_${upcomingClass.time}`,
+            title: upcomingClass.subjectName,
+            description: `Próxima clase`,
+            date: classDate,
+            dateStr: upcomingClass.date,
+            time: upcomingClass.time,
+            classroom: upcomingClass.classroom,
+            subjectId: upcomingClass.subjectId,
+            evaluations: evaluations,
+            data: upcomingClass
+        });
+    });
+
+    // Sort by date (upcoming first, then by creation date for past items)
+    const now = new Date();
+    allItems.sort((a, b) => {
+        // Prioritize upcoming items (future dates first)
+        const aIsUpcoming = a.date > now;
+        const bIsUpcoming = b.date > now;
+        
+        if (aIsUpcoming && !bIsUpcoming) return -1;
+        if (!aIsUpcoming && bIsUpcoming) return 1;
+        
+        // Both are upcoming or both are past, sort by date
+        return a.date - b.date;
+    });
+
+    // Display all items
+    if (allItems.length === 0) {
+        unifiedList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-bell"></i>
+                <h3 data-translate="no_notifications_message">No hay notificaciones recientes.</h3>
+                <p data-translate="no_items_message">No hay notificaciones, recordatorios ni clases próximas.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Display unified list
+    unifiedList.innerHTML = allItems.map(item => {
+        if (item.type === 'upcoming_class') {
+            // Format upcoming class
+            const displayDate = item.dateStr ? formatDate(item.dateStr) : formatNotificationDate(item.date);
+            const hasEvaluations = item.evaluations && item.evaluations.length > 0;
+            
+            return `
+                <div class="class-item upcoming-class-item ${hasEvaluations ? 'has-evaluations' : ''}">
+                    <div class="class-header">
+                        <div class="class-time" style="color: #10b981;">
+                            <i class="fas fa-calendar-day"></i>
+                            <span>${displayDate}</span>
+                        </div>
+                        ${item.time ? `
+                            <div class="class-schedule">
+                                <i class="fas fa-clock"></i>
+                                <span>${item.time}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="class-details">
+                        <h4>${item.title}</h4>
+                        <p class="class-info">
+                            <span class="classroom">• ${item.classroom || 'Aula por asignar'}</span>
+                        </p>
+                        ${hasEvaluations ? `
+                            <div class="evaluations">
+                                <div class="evaluation-header">
+                                    <i class="fas fa-clipboard-list"></i>
+                                    <span data-translate="evaluations_today">Evaluaciones:</span>
+                                </div>
+                                ${item.evaluations.map(eval => `
+                                    <div class="evaluation-item">
+                                        <span class="evaluation-title">${eval.Titulo}</span>
+                                        <span class="evaluation-type">${typeof getEvaluationTypeLabel === 'function' ? getEvaluationTypeLabel(eval.Tipo) : eval.Tipo}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        } else {
+            // Format notification or recordatorio
+            const displayDate = item.type === 'recordatorio' && item.dateStr ? 
+                new Date(item.dateStr) : item.date;
+            const formattedDate = formatNotificationDate(displayDate);
+            const typeIcon = item.type === 'recordatorio' ? 'fa-calendar-check' : 'fa-bell';
+            const typeColor = item.type === 'recordatorio' ? getRecordatorioTypeColor(item.tipo) : getNotificationTypeColor(item.tipo);
+            
+            return `
+                <div class="class-item notification-item ${item.type}-item">
+                    <div class="class-header">
+                        <div class="class-time" style="color: ${typeColor};">
+                            <i class="fas ${typeIcon}"></i>
+                            <span>${formattedDate}</span>
+                        </div>
+                        ${item.type === 'recordatorio' && item.prioridad ? `
+                            <div class="priority-badge priority-${item.prioridad.toLowerCase()}">
+                                ${item.prioridad}
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="class-details">
+                        <h4>${item.title}</h4>
+                        <p class="class-info">${item.description}</p>
+                        ${item.type === 'recordatorio' && item.subjectName ? `
+                            <p class="class-info">
+                                <span class="classroom">• ${item.subjectName}</span>
+                            </p>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+    }).join('');
+}
+
 function loadNextClass() {
     const nextClassList = document.getElementById('nextClassList');
     if (!nextClassList) {
@@ -543,7 +742,6 @@ function loadNextClass() {
     }
 
     const nextClasses = getNextTwoClasses();
-    console.log('loadNextClass: Found next classes:', nextClasses);
     
     if (nextClasses.length === 0) {
         nextClassList.innerHTML = `
@@ -610,56 +808,28 @@ function getNextTwoClasses() {
         return [];
     }
 
-    console.log('getNextTwoClasses: Looking for classes for userId:', currentUserId);
-    console.log('getNextTwoClasses: Total subjects:', subjects.length);
-    console.log('getNextTwoClasses: Current time:', now);
-    
-    // Debug: Show all subjects and their teacher IDs
-    console.log('getNextTwoClasses: All subjects:', subjects.map(s => ({
-        nombre: s.Nombre,
-        id_materia: s.ID_materia,
-        teacher_id: s.Usuarios_docente_ID_docente,
-        estado: s.Estado,
-        horario: s.Horario
-    })));
 
     let userSubjectsCount = 0;
     subjects.forEach(subject => {
-        // Log all subjects to debug
-        console.log(`getNextTwoClasses: Checking subject "${subject.Nombre}" - Usuarios_docente_ID_docente: ${subject.Usuarios_docente_ID_docente} (type: ${typeof subject.Usuarios_docente_ID_docente}), currentUserId: ${currentUserId} (type: ${typeof currentUserId})`);
-        
         // Check if subject belongs to user (compare both as numbers and as strings to handle type mismatches)
         const subjectTeacherId = parseInt(subject.Usuarios_docente_ID_docente);
         const userId = parseInt(currentUserId);
         const matches = subjectTeacherId === userId;
         
-        console.log(`getNextTwoClasses: Subject "${subject.Nombre}" - teacherId: ${subjectTeacherId}, userId: ${userId}, matches: ${matches}`);
-        
         if (!matches) {
-            console.log(`getNextTwoClasses: Subject "${subject.Nombre}" does not belong to user ${userId}`);
             return;
         }
         
         if (!subject.Horario || subject.Estado !== 'ACTIVA') {
-            if (!subject.Horario) {
-                console.log(`getNextTwoClasses: Subject "${subject.Nombre}" has no Horario`);
-            }
-            if (subject.Estado !== 'ACTIVA') {
-                console.log(`getNextTwoClasses: Subject "${subject.Nombre}" is not ACTIVA (Estado: ${subject.Estado})`);
-            }
             return;
         }
 
         userSubjectsCount++;
-        console.log(`getNextTwoClasses: Processing subject "${subject.Nombre}" with Horario: "${subject.Horario}"`);
 
         const schedule = parseSchedule(subject.Horario);
         if (!schedule) {
-            console.warn(`getNextTwoClasses: Could not parse schedule for "${subject.Nombre}": "${subject.Horario}"`);
             return;
         }
-
-        console.log(`getNextTwoClasses: Parsed schedule for "${subject.Nombre}":`, schedule);
 
         const teacher = teachers.find(t => t.ID_docente === subject.Usuarios_docente_ID_docente);
         const teacherName = teacher ? `${teacher.Nombre_docente} ${teacher.Apellido_docente}` : 'Profesor no asignado';
@@ -696,16 +866,12 @@ function getNextTwoClasses() {
         }
     });
 
-    console.log(`getNextTwoClasses: Found ${userSubjectsCount} user subjects`);
-    console.log(`getNextTwoClasses: Found ${allClasses.length} upcoming classes`);
-
     // Sort by dateTime and take first 2
     const result = allClasses
         .sort((a, b) => a.dateTime - b.dateTime)
         .slice(0, 2)
         .map(({ dateTime, ...rest }) => rest); // Remove dateTime from result
 
-    console.log('getNextTwoClasses: Returning next classes:', result);
     return result;
 }
 
@@ -1122,7 +1288,6 @@ function initializeCalendar() {
             
             // Get events for this day
             const dayEvents = getEventsForDate(dayDate);
-            console.log(`Events for ${dayDate.toDateString()}:`, dayEvents);
             dayEvents.forEach(event => {
                 const eventElement = document.createElement('div');
                 let className = `event-item ${event.type}`;
