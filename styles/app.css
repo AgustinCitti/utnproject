@@ -1520,7 +1520,8 @@
 
 /* Grid layout containers - Responsive grid for various content types */
 .students-grid, .grades-container, .attendance-container, 
-.exams-container, .repository-container, .notifications-container {
+.exams-container, .repository-container, .notifications-container,
+.subjects-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
@@ -1528,13 +1529,15 @@
 
 /* List view containers - Hidden by default, shown when active */
 .students-list, .grades-list, .attendance-list, 
-.exams-list, .repository-list, .notifications-list {
+.exams-list, .repository-list, .notifications-list,
+.subjects-list {
     display: none;
 }
 
 /* Active list views - Currently visible list content */
 .students-list.active, .grades-list.active, .attendance-list.active, 
-.exams-list.active, .repository-list.active, .notifications-list.active {
+.exams-list.active, .repository-list.active, .notifications-list.active,
+.subjects-list.active {
     display: block;
 }
 

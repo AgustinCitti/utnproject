@@ -74,6 +74,11 @@ try {
 			$Aula = isset($body['Aula']) && $body['Aula'] !== '' ? $body['Aula'] : null;
 			$Descripcion = isset($body['Descripcion']) && $body['Descripcion'] !== '' ? $body['Descripcion'] : null;
 
+			// Validar que el docente ID sea válido
+			if ($DocenteId <= 0) {
+				respond(400, ['success'=>false,'message'=>'ID de docente inválido']);
+			}
+
 			$stmt = $db->prepare("INSERT INTO Materia (Nombre, Curso_division, Usuarios_docente_ID_docente, Estado, Horario, Aula, Descripcion) VALUES (?, ?, ?, ?, ?, ?, ?)");
 			$stmt->execute([$Nombre, $Curso_division, $DocenteId, $Estado, $Horario, $Aula, $Descripcion]);
 			$newId = (int)$db->lastInsertId();

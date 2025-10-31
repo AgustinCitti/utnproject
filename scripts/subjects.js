@@ -39,19 +39,14 @@ function initializeSubjects() {
     if (addSubjectBtn) {
         addSubjectBtn.addEventListener('click', () => {
             try {
-                console.log('[subjects] Botón agregar materia clickeado');
-                
                 // Verificar que el modal existe - verificar múltiples veces si es necesario
                 let modalElement = document.getElementById('subjectModal');
                 
                 if (!modalElement) {
                     // Try again after a short delay (in case DOM is updating)
-                    console.warn('[subjects] Modal not found initially, checking again...');
                     setTimeout(() => {
                         modalElement = document.getElementById('subjectModal');
                         if (!modalElement) {
-                            console.error('[subjects] Modal subjectModal no encontrado en el DOM después de reintento');
-                            console.error('[subjects] All modals in DOM:', Array.from(document.querySelectorAll('.modal')).map(m => m.id));
                             alert('Error: No se encontró el formulario de materia. Por favor, recarga la página.');
                             return;
                         }
@@ -71,7 +66,6 @@ function initializeSubjects() {
                     showModal('subjectModal');
                 } else {
                     modalElement.classList.add('active');
-                    console.log('[subjects] Modal abierto manualmente');
                 }
                 
                 // Limpiar el formulario
@@ -84,16 +78,10 @@ function initializeSubjects() {
                     }
                     currentSubjectId = null;
                 }
-                
-                console.log('[subjects] Modal de materia abierto correctamente');
             } catch (e) {
-                console.error('[subjects] Error al abrir modal de materia:', e);
-                console.error('[subjects] Stack trace:', e.stack);
                 alert('Error al abrir el formulario de materia: ' + e.message);
             }
         });
-    } else {
-        console.warn('[subjects] Botón addSubjectBtn no encontrado en el DOM');
     }
 
     if (subjectForm) {
@@ -108,12 +96,10 @@ function initializeSubjects() {
             e.stopPropagation(); // Prevenir propagación
             
             if (isSubmitting) {
-                console.warn('[subjects] Submit ya en proceso, ignorando...');
                 return;
             }
             
             saveSubject().catch(err => {
-                console.error('[subjects] saveSubject error:', err);
                 alert(err.message || 'Error guardando la materia');
             });
         };
@@ -165,6 +151,25 @@ function initializeSubjects() {
     loadSubjects();
     populateSubjectSelect();
     populateCourseFilter();
+    
+    // Ensure correct initial view is displayed
+    const gridBtn = document.getElementById('subjectsGridViewBtn');
+    const listBtn = document.getElementById('subjectsListViewBtn');
+    const subjectsContainer = document.getElementById('subjectsContainer');
+    const subjectsList = document.getElementById('subjectsList');
+    
+    if (listBtn && listBtn.classList.contains('active')) {
+        if (subjectsContainer) subjectsContainer.style.display = 'none';
+        if (subjectsList) subjectsList.style.display = 'block';
+    } else if (gridBtn && gridBtn.classList.contains('active')) {
+        if (subjectsContainer) subjectsContainer.style.display = 'grid';
+        if (subjectsList) subjectsList.style.display = 'none';
+    } else {
+        // Default to list view if no button is active
+        if (listBtn) listBtn.classList.add('active');
+        if (subjectsContainer) subjectsContainer.style.display = 'none';
+        if (subjectsList) subjectsList.style.display = 'block';
+    }
 }
 
 function loadSubjects() {
@@ -279,10 +284,16 @@ function loadSubjects() {
 
 async function saveSubject() {
 	// Always use the logged-in user as the professor
-	const teacherId = parseInt(localStorage.getItem('userId') || '0');
-	
-	if (!teacherId) {
+	const userIdString = localStorage.getItem('userId');
+	if (!userIdString) {
 		alert('Error: No se encontró el ID de usuario. Por favor, inicia sesión nuevamente.');
+		return;
+	}
+	
+	const teacherId = parseInt(userIdString, 10);
+	
+	if (!teacherId || isNaN(teacherId) || teacherId <= 0) {
+		alert('Error: ID de usuario inválido. Por favor, inicia sesión nuevamente.');
 		return;
 	}
 
@@ -308,14 +319,20 @@ async function saveSubject() {
 		Descripcion: (document.getElementById('subjectDescription').value || '').trim() || null
 	};
 
-	if (!payload.Nombre || !curso_division || !payload.Usuarios_docente_ID_docente) {
+	// Validación mejorada
+	if (!payload.Nombre || !curso_division) {
 		alert('Completá Nombre, Curso y División.');
+		return;
+	}
+	
+	// Validar que el teacherId es válido
+	if (!payload.Usuarios_docente_ID_docente || payload.Usuarios_docente_ID_docente <= 0) {
+		alert('Error: ID de profesor inválido. Por favor, inicia sesión nuevamente.');
 		return;
 	}
 
 	// Prevenir doble submit
 	if (isSubmitting) {
-		console.warn('[subjects] Ya hay un submit en proceso, ignorando...');
 		return;
 	}
 
@@ -341,7 +358,6 @@ async function saveSubject() {
 			if (!res.ok) throw new Error(data.message || 'No se pudo actualizar la materia');
 		} else {
 			// CREATE con POST
-			console.log('[subjects] Enviando payload:', payload);
 			const res = await fetch('../api/materia.php', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -351,19 +367,14 @@ async function saveSubject() {
 			
 			let data = {};
 			const text = await res.text();
-			console.log('[subjects] Respuesta raw del servidor:', text);
 			try {
 				data = JSON.parse(text);
-				console.log('[subjects] Respuesta parseada:', data);
 			} catch (e) {
-				console.error('[subjects] Error parseando JSON:', e);
-				console.error('[subjects] Texto recibido:', text);
-				throw new Error(`Error del servidor (${res.status}): ${text.substring(0, 200)}`);
+				throw new Error(`Error del servidor (${res.status})`);
 			}
 			
 			if (!res.ok) {
 				const errorMsg = data.error ? `${data.message || 'Error'}: ${data.error}` : (data.message || 'No se pudo crear la materia');
-				console.error('[subjects] Error completo:', { status: res.status, data, file: data.file, line: data.line });
 				throw new Error(errorMsg);
 			}
 		}
@@ -380,10 +391,8 @@ async function saveSubject() {
 		currentSubjectId = null;
 		alert('Materia guardada correctamente');
 	} catch (err) {
-		console.error('[subjects] saveSubject error completo:', err);
-		console.error('[subjects] Stack trace:', err.stack);
 		const errorMsg = err.message || 'Error al guardar la materia';
-		alert(`Error: ${errorMsg}\n\nRevisa la consola para más detalles.`);
+		alert(`Error: ${errorMsg}`);
 	} finally {
 		// Rehabilitar botón y flag
 		isSubmitting = false;
@@ -455,7 +464,6 @@ async function deleteSubject(id) {
     }
     
     try {
-        console.log('[subjects] Eliminando materia ID:', id);
         const res = await fetch(`../api/materia.php?id=${id}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -467,7 +475,6 @@ async function deleteSubject(id) {
         try {
             data = JSON.parse(text);
         } catch (e) {
-            console.error('[subjects] Error parseando respuesta:', text);
             throw new Error(`Error del servidor (${res.status})`);
         }
         
@@ -491,7 +498,6 @@ async function deleteSubject(id) {
         
         alert('Materia eliminada correctamente');
     } catch (err) {
-        console.error('[subjects] Error al eliminar materia:', err);
         alert(err.message || 'Error al eliminar la materia');
     }
 }
@@ -723,9 +729,12 @@ function getFilteredSubjects() {
     
     // Filter by current teacher (only show subjects taught by current user)
     if (currentUserId) {
-        subjects = subjects.filter(subject => 
-            subject.Usuarios_docente_ID_docente === parseInt(currentUserId)
-        );
+        const teacherId = parseInt(currentUserId, 10);
+        subjects = subjects.filter(subject => {
+            // Ensure both values are integers for comparison
+            const subjectTeacherId = parseInt(subject.Usuarios_docente_ID_docente, 10);
+            return subjectTeacherId === teacherId;
+        });
     }
     
     // Filter by course/division
@@ -771,9 +780,11 @@ function populateCourseFilter() {
     if (!currentUserId) return;
 
     // Get user's subjects
-    const userSubjects = appData.materia.filter(subject => 
-        subject.Usuarios_docente_ID_docente === parseInt(currentUserId)
-    );
+    const teacherId = parseInt(currentUserId, 10);
+    const userSubjects = appData.materia.filter(subject => {
+        const subjectTeacherId = parseInt(subject.Usuarios_docente_ID_docente, 10);
+        return subjectTeacherId === teacherId;
+    });
 
     // Get unique course divisions from user's subjects
     const courseDivisions = [...new Set(userSubjects.map(subject => subject.Curso_division))];
@@ -897,7 +908,6 @@ function loadSubjectDetailsTab(subject, teacher, students, evaluations) {
     // Subject info summary
     const subjectInfoSummary = document.getElementById('subjectInfoSummary');
     if (!subjectInfoSummary) {
-        console.error('subjectInfoSummary element not found');
         return;
     }
     
@@ -935,7 +945,6 @@ function loadSubjectDetailsTab(subject, teacher, students, evaluations) {
     // Subject details content
     const subjectDetailsContent = document.getElementById('subjectDetailsContent');
     if (!subjectDetailsContent) {
-        console.error('subjectDetailsContent element not found');
         return;
     }
     
@@ -984,7 +993,6 @@ function loadSubjectDetailsTab(subject, teacher, students, evaluations) {
 function loadSubjectContentTab(subjectId, content) {
     const contentListContainer = document.getElementById('subjectContentList');
     if (!contentListContainer) {
-        console.error('subjectContentList element not found');
         return;
     }
     

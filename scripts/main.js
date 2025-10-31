@@ -9,9 +9,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function initializeApp() {
-    console.log('initializeApp called');
-    console.log('Available functions at start:', typeof initializeNavigation, typeof initializeLogin);
-    
     // Initialize language system
     initializeLanguage();
     
@@ -19,7 +16,6 @@ async function initializeApp() {
     if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
         // Allow users to stay on landing page even if logged in
         // They can manually navigate to home.html if they want
-        console.log('Landing page - user can stay here even if logged in');
         
         // Update landing page based on login status
         updateLandingPageForLoginStatus();
@@ -37,11 +33,8 @@ async function initializeApp() {
     if (typeof initializeNavigation === 'function') {
         initializeNavigation();
     } else {
-        console.error('initializeNavigation function not found - checking window object');
         if (typeof window.initializeNavigation === 'function') {
             window.initializeNavigation();
-        } else {
-            console.error('initializeNavigation not found in window object either');
         }
     }
     initializeLogin();
@@ -91,7 +84,13 @@ async function loadData() {
         // Determinar la ruta base según desde dónde se carga
         const isInPages = window.location.pathname.includes('/pages/');
         const baseUrl = isInPages ? '../api' : 'api';
-        const response = await fetch(`${baseUrl}/get_data.php`);
+        const response = await fetch(`${baseUrl}/get_data.php`, {
+            method: 'GET',
+            credentials: 'include', // Include cookies/session for PHP session to work
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -99,7 +98,6 @@ async function loadData() {
         // También hacer data disponible globalmente para reports
         window.data = appData;
     } catch (error) {
-        console.error('Error loading data:', error);
         // Initialize with empty data structure matching database schema
         appData = {
             usuarios_docente: [],
@@ -122,15 +120,12 @@ async function loadData() {
 
 function saveData() {
     // In a real application, this would save to a database
-    // For now, we'll just log the data
-    console.log('Data saved:', appData);
 }
 
 // Utility function to clear authentication data
 function clearAuthData() {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('username');
-    console.log('Authentication data cleared');
     window.location.reload();
 }
 
@@ -195,40 +190,28 @@ function updateLandingPageForLoginStatus() {
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
     // Check which page we're on
-    console.log('Current pathname:', window.location.pathname);
     if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
-        console.log('Initializing landing page');
         initializeLandingPage();
     } else if (window.location.pathname.includes('auth.html')) {
-        console.log('Initializing auth page');
         initializeAuthPage();
     } else if (window.location.pathname.includes('login.html')) {
-        console.log('Initializing login page');
         initializeLoginPage();
     } else if (window.location.pathname.includes('register.html')) {
-        console.log('Initializing register page');
         initializeRegisterPage();
     } else {
-        console.log('Initializing app');
         initializeApp();
     }
     });
 } else {
-    console.log('Current pathname (immediate):', window.location.pathname);
     if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
-        console.log('Initializing landing page (immediate)');
         initializeLandingPage();
     } else if (window.location.pathname.includes('auth.html')) {
-        console.log('Initializing auth page (immediate)');
         initializeAuthPage();
     } else if (window.location.pathname.includes('login.html')) {
-        console.log('Initializing login page (immediate)');
         initializeLoginPage();
     } else if (window.location.pathname.includes('register.html')) {
-        console.log('Initializing register page (immediate)');
         initializeRegisterPage();
     } else {
-        console.log('Initializing app (immediate)');
         initializeApp();
     }
 }

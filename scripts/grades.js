@@ -126,13 +126,11 @@ function populateGradeForm() {
 
     // Check if elements exist
     if (!studentSelect || !subjectSelect) {
-        console.error('Grade form elements not found');
         return;
     }
 
     // Check if data is loaded
     if (!appData || !appData.estudiante || !appData.materia) {
-        console.error('App data not loaded');
         return;
     }
 

@@ -5,16 +5,10 @@ function showModal(modalId) {
         // Ensure the modal is visible
         modal.style.display = '';
         modal.classList.add('active');
-        console.log('[showModal] Modal', modalId, 'mostrado. Clase active agregada.');
-        
         // Ensure modal handlers are set up
         if (typeof setupModalHandlers === 'function') {
             setupModalHandlers(modalId);
         }
-    } else {
-        console.error('[showModal] Modal con ID', modalId, 'no encontrado en el DOM');
-        console.error('[showModal] Document body:', document.body);
-        console.error('[showModal] Available modals:', document.querySelectorAll('.modal'));
     }
 }
 
@@ -30,9 +24,6 @@ function closeModal(modal) {
     if (modalElement) {
         // Just hide the modal instead of removing it from DOM
         modalElement.classList.remove('active');
-        console.log('[closeModal] Modal closed, element still in DOM:', document.getElementById(modalElement.id) !== null);
-    } else {
-        console.error('[closeModal] Modal element not found');
     }
 }
 
@@ -42,13 +33,11 @@ const modalHandlers = new WeakMap();
 function setupModalHandlers(modalId) {
     const modal = typeof modalId === 'string' ? document.getElementById(modalId) : modalId;
     if (!modal) {
-        console.error('[setupModalHandlers] Modal not found:', modalId);
         return;
     }
 
     // Check if handlers are already set up for this modal instance
     if (modalHandlers.has(modal)) {
-        console.log('[setupModalHandlers] Handlers already set up for modal:', modalId);
         return; // Don't add duplicate handlers
     }
 
@@ -81,8 +70,6 @@ function setupModalHandlers(modalId) {
     
     // Store handlers for reference (though we won't remove them since modal shouldn't be removed)
     modalHandlers.set(modal, { closeButtons: buttonHandlers, backdropHandler });
-    
-    console.log('[setupModalHandlers] Handlers set up for modal:', modalId);
 }
 
 // Utility Functions

@@ -16,91 +16,17 @@ function initializeDashboard() {
     // Test function to verify the logic
     window.testUpcomingClasses = function() {
         const now = new Date();
-        console.log('Current time:', now.toString());
-        
-        const testClass1 = new Date(2025, 9, 22, 10, 0, 0); // 10:00 AM today
-        const testClass2 = new Date(2025, 9, 22, 14, 0, 0); // 2:00 PM today
-        const testClass3 = new Date(2025, 9, 22, 20, 0, 0); // 8:00 PM today
-        
-        console.log('Test class 1 (10:00 AM):', testClass1.toString(), 'Is future?', testClass1 > now);
-        console.log('Test class 2 (2:00 PM):', testClass2.toString(), 'Is future?', testClass2 > now);
-        console.log('Test class 3 (8:00 PM):', testClass3.toString(), 'Is future?', testClass3 > now);
-        
-        console.log('Testing getNextTwoClasses function...');
-        const nextClasses = getNextTwoClasses();
-        console.log('Next classes found:', nextClasses);
-        
-        // Test with specific subjects from data
-        console.log('Available subjects:', appData.materia);
-        
-        // Test schedule parsing
-        appData.materia.forEach(subject => {
-            console.log(`Testing subject: ${subject.Nombre}`);
-            console.log(`Schedule: ${subject.Horario}`);
-            const schedule = parseSchedule(subject.Horario);
-            console.log('Parsed schedule:', schedule);
-        });
-        
         loadUpcomingClasses();
     };
     
     // Additional test function to debug the specific issue
     window.debugClassFiltering = function() {
-        const now = new Date();
-        console.log('=== DEBUGGING CLASS FILTERING ===');
-        console.log('Current time:', now.toString());
-        console.log('Current day of week:', now.getDay());
-        console.log('Current hour:', now.getHours());
-        console.log('Current minute:', now.getMinutes());
-        
-        // Test each subject's schedule
-        appData.materia.forEach(subject => {
-            console.log(`\n--- Testing ${subject.Nombre} ---`);
-            console.log('Schedule:', subject.Horario);
-            
-            const schedule = parseSchedule(subject.Horario);
-            if (schedule) {
-                console.log('Parsed schedule:', schedule);
-                console.log('Days:', schedule.days);
-                console.log('Start time:', schedule.startTime);
-                
-                // Check if today matches the schedule
-                const todayMatches = schedule.days.includes(now.getDay());
-                console.log('Today matches schedule?', todayMatches);
-                
-                if (todayMatches) {
-                    // Create a class time for today
-                    const [hours, minutes] = schedule.startTime.split(':');
-                    const classDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(hours), parseInt(minutes), 0);
-                    console.log('Class datetime:', classDateTime.toString());
-                    console.log('Is class in future?', classDateTime > now);
-                }
-            }
-        });
+        // Debug functionality removed for security
     };
     
     // Test function for date formatting
     window.testDateFormatting = function() {
-        console.log('=== TESTING DATE FORMATTING ===');
-        const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
-        const tomorrow = new Date(today);
-        tomorrow.setDate(today.getDate() + 1);
-        const tomorrowStr = tomorrow.toISOString().split('T')[0];
-        const nextWeek = new Date(today);
-        nextWeek.setDate(today.getDate() + 7);
-        const nextWeekStr = nextWeek.toISOString().split('T')[0];
-        
-        console.log('Today string:', todayStr, 'Formatted:', formatDate(todayStr));
-        console.log('Tomorrow string:', tomorrowStr, 'Formatted:', formatDate(tomorrowStr));
-        console.log('Next week string:', nextWeekStr, 'Formatted:', formatDate(nextWeekStr));
-        
-        // Test with the actual classes
-        const nextClasses = getNextTwoClasses();
-        console.log('Next classes found:', nextClasses);
-        nextClasses.forEach((classInfo, index) => {
-            console.log(`Class ${index + 1}:`, classInfo.date, 'Formatted:', formatDate(classInfo.date));
-        });
+        // Debug functionality removed for security
     };
     
 }
@@ -397,7 +323,6 @@ function getNextTwoClasses() {
     // Get current user ID to filter subjects
     const currentUserId = localStorage.getItem('userId');
     if (!currentUserId) {
-        console.log('No current user found, showing no classes');
         return [];
     }
 
@@ -1125,7 +1050,6 @@ window.goToWeekWithRecordatorios = function() {
     // Re-render the calendar
     renderCalendar();
     
-    console.log('Navigated to week with recordatorios:', currentWeekStart);
 };
 
 // Simple test function to check recordatorios
