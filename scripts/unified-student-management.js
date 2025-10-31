@@ -1,8 +1,6 @@
 // Unified Student Management - Combines Students, Grades, Attendance, and Exams
 function initializeUnifiedStudentManagement() {
-    console.log('[unified-student] Inicializando gestión de estudiantes...');
     const addStudentBtn = document.getElementById('addStudentBtn');
-    console.log('[unified-student] addStudentBtn encontrado:', !!addStudentBtn);
     const markAttendanceBtn = document.getElementById('markAttendanceBtn');
     const unifiedSubjectFilter = document.getElementById('unifiedSubjectFilter');
     const unifiedCourseFilter = document.getElementById('unifiedCourseFilter');

@@ -98,21 +98,6 @@ async function loadData() {
         appData = await response.json();
         // También hacer data disponible globalmente para reports
         window.data = appData;
-        console.log('Data loaded successfully:', appData);
-        // ... resto del código ...
-        console.log('Data structure check:', {
-            usuarios_docente: appData.usuarios_docente?.length || 0,
-            materia: appData.materia?.length || 0,
-            estudiante: appData.estudiante?.length || 0,
-            alumnos_x_materia: appData.alumnos_x_materia?.length || 0,
-            evaluacion: appData.evaluacion?.length || 0,
-            notas: appData.notas?.length || 0,
-            asistencia: appData.asistencia?.length || 0,
-            contenido: appData.contenido?.length || 0,
-            tema_estudiante: appData.tema_estudiante?.length || 0,
-            archivos: appData.archivos?.length || 0,
-            recordatorio: appData.recordatorio?.length || 0
-        });
     } catch (error) {
         console.error('Error loading data:', error);
         // Initialize with empty data structure matching database schema

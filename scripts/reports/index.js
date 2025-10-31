@@ -68,11 +68,9 @@ function verifyReportsComponents() {
     const missingFunctions = requiredFunctions.filter(func => typeof window[func] !== 'function');
     
     if (missingFunctions.length > 0) {
-        console.warn('Missing report functions:', missingFunctions);
         return false;
     }
     
-    console.log('All report components loaded successfully');
     return true;
 }
 

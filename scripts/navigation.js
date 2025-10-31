@@ -1,6 +1,5 @@
 // Navigation System
 function initializeNavigation() {
-    console.log('initializeNavigation called');
     const menuToggle = document.getElementById('menuToggle');
     const navOverlay = document.getElementById('navOverlay');
     const closeNav = document.getElementById('closeNav');

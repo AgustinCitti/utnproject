@@ -65,15 +65,11 @@ function getCurrentUserAttendance() {
 
 function getGradesDistribution(subjectId = 'all') {
     if (!window.data || !window.data.notas) {
-        console.warn('getGradesDistribution: No data available', { data: window.data, notas: window.data?.notas });
         return { labels: [], data: [] };
     }
 
-    console.log('getGradesDistribution called with subjectId:', subjectId);
-
     // Use current user's grades data
     let filteredGrades = getCurrentUserGrades();
-    console.log('Initial filtered grades count:', filteredGrades.length);
     
     // Filter by subject if specified
     if (subjectId !== 'all') {
@@ -85,7 +81,6 @@ function getGradesDistribution(subjectId = 'all') {
         filteredGrades = filteredGrades.filter(nota => 
             subjectEvaluationIds.includes(nota.Evaluacion_ID_evaluacion)
         );
-        console.log('After subject filter, grades count:', filteredGrades.length);
     }
 
     const gradeRanges = [
@@ -231,7 +226,6 @@ function getSubjectComparison() {
 
 function calculateAverageGrade() {
     if (!window.data || !window.data.notas || window.data.notas.length === 0) {
-        console.warn('calculateAverageGrade: No data available', { data: window.data, notas: window.data?.notas });
         return 0;
     }
     
@@ -249,7 +243,6 @@ function calculateAverageGrade() {
 
 function calculateAttendanceRate() {
     if (!window.data || !window.data.asistencia || window.data.asistencia.length === 0) {
-        console.warn('calculateAttendanceRate: No data available', { data: window.data, asistencia: window.data?.asistencia });
         return 0;
     }
     

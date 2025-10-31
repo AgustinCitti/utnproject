@@ -300,10 +300,6 @@ function getCurrentUser() {
         docente = appData.usuarios_docente.find(d => d.ID_docente === parseInt(username));
     }
     
-    // Debug logging
-    console.log('getCurrentUser - username:', username);
-    console.log('getCurrentUser - found docente:', docente);
-    
     return docente || null;
 }
 
@@ -334,14 +330,8 @@ function getRecordatoriosForDocente(docenteId) {
     const docenteSubjects = appData.materia.filter(m => m.Usuarios_docente_ID_docente === docenteId);
     const subjectIds = docenteSubjects.map(s => s.ID_materia);
     
-    // Debug logging
-    console.log('getRecordatoriosForDocente - docenteId:', docenteId);
-    console.log('getRecordatoriosForDocente - docenteSubjects:', docenteSubjects);
-    console.log('getRecordatoriosForDocente - subjectIds:', subjectIds);
-    
     // Get recordatorios for these subjects
     const recordatorios = appData.recordatorio.filter(r => subjectIds.includes(r.Materia_ID_materia));
-    console.log('getRecordatoriosForDocente - found recordatorios:', recordatorios);
     
     return recordatorios;
 }

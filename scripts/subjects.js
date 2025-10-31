@@ -7,12 +7,9 @@ let subjectFormHandler = null; // Referencia al manejador del formulario
 function initializeSubjects() {
     // Prevenir múltiples inicializaciones
     if (subjectsInitialized) {
-        console.log('[subjects] Ya inicializado, omitiendo...');
         return;
     }
-    console.log('[subjects] Inicializando gestión de materias...');
     const addSubjectBtn = document.getElementById('addSubjectBtn');
-    console.log('[subjects] addSubjectBtn encontrado:', !!addSubjectBtn);
     const subjectModal = document.getElementById('subjectModal');
     const subjectForm = document.getElementById('subjectForm');
     const courseFilter = document.getElementById('subjectsCourseFilter');
