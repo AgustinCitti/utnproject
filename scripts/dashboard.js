@@ -1,22 +1,51 @@
 // Dashboard System
 function initializeDashboard() {
     initializeCalendar();
-    loadUpcomingClasses();
+    loadLatestNotifications();
+    loadNextClass();
     setupQuickActions();
     
-    // Refresh upcoming classes every minute to keep them current
+    // Refresh latest notifications and next class every minute to keep them current
     setInterval(() => {
-        loadUpcomingClasses();
+        loadLatestNotifications();
+        loadNextClass();
         updateStats(); // Also update stats periodically
     }, 60000); // 60 seconds
     
-    // Make loadUpcomingClasses globally accessible for testing
-    window.loadUpcomingClasses = loadUpcomingClasses;
+    // Make functions globally accessible for testing
+    window.loadLatestNotifications = loadLatestNotifications;
+    window.loadNextClass = loadNextClass;
+    window.getNextTwoClasses = getNextTwoClasses;
+    window.debugNextClass = function() {
+        console.log('=== DEBUG NEXT CLASS ===');
+        console.log('Current userId:', localStorage.getItem('userId'));
+        console.log('appData loaded:', !!appData);
+        console.log('Total subjects:', appData.materia?.length || 0);
+        
+        const currentUserId = localStorage.getItem('userId');
+        if (currentUserId) {
+            const userSubjects = (appData.materia || []).filter(m => 
+                m.Usuarios_docente_ID_docente === parseInt(currentUserId)
+            );
+            console.log('User subjects:', userSubjects.length);
+            userSubjects.forEach(subject => {
+                console.log(`- "${subject.Nombre}" (Estado: ${subject.Estado}, Horario: "${subject.Horario || 'N/A'}")`);
+                if (subject.Horario) {
+                    const parsed = parseSchedule(subject.Horario);
+                    console.log(`  Parsed:`, parsed);
+                }
+            });
+        }
+        
+        const nextClasses = getNextTwoClasses();
+        console.log('Next classes found:', nextClasses.length);
+        console.log('Next classes:', nextClasses);
+    };
     
     // Test function to verify the logic
-    window.testUpcomingClasses = function() {
+    window.testLatestNotifications = function() {
         const now = new Date();
-        loadUpcomingClasses();
+        loadLatestNotifications();
     };
     
     // Additional test function to debug the specific issue
@@ -34,7 +63,8 @@ function initializeDashboard() {
 function updateDashboard() {
     updateStats();
     updateCalendar();
-    loadUpcomingClasses();
+    loadLatestNotifications();
+    loadNextClass();
     
     // Re-initialize calendar if dashboard is visible
     const dashboardSection = document.getElementById('dashboard');
@@ -258,14 +288,265 @@ function calculateAttendanceRate() {
     return Math.round((presentCount / appData.asistencia.length) * 100);
 }
 
-function loadUpcomingClasses() {
+function loadLatestNotifications() {
     const classesList = document.getElementById('classesList');
     if (!classesList) return;
 
+    // Check if appData is loaded
+    if (!appData) {
+        console.error('appData is not loaded');
+        return;
+    }
+
+    // Get current user
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+        console.log('No current user found');
+        classesList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-bell"></i>
+                <h3 data-translate="no_notifications_message">No hay notificaciones recientes.</h3>
+            </div>
+        `;
+        return;
+    }
+
+    // Get recordatorios for current docente's subjects
+    let recordatorios = [];
+    if (typeof getRecordatoriosForDocente === 'function') {
+        recordatorios = getRecordatoriosForDocente(currentUser.ID_docente);
+    } else if (appData.recordatorio && appData.materia) {
+        // Fallback: implement the logic directly
+        const docenteSubjects = appData.materia.filter(m => m.Usuarios_docente_ID_docente === currentUser.ID_docente);
+        const subjectIds = docenteSubjects.map(s => s.ID_materia);
+        recordatorios = appData.recordatorio.filter(r => subjectIds.includes(r.Materia_ID_materia));
+    }
+
+    // Get notifications for current user
+    let notifications = [];
+    if (appData.notifications && typeof shouldShowNotification === 'function') {
+        notifications = appData.notifications.filter(n => shouldShowNotification(n, currentUser.ID_docente));
+    } else if (appData.notifications) {
+        // Fallback: filter notifications manually
+        notifications = appData.notifications.filter(n => 
+            n.Destinatario_tipo === 'TODOS' || 
+            (n.Destinatario_tipo === 'DOCENTE' && n.Destinatario_id === currentUser.ID_docente)
+        );
+    }
+
+    // Combine recordatorios and notifications into a unified array
+    const allItems = [];
+    
+    // Add recordatorios
+    recordatorios.forEach(recordatorio => {
+        const subject = appData.materia ? appData.materia.find(m => m.ID_materia === recordatorio.Materia_ID_materia) : null;
+        const subjectName = subject ? subject.Nombre : 'Materia no encontrada';
+        
+        // Use Fecha_creacion if available for sorting (creation date), otherwise use Fecha (reminder date)
+        // For display, we'll use Fecha (the reminder date)
+        const sortDateValue = recordatorio.Fecha_creacion || recordatorio.Fecha;
+        const dateObj = sortDateValue ? new Date(sortDateValue) : new Date();
+        
+        allItems.push({
+            type: 'recordatorio',
+            id: recordatorio.ID_recordatorio,
+            title: getRecordatorioTitleForDashboard(recordatorio),
+            description: recordatorio.Descripcion,
+            date: dateObj, // For sorting by creation/reminder date
+            dateStr: recordatorio.Fecha, // For display (the actual reminder date)
+            tipo: recordatorio.Tipo,
+            prioridad: recordatorio.Prioridad,
+            subjectName: subjectName,
+            data: recordatorio
+        });
+    });
+    
+    // Add notifications
+    notifications.forEach(notification => {
+        const dateObj = notification.Fecha_creacion ? new Date(notification.Fecha_creacion) : new Date();
+        
+        allItems.push({
+            type: 'notification',
+            id: notification.ID_notificacion,
+            title: notification.Titulo,
+            description: notification.Mensaje,
+            date: dateObj,
+            tipo: notification.Tipo,
+            estado: notification.Estado,
+            data: notification
+        });
+    });
+
+    // Sort by date (newest first) and take last 3
+    allItems.sort((a, b) => b.date - a.date);
+    const latestItems = allItems.slice(0, 3);
+
+    if (latestItems.length === 0) {
+        classesList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-bell"></i>
+                <h3 data-translate="no_notifications_message">No hay notificaciones recientes.</h3>
+            </div>
+        `;
+        return;
+    }
+
+    // Display the latest notifications
+    classesList.innerHTML = latestItems.map(item => {
+        // For recordatorios, use the reminder date (dateStr), for notifications use the creation date
+        const displayDate = item.type === 'recordatorio' && item.dateStr ? 
+            new Date(item.dateStr) : item.date;
+        const formattedDate = formatNotificationDate(displayDate);
+        const typeIcon = item.type === 'recordatorio' ? 'fa-calendar-check' : 'fa-bell';
+        const typeColor = item.type === 'recordatorio' ? getRecordatorioTypeColor(item.tipo) : getNotificationTypeColor(item.tipo);
+        
+        return `
+            <div class="class-item notification-item ${item.type}-item">
+                <div class="class-header">
+                    <div class="class-time" style="color: ${typeColor};">
+                        <i class="fas ${typeIcon}"></i>
+                        <span>${formattedDate}</span>
+                    </div>
+                    ${item.type === 'recordatorio' && item.prioridad ? `
+                        <div class="priority-badge priority-${item.prioridad.toLowerCase()}">
+                            ${item.prioridad}
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="class-details">
+                    <h4>${item.title}</h4>
+                    <p class="class-info">${item.description}</p>
+                    ${item.type === 'recordatorio' && item.subjectName ? `
+                        <p class="class-info">
+                            <span class="classroom">• ${item.subjectName}</span>
+                        </p>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Helper function to get recordatorio title for dashboard
+function getRecordatorioTitleForDashboard(recordatorio) {
+    if (typeof getRecordatorioTitle === 'function') {
+        return getRecordatorioTitle(recordatorio);
+    }
+    const typeLabels = {
+        'EXAMEN': 'Examen',
+        'ENTREGA': 'Entrega',
+        'CLASE': 'Clase',
+        'REUNION': 'Reunión',
+        'EVENTO': 'Evento'
+    };
+    const typeLabel = typeLabels[recordatorio.Tipo] || recordatorio.Tipo;
+    return `${typeLabel}: ${recordatorio.Descripcion.substring(0, 50)}${recordatorio.Descripcion.length > 50 ? '...' : ''}`;
+}
+
+// Helper function to format notification date
+function formatNotificationDate(date) {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const tomorrowDate = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate());
+    const notificationDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    if (notificationDate.getTime() === todayDate.getTime()) {
+        return currentLanguage === 'es' ? 'Hoy' : 'Today';
+    } else if (notificationDate.getTime() === tomorrowDate.getTime()) {
+        return currentLanguage === 'es' ? 'Mañana' : 'Tomorrow';
+    } else {
+        const dayNames = {
+            es: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+            en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        };
+        
+        const monthNames = {
+            es: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+            en: ['January', 'February', 'March', 'April', 'May', 'June',
+                 'July', 'August', 'September', 'October', 'November', 'December']
+        };
+        
+        const lang = currentLanguage || 'es';
+        return `${dayNames[lang][date.getDay()]}, ${date.getDate()} ${monthNames[lang][date.getMonth()]}`;
+    }
+}
+
+// Helper function to get recordatorio type color
+function getRecordatorioTypeColor(tipo) {
+    const colors = {
+        'EXAMEN': '#ef4444',
+        'ENTREGA': '#f59e0b',
+        'REUNION': '#3b82f6',
+        'CLASE': '#10b981',
+        'EVENTO': '#8b5cf6'
+    };
+    return colors[tipo] || '#6b7280';
+}
+
+// Helper function to get notification type color
+function getNotificationTypeColor(tipo) {
+    const colors = {
+        'INFO': '#3b82f6',
+        'WARNING': '#f59e0b',
+        'ERROR': '#ef4444',
+        'SUCCESS': '#10b981'
+    };
+    return colors[tipo] || '#6b7280';
+}
+
+// Helper function to get current user (if not available from notifications.js)
+function getCurrentUser() {
+    // Try to use global getCurrentUser from notifications.js
+    if (typeof window.getCurrentUser === 'function') {
+        return window.getCurrentUser();
+    }
+    
+    // Fallback implementation
+    if (!appData || !appData.usuarios_docente) return null;
+    
+    // Get from localStorage
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+        return appData.usuarios_docente.find(u => u.ID_docente == userId);
+    }
+    
+    // Try email from localStorage
+    const email = localStorage.getItem('username');
+    if (email) {
+        return appData.usuarios_docente.find(u => u.Email_docente === email);
+    }
+    
+    return null;
+}
+
+function loadNextClass() {
+    const nextClassList = document.getElementById('nextClassList');
+    if (!nextClassList) {
+        console.warn('loadNextClass: nextClassList element not found');
+        return;
+    }
+
+    // Check if appData is loaded
+    if (!appData) {
+        console.error('loadNextClass: appData is not loaded');
+        nextClassList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-calendar-check"></i>
+                <h3>Cargando datos...</h3>
+            </div>
+        `;
+        return;
+    }
+
     const nextClasses = getNextTwoClasses();
+    console.log('loadNextClass: Found next classes:', nextClasses);
     
     if (nextClasses.length === 0) {
-        classesList.innerHTML = `
+        nextClassList.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-calendar-check"></i>
                 <h3 data-translate="no_upcoming_classes">No hay clases próximas</h3>
@@ -275,45 +556,45 @@ function loadUpcomingClasses() {
         return;
     }
 
-    classesList.innerHTML = nextClasses.map(classInfo => {
-        const evaluations = getEvaluationsForDate(classInfo.date);
-        const hasEvaluations = evaluations.length > 0;
-        
-        return `
-            <div class="class-item ${hasEvaluations ? 'has-evaluations' : ''}">
-                <div class="class-header">
-                    <div class="class-time">
-                        <i class="fas fa-calendar-day"></i>
-                        <span>${formatDate(classInfo.date)}</span>
-                    </div>
-                    <div class="class-schedule">
-                        <i class="fas fa-clock"></i>
-                        <span>${classInfo.time}</span>
-                    </div>
+    // Display only the first (next) class
+    const nextClass = nextClasses[0];
+    const evaluations = getEvaluationsForDate(nextClass.date);
+    const hasEvaluations = evaluations.length > 0;
+    
+    nextClassList.innerHTML = `
+        <div class="class-item ${hasEvaluations ? 'has-evaluations' : ''}">
+            <div class="class-header">
+                <div class="class-time">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>${formatDate(nextClass.date)}</span>
                 </div>
-                <div class="class-details">
-                    <h4>${classInfo.subjectName}</h4>
-                    <p class="class-info">                    
-                        <span class="classroom">• ${classInfo.classroom}</span>
-                    </p>
-                    ${hasEvaluations ? `
-                        <div class="evaluations">
-                            <div class="evaluation-header">
-                                <i class="fas fa-clipboard-list"></i>
-                                <span data-translate="evaluations_today">Evaluaciones hoy:</span>
-                            </div>
-                            ${evaluations.map(eval => `
-                                <div class="evaluation-item">
-                                    <span class="evaluation-title">${eval.Titulo}</span>
-                                    <span class="evaluation-type">${getEvaluationTypeLabel(eval.Tipo)}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
+                <div class="class-schedule">
+                    <i class="fas fa-clock"></i>
+                    <span>${nextClass.time}</span>
                 </div>
             </div>
-        `;
-    }).join('');
+            <div class="class-details">
+                <h4>${nextClass.subjectName}</h4>
+                <p class="class-info">                    
+                    <span class="classroom">• ${nextClass.classroom}</span>
+                </p>
+                ${hasEvaluations ? `
+                    <div class="evaluations">
+                        <div class="evaluation-header">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span data-translate="evaluations_today">Evaluaciones hoy:</span>
+                        </div>
+                        ${evaluations.map(eval => `
+                            <div class="evaluation-item">
+                                <span class="evaluation-title">${eval.Titulo}</span>
+                                <span class="evaluation-type">${getEvaluationTypeLabel(eval.Tipo)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
 }
 
 function getNextTwoClasses() {
@@ -325,23 +606,66 @@ function getNextTwoClasses() {
     // Get current user ID to filter subjects
     const currentUserId = localStorage.getItem('userId');
     if (!currentUserId) {
+        console.warn('getNextTwoClasses: No userId found in localStorage');
         return [];
     }
 
+    console.log('getNextTwoClasses: Looking for classes for userId:', currentUserId);
+    console.log('getNextTwoClasses: Total subjects:', subjects.length);
+    console.log('getNextTwoClasses: Current time:', now);
+    
+    // Debug: Show all subjects and their teacher IDs
+    console.log('getNextTwoClasses: All subjects:', subjects.map(s => ({
+        nombre: s.Nombre,
+        id_materia: s.ID_materia,
+        teacher_id: s.Usuarios_docente_ID_docente,
+        estado: s.Estado,
+        horario: s.Horario
+    })));
+
+    let userSubjectsCount = 0;
     subjects.forEach(subject => {
-        if (!subject.Horario || subject.Estado !== 'ACTIVA') return;
+        // Log all subjects to debug
+        console.log(`getNextTwoClasses: Checking subject "${subject.Nombre}" - Usuarios_docente_ID_docente: ${subject.Usuarios_docente_ID_docente} (type: ${typeof subject.Usuarios_docente_ID_docente}), currentUserId: ${currentUserId} (type: ${typeof currentUserId})`);
         
-        // Only show classes for subjects assigned to the current user
-        if (subject.Usuarios_docente_ID_docente !== parseInt(currentUserId)) return;
+        // Check if subject belongs to user (compare both as numbers and as strings to handle type mismatches)
+        const subjectTeacherId = parseInt(subject.Usuarios_docente_ID_docente);
+        const userId = parseInt(currentUserId);
+        const matches = subjectTeacherId === userId;
+        
+        console.log(`getNextTwoClasses: Subject "${subject.Nombre}" - teacherId: ${subjectTeacherId}, userId: ${userId}, matches: ${matches}`);
+        
+        if (!matches) {
+            console.log(`getNextTwoClasses: Subject "${subject.Nombre}" does not belong to user ${userId}`);
+            return;
+        }
+        
+        if (!subject.Horario || subject.Estado !== 'ACTIVA') {
+            if (!subject.Horario) {
+                console.log(`getNextTwoClasses: Subject "${subject.Nombre}" has no Horario`);
+            }
+            if (subject.Estado !== 'ACTIVA') {
+                console.log(`getNextTwoClasses: Subject "${subject.Nombre}" is not ACTIVA (Estado: ${subject.Estado})`);
+            }
+            return;
+        }
+
+        userSubjectsCount++;
+        console.log(`getNextTwoClasses: Processing subject "${subject.Nombre}" with Horario: "${subject.Horario}"`);
 
         const schedule = parseSchedule(subject.Horario);
-        if (!schedule) return;
+        if (!schedule) {
+            console.warn(`getNextTwoClasses: Could not parse schedule for "${subject.Nombre}": "${subject.Horario}"`);
+            return;
+        }
+
+        console.log(`getNextTwoClasses: Parsed schedule for "${subject.Nombre}":`, schedule);
 
         const teacher = teachers.find(t => t.ID_docente === subject.Usuarios_docente_ID_docente);
         const teacherName = teacher ? `${teacher.Nombre_docente} ${teacher.Apellido_docente}` : 'Profesor no asignado';
 
-        // Look ahead for next 4 weeks
-        for (let daysAhead = 0; daysAhead < 28; daysAhead++) {
+        // Look ahead for next 8 weeks to find next class (even if it's far in the future)
+        for (let daysAhead = 0; daysAhead < 56; daysAhead++) {
             const checkDate = new Date(now);
             checkDate.setDate(now.getDate() + daysAhead);
             
@@ -372,71 +696,91 @@ function getNextTwoClasses() {
         }
     });
 
+    console.log(`getNextTwoClasses: Found ${userSubjectsCount} user subjects`);
+    console.log(`getNextTwoClasses: Found ${allClasses.length} upcoming classes`);
+
     // Sort by dateTime and take first 2
-    return allClasses
+    const result = allClasses
         .sort((a, b) => a.dateTime - b.dateTime)
         .slice(0, 2)
         .map(({ dateTime, ...rest }) => rest); // Remove dateTime from result
+
+    console.log('getNextTwoClasses: Returning next classes:', result);
+    return result;
 }
 
 function parseSchedule(horario) {
     if (!horario) return null;
 
-    // Common patterns for schedule parsing (both Spanish and English)
-    const patterns = [
-        // Spanish: "Lunes y Miércoles 10:00-12:00"
-        /(lunes|martes|miércoles|jueves|viernes|sábado|domingo)(?:\s+y\s+(lunes|martes|miércoles|jueves|viernes|sábado|domingo))?\s+(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})/i,
-        // English: "Monday and Wednesday 10:00-12:00"
-        /(monday|tuesday|wednesday|thursday|friday|saturday|sunday)(?:\s+and\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday))?\s+(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})/i,
-        // Spanish: "Lunes, Miércoles 13:00-15:00"
-        /(lunes|martes|miércoles|jueves|viernes|sábado|domingo)(?:,\s*(lunes|martes|miércoles|jueves|viernes|sábado|domingo))?\s+(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})/i,
-        // English: "Monday, Wednesday 13:00-15:00"
-        /(monday|tuesday|wednesday|thursday|friday|saturday|sunday)(?:,\s*(monday|tuesday|wednesday|thursday|friday|saturday|sunday))?\s+(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})/i,
-        // Spanish: "Lunes 13hs"
-        /(lunes|martes|miércoles|jueves|viernes|sábado|domingo)\s+(\d{1,2})hs/i,
-        // English: "Monday 13hs"
-        /(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s+(\d{1,2})hs/i
-    ];
+    const dayNames = {
+        // Spanish
+        'lunes': 1, 'martes': 2, 'miércoles': 3, 'jueves': 4, 
+        'viernes': 5, 'sábado': 6, 'domingo': 0,
+        // English
+        'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4,
+        'friday': 5, 'saturday': 6, 'sunday': 0
+    };
 
-    for (const pattern of patterns) {
-        const match = horario.match(pattern);
-        if (match) {
-            const dayNames = {
-                // Spanish
-                'lunes': 1, 'martes': 2, 'miércoles': 3, 'jueves': 4, 
-                'viernes': 5, 'sábado': 6, 'domingo': 0,
-                // English
-                'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4,
-                'friday': 5, 'saturday': 6, 'sunday': 0
-            };
-
-            const day1 = dayNames[match[1].toLowerCase()];
-            const day2 = match[2] ? dayNames[match[2].toLowerCase()] : null;
-
-            if (pattern === patterns[4] || pattern === patterns[5]) {
-                // Format: "Lunes 13hs" or "Monday 13hs"
-                const hour = parseInt(match[2]);
-                return {
-                    days: [day1],
-                    startTime: `${hour.toString().padStart(2, '0')}:00`,
-                    endTime: `${(hour + 2).toString().padStart(2, '0')}:00`
-                };
-            } else {
-                // Format with time range
-                const startHour = parseInt(match[3]);
-                const startMin = parseInt(match[4]);
-                const endHour = parseInt(match[5]);
-                const endMin = parseInt(match[6]);
-                
-                return {
-                    days: day2 ? [day1, day2] : [day1],
-                    startTime: `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`,
-                    endTime: `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`
-                };
-            }
+    const lowerHorario = horario.toLowerCase();
+    const days = [];
+    
+    // Extract all days (supports comma-separated, "y"/"and" separated, or single day)
+    Object.keys(dayNames).forEach(day => {
+        if (lowerHorario.includes(day)) {
+            days.push(dayNames[day]);
         }
+    });
+
+    if (days.length === 0) return null;
+
+    // Extract time range
+    // Pattern 1: "HH:MM-HH:MM" format
+    const timeRangePattern = /(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/;
+    const timeRangeMatch = horario.match(timeRangePattern);
+    
+    if (timeRangeMatch) {
+        const startHour = parseInt(timeRangeMatch[1]);
+        const startMin = parseInt(timeRangeMatch[2]);
+        const endHour = parseInt(timeRangeMatch[3]);
+        const endMin = parseInt(timeRangeMatch[4]);
+        
+        return {
+            days: days,
+            startTime: `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`,
+            endTime: `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`
+        };
     }
 
+    // Pattern 2: "HHhs" format (e.g., "13hs")
+    const hourPattern = /\s+(\d{1,2})hs/i;
+    const hourMatch = horario.match(hourPattern);
+    
+    if (hourMatch) {
+        const hour = parseInt(hourMatch[1]);
+        return {
+            days: days,
+            startTime: `${hour.toString().padStart(2, '0')}:00`,
+            endTime: `${(hour + 2).toString().padStart(2, '0')}:00`
+        };
+    }
+
+    // Pattern 3: Single time "HH:MM" (assume 2 hour duration)
+    const singleTimePattern = /\s+(\d{1,2}):(\d{2})/;
+    const singleTimeMatch = horario.match(singleTimePattern);
+    
+    if (singleTimeMatch) {
+        const startHour = parseInt(singleTimeMatch[1]);
+        const startMin = parseInt(singleTimeMatch[2]);
+        const endHour = startHour + 2;
+        
+        return {
+            days: days,
+            startTime: `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`,
+            endTime: `${endHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`
+        };
+    }
+
+    // If no time found, return null
     return null;
 }
 
@@ -510,12 +854,14 @@ function formatDate(dateStr) {
              'July', 'August', 'September', 'October', 'November', 'December']
     };
     
+    const lang = currentLanguage || 'es';
+    
     if (classDate.getTime() === todayDate.getTime()) {
-        return currentLanguage === 'es' ? 'Hoy' : 'Today';
+        return lang === 'es' ? 'Hoy' : 'Today';
     } else if (classDate.getTime() === tomorrowDate.getTime()) {
-        return currentLanguage === 'es' ? 'Mañana' : 'Tomorrow';
+        return lang === 'es' ? 'Mañana' : 'Tomorrow';
     } else {
-        return `${dayNames[currentLanguage][date.getDay()]}, ${date.getDate()} ${monthNames[currentLanguage][date.getMonth()]}`;
+        return `${dayNames[lang][classDate.getDay()]}, ${classDate.getDate()} ${monthNames[lang][classDate.getMonth()]}`;
     }
 }
 

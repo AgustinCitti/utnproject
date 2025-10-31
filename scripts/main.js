@@ -73,9 +73,15 @@ async function initializeApp() {
         updateNotificationCount();
     }
     
-    // Update UI
-    updateDashboard();
-    updateNotificationCount();
+    // Force refresh next class after a short delay to ensure data is fully loaded
+    setTimeout(() => {
+        if (typeof loadNextClass === 'function') {
+            loadNextClass();
+        }
+        if (typeof updateStats === 'function') {
+            updateStats(); // Also update the KPI card
+        }
+    }, 500);
 }
 
 // Data Management
