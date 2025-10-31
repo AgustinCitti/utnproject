@@ -216,6 +216,34 @@ function showSection(sectionName, subsection = null) {
                 loadExams();
             }
             break;
+        case 'attendance':
+            // Show attendance view when navigating to attendance section
+            setTimeout(() => {
+                if (typeof showAttendanceView === 'function') {
+                    showAttendanceView();
+                }
+            }, 100);
+            if (typeof loadAttendance === 'function') {
+                loadAttendance();
+            }
+            break;
+        case 'grade-marking':
+            // Show grade marking view when navigating to grade-marking section
+            setTimeout(() => {
+                if (typeof showGradeMarkingView === 'function') {
+                    showGradeMarkingView();
+                } else {
+                    const gradeMarkingView = document.getElementById('gradeMarkingView');
+                    const gradeMarkingList = document.getElementById('gradeMarkingList');
+                    if (gradeMarkingView) {
+                        gradeMarkingView.style.display = 'block';
+                    }
+                    if (gradeMarkingList) {
+                        gradeMarkingList.style.display = 'none';
+                    }
+                }
+            }, 100);
+            break;
         case 'notifications':
             loadNotifications();
             break;

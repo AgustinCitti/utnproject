@@ -37,8 +37,81 @@
     }
 }
 
-/* Responsive Design */
+/* Dashboard Responsive Styles */
+@media (max-width: 1024px) {
+    .dashboard-content-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-sidebar {
+        order: -1; /* Show calendar first on smaller screens */
+    }
+    
+    .calendar-widget {
+        margin-bottom: 2rem;
+    }
+    
+    /* Stack KPI cards on tablet */
+    .dashboard-kpis {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 768px) {
+    .dashboard-hero {
+        padding: 2.5rem 1.5rem;
+        border-radius: 16px;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .hero-actions {
+        flex-direction: column;
+    }
+    
+    .hero-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .dashboard-kpis {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .kpi-card {
+        padding: 1.5rem;
+    }
+    
+    .kpi-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.5rem;
+    }
+    
+    .kpi-value {
+        font-size: 2rem;
+    }
+    
+    .quick-actions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .calendar-widget-grid {
+        gap: 2px;
+    }
+    
+    .calendar-widget-grid .calendar-day {
+        min-height: 32px;
+        font-size: 0.75rem;
+    }
+    
     .landing-nav {
         padding: 1rem;
         flex-wrap: wrap;

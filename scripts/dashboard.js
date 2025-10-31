@@ -2,10 +2,12 @@
 function initializeDashboard() {
     initializeCalendar();
     loadUpcomingClasses();
+    setupQuickActions();
     
     // Refresh upcoming classes every minute to keep them current
     setInterval(() => {
         loadUpcomingClasses();
+        updateStats(); // Also update stats periodically
     }, 60000); // 60 seconds
     
     // Make loadUpcomingClasses globally accessible for testing
@@ -107,6 +109,14 @@ function updateDashboard() {
     updateStats();
     updateCalendar();
     loadUpcomingClasses();
+    
+    // Re-initialize calendar if dashboard is visible
+    const dashboardSection = document.getElementById('dashboard');
+    if (dashboardSection && dashboardSection.classList.contains('active')) {
+        // Reset calendar initialization to allow re-render
+        calendarInitialized = false;
+        initializeCalendar();
+    }
 }
 
 function updateStats() {
@@ -115,7 +125,7 @@ function updateStats() {
     const attendanceRate = calculateAttendanceRate();
     const pendingNotifications = (appData.notifications || []).filter(n => !n.read).length;
 
-    // Update elements only if they exist on the current page
+    // Update KPI cards
     const totalStudentsEl = document.getElementById('totalStudents');
     if (totalStudentsEl) totalStudentsEl.textContent = totalStudents;
     
@@ -127,6 +137,185 @@ function updateStats() {
     
     const pendingNotificationsEl = document.getElementById('pendingNotifications');
     if (pendingNotificationsEl) pendingNotificationsEl.textContent = pendingNotifications;
+
+    // Update new KPI cards
+    const pendingTasksEl = document.getElementById('pendingTasks');
+    if (pendingTasksEl) {
+        const pendingTasks = calculatePendingTasks();
+        pendingTasksEl.textContent = pendingTasks;
+    }
+
+    const nextClassTimeEl = document.getElementById('nextClassTime');
+    if (nextClassTimeEl) {
+        const nextClass = getNextClassTime();
+        nextClassTimeEl.textContent = nextClass;
+    }
+}
+
+function calculatePendingTasks() {
+    let pendingCount = 0;
+    
+    // Count pending evaluations that need grading
+    const evaluations = appData.evaluacion || [];
+    const currentUserId = localStorage.getItem('userId');
+    
+    if (currentUserId) {
+        const userSubjects = (appData.materia || []).filter(m => 
+            m.Usuarios_docente_ID_docente === parseInt(currentUserId)
+        );
+        const userSubjectIds = userSubjects.map(s => s.ID_materia);
+        
+        evaluations.forEach(eval => {
+            if (userSubjectIds.includes(eval.Materia_ID_materia)) {
+                // Check if there are students without grades for this evaluation
+                const notes = appData.notas || [];
+                const evaluationNotes = notes.filter(n => n.Evaluacion_ID_evaluacion === eval.ID_evaluacion);
+                const students = (appData.estudiante || []).filter(e => {
+                    const enrollments = appData.alumnos_x_materia || [];
+                    return enrollments.some(enrollment => 
+                        enrollment.Estudiante_ID_Estudiante === e.ID_Estudiante &&
+                        enrollment.Materia_ID_materia === eval.Materia_ID_materia
+                    );
+                });
+                
+                if (evaluationNotes.length < students.length) {
+                    pendingCount += (students.length - evaluationNotes.length);
+                }
+            }
+        });
+    }
+    
+    // Count pending topics (content that's not completed)
+    const contenido = appData.contenido || [];
+    if (currentUserId) {
+        const userSubjects = (appData.materia || []).filter(m => 
+            m.Usuarios_docente_ID_docente === parseInt(currentUserId)
+        );
+        const userSubjectIds = userSubjects.map(s => s.ID_materia);
+        
+        contenido.forEach(content => {
+            if (userSubjectIds.includes(content.Materia_ID_materia) && 
+                (content.Estado === 'PENDIENTE' || content.Estado === 'EN_PROGRESO')) {
+                pendingCount++;
+            }
+        });
+    }
+    
+    return pendingCount;
+}
+
+function getNextClassTime() {
+    const nextClasses = getNextTwoClasses();
+    if (nextClasses.length === 0) {
+        return '--';
+    }
+    
+    const nextClass = nextClasses[0];
+    const today = new Date();
+    const [year, month, day] = nextClass.date.split('-');
+    const classDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    
+    const dayNames = {
+        es: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+        en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    };
+    
+    if (classDate.toDateString() === today.toDateString()) {
+        return `Hoy ${nextClass.time}`;
+    }
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    
+    if (classDate.toDateString() === tomorrow.toDateString()) {
+        return `Mañana ${nextClass.time}`;
+    }
+    
+    return `${dayNames[currentLanguage || 'es'][classDate.getDay()]} ${nextClass.time}`;
+}
+
+function setupQuickActions() {
+    // Hero section buttons
+    const quickCreateClassBtn = document.getElementById('quickCreateClassBtn');
+    if (quickCreateClassBtn) {
+        quickCreateClassBtn.addEventListener('click', () => {
+            if (typeof showSection === 'function') {
+                showSection('subjects-management');
+            }
+        });
+    }
+
+    const quickUploadMaterialBtn = document.getElementById('quickUploadMaterialBtn');
+    if (quickUploadMaterialBtn) {
+        quickUploadMaterialBtn.addEventListener('click', () => {
+            if (typeof showSection === 'function') {
+                showSection('subjects-management');
+            }
+        });
+    }
+
+    const quickViewReportsBtn = document.getElementById('quickViewReportsBtn');
+    if (quickViewReportsBtn) {
+        quickViewReportsBtn.addEventListener('click', () => {
+            if (typeof showSection === 'function') {
+                showSection('reports');
+            }
+        });
+    }
+
+    // Quick action buttons
+    const quickActionButtons = document.querySelectorAll('.quick-action-btn');
+    quickActionButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const action = btn.getAttribute('data-action');
+            if (typeof showSection !== 'function') {
+                console.error('showSection function not found');
+                return;
+            }
+            switch(action) {
+                case 'students':
+                    // Navigate to student management with students subsection
+                    showSection('student-management', 'students');
+                    break;
+                case 'attendance':
+                    // Navigate to attendance section and show attendance view
+                    showSection('attendance');
+                    setTimeout(() => {
+                        if (typeof showAttendanceView === 'function') {
+                            showAttendanceView();
+                        }
+                    }, 100);
+                    break;
+                case 'grades':
+                    // Navigate to grade marking section
+                    showSection('grade-marking');
+                    setTimeout(() => {
+                        if (typeof showGradeMarkingView === 'function') {
+                            showGradeMarkingView();
+                        } else {
+                            const gradeMarkingView = document.getElementById('gradeMarkingView');
+                            if (gradeMarkingView) {
+                                gradeMarkingView.style.display = 'block';
+                            }
+                        }
+                    }, 100);
+                    break;
+                case 'subjects':
+                    // Navigate to subjects management
+                    showSection('subjects-management');
+                    break;
+            }
+        });
+    });
+
+    // Calendar full view button
+    const viewFullCalendarBtn = document.getElementById('viewFullCalendarBtn');
+    if (viewFullCalendarBtn) {
+        viewFullCalendarBtn.addEventListener('click', () => {
+            // Could open a modal with full calendar view
+            console.log('Open full calendar view');
+        });
+    }
 }
 
 function calculateAverageGrade() {
@@ -150,7 +339,7 @@ function loadUpcomingClasses() {
     if (nextClasses.length === 0) {
         classesList.innerHTML = `
             <div class="empty-state">
-                <i class="fas fa-calendar-alt"></i>
+                <i class="fas fa-calendar-check"></i>
                 <h3 data-translate="no_upcoming_classes">No hay clases próximas</h3>
                 <p data-translate="no_classes_message">No hay clases programadas para los próximos días.</p>
             </div>
@@ -434,15 +623,30 @@ let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 
 function initializeCalendar() {
+    const calendarGrid = document.getElementById('calendarGrid');
+    
+    // Reset initialization if calendar grid exists and is empty or if we're on dashboard
+    if (calendarInitialized && calendarGrid && calendarGrid.children.length === 0) {
+        calendarInitialized = false;
+    }
+    
     if (calendarInitialized) return;
     
     const currentMonthElement = document.getElementById('currentMonth');
-    const calendarGrid = document.getElementById('calendarGrid');
     const prevMonthBtn = document.getElementById('prevMonth');
     const nextMonthBtn = document.getElementById('nextMonth');
     const toggleButtons = document.querySelectorAll('.toggle-btn');
 
     if (!currentMonthElement || !calendarGrid) return;
+
+    // Check if this is the widget calendar (different structure)
+    const isWidget = calendarGrid.classList.contains('calendar-widget-grid') || 
+                     calendarGrid.closest('.calendar-widget');
+
+    // Ensure the widget grid class is set
+    if (isWidget && !calendarGrid.classList.contains('calendar-widget-grid')) {
+        calendarGrid.classList.add('calendar-widget-grid');
+    }
 
     calendarInitialized = true;
     // Use global variables for month and year
@@ -464,6 +668,9 @@ function initializeCalendar() {
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const dayNamesShort = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
+    // Store isWidget in a way that's accessible to nested functions
+    const widgetMode = isWidget;
+
     function renderCalendar() {
         if (currentView === 'month') {
             renderMonthView();
@@ -480,8 +687,13 @@ function initializeCalendar() {
         calendarGrid.innerHTML = '';
         calendarGrid.classList.remove('week-view');
 
+        // For widget calendar, use shorter day names
+        const dayNamesForDisplay = widgetMode ? 
+            (currentLanguage === 'es' ? ['D', 'L', 'M', 'X', 'J', 'V', 'S'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']) :
+            dayNames;
+
         // Add day headers
-        dayNames.forEach(day => {
+        dayNamesForDisplay.forEach(day => {
             const dayHeader = document.createElement('div');
             dayHeader.className = 'calendar-day-header';
             dayHeader.textContent = day;
@@ -516,38 +728,53 @@ function initializeCalendar() {
             dayNumber.textContent = day;
             dayElement.appendChild(dayNumber);
             
-            // Add events container
-            const eventsContainer = document.createElement('div');
-            eventsContainer.className = 'day-events';
-            
-            // Get events for this day
+            // Get events for this day to show indicators
             const dayEvents = getEventsForDate(dayDate);
-            dayEvents.forEach(event => {
-                const eventElement = document.createElement('div');
-                let className = `event-item ${event.type}`;
-                
-                // Add special styling for recordatorios not belonging to user's subjects
-                if (event.type === 'recordatorio' && event.isUserSubject === false) {
-                    className += ' other-subject';
+            
+            if (widgetMode) {
+                // In widget mode, show a small indicator dot if there are events
+                if (dayEvents.length > 0) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'calendar-day-indicator';
+                    indicator.style.cssText = 'width: 4px; height: 4px; background: #667eea; border-radius: 50%; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);';
+                    dayElement.style.position = 'relative';
+                    dayElement.appendChild(indicator);
+                    
+                    // Add tooltip on hover
+                    dayElement.title = `${dayEvents.length} evento(s)`;
                 }
+            } else {
+                // Full calendar mode - show full event details
+                const eventsContainer = document.createElement('div');
+                eventsContainer.className = 'day-events';
                 
-                eventElement.className = className;
-                eventElement.innerHTML = `
-                    <div class="event-time">${event.time}</div>
-                    <div class="event-title">${event.title}</div>
-                    <div class="event-type">${event.typeLabel}</div>
-                    ${event.subject ? `<div class="event-subject">${event.subject}</div>` : ''}
-                `;
-                
-                // Add click interaction
-                eventElement.addEventListener('click', function() {
-                    showEventDetails(event, dayDate);
+                dayEvents.forEach(event => {
+                    const eventElement = document.createElement('div');
+                    let className = `event-item ${event.type}`;
+                    
+                    // Add special styling for recordatorios not belonging to user's subjects
+                    if (event.type === 'recordatorio' && event.isUserSubject === false) {
+                        className += ' other-subject';
+                    }
+                    
+                    eventElement.className = className;
+                    eventElement.innerHTML = `
+                        <div class="event-time">${event.time}</div>
+                        <div class="event-title">${event.title}</div>
+                        <div class="event-type">${event.typeLabel}</div>
+                        ${event.subject ? `<div class="event-subject">${event.subject}</div>` : ''}
+                    `;
+                    
+                    // Add click interaction
+                    eventElement.addEventListener('click', function() {
+                        showEventDetails(event, dayDate);
+                    });
+                    
+                    eventsContainer.appendChild(eventElement);
                 });
                 
-                eventsContainer.appendChild(eventElement);
-            });
-            
-            dayElement.appendChild(eventsContainer);
+                dayElement.appendChild(eventsContainer);
+            }
 
             // Highlight today
             const today = new Date();
