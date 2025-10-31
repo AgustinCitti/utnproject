@@ -45,14 +45,40 @@ async function initializeApp() {
         }
     }
     initializeLogin();
-    initializeDashboard();
-    initializeUnifiedStudentManagement();
-    initializeSubjects();
-    initializeGrades();
-    initializeNotifications();
-    initializeReports();
-    initializeAttendance();
-    initializeViewToggles();
+    
+    // Solo inicializar componentes si están disponibles (están en home.html, no en index.html)
+    if (typeof initializeDashboard === 'function') {
+        initializeDashboard();
+    }
+    if (typeof initializeUnifiedStudentManagement === 'function') {
+        initializeUnifiedStudentManagement();
+    }
+    if (typeof initializeSubjects === 'function') {
+        initializeSubjects();
+    }
+    if (typeof initializeGrades === 'function') {
+        initializeGrades();
+    }
+    if (typeof initializeNotifications === 'function') {
+        initializeNotifications();
+    }
+    if (typeof initializeReports === 'function') {
+        initializeReports();
+    }
+    if (typeof initializeAttendance === 'function') {
+        initializeAttendance();
+    }
+    if (typeof initializeViewToggles === 'function') {
+        initializeViewToggles();
+    }
+    
+    // Update UI (solo si las funciones existen)
+    if (typeof updateDashboard === 'function') {
+        updateDashboard();
+    }
+    if (typeof updateNotificationCount === 'function') {
+        updateNotificationCount();
+    }
     
     // Update UI
     updateDashboard();
@@ -62,11 +88,18 @@ async function initializeApp() {
 // Data Management
 async function loadData() {
     try {
-        const response = await fetch('../api/get_data.php');
+        // Determinar la ruta base según desde dónde se carga
+        const isInPages = window.location.pathname.includes('/pages/');
+        const baseUrl = isInPages ? '../api' : 'api';
+        const response = await fetch(`${baseUrl}/get_data.php`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         appData = await response.json();
-        // Also make data available globally for reports
+        // También hacer data disponible globalmente para reports
         window.data = appData;
         console.log('Data loaded successfully:', appData);
+        // ... resto del código ...
         console.log('Data structure check:', {
             usuarios_docente: appData.usuarios_docente?.length || 0,
             materia: appData.materia?.length || 0,

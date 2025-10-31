@@ -1,12 +1,15 @@
 // Unified Student Management - Combines Students, Grades, Attendance, and Exams
 function initializeUnifiedStudentManagement() {
+    console.log('[unified-student] Inicializando gestión de estudiantes...');
     const addStudentBtn = document.getElementById('addStudentBtn');
+    console.log('[unified-student] addStudentBtn encontrado:', !!addStudentBtn);
     const markAttendanceBtn = document.getElementById('markAttendanceBtn');
     const unifiedSubjectFilter = document.getElementById('unifiedSubjectFilter');
     const unifiedCourseFilter = document.getElementById('unifiedCourseFilter');
     const unifiedTopicFilter = document.getElementById('unifiedTopicFilter');
     const unifiedGridViewBtn = document.getElementById('unifiedGridViewBtn');
     const unifiedListViewBtn = document.getElementById('unifiedListViewBtn');
+    const unifiedMatrixViewBtn = document.getElementById('unifiedMatrixViewBtn');
     const closeStudentDetail = document.getElementById('closeStudentDetail');
     
     // Tab navigation elements
@@ -22,9 +25,32 @@ function initializeUnifiedStudentManagement() {
     // Event listeners for action buttons
     if (addStudentBtn) {
         addStudentBtn.addEventListener('click', () => {
-            showModal('studentModal');
-            clearStudentForm();
+            try {
+                console.log('[unified-student] Botón agregar estudiante clickeado');
+                if (typeof showModal === 'function') {
+                    showModal('studentModal');
+                } else {
+                    const modal = document.getElementById('studentModal');
+                    if (modal) {
+                        modal.classList.add('active');
+                        console.log('[unified-student] Modal abierto manualmente');
+                    } else {
+                        console.error('[unified-student] Modal studentModal no encontrado');
+                    }
+                }
+                if (typeof clearStudentForm === 'function') {
+                    clearStudentForm();
+                } else {
+                    const form = document.getElementById('studentForm');
+                    if (form) form.reset();
+                }
+            } catch (e) {
+                console.error('[unified-student] Error al abrir modal de estudiante:', e);
+                alert('Error al abrir el formulario de estudiante');
+            }
         });
+    } else {
+        console.warn('[unified-student] Botón addStudentBtn no encontrado');
     }
 
     if (markAttendanceBtn) {
@@ -64,6 +90,12 @@ function initializeUnifiedStudentManagement() {
     if (unifiedListViewBtn) {
         unifiedListViewBtn.addEventListener('click', () => {
             switchToListView();
+        });
+    }
+
+    if (unifiedMatrixViewBtn) {
+        unifiedMatrixViewBtn.addEventListener('click', () => {
+            switchToMatrixView();
         });
     }
 
@@ -401,7 +433,8 @@ function getFilteredUnifiedStudents() {
         // Get subjects taught by current teacher
         let teacherSubjects = appData.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
         
-        // Si el profesor tiene materias, filtrar estudiantes inscritos en esas materias
+        // Si el profesor tiene materias, mostrar estudiantes inscritos en esas materias
+        // PERO también mostrar estudiantes que no tienen materias asignadas aún
         if (teacherSubjects.length > 0) {
             // Filter by course/division if selected
             if (selectedCourse) {
@@ -411,12 +444,26 @@ function getFilteredUnifiedStudents() {
             const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
             
             // Get students enrolled in these subjects
-            const enrolledStudentIds = appData.alumnos_x_materia
-                .filter(enrollment => teacherSubjectIds.includes(enrollment.Materia_ID_materia))
-                .map(enrollment => enrollment.Estudiante_ID_Estudiante);
+            const enrolledStudentIds = new Set();
+            (appData.alumnos_x_materia || []).forEach(enrollment => {
+                if (teacherSubjectIds.includes(enrollment.Materia_ID_materia)) {
+                    enrolledStudentIds.add(enrollment.Estudiante_ID_Estudiante);
+                }
+            });
             
+            // Mostrar estudiantes inscritos en materias del docente
+            // Y también estudiantes que NO tienen ninguna materia asignada (recién creados)
+            const studentsWithoutSubjects = (appData.estudiante || []).filter(student => {
+                const hasAnyEnrollment = (appData.alumnos_x_materia || []).some(
+                    axm => axm.Estudiante_ID_Estudiante === student.ID_Estudiante
+                );
+                return !hasAnyEnrollment;
+            });
+            
+            const enrolledStudentsArray = Array.from(enrolledStudentIds);
             filteredStudents = filteredStudents.filter(student => 
-                enrolledStudentIds.includes(student.ID_Estudiante)
+                enrolledStudentsArray.includes(student.ID_Estudiante) || 
+                studentsWithoutSubjects.some(s => s.ID_Estudiante === student.ID_Estudiante)
             );
         }
         // Si el profesor NO tiene materias, mostrar TODOS los estudiantes
@@ -451,15 +498,148 @@ function getFilteredUnifiedStudents() {
 
 function filterUnifiedData() {
     loadUnifiedStudentData();
+    // También actualizar la matriz si está visible
+    const studentMatrix = document.getElementById('unifiedStudentMatrix');
+    if (studentMatrix && studentMatrix.style.display !== 'none') {
+        loadStudentMatrix();
+    }
+}
+
+function loadStudentMatrix() {
+    const matrixContainer = document.getElementById('unifiedStudentMatrix');
+    if (!matrixContainer) return;
+
+    // Obtener ID del docente actual
+    const currentUserId = localStorage.getItem('userId');
+    const teacherId = currentUserId ? parseInt(currentUserId) : null;
+
+    if (!teacherId) {
+        matrixContainer.innerHTML = '<p class="no-data">No hay docente logueado</p>';
+        return;
+    }
+
+    // Filtrar materias del docente actual
+    const teacherSubjects = (appData.materia || []).filter(m => 
+        m.Usuarios_docente_ID_docente === teacherId && 
+        (m.Estado === 'ACTIVA' || !m.Estado)
+    );
+
+    if (teacherSubjects.length === 0) {
+        matrixContainer.innerHTML = '<p class="no-data">No hay materias disponibles. Creá materias primero.</p>';
+        return;
+    }
+
+    // Obtener estudiantes (filtrar por los inscritos en las materias del docente)
+    const enrolledStudentIds = new Set();
+    (appData.alumnos_x_materia || []).forEach(enrollment => {
+        if (teacherSubjects.some(s => s.ID_materia === enrollment.Materia_ID_materia)) {
+            enrolledStudentIds.add(enrollment.Estudiante_ID_Estudiante);
+        }
+    });
+
+    let filteredStudents = (appData.estudiante || []).filter(student => 
+        enrolledStudentIds.has(student.ID_Estudiante)
+    );
+
+    // Aplicar filtros adicionales si existen
+    const subjectFilter = document.getElementById('unifiedSubjectFilter');
+    const courseFilter = document.getElementById('unifiedCourseFilter');
+    
+    if (subjectFilter && subjectFilter.value) {
+        const selectedSubjectId = parseInt(subjectFilter.value);
+        const studentIdsInSubject = (appData.alumnos_x_materia || [])
+            .filter(axm => axm.Materia_ID_materia === selectedSubjectId)
+            .map(axm => axm.Estudiante_ID_Estudiante);
+        filteredStudents = filteredStudents.filter(s => 
+            studentIdsInSubject.includes(s.ID_Estudiante)
+        );
+    }
+
+    if (courseFilter && courseFilter.value) {
+        const selectedCourse = courseFilter.value;
+        const subjectIdsInCourse = teacherSubjects
+            .filter(s => s.Curso_division === selectedCourse)
+            .map(s => s.ID_materia);
+        const studentIdsInCourse = (appData.alumnos_x_materia || [])
+            .filter(axm => subjectIdsInCourse.includes(axm.Materia_ID_materia))
+            .map(axm => axm.Estudiante_ID_Estudiante);
+        filteredStudents = filteredStudents.filter(s => 
+            studentIdsInCourse.includes(s.ID_Estudiante)
+        );
+    }
+
+    // Crear mapa de inscripciones para acceso rápido
+    const enrollmentMap = new Map();
+    (appData.alumnos_x_materia || []).forEach(axm => {
+        const key = `${axm.Estudiante_ID_Estudiante}-${axm.Materia_ID_materia}`;
+        enrollmentMap.set(key, axm);
+    });
+
+    // Crear la tabla
+    matrixContainer.innerHTML = `
+        <div class="matrix-container">
+            <div class="table-responsive">
+                <table class="data-table matrix-table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="position: sticky; left: 0; background: #fff; z-index: 10; border: 1px solid #ddd; padding: 12px;">
+                                <strong>Estudiante</strong>
+                            </th>
+                            ${teacherSubjects.map(subject => `
+                                <th style="border: 1px solid #ddd; padding: 12px; text-align: center; min-width: 120px;">
+                                    <div>${subject.Nombre}</div>
+                                    <small style="color: #666; font-size: 0.85em;">${subject.Curso_division}</small>
+                                </th>
+                            `).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filteredStudents.length === 0 ? `
+                            <tr>
+                                <td colspan="${teacherSubjects.length + 1}" style="text-align: center; padding: 40px; color: #999;">
+                                    No hay estudiantes inscritos
+                                </td>
+                            </tr>
+                        ` : filteredStudents.map(student => `
+                            <tr>
+                                <td style="position: sticky; left: 0; background: #fff; z-index: 9; border: 1px solid #ddd; padding: 12px; font-weight: 500;">
+                                    <strong>${student.Nombre} ${student.Apellido}</strong>
+                                </td>
+                                ${teacherSubjects.map(subject => {
+                                    const key = `${student.ID_Estudiante}-${subject.ID_materia}`;
+                                    const isEnrolled = enrollmentMap.has(key);
+                                    const enrollment = enrollmentMap.get(key);
+                                    return `
+                                        <td style="border: 1px solid #ddd; padding: 12px; text-align: center; background: ${isEnrolled ? '#e8f5e9' : '#ffebee'};">
+                                            ${isEnrolled ? `
+                                                <span style="color: #2e7d32; font-size: 1.2em; font-weight: bold;">✓</span>
+                                                <div style="font-size: 0.75em; color: #666; margin-top: 4px;">
+                                                    ${enrollment.Estado || 'INSCRITO'}
+                                                </div>
+                                            ` : `
+                                                <span style="color: #c62828; font-size: 1.2em;">✗</span>
+                                            `}
+                                        </td>
+                                    `;
+                                }).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
 }
 
 function switchToGridView() {
     // Handle students view
     const studentCards = document.getElementById('unifiedStudentCards');
     const studentList = document.getElementById('unifiedStudentList');
-    if (studentCards && studentList) {
+    const studentMatrix = document.getElementById('unifiedStudentMatrix');
+    if (studentCards && studentList && studentMatrix) {
         studentCards.style.display = 'grid';
         studentList.style.display = 'none';
+        studentMatrix.style.display = 'none';
     }
     
     // Handle exams view
@@ -472,15 +652,19 @@ function switchToGridView() {
     
     document.getElementById('unifiedGridViewBtn').classList.add('active');
     document.getElementById('unifiedListViewBtn').classList.remove('active');
+    const matrixBtn = document.getElementById('unifiedMatrixViewBtn');
+    if (matrixBtn) matrixBtn.classList.remove('active');
 }
 
 function switchToListView() {
     // Handle students view
     const studentCards = document.getElementById('unifiedStudentCards');
     const studentList = document.getElementById('unifiedStudentList');
-    if (studentCards && studentList) {
+    const studentMatrix = document.getElementById('unifiedStudentMatrix');
+    if (studentCards && studentList && studentMatrix) {
         studentCards.style.display = 'none';
         studentList.style.display = 'block';
+        studentMatrix.style.display = 'none';
     }
     
     // Handle exams view
@@ -493,6 +677,26 @@ function switchToListView() {
     
     document.getElementById('unifiedGridViewBtn').classList.remove('active');
     document.getElementById('unifiedListViewBtn').classList.add('active');
+    const matrixBtn = document.getElementById('unifiedMatrixViewBtn');
+    if (matrixBtn) matrixBtn.classList.remove('active');
+}
+
+function switchToMatrixView() {
+    // Handle students view
+    const studentCards = document.getElementById('unifiedStudentCards');
+    const studentList = document.getElementById('unifiedStudentList');
+    const studentMatrix = document.getElementById('unifiedStudentMatrix');
+    if (studentCards && studentList && studentMatrix) {
+        studentCards.style.display = 'none';
+        studentList.style.display = 'none';
+        studentMatrix.style.display = 'block';
+        loadStudentMatrix();
+    }
+    
+    document.getElementById('unifiedGridViewBtn').classList.remove('active');
+    document.getElementById('unifiedListViewBtn').classList.remove('active');
+    const matrixBtn = document.getElementById('unifiedMatrixViewBtn');
+    if (matrixBtn) matrixBtn.classList.add('active');
 }
 
 function populateSubjectFilter() {
@@ -1126,7 +1330,7 @@ function getFilteredExams() {
         const todayStr = today.toISOString().split('T')[0];
         
         filteredExams = filteredExams.filter(exam => {
-            const examDate = new Date(exam.Fecha + 'T00:00:00'); // Ensure consistent timezone
+            const examDate = new Date(exam.Fecha + 'T00:00:00');
             const todayDate = new Date(todayStr + 'T00:00:00');
             
             switch (selectedDate) {
@@ -1153,4 +1357,72 @@ function getFilteredExams() {
     }
     
     return filteredExams;
+}
+
+// Funciones de manejo de exámenes (fuera de getFilteredExams)
+function saveExam(event) {
+    event.preventDefault();
+    
+    const payload = {
+        Titulo: document.getElementById('examTitle').value,
+        Materia_ID_materia: parseInt(document.getElementById('examSubject').value),
+        Fecha: document.getElementById('examDate').value,
+        Tipo: document.getElementById('examType').value,
+        Descripcion: document.getElementById('examDescription').value || '',
+        Estado: 'PROGRAMADA'
+    };
+    
+    if (typeof API !== 'undefined' && typeof API.createEvaluacion === 'function') {
+        API.createEvaluacion(payload).then(async () => {
+            closeModal(document.querySelector('.modal'));
+            if (typeof hydrateAppData === 'function') await hydrateAppData();
+            loadExams();
+        }).catch(err => alert(err.message || 'No se pudo guardar la evaluación.'));
+    } else {
+        alert('Sistema de API no disponible');
+    }
+}
+
+function editExam(id) {
+    const exam = appData.evaluacion.find(e => e.ID_evaluacion === id);
+    if (!exam) return;
+    
+    showExamModal();
+    document.getElementById('examTitle').value = exam.Titulo;
+    document.getElementById('examSubject').value = exam.Materia_ID_materia;
+    document.getElementById('examDate').value = exam.Fecha;
+    document.getElementById('examType').value = exam.Tipo;
+    document.getElementById('examDescription').value = exam.Descripcion || '';
+    
+    const form = document.querySelector('.modal form');
+    if (form) {
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const payload = {
+                Titulo: document.getElementById('examTitle').value,
+                Materia_ID_materia: parseInt(document.getElementById('examSubject').value),
+                Fecha: document.getElementById('examDate').value,
+                Tipo: document.getElementById('examType').value,
+                Descripcion: document.getElementById('examDescription').value || '',
+                Estado: exam.Estado || 'PROGRAMADA'
+            };
+            if (typeof API !== 'undefined' && typeof API.updateEvaluacion === 'function') {
+                API.updateEvaluacion(id, payload).then(async () => {
+                    closeModal(document.querySelector('.modal'));
+                    if (typeof hydrateAppData === 'function') await hydrateAppData();
+                    loadExams();
+                }).catch(err => alert(err.message || 'No se pudo actualizar la evaluación.'));
+            }
+        };
+    }
+}
+
+function deleteExam(id) {
+    if (!confirm('¿Eliminar esta evaluación?')) return;
+    if (typeof API !== 'undefined' && typeof API.deleteEvaluacion === 'function') {
+        API.deleteEvaluacion(id).then(async () => {
+            if (typeof hydrateAppData === 'function') await hydrateAppData();
+            loadExams();
+        }).catch(err => alert(err.message || 'No se pudo eliminar la evaluación.'));
+    }
 }
