@@ -950,6 +950,9 @@ function parseSchedule(horario) {
     return null;
 }
 
+// Make parseSchedule globally available for calendar.js
+window.parseSchedule = parseSchedule;
+
 function getNextClassOccurrences(schedule, fromDate, count) {
     const occurrences = [];
     const currentDate = new Date(fromDate);

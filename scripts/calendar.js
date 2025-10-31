@@ -262,54 +262,113 @@ function renderDaysGrid() {
 }
 
 function renderEvents() {
-    if (!appData) return;
+    if (!appData) {
+        console.warn('Calendar: appData not loaded yet');
+        return;
+    }
     
-    // Get all events (notifications and recordatorios)
+    if (!appData.materia || !appData.usuarios_docente) {
+        console.warn('Calendar: Required data not loaded yet', {
+            hasMateria: !!appData.materia,
+            hasUsuarios: !!appData.usuarios_docente,
+            hasEvaluacion: !!appData.evaluacion,
+            hasRecordatorio: !!appData.recordatorio
+        });
+        return;
+    }
+    
+    // Get all events (notifications, exams, and recordatorios)
     const events = getAllEvents();
     
+    if (events.length === 0) {
+        console.log('Calendar: No events found. This might be normal if no events exist in the current view period.');
+        console.log('Calendar: Debug info - appData keys:', Object.keys(appData));
+        return;
+    }
+    
+    console.log('Calendar: Rendering', events.length, 'events');
+    
     events.forEach(event => {
-        const eventDate = new Date(event.date);
-        const eventDayIndex = getDayIndexInWeek(eventDate);
-        
-        if (eventDayIndex === -1) return; // Event not in current week
-        
-        // Find the cell for this event
-        const timeSlot = findTimeSlotForEvent(event);
-        const cells = document.querySelectorAll(`[data-date="${formatDateForCell(eventDate)}"]`);
-        const cell = Array.from(cells).find(c => {
-            const cellTime = c.dataset.time;
-            return cellTime === timeSlot;
-        });
-        
-        if (!cell) return;
-        
-        // Create event element
-        const eventElement = document.createElement('div');
-        eventElement.className = `calendar-event event-${event.type}`;
-        eventElement.style.backgroundColor = getEventColor(event);
-        
-        const eventTime = document.createElement('div');
-        eventTime.className = 'event-time';
-        eventTime.textContent = formatEventTime(event);
-        
-        const eventTitle = document.createElement('div');
-        eventTitle.className = 'event-title';
-        eventTitle.textContent = event.title;
-        
-        const eventMeta = document.createElement('div');
-        eventMeta.className = 'event-meta';
-        eventMeta.innerHTML = getEventMeta(event);
-        
-        eventElement.appendChild(eventTime);
-        eventElement.appendChild(eventTitle);
-        eventElement.appendChild(eventMeta);
-        
-        // Add click handler
-        eventElement.addEventListener('click', () => {
-            showEventDetails(event);
-        });
-        
-        cell.appendChild(eventElement);
+        try {
+            const eventDate = new Date(event.date);
+            if (isNaN(eventDate.getTime())) {
+                console.warn('Calendar: Invalid date for event:', event);
+                return;
+            }
+            
+            console.log('Calendar: Processing event:', {
+                title: event.title,
+                type: event.type,
+                eventDate: eventDate.toISOString(),
+                eventDateString: eventDate.toLocaleString()
+            });
+            
+            const eventDayIndex = getDayIndexInWeek(eventDate);
+            console.log('Calendar: Event day index:', eventDayIndex, 'Week start:', calendarWeekStart?.toISOString());
+            
+            if (eventDayIndex === -1) {
+                console.log('Calendar: Event not in current week, skipping');
+                return; // Event not in current week
+            }
+            
+            // Find the cell for this event
+            const timeSlot = findTimeSlotForEvent(event);
+            const formattedDate = formatDateForCell(eventDate);
+            console.log('Calendar: Looking for cell - date:', formattedDate, 'time:', timeSlot);
+            
+            const cells = document.querySelectorAll(`[data-date="${formattedDate}"]`);
+            console.log('Calendar: Found', cells.length, 'cells for date', formattedDate);
+            
+            const cell = Array.from(cells).find(c => {
+                const cellTime = c.dataset.time;
+                const matches = cellTime === timeSlot;
+                if (!matches && cells.length > 0) {
+                    console.log('Calendar: Cell time mismatch:', cellTime, 'vs', timeSlot);
+                }
+                return matches;
+            });
+            
+            if (!cell) {
+                console.warn('Calendar: Cell not found for event:', {
+                    date: formattedDate,
+                    time: timeSlot,
+                    availableTimes: Array.from(cells).slice(0, 5).map(c => c.dataset.time)
+                });
+                return;
+            }
+            
+            console.log('Calendar: Found cell, rendering event:', event.title);
+            
+            // Create event element
+            const eventElement = document.createElement('div');
+            eventElement.className = `calendar-event event-${event.type}`;
+            eventElement.style.backgroundColor = getEventColor(event);
+            
+            const eventTime = document.createElement('div');
+            eventTime.className = 'event-time';
+            eventTime.textContent = formatEventTime(event);
+            
+            const eventTitle = document.createElement('div');
+            eventTitle.className = 'event-title';
+            eventTitle.textContent = event.title;
+            
+            const eventMeta = document.createElement('div');
+            eventMeta.className = 'event-meta';
+            eventMeta.innerHTML = getEventMeta(event);
+            
+            eventElement.appendChild(eventTime);
+            eventElement.appendChild(eventTitle);
+            eventElement.appendChild(eventMeta);
+            
+            // Add click handler
+            eventElement.addEventListener('click', () => {
+                showEventDetails(event);
+            });
+            
+            cell.appendChild(eventElement);
+        } catch (error) {
+            console.error('Error rendering event:', error, event);
+        }
     });
 }
 
@@ -318,7 +377,35 @@ function getAllEvents() {
     
     // Get current user
     const currentUser = getCurrentUserForCalendar();
-    if (!currentUser) return events;
+    if (!currentUser) {
+        console.warn('Calendar: No current user found, cannot load events');
+        return events;
+    }
+    
+    console.log('Calendar: Current user:', currentUser.ID_docente, currentUser.Nombre_docente);
+    
+    // Get user's subjects
+    let userSubjects = [];
+    let subjectIds = [];
+    
+    if (appData.materia) {
+        userSubjects = appData.materia.filter(m => 
+            m.Usuarios_docente_ID_docente === currentUser.ID_docente || 
+            m.Usuarios_docente_ID_docente == currentUser.ID_docente ||
+            parseInt(m.Usuarios_docente_ID_docente) === parseInt(currentUser.ID_docente)
+        );
+        subjectIds = userSubjects.map(s => s.ID_materia);
+        console.log('Calendar: Found', userSubjects.length, 'subjects for user:', subjectIds);
+        console.log('Calendar: Subject IDs types:', subjectIds.map(id => ({id, type: typeof id})));
+        console.log('Calendar: User subjects details:', userSubjects.map(s => ({
+            id: s.ID_materia,
+            nombre: s.Nombre,
+            docente_id: s.Usuarios_docente_ID_docente,
+            docente_id_type: typeof s.Usuarios_docente_ID_docente
+        })));
+    } else {
+        console.warn('Calendar: appData.materia not available');
+    }
     
     // Get notifications
     if (appData.notifications) {
@@ -336,34 +423,169 @@ function getAllEvents() {
         });
     }
     
+    // Get exams (evaluaciones) for current user's subjects
+    if (appData.evaluacion && appData.materia && subjectIds.length > 0) {
+        console.log('Calendar: Checking exams. Total exams in data:', appData.evaluacion.length);
+        console.log('Calendar: Subject IDs to match (as numbers):', subjectIds.map(id => parseInt(id)));
+        console.log('Calendar: Sample exam data:', appData.evaluacion.slice(0, 3).map(e => ({
+            id: e.ID_evaluacion,
+            materia_id: e.Materia_ID_materia,
+            materia_id_type: typeof e.Materia_ID_materia,
+            titulo: e.Titulo,
+            fecha: e.Fecha
+        })));
+        
+        const examCount = appData.evaluacion.filter(e => {
+            const examMateriaId = e.Materia_ID_materia;
+            // Try both string and number matching
+            return subjectIds.includes(examMateriaId) || 
+                   subjectIds.includes(parseInt(examMateriaId)) ||
+                   subjectIds.includes(String(examMateriaId));
+        }).length;
+        console.log('Calendar: Found', examCount, 'exams for user subjects');
+        
+        appData.evaluacion.forEach(evaluacion => {
+            const examMateriaId = evaluacion.Materia_ID_materia;
+            const matches = subjectIds.includes(examMateriaId) || 
+                           subjectIds.includes(parseInt(examMateriaId)) ||
+                           subjectIds.includes(String(examMateriaId));
+            
+            if (matches) {
+                const materia = appData.materia.find(m => 
+                    m.ID_materia === evaluacion.Materia_ID_materia
+                );
+                
+                // Parse date - handle both date-only and datetime formats
+                let examDate = new Date(evaluacion.Fecha);
+                if (isNaN(examDate.getTime())) {
+                    // If invalid date, try adding time
+                    examDate = new Date(evaluacion.Fecha + ' 09:00:00');
+                }
+                
+                events.push({
+                    id: `exam_${evaluacion.ID_evaluacion}`,
+                    type: 'exam',
+                    title: evaluacion.Titulo || 'Examen',
+                    description: evaluacion.Descripcion || `Examen de ${materia ? materia.Nombre : 'Materia'}`,
+                    date: examDate,
+                    tipo: evaluacion.Tipo || 'EXAMEN',
+                    materia: materia ? materia.Nombre : 'Unknown',
+                    evaluacion: evaluacion
+                });
+            }
+        });
+    }
+    
+    // Get classes (materias) for current user - parse schedule from Horario field
+    // Try to get parseSchedule from dashboard.js
+    const parseScheduleFunc = typeof parseSchedule === 'function' ? parseSchedule : 
+                               (typeof window.parseSchedule === 'function' ? window.parseSchedule : null);
+    
+    if (appData.materia && subjectIds.length > 0 && parseScheduleFunc) {
+        userSubjects.forEach(subject => {
+            if (!subject.Horario || subject.Estado !== 'ACTIVA') {
+                return;
+            }
+            
+            const schedule = parseScheduleFunc(subject.Horario);
+            if (!schedule) {
+                console.log('Calendar: Could not parse schedule for subject:', subject.Nombre, 'Horario:', subject.Horario);
+                return;
+            }
+            
+            console.log('Calendar: Parsed schedule for', subject.Nombre, ':', schedule);
+            
+            // Generate class events for the current week (for week view) or month (for month view)
+            const viewStart = calendarCurrentView === 'week' ? 
+                new Date(calendarWeekStart) : 
+                new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth(), 1);
+            
+            const viewEnd = calendarCurrentView === 'week' ? 
+                new Date(calendarWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000) : 
+                new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth() + 1, 0);
+            
+            let classCount = 0;
+            // Generate classes for the view period
+            for (let d = new Date(viewStart); d <= viewEnd; d.setDate(d.getDate() + 1)) {
+                if (schedule.days.includes(d.getDay())) {
+                    const [hours, minutes] = schedule.startTime.split(':');
+                    const classDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(), parseInt(hours), parseInt(minutes), 0);
+                    
+                    events.push({
+                        id: `class_${subject.ID_materia}_${classDate.toISOString()}`,
+                        type: 'class',
+                        title: subject.Nombre,
+                        description: `Clase de ${subject.Nombre}`,
+                        date: classDate,
+                        tipo: 'CLASE',
+                        materia: subject.Nombre,
+                        aula: subject.Aula || 'Aula por asignar',
+                        horario: subject.Horario,
+                        subject: subject
+                    });
+                    classCount++;
+                }
+            }
+            if (classCount > 0) {
+                console.log('Calendar: Generated', classCount, 'class events for', subject.Nombre);
+            }
+        });
+    }
+    
     // Get recordatorios for current user's subjects
-    if (appData.recordatorio && appData.materia) {
-        const userSubjects = appData.materia.filter(m => 
-            m.Usuarios_docente_ID_docente === currentUser.ID_docente
-        );
-        const subjectIds = userSubjects.map(s => s.ID_materia);
+    if (appData.recordatorio && appData.materia && subjectIds.length > 0) {
+        console.log('Calendar: Checking recordatorios. Total recordatorios in data:', appData.recordatorio.length);
+        console.log('Calendar: Sample recordatorio data:', appData.recordatorio.slice(0, 3).map(r => ({
+            id: r.ID_recordatorio,
+            materia_id: r.Materia_ID_materia,
+            materia_id_type: typeof r.Materia_ID_materia,
+            descripcion: r.Descripcion,
+            fecha: r.Fecha
+        })));
+        
+        const reminderCount = appData.recordatorio.filter(r => {
+            const recMateriaId = r.Materia_ID_materia;
+            // Try both string and number matching
+            return subjectIds.includes(recMateriaId) || 
+                   subjectIds.includes(parseInt(recMateriaId)) ||
+                   subjectIds.includes(String(recMateriaId));
+        }).length;
+        console.log('Calendar: Found', reminderCount, 'recordatorios for user subjects');
         
         appData.recordatorio.forEach(recordatorio => {
-            if (subjectIds.includes(recordatorio.Materia_ID_materia)) {
+            const recMateriaId = recordatorio.Materia_ID_materia;
+            const matches = subjectIds.includes(recMateriaId) || 
+                           subjectIds.includes(parseInt(recMateriaId)) ||
+                           subjectIds.includes(String(recMateriaId));
+            
+            if (matches) {
                 const materia = appData.materia.find(m => 
                     m.ID_materia === recordatorio.Materia_ID_materia
                 );
+                
+                // Parse date - handle both date-only and datetime formats
+                let reminderDate = new Date(recordatorio.Fecha);
+                if (isNaN(reminderDate.getTime())) {
+                    // If invalid date, try adding time
+                    reminderDate = new Date(recordatorio.Fecha + ' 09:00:00');
+                }
                 
                 events.push({
                     id: `rec_${recordatorio.ID_recordatorio}`,
                     type: 'recordatorio',
                     title: getRecordatorioTitle(recordatorio),
                     description: recordatorio.Descripcion,
-                    date: new Date(recordatorio.Fecha),
+                    date: reminderDate,
                     tipo: recordatorio.Tipo,
                     prioridad: recordatorio.Prioridad,
-                    materia: materia ? materia.Nombre_materia : 'Unknown',
+                    materia: materia ? materia.Nombre : 'Unknown',
                     recordatorio: recordatorio
                 });
             }
         });
     }
     
+    console.log('Calendar: Total events found:', events.length);
     return events;
 }
 
@@ -374,21 +596,40 @@ function shouldShowNotification(notif, docenteId) {
 
 // Use getCurrentUser from notifications.js if available, otherwise define it here
 function getCurrentUserForCalendar() {
-    // Try to use global getCurrentUser from notifications.js
+    // Try to use global getCurrentUser from notifications.js or dashboard.js
     if (typeof getCurrentUser === 'function') {
-        return getCurrentUser();
+        const user = getCurrentUser();
+        if (user) return user;
     }
     
     // Fallback implementation
-    if (!appData || !appData.usuarios_docente) return null;
-    
-    // Get from session storage or find first user (for demo)
-    const userId = sessionStorage.getItem('user_id');
-    if (userId) {
-        return appData.usuarios_docente.find(u => u.ID_docente == userId);
+    if (!appData || !appData.usuarios_docente) {
+        console.warn('Calendar: appData or usuarios_docente not available');
+        return null;
     }
     
-    return appData.usuarios_docente[0] || null;
+    // Get from localStorage (where login stores it)
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+        const user = appData.usuarios_docente.find(u => u.ID_docente == userId || u.ID_docente == parseInt(userId));
+        if (user) {
+            console.log('Calendar: Found user by userId:', user);
+            return user;
+        }
+    }
+    
+    // Try email from localStorage as fallback
+    const email = localStorage.getItem('userEmail') || localStorage.getItem('username');
+    if (email) {
+        const user = appData.usuarios_docente.find(u => u.Email_docente === email);
+        if (user) {
+            console.log('Calendar: Found user by email:', user);
+            return user;
+        }
+    }
+    
+    console.warn('Calendar: No user found. userId:', userId, 'email:', email);
+    return null;
 }
 
 function getRecordatorioTitle(recordatorio) {
@@ -404,26 +645,47 @@ function getRecordatorioTitle(recordatorio) {
 }
 
 function getDayIndexInWeek(date) {
+    if (!calendarWeekStart) return -1;
+    
     const weekStart = new Date(calendarWeekStart);
+    weekStart.setHours(0, 0, 0, 0); // Start of day
+    
     const weekEnd = new Date(calendarWeekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999); // End of day
     
-    if (date < weekStart || date > weekEnd) return -1;
+    const eventDate = new Date(date);
+    eventDate.setHours(0, 0, 0, 0); // Compare only dates, not times
     
-    const dayDiff = Math.floor((date - weekStart) / (1000 * 60 * 60 * 24));
+    if (eventDate < weekStart || eventDate > weekEnd) return -1;
+    
+    const dayDiff = Math.floor((eventDate - weekStart) / (1000 * 60 * 60 * 24));
     return dayDiff;
 }
 
 function findTimeSlotForEvent(event) {
-    // For now, use 9:00 AM as default, or parse from event if available
+    // Parse time from event date
     const hour = event.date.getHours();
     const minute = event.date.getMinutes();
     
-    const timeStr = `${hour.toString().padStart(2, '0')}:${minute < 30 ? '00' : '30'}`;
+    // Round to nearest 30-minute slot
+    const roundedMinute = minute < 30 ? 0 : 30;
+    const timeStr = `${hour.toString().padStart(2, '0')}:${roundedMinute.toString().padStart(2, '0')}`;
+    
+    console.log('Calendar: Event time:', hour, ':', minute, '-> rounded to:', timeStr);
+    
+    // Find exact match first, then closest
+    const exactMatch = TIME_SLOTS.find(slot => slot === timeStr);
+    if (exactMatch) {
+        console.log('Calendar: Found exact time slot:', exactMatch);
+        return exactMatch;
+    }
     
     // Find closest time slot
     const index = TIME_SLOTS.findIndex(slot => slot >= timeStr);
-    return TIME_SLOTS[index] || TIME_SLOTS[0];
+    const slot = TIME_SLOTS[index] || TIME_SLOTS[0];
+    console.log('Calendar: Using closest time slot:', slot);
+    return slot;
 }
 
 function formatDateForCell(date) {
@@ -448,6 +710,12 @@ function getEventColor(event) {
             'SUCCESS': '#10b981'
         };
         return tipoColors[event.notification.Tipo] || '#6b7280';
+    } else if (event.type === 'exam') {
+        // Exams are always red/important
+        return '#dc2626'; // Red color for exams
+    } else if (event.type === 'class') {
+        // Regular classes are green
+        return '#10b981'; // Green color for classes
     } else if (event.type === 'recordatorio') {
         const tipoColors = {
             'EXAMEN': '#ef4444',
@@ -462,7 +730,11 @@ function getEventColor(event) {
 }
 
 function getEventMeta(event) {
-    if (event.type === 'recordatorio') {
+    if (event.type === 'exam') {
+        return `<i class="fas fa-clipboard-list"></i> ${event.materia}`;
+    } else if (event.type === 'class') {
+        return `<i class="fas fa-chalkboard-teacher"></i> ${event.aula || ''}`;
+    } else if (event.type === 'recordatorio') {
         return `<i class="fas fa-book"></i> ${event.materia}`;
     }
     return `<i class="fas fa-bell"></i> Notification`;
@@ -533,18 +805,44 @@ function renderMonthView() {
             const eventsContainer = document.createElement('div');
             eventsContainer.className = 'month-day-events';
             
+            // Show up to 3 events with details
             dayEvents.slice(0, 3).forEach(event => {
-                const eventDot = document.createElement('div');
-                eventDot.className = 'month-event-dot';
-                eventDot.style.backgroundColor = getEventColor(event);
-                eventDot.title = event.title;
-                eventsContainer.appendChild(eventDot);
+                const eventItem = document.createElement('div');
+                eventItem.className = `month-event-item event-${event.type}`;
+                const color = getEventColor(event);
+                eventItem.style.borderLeftColor = color;
+                // Convert hex to rgba with opacity
+                const rgb = hexToRgb(color);
+                if (rgb) {
+                    eventItem.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1)`;
+                }
+                
+                // Add click handler
+                eventItem.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showEventDetails(event);
+                });
+                
+                const eventTime = document.createElement('div');
+                eventTime.className = 'month-event-time';
+                eventTime.textContent = formatEventTime(event);
+                
+                const eventTitle = document.createElement('div');
+                eventTitle.className = 'month-event-title';
+                eventTitle.textContent = event.title;
+                eventTitle.title = event.title; // Tooltip for full text
+                
+                eventItem.appendChild(eventTime);
+                eventItem.appendChild(eventTitle);
+                eventsContainer.appendChild(eventItem);
             });
             
+            // Show indicator if there are more events
             if (dayEvents.length > 3) {
                 const moreIndicator = document.createElement('div');
                 moreIndicator.className = 'more-events';
-                moreIndicator.textContent = `+${dayEvents.length - 3}`;
+                moreIndicator.textContent = `+${dayEvents.length - 3} más`;
+                moreIndicator.title = `${dayEvents.length - 3} eventos adicionales`;
                 eventsContainer.appendChild(moreIndicator);
             }
             
@@ -565,28 +863,197 @@ function renderMonthView() {
 
 function getEventsForDate(date) {
     const events = getAllEvents();
+    
+    // Normalize both dates to compare only the date part (ignore time)
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
+    
     return events.filter(event => {
         const eventDate = new Date(event.date);
-        return eventDate.toDateString() === date.toDateString();
+        eventDate.setHours(0, 0, 0, 0);
+        
+        return eventDate.getTime() === targetDate.getTime();
     });
 }
 
 function showEventDetails(event) {
-    // Create a simple modal or alert for now
-    let message = `Title: ${event.title}\n\n`;
-    message += `Description: ${event.description}\n\n`;
-    message += `Date: ${event.date.toLocaleString()}\n\n`;
-    
-    if (event.type === 'recordatorio') {
-        message += `Type: ${event.tipo}\n`;
-        message += `Priority: ${event.prioridad}\n`;
-        message += `Subject: ${event.materia}\n`;
-    } else {
-        message += `Type: ${event.notification.Tipo}\n`;
+    const modal = document.getElementById('eventDetailsModal');
+    if (!modal) {
+        // Fallback to alert if modal doesn't exist
+        alert(`Event: ${event.title}\nDate: ${event.date.toLocaleString()}`);
+        return;
     }
     
-    alert(message);
-    // TODO: Replace with a proper modal
+    // Set icon and color based on event type
+    const iconElement = document.getElementById('eventModalIcon');
+    const headerElement = document.getElementById('eventModalHeader');
+    const titleElement = document.getElementById('eventModalTitle');
+    const subtitleElement = document.getElementById('eventModalSubtitle');
+    const bodyElement = document.getElementById('eventModalBody');
+    
+    if (!iconElement || !headerElement || !titleElement || !subtitleElement || !bodyElement) {
+        console.error('Calendar: Modal elements not found');
+        return;
+    }
+    
+    // Set icon and header color
+    let iconClass = 'fas fa-calendar-day';
+    let headerGradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    
+    if (event.type === 'exam') {
+        iconClass = 'fas fa-clipboard-list';
+        headerGradient = 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)';
+    } else if (event.type === 'class') {
+        iconClass = 'fas fa-chalkboard-teacher';
+        headerGradient = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+    } else if (event.type === 'recordatorio') {
+        iconClass = 'fas fa-book';
+        headerGradient = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+    } else if (event.type === 'notification') {
+        iconClass = 'fas fa-bell';
+        headerGradient = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+    }
+    
+    // Update header
+    headerElement.style.background = headerGradient;
+    iconElement.innerHTML = `<i class="${iconClass}"></i>`;
+    titleElement.textContent = event.title;
+    
+    // Format date
+    const eventDate = new Date(event.date);
+    const dateStr = eventDate.toLocaleDateString('es-ES', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    const timeStr = eventDate.toLocaleTimeString('es-ES', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+    subtitleElement.textContent = `${dateStr} a las ${timeStr}`;
+    
+    // Build body content
+    let bodyHTML = '';
+    
+    // Description
+    if (event.description) {
+        bodyHTML += `
+            <div class="event-detail-item">
+                <div class="event-detail-label">
+                    <i class="fas fa-align-left"></i> Descripción
+                </div>
+                <div class="event-detail-value">${event.description}</div>
+            </div>
+        `;
+    }
+    
+    // Type-specific information
+    if (event.type === 'exam') {
+        bodyHTML += `
+            <div class="event-detail-item">
+                <div class="event-detail-label">
+                    <i class="fas fa-tag"></i> Tipo
+                </div>
+                <div class="event-detail-value">${event.tipo || 'Examen'}</div>
+            </div>
+            <div class="event-detail-item">
+                <div class="event-detail-label">
+                    <i class="fas fa-book"></i> Materia
+                </div>
+                <div class="event-detail-value">${event.materia || 'N/A'}</div>
+            </div>
+        `;
+        if (event.evaluacion && event.evaluacion.Descripcion) {
+            bodyHTML += `
+                <div class="event-detail-item">
+                    <div class="event-detail-label">
+                        <i class="fas fa-info-circle"></i> Detalles
+                    </div>
+                    <div class="event-detail-value">${event.evaluacion.Descripcion}</div>
+                </div>
+            `;
+        }
+    } else if (event.type === 'class') {
+        bodyHTML += `
+            <div class="event-detail-item">
+                <div class="event-detail-label">
+                    <i class="fas fa-book"></i> Materia
+                </div>
+                <div class="event-detail-value">${event.materia || 'N/A'}</div>
+            </div>
+            <div class="event-detail-item">
+                <div class="event-detail-label">
+                    <i class="fas fa-door-open"></i> Aula
+                </div>
+                <div class="event-detail-value">${event.aula || 'Aula por asignar'}</div>
+            </div>
+            <div class="event-detail-item">
+                <div class="event-detail-label">
+                    <i class="fas fa-clock"></i> Horario
+                </div>
+                <div class="event-detail-value">${event.horario || 'N/A'}</div>
+            </div>
+        `;
+    } else if (event.type === 'recordatorio') {
+        bodyHTML += `
+            <div class="event-detail-item">
+                <div class="event-detail-label">
+                    <i class="fas fa-tag"></i> Tipo
+                </div>
+                <div class="event-detail-value">${event.tipo || 'Recordatorio'}</div>
+            </div>
+            <div class="event-detail-item">
+                <div class="event-detail-label">
+                    <i class="fas fa-book"></i> Materia
+                </div>
+                <div class="event-detail-value">${event.materia || 'N/A'}</div>
+            </div>
+            <div class="event-detail-item">
+                <div class="event-detail-label">
+                    <i class="fas fa-star"></i> Prioridad
+                </div>
+                <div class="event-detail-value">${event.prioridad || 'Normal'}</div>
+            </div>
+        `;
+    } else if (event.type === 'notification') {
+        bodyHTML += `
+            <div class="event-detail-item">
+                <div class="event-detail-label">
+                    <i class="fas fa-tag"></i> Tipo
+                </div>
+                <div class="event-detail-value">${event.notification.Tipo || 'Notificación'}</div>
+            </div>
+            <div class="event-detail-item">
+                <div class="event-detail-label">
+                    <i class="fas fa-info-circle"></i> Estado
+                </div>
+                <div class="event-detail-value">${event.notification.Estado || 'No leída'}</div>
+            </div>
+        `;
+    }
+    
+    bodyElement.innerHTML = bodyHTML || '<p>No hay información adicional disponible.</p>';
+    
+    // Show modal
+    if (typeof showModal === 'function') {
+        showModal('eventDetailsModal');
+    } else if (typeof setupModalHandlers === 'function') {
+        modal.classList.add('active');
+        setupModalHandlers('eventDetailsModal');
+    } else {
+        modal.classList.add('active');
+    }
+}
+
+// Helper function to convert hex to RGB
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
 }
 
 // Make functions globally available
