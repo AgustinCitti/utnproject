@@ -641,9 +641,11 @@ function switchToGridView() {
         examsList.style.display = 'none';
     }
     
-    document.getElementById('unifiedGridViewBtn').classList.add('active');
-    document.getElementById('unifiedListViewBtn').classList.remove('active');
+    const gridBtn = document.getElementById('unifiedGridViewBtn');
+    const listBtn = document.getElementById('unifiedListViewBtn');
     const matrixBtn = document.getElementById('unifiedMatrixViewBtn');
+    if (gridBtn) gridBtn.classList.add('active');
+    if (listBtn) listBtn.classList.remove('active');
     if (matrixBtn) matrixBtn.classList.remove('active');
 }
 
@@ -666,9 +668,11 @@ function switchToListView() {
         examsList.style.display = 'block';
     }
     
-    document.getElementById('unifiedGridViewBtn').classList.remove('active');
-    document.getElementById('unifiedListViewBtn').classList.add('active');
+    const gridBtn = document.getElementById('unifiedGridViewBtn');
+    const listBtn = document.getElementById('unifiedListViewBtn');
     const matrixBtn = document.getElementById('unifiedMatrixViewBtn');
+    if (gridBtn) gridBtn.classList.remove('active');
+    if (listBtn) listBtn.classList.add('active');
     if (matrixBtn) matrixBtn.classList.remove('active');
 }
 
@@ -684,9 +688,11 @@ function switchToMatrixView() {
         loadStudentMatrix();
     }
     
-    document.getElementById('unifiedGridViewBtn').classList.remove('active');
-    document.getElementById('unifiedListViewBtn').classList.remove('active');
+    const gridBtn = document.getElementById('unifiedGridViewBtn');
+    const listBtn = document.getElementById('unifiedListViewBtn');
     const matrixBtn = document.getElementById('unifiedMatrixViewBtn');
+    if (gridBtn) gridBtn.classList.remove('active');
+    if (listBtn) listBtn.classList.remove('active');
     if (matrixBtn) matrixBtn.classList.add('active');
 }
 

@@ -1,24 +1,26 @@
 // Variable para almacenar el ID del estudiante que se está editando
 let editingStudentId = null;
+// Lista de materias seleccionadas para el estudiante
+let selectedSubjectsList = [];
 
 // Función para poblar el select de materias con las del docente actual
 function populateStudentSubjectsSelect() {
     const subjectsSelect = document.getElementById('studentSubjects');
     if (!subjectsSelect) return;
     
-    // Limpiar opciones actuales
-    subjectsSelect.innerHTML = '';
+    // Obtener materias ya seleccionadas (para no mostrarlas en el dropdown)
+    const selectedSubjectIds = selectedSubjectsList.map(s => s.id);
     
-    // Obtener ID del docente actual
-    const currentUserId = parseInt(localStorage.getItem('userId') || '0');
+    // Limpiar opciones actuales excepto la primera
+    subjectsSelect.innerHTML = '<option value="" data-translate="select_subject">- Seleccionar Materia -</option>';
     
-    // Filtrar materias del docente actual
+    // El API ya filtra las materias por el docente logueado, así que solo filtramos por estado activo
+    // Estado puede ser 'ACTIVA', 'INACTIVA', 'FINALIZADA', o null/undefined (en cuyo caso asumimos activa por defecto)
     const teacherSubjects = (appData.materia || []).filter(m => 
-        m.Usuarios_docente_ID_docente === currentUserId && 
-        (m.Estado === 'ACTIVA' || !m.Estado)
+        (!m.Estado || m.Estado === 'ACTIVA') && !selectedSubjectIds.includes(m.ID_materia)
     );
     
-    if (teacherSubjects.length === 0) {
+    if (teacherSubjects.length === 0 && selectedSubjectsList.length === 0) {
         const option = document.createElement('option');
         option.value = '';
         option.textContent = 'No hay materias disponibles';
@@ -32,7 +34,69 @@ function populateStudentSubjectsSelect() {
             subjectsSelect.appendChild(option);
         });
     }
+    
+    // Agregar event listener para cuando se selecciona una materia
+    subjectsSelect.removeEventListener('change', handleSubjectSelection);
+    subjectsSelect.addEventListener('change', handleSubjectSelection);
 }
+
+function handleSubjectSelection() {
+    const subjectsSelect = document.getElementById('studentSubjects');
+    const selectedValue = subjectsSelect.value;
+    
+    if (!selectedValue) return;
+    
+    // Encontrar la materia seleccionada
+    const subject = appData.materia.find(m => m.ID_materia === parseInt(selectedValue));
+    if (!subject) return;
+    
+    // Agregar a la lista de seleccionadas si no está ya
+    if (!selectedSubjectsList.some(s => s.id === subject.ID_materia)) {
+        selectedSubjectsList.push({
+            id: subject.ID_materia,
+            name: subject.Nombre,
+            curso: subject.Curso_division
+        });
+    }
+    
+    // Renderizar las materias seleccionadas
+    renderSelectedSubjects();
+    
+    // Repoblar el dropdown (sin las ya seleccionadas)
+    populateStudentSubjectsSelect();
+    
+    // Resetear el dropdown
+    subjectsSelect.value = '';
+}
+
+function renderSelectedSubjects() {
+    const container = document.getElementById('selectedSubjectsContainer');
+    if (!container) return;
+    
+    if (selectedSubjectsList.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = selectedSubjectsList.map((subject, index) => `
+        <span class="subject-chip" data-subject-id="${subject.id}">
+            ${subject.name} - ${subject.curso}
+            <button type="button" class="remove-subject-btn" onclick="removeSubject(${index})" title="Eliminar">
+                <i class="fas fa-times"></i>
+            </button>
+        </span>
+    `).join('');
+}
+
+function removeSubject(index) {
+    selectedSubjectsList.splice(index, 1);
+    renderSelectedSubjects();
+    populateStudentSubjectsSelect();
+}
+
+// Make removeSubject globally accessible
+window.removeSubject = removeSubject;
 
 // Función actualizada para GUARDAR/CREAR estudiante
 async function saveStudent() {
@@ -40,7 +104,7 @@ async function saveStudent() {
         Nombre: document.getElementById('studentFirstName').value,
         Apellido: document.getElementById('studentLastName').value,
         Email: document.getElementById('studentEmail').value || null,
-        Fecha_nacimiento: document.getElementById('studentCourse').value || null,
+        Fecha_nacimiento: null, // Fecha de nacimiento no se captura en el formulario
         Estado: 'ACTIVO'
     };
 
@@ -86,15 +150,10 @@ async function saveStudent() {
             
             
             // Guardar relaciones alumno-materia si hay materias seleccionadas
-            const subjectsSelect = document.getElementById('studentSubjects');
-            if (!subjectsSelect) {
-            } else if (!studentId) {
+            if (!studentId) {
                 alert('Estudiante guardado pero no se pudieron guardar las materias. ID no disponible.');
             } else {
-                const selectedSubjects = Array.from(subjectsSelect.selectedOptions)
-                    .map(opt => parseInt(opt.value))
-                    .filter(id => !isNaN(id));
-                
+                const selectedSubjects = selectedSubjectsList.map(s => s.id);
                 
                 if (selectedSubjects.length > 0) {
                     try {
@@ -137,7 +196,6 @@ async function saveStudent() {
                     } catch (error) {
                         alert('Estudiante guardado pero hubo un error al guardar las materias: ' + error.message);
                     }
-                } else {
                 }
             }
             
@@ -198,22 +256,33 @@ function editStudent(id) {
     document.getElementById('studentFirstName').value = student.Nombre || '';
     document.getElementById('studentLastName').value = student.Apellido || '';
     document.getElementById('studentEmail').value = student.Email || '';
-    document.getElementById('studentCourse').value = student.Fecha_nacimiento || '';
     
-    // Poblar materias y seleccionar las del estudiante
-    populateStudentSubjectsSelect();
+    // Limpiar y poblar materias seleccionadas
+    selectedSubjectsList = [];
     
     // Obtener materias del estudiante
     const studentSubjects = (appData.alumnos_x_materia || [])
         .filter(axm => axm.Estudiante_ID_Estudiante === id)
-        .map(axm => axm.Materia_ID_materia);
+        .map(axm => {
+            const subject = appData.materia.find(m => m.ID_materia === axm.Materia_ID_materia);
+            if (subject) {
+                return {
+                    id: subject.ID_materia,
+                    name: subject.Nombre,
+                    curso: subject.Curso_division
+                };
+            }
+            return null;
+        })
+        .filter(s => s !== null);
     
-    const subjectsSelect = document.getElementById('studentSubjects');
-    if (subjectsSelect) {
-        Array.from(subjectsSelect.options).forEach(option => {
-            option.selected = studentSubjects.includes(parseInt(option.value));
-        });
-    }
+    selectedSubjectsList = studentSubjects;
+    
+    // Renderizar materias seleccionadas
+    renderSelectedSubjects();
+    
+    // Poblar el dropdown con las materias disponibles
+    populateStudentSubjectsSelect();
 
     showModal('studentModal');
 }
@@ -264,6 +333,8 @@ async function deleteStudent(id) {
 function clearStudentForm() {
     document.getElementById('studentForm').reset();
     editingStudentId = null;
+    selectedSubjectsList = [];
+    renderSelectedSubjects();
     populateStudentSubjectsSelect(); // Repoblar las materias
 }
 
@@ -344,10 +415,10 @@ const originalShowModal = typeof window.showModal === 'function' ? window.showMo
 window.showModal = function(modalId) {
     if (modalId === 'studentModal') {
         // Verificar si el usuario tiene materias antes de abrir el modal
-        const currentUserId = parseInt(localStorage.getItem('userId') || '0');
+        // El API ya filtra las materias por el docente logueado, así que solo verificamos si hay materias activas
+        // Estado puede ser 'ACTIVA', 'INACTIVA', 'FINALIZADA', o null/undefined (en cuyo caso asumimos activa por defecto)
         const teacherSubjects = (appData.materia || []).filter(m => 
-            m.Usuarios_docente_ID_docente === currentUserId && 
-            (m.Estado === 'ACTIVA' || !m.Estado)
+            !m.Estado || m.Estado === 'ACTIVA'
         );
         
         if (teacherSubjects.length === 0) {

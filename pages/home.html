@@ -883,20 +883,15 @@
                     <input type="email" id="studentEmail" required>
                 </div>
                 <div class="form-group">
-                    <label for="studentCourse" data-translate="course">Curso</label>
-                    <select id="studentCourse" required>
-                        <option value="9th" data-translate="9th_course">9º Curso</option>
-                        <option value="10th" data-translate="10th_course">10º Curso</option>
-                        <option value="11th" data-translate="11th_course">11º Curso</option>
-                        <option value="12th" data-translate="12th_course">12º Curso</option>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label for="studentSubjects" data-translate="subjects">Materias</label>
-                    <select id="studentSubjects" multiple size="5" style="min-height: 120px;">
+                    <select id="studentSubjects" required>
+                        <option value="" data-translate="select_subject">- Seleccionar Materia -</option>
                         <!-- Se poblará dinámicamente con las materias del docente actual -->
                     </select>
-                    <small style="display: block; margin-top: 5px; color: #666;">Mantené presionada la tecla Ctrl (o Cmd en Mac) para seleccionar múltiples materias</small>
+                    <div id="selectedSubjectsContainer" class="selected-subjects-container" style="display: none; margin-top: 10px;">
+                        <!-- Selected subjects will be displayed here as chips -->
+                    </div>
+                    <small style="display: block; margin-top: 5px; color: #666;">Puedes seleccionar múltiples materias. El curso se determina automáticamente según la materia seleccionada.</small>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
