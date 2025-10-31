@@ -385,13 +385,7 @@
                 <div class="section-header">
                     
                     <div class="section-actions">
-                        <div class="filters">
-                            <select id="attendanceTeacherFilter" class="filter-select">
-                                <option value="" data-translate="all_teachers">Todos los Profesores</option>
-                                <!-- Teacher options will be populated dynamically -->
-                            </select>
-                        </div>
-                        <button id="cancelAttendanceBtn" class="btn-secondary">
+                        <button id="backAttendanceBtn" class="btn-secondary">
                             <i class="fas fa-arrow-left"></i>
                             <span data-translate="back">Volver</span>
                         </button>
@@ -407,19 +401,10 @@
                                 <input type="date" id="attendanceDate" required>
                             </div>
                             <div class="form-group">
-                                <label for="attendanceCourseSelect" data-translate="course">Curso:</label>
-                                <select id="attendanceCourseSelect" required>
-                                    <option value="" data-translate="select_course">- Seleccionar -</option>
-                                    <option value="9th">9º Curso</option>
-                                    <option value="10th">10º Curso</option>
-                                    <option value="11th">11º Curso</option>
-                                    <option value="12th">12º Curso</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
                                 <label for="attendanceSubjectSelect" data-translate="subject">Materia:</label>
-                                <select id="attendanceSubjectSelect" required disabled>
+                                <select id="attendanceSubjectSelect" required>
                                     <option value="" data-translate="select_subject">- Seleccionar -</option>
+                                    <!-- Materia options will be populated dynamically from logged-in user's materias -->
                                 </select>
                             </div>
                         </div>
@@ -444,7 +429,7 @@
                             </thead>
                             <tbody id="attendanceTableBody">
                                 <tr>
-                                    <td colspan="6" class="text-center">Seleccione un curso y materia para ver los estudiantes</td>
+                                    <td colspan="6" class="text-center">Seleccione una materia para ver los estudiantes</td>
                                 </tr>
                             </tbody>
                         </table>

@@ -1,13 +1,10 @@
 // Attendance Management
 function initializeAttendance() {
     const markAttendanceBtn = document.getElementById('markAttendanceBtn');
-    const attendanceTeacherFilter = document.getElementById('attendanceTeacherFilter');
-    const attendanceCourseFilter = document.getElementById('attendanceCourseFilter');
-    const attendanceSubjectFilter = document.getElementById('attendanceSubjectFilter');
-    const attendanceCourseSelect = document.getElementById('attendanceCourseSelect');
     const attendanceSubjectSelect = document.getElementById('attendanceSubjectSelect');
     const saveAttendanceBtn = document.getElementById('saveAttendanceBtn');
     const cancelAttendanceBtn = document.getElementById('cancelAttendanceBtn');
+    const backAttendanceBtn = document.getElementById('backAttendanceBtn');
     
     if (markAttendanceBtn) {
         markAttendanceBtn.addEventListener('click', () => {
@@ -15,32 +12,7 @@ function initializeAttendance() {
         });
     }
     
-    // Main attendance section filters
-    if (attendanceTeacherFilter) {
-        attendanceTeacherFilter.addEventListener('change', () => {
-            filterAttendanceByTeacher();
-        });
-    }
-    
-    if (attendanceCourseFilter) {
-        attendanceCourseFilter.addEventListener('change', () => {
-            updateSubjectFilter();
-        });
-    }
-    
-    if (attendanceSubjectFilter) {
-        attendanceSubjectFilter.addEventListener('change', () => {
-            loadStudentsForAttendance();
-        });
-    }
-    
-    // Attendance view filters
-    if (attendanceCourseSelect) {
-        attendanceCourseSelect.addEventListener('change', () => {
-            updateAttendanceSubjectFilter();
-        });
-    }
-    
+    // Attendance view filter
     if (attendanceSubjectSelect) {
         attendanceSubjectSelect.addEventListener('change', () => {
             loadStudentsForAttendanceView();
@@ -53,14 +25,51 @@ function initializeAttendance() {
         });
     }
     
+    // Cancel button in the form (just hides the attendance view)
     if (cancelAttendanceBtn) {
         cancelAttendanceBtn.addEventListener('click', () => {
             hideAttendanceView();
         });
     }
     
-    // Initialize teacher filter
-    populateAttendanceTeacherFilter();
+    // Back button in header (navigates to student-management)
+    if (backAttendanceBtn) {
+        backAttendanceBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Navigate back to student-management section
+            if (typeof window.showSection === 'function') {
+                window.showSection('student-management', 'students');
+            } else if (typeof showSection === 'function') {
+                showSection('student-management', 'students');
+            } else {
+                // Fallback: direct navigation
+                document.querySelectorAll('.content-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                const studentSection = document.getElementById('student-management');
+                if (studentSection) {
+                    studentSection.classList.add('active');
+                    // Also show students tab
+                    const studentsContent = document.getElementById('studentsTabContent');
+                    const examsContent = document.getElementById('examsTabContent');
+                    if (studentsContent) studentsContent.classList.add('active');
+                    if (examsContent) examsContent.classList.remove('active');
+                    // Update tab buttons
+                    const studentsTab = document.getElementById('studentsTab');
+                    const examsTab = document.getElementById('examsTab');
+                    if (studentsTab) studentsTab.classList.add('active');
+                    if (examsTab) examsTab.classList.remove('active');
+                    // Show/hide appropriate buttons
+                    document.querySelectorAll('.students-only').forEach(btn => btn.style.display = 'flex');
+                    document.querySelectorAll('.exams-only').forEach(btn => btn.style.display = 'none');
+                    // Load student data
+                    if (typeof loadUnifiedStudentData === 'function') {
+                        loadUnifiedStudentData();
+                    }
+                }
+            }
+        });
+    }
 }
 
 function loadAttendance() {
@@ -132,14 +141,15 @@ function showAttendanceView() {
         
         // Reset form
         document.getElementById('attendanceNotes').value = '';
-        document.getElementById('attendanceCourseSelect').value = '';
         document.getElementById('attendanceSubjectSelect').value = '';
-        document.getElementById('attendanceSubjectSelect').disabled = true;
+        
+        // Populate materias from logged-in user
+        populateAttendanceMateriaSelect();
         
         // Clear student table
         const tableBody = document.getElementById('attendanceTableBody');
         if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Seleccione un curso y materia para ver los estudiantes</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Seleccione una materia para ver los estudiantes</td></tr>';
         }
     }
 }
@@ -154,94 +164,45 @@ function hideAttendanceView() {
     }
 }
 
-function updateSubjectFilter() {
-    const courseFilter = document.getElementById('attendanceCourseFilter');
-    const subjectFilter = document.getElementById('attendanceSubjectFilter');
-    
-    if (!courseFilter || !subjectFilter) return;
-    
-    const selectedCourse = courseFilter.value;
-    
-    // Clear and populate subject filter
-    subjectFilter.innerHTML = '<option value="" data-translate="all_subjects">Todas las Materias</option>';
-    
-    if (selectedCourse) {
-        // Create a mapping between course values and curso_division patterns
-        const courseMapping = {
-            '9th': '9º Curso',
-            '10th': '10º Curso',
-            '11th': '11º Curso',
-            '12th': '12º Curso'
-        };
-        
-        const coursePattern = courseMapping[selectedCourse];
-        
-        // Filter subjects by course using the Curso_division field
-        const courseSubjects = appData.materia.filter(subject => 
-            subject.Curso_division.includes(coursePattern)
-        );
-        
-        courseSubjects.forEach(subject => {
-            const option = document.createElement('option');
-            option.value = subject.ID_materia;
-            option.textContent = subject.Nombre;
-            subjectFilter.appendChild(option);
-        });
-    }
-}
-
-function updateAttendanceSubjectFilter() {
-    const courseSelect = document.getElementById('attendanceCourseSelect');
+// Populate materia select with logged-in user's materias
+function populateAttendanceMateriaSelect() {
     const subjectSelect = document.getElementById('attendanceSubjectSelect');
+    if (!subjectSelect) return;
     
-    if (!courseSelect || !subjectSelect) return;
+    // Get current user ID
+    const currentUserId = localStorage.getItem('userId');
+    if (!currentUserId) {
+        subjectSelect.innerHTML = '<option value="" data-translate="select_subject">- Seleccionar -</option>';
+        return;
+    }
     
-    const selectedCourse = courseSelect.value;
+    // Get user's materias
+    const userSubjects = appData.materia.filter(subject => 
+        subject.Usuarios_docente_ID_docente === parseInt(currentUserId)
+    );
     
     // Clear and populate subject filter
     subjectSelect.innerHTML = '<option value="" data-translate="select_subject">- Seleccionar -</option>';
     
-    if (selectedCourse) {
-        subjectSelect.disabled = false;
-        
-        // Create a mapping between course values and curso_division patterns
-        const courseMapping = {
-            '9th': '9º Curso',
-            '10th': '10º Curso',
-            '11th': '11º Curso',
-            '12th': '12º Curso'
-        };
-        
-        const coursePattern = courseMapping[selectedCourse];
-        
-        // Filter subjects by course using the Curso_division field
-        const courseSubjects = appData.materia.filter(subject => 
-            subject.Curso_division.includes(coursePattern)
-        );
-        
-        courseSubjects.forEach(subject => {
-            const option = document.createElement('option');
-            option.value = subject.ID_materia;
-            option.textContent = subject.Nombre;
-            subjectSelect.appendChild(option);
-        });
-    } else {
-        subjectSelect.disabled = true;
-    }
+    userSubjects.forEach(subject => {
+        const option = document.createElement('option');
+        option.value = subject.ID_materia;
+        // Display materia name with curso and division info
+        option.textContent = `${subject.Nombre} (${subject.Curso_division || ''})`;
+        subjectSelect.appendChild(option);
+    });
 }
 
 function loadStudentsForAttendanceView() {
-    const courseSelect = document.getElementById('attendanceCourseSelect');
     const subjectSelect = document.getElementById('attendanceSubjectSelect');
     const tableBody = document.getElementById('attendanceTableBody');
     
-    if (!courseSelect || !subjectSelect || !tableBody) return;
+    if (!subjectSelect || !tableBody) return;
     
-    const selectedCourse = courseSelect.value;
     const selectedSubjectId = parseInt(subjectSelect.value);
     
-    if (!selectedCourse || !selectedSubjectId) {
-        alert('Por favor seleccione un curso y una materia.');
+    if (!selectedSubjectId) {
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Seleccione una materia para ver los estudiantes</td></tr>';
         return;
     }
     
@@ -260,7 +221,7 @@ function loadStudentsForAttendanceView() {
         enrolledStudentIds.includes(student.ID_Estudiante)
     );
             
-            if (enrolledStudents.length === 0) {
+    if (enrolledStudents.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No hay estudiantes inscritos en esta materia</td></tr>';
         return;
     }
@@ -311,86 +272,6 @@ function loadStudentsForAttendanceView() {
     setupAttendanceStatusButtons();
 }
 
-function loadStudentsForAttendance() {
-    const courseFilter = document.getElementById('attendanceCourseFilter');
-    const subjectFilter = document.getElementById('attendanceSubjectFilter');
-    const tableBody = document.getElementById('attendanceTableBody');
-    
-    if (!courseFilter || !subjectFilter || !tableBody) return;
-    
-    const selectedCourse = courseFilter.value;
-    const selectedSubjectId = parseInt(subjectFilter.value);
-    
-    if (!selectedCourse || !selectedSubjectId) {
-        tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Seleccione un curso y materia para ver los estudiantes</td></tr>';
-        return;
-    }
-    
-    const subject = appData.materia.find(s => s.ID_materia === selectedSubjectId);
-    if (!subject) {
-        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Materia no encontrada</td></tr>';
-        return;
-    }
-    
-    // Get students enrolled in this subject using the alumnos_x_materia table
-    const enrolledStudentIds = appData.alumnos_x_materia
-        .filter(enrollment => enrollment.Materia_ID_materia === selectedSubjectId)
-        .map(enrollment => enrollment.Estudiante_ID_Estudiante);
-    
-    const enrolledStudents = appData.estudiante.filter(student => 
-        enrolledStudentIds.includes(student.ID_Estudiante)
-    );
-    
-    if (enrolledStudents.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No hay estudiantes en este curso</td></tr>';
-        return;
-    }
-    
-    tableBody.innerHTML = enrolledStudents.map(student => {
-        // Get existing attendance for this student, subject, and date
-        const attendanceDate = document.getElementById('attendanceDate').value;
-        const existingAttendance = appData.asistencia.find(att => 
-            att.Estudiante_ID_Estudiante === student.ID_Estudiante && 
-            att.Materia_ID_materia === selectedSubjectId && 
-            att.Fecha === attendanceDate
-        );
-        
-        // Calculate absences for this student
-        const studentAbsences = appData.asistencia.filter(att => 
-            att.Estudiante_ID_Estudiante === student.ID_Estudiante && 
-            att.Materia_ID_materia === selectedSubjectId && 
-            att.Presente === 'N'
-        ).length;
-        
-        const currentStatus = existingAttendance ? (existingAttendance.Presente === 'Y' ? 'present' : 'absent') : '';
-        
-        return `
-            <tr data-student-id="${student.ID_Estudiante}">
-                <td class="student-id">${student.ID_Estudiante}</td>
-                <td class="student-name">${student.Apellido}, ${student.Nombre}</td>
-                <td class="status-cell">
-                    <button class="status-btn present-btn ${currentStatus === 'present' ? 'active' : ''}" 
-                            data-status="present" data-student-id="${student.ID_Estudiante}">
-                        <i class="fas fa-check"></i>
-                    </button>
-                </td>
-                <td class="status-cell">
-                    <button class="status-btn absent-btn ${currentStatus === 'absent' ? 'active' : ''}" 
-                            data-status="absent" data-student-id="${student.ID_Estudiante}">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </td>
-                <td class="absences-count">${studentAbsences}/0</td>
-                <td class="student-status">
-                    <span class="status-badge habilitado">[Habilitado]</span>
-                </td>
-            </tr>
-        `;
-    }).join('');
-    
-    // Add event listeners to status buttons
-    setupAttendanceStatusButtons();
-}
 
 function setupAttendanceStatusButtons() {
     const statusButtons = document.querySelectorAll('.status-btn');
@@ -415,7 +296,6 @@ function setupAttendanceStatusButtons() {
 
 function saveAttendanceBulk() {
     const date = document.getElementById('attendanceDate').value;
-    const courseSelect = document.getElementById('attendanceCourseSelect');
     const subjectSelect = document.getElementById('attendanceSubjectSelect');
     const notes = document.getElementById('attendanceNotes').value;
     
@@ -551,57 +431,28 @@ function loadAttendance() {
     }
 }
 
-// Teacher filtering functions for attendance
-function populateAttendanceTeacherFilter() {
-    const teacherFilter = document.getElementById('attendanceTeacherFilter');
-    if (!teacherFilter) return;
-
-    // Get current user ID from localStorage
-    const currentUserId = localStorage.getItem('userId');
-    
-    // Clear existing options except the first one
-    teacherFilter.innerHTML = '<option value="" data-translate="all_teachers">Todos los Profesores</option>';
-    
-    // Add all teachers to the filter
-    if (appData.usuarios_docente) {
-        appData.usuarios_docente.forEach(teacher => {
-            const option = document.createElement('option');
-            option.value = teacher.ID_docente;
-            option.textContent = `${teacher.Nombre_docente} ${teacher.Apellido_docente}`;
-            teacherFilter.appendChild(option);
-        });
-    }
-    
-    // If current user is a teacher, set the filter to show only their attendance by default
-    if (currentUserId) {
-        teacherFilter.value = currentUserId;
-        // Trigger filter update
-        filterAttendanceByTeacher();
-    }
-}
-
+// Get filtered attendance for logged-in user
 function getFilteredAttendance() {
-    const teacherFilter = document.getElementById('attendanceTeacherFilter');
-    const selectedTeacher = teacherFilter ? teacherFilter.value : '';
+    // Get current user ID
+    const currentUserId = localStorage.getItem('userId');
+    if (!currentUserId) {
+        return [];
+    }
     
     let filteredAttendance = appData.asistencia || [];
     
-    // Filter by teacher (attendance for subjects taught by this teacher)
-    if (selectedTeacher) {
-        const teacherId = parseInt(selectedTeacher);
-        const teacherSubjects = appData.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
-        const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
-        
-        filteredAttendance = filteredAttendance.filter(attendance => 
-            teacherSubjectIds.includes(attendance.Materia_ID_materia)
-        );
-    }
+    // Filter by logged-in teacher (attendance for subjects taught by this teacher)
+    const teacherId = parseInt(currentUserId);
+    const teacherSubjects = appData.materia.filter(subject => 
+        subject.Usuarios_docente_ID_docente === teacherId
+    );
+    const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
+    
+    filteredAttendance = filteredAttendance.filter(attendance => 
+        teacherSubjectIds.includes(attendance.Materia_ID_materia)
+    );
     
     return filteredAttendance;
-}
-
-function filterAttendanceByTeacher() {
-    loadAttendance();
 }
 
 function showNotification(message, type = 'info') {

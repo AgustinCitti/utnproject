@@ -276,5 +276,6 @@ function handleStudentManagementSubsection(subsection) {
     }
 }
 
-// Make function globally available
+// Make functions globally available
 window.initializeNavigation = initializeNavigation;
+window.showSection = showSection;
