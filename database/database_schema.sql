@@ -40,7 +40,8 @@ CREATE TABLE Estudiante (
 CREATE TABLE Materia (
     ID_materia INTEGER PRIMARY KEY,
     Nombre VARCHAR2(100) NOT NULL,
-    "Curso-division" VARCHAR2(50) NOT NULL,
+    Curso VARCHAR2(50) NOT NULL,
+    Division VARCHAR2(50) NOT NULL,
     Descripcion CLOB,
     Horario VARCHAR2(100),
     Aula VARCHAR2(50),
@@ -344,11 +345,11 @@ INSERT INTO Estudiante (Apellido, Nombre, Email, Fecha_nacimiento)
 VALUES ('López', 'Ana', 'ana.lopez@estudiante.utn.edu.ar', DATE '1999-08-22');
 
 -- Insertar materias de ejemplo
-INSERT INTO Materia (Nombre, "Curso-division", Descripcion, Usuarios_docente_ID_docente) 
-VALUES ('Matemática I', '1er Año - División A', 'Álgebra y Geometría Analítica', 1);
+INSERT INTO Materia (Nombre, Curso, Division, Descripcion, Usuarios_docente_ID_docente) 
+VALUES ('Matemática I', '1er Año', 'División A', 'Álgebra y Geometría Analítica', 1);
 
-INSERT INTO Materia (Nombre, "Curso-division", Descripcion, Usuarios_docente_ID_docente) 
-VALUES ('Física I', '1er Año - División A', 'Mecánica Clásica', 2);
+INSERT INTO Materia (Nombre, Curso, Division, Descripcion, Usuarios_docente_ID_docente) 
+VALUES ('Física I', '1er Año', 'División A', 'Mecánica Clásica', 2);
 
 -- Insertar relación estudiantes-materias
 INSERT INTO Alumnos_X_Materia (Materia_ID_materia, Estudiante_ID_Estudiante) 
@@ -384,7 +385,8 @@ CREATE OR REPLACE VIEW vista_materias_docente AS
 SELECT 
     m.ID_materia,
     m.Nombre as Materia_Nombre,
-    m."Curso-division",
+    m.Curso,
+    m.Division,
     m.Descripcion,
     m.Horario,
     m.Aula,
@@ -395,7 +397,7 @@ SELECT
 FROM Materia m
 JOIN Usuarios_docente ud ON m.Usuarios_docente_ID_docente = ud.ID_docente
 LEFT JOIN Alumnos_X_Materia axm ON m.ID_materia = axm.Materia_ID_materia
-GROUP BY m.ID_materia, m.Nombre, m."Curso-division", m.Descripcion, m.Horario, m.Aula, 
+GROUP BY m.ID_materia, m.Nombre, m.Curso, m.Division, m.Descripcion, m.Horario, m.Aula, 
          ud.Nombre_docente, ud.Apellido_docente, ud.Email_docente;
 
 -- Vista para calificaciones con información completa
