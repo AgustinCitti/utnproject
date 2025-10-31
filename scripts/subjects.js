@@ -26,27 +26,39 @@ function initializeSubjects() {
         addSubjectBtn.addEventListener('click', () => {
             try {
                 console.log('[subjects] Botón agregar materia clickeado');
+                
+                // Verificar que el modal existe
+                const modalElement = document.getElementById('subjectModal');
+                if (!modalElement) {
+                    console.error('[subjects] Modal subjectModal no encontrado en el DOM');
+                    alert('Error: No se encontró el formulario de materia. Por favor, recarga la página.');
+                    return;
+                }
+                
+                // Abrir el modal
                 if (typeof showModal === 'function') {
                     showModal('subjectModal');
                 } else {
-                    const el = document.getElementById('subjectModal');
-                    if (el) {
-                        el.classList.add('active');
-                        console.log('[subjects] Modal abierto manualmente');
-                    } else {
-                        console.error('[subjects] Modal subjectModal no encontrado');
-                    }
+                    modalElement.classList.add('active');
+                    console.log('[subjects] Modal abierto manualmente');
                 }
+                
+                // Limpiar el formulario
                 if (typeof clearSubjectForm === 'function') {
                     clearSubjectForm();
                 } else {
                     const form = document.getElementById('subjectForm');
-                    if (form) form.reset();
+                    if (form) {
+                        form.reset();
+                    }
                     currentSubjectId = null;
                 }
+                
+                console.log('[subjects] Modal de materia abierto correctamente');
             } catch (e) {
                 console.error('[subjects] Error al abrir modal de materia:', e);
-                alert('Error al abrir el formulario de materia');
+                console.error('[subjects] Stack trace:', e.stack);
+                alert('Error al abrir el formulario de materia: ' + e.message);
             }
         });
     } else {
@@ -236,9 +248,18 @@ async function saveSubject() {
 	const teacherEl = document.getElementById('subjectTeacher');
 	const teacherId = teacherEl && teacherEl.value ? parseInt(teacherEl.value) : parseInt(localStorage.getItem('userId') || '0');
 
+	// Obtener curso y división por separado
+	const courseValue = document.getElementById('subjectCourse').value;
+	const divisionValue = document.getElementById('subjectDivision').value;
+	
+	// Combinar curso y división en el formato esperado
+	const curso_division = courseValue && divisionValue 
+		? `${courseValue}º Curso - División ${divisionValue}`
+		: '';
+
 	const payload = {
 		Nombre: document.getElementById('subjectName').value.trim(),
-		Curso_division: document.getElementById('subjectCourse').value.trim(),
+		Curso_division: curso_division,
 		Usuarios_docente_ID_docente: teacherId,
 		Estado: document.getElementById('subjectStatus').value,
 		Horario: (document.getElementById('subjectSchedule').value || '').trim() || null,
@@ -246,8 +267,8 @@ async function saveSubject() {
 		Descripcion: (document.getElementById('subjectDescription').value || '').trim() || null
 	};
 
-	if (!payload.Nombre || !payload.Curso_division || !payload.Usuarios_docente_ID_docente) {
-		alert('Completá Nombre, Curso y Profesor.');
+	if (!payload.Nombre || !curso_division || !payload.Usuarios_docente_ID_docente) {
+		alert('Completá Nombre, Curso, División y Profesor.');
 		return;
 	}
 
@@ -334,13 +355,43 @@ async function saveSubject() {
 }
 
 
+// Función helper para parsear curso_division y extraer curso y división
+function parseCourseDivision(cursoDivision) {
+    if (!cursoDivision) return { course: '', division: '' };
+    
+    // Intentar diferentes formatos: "10º Curso - División A", "10 - A", "10º-A", etc.
+    // Buscar el número del curso (puede estar al inicio)
+    const courseMatch = cursoDivision.match(/(\d+)/);
+    const course = courseMatch ? courseMatch[1] : '';
+    
+    // Buscar la letra de la división (A-F, puede estar después de "División", "Div", o al final)
+    const divisionMatch = cursoDivision.match(/(?:División|Div)[\s-]*([A-F])/i) || 
+                          cursoDivision.match(/[\s-]([A-F])[\s-]*$/i) ||
+                          cursoDivision.match(/([A-F])[\s-]*$/i);
+    const division = divisionMatch ? divisionMatch[1].toUpperCase() : '';
+    
+    return { course, division };
+}
+
 function editSubject(id) {
     const subject = appData.materia.find(s => s.ID_materia === id);
     if (!subject) return;
 
     currentSubjectId = id;
     document.getElementById('subjectName').value = subject.Nombre;
-    document.getElementById('subjectCourse').value = subject.Curso_division;
+    
+    // Parsear curso_division para separar curso y división
+    const { course, division } = parseCourseDivision(subject.Curso_division);
+    const courseSelect = document.getElementById('subjectCourse');
+    const divisionSelect = document.getElementById('subjectDivision');
+    
+    if (courseSelect && course) {
+        courseSelect.value = course;
+    }
+    if (divisionSelect && division) {
+        divisionSelect.value = division;
+    }
+    
     document.getElementById('subjectDescription').value = subject.Descripcion || '';
     document.getElementById('subjectSchedule').value = subject.Horario || '';
     document.getElementById('subjectClassroom').value = subject.Aula || '';
@@ -400,7 +451,10 @@ async function deleteSubject(id) {
 
 
 function clearSubjectForm() {
-    document.getElementById('subjectForm').reset();
+    const form = document.getElementById('subjectForm');
+    if (form) {
+        form.reset();
+    }
     currentSubjectId = null;
 }
 
@@ -509,9 +563,18 @@ function getStatusText(status) {
 
 function populateTeacherSelect() {
     const teacherSelect = document.getElementById('subjectTeacher');
-    if (!teacherSelect) return;
+    if (!teacherSelect) {
+        console.warn('[subjects] select de profesor no encontrado');
+        return;
+    }
 
     teacherSelect.innerHTML = '<option value="" data-translate="select_teacher">- Seleccionar Profesor -</option>';
+    
+    // Verificar que los datos estén disponibles
+    if (!appData || !appData.usuarios_docente || !Array.isArray(appData.usuarios_docente)) {
+        console.warn('[subjects] Datos de profesores no disponibles aún');
+        return;
+    }
     
     appData.usuarios_docente.forEach(teacher => {
         const option = document.createElement('option');

@@ -769,9 +769,32 @@
                     <label for="subjectName" data-translate="subject_name">Nombre de la Materia</label>
                     <input type="text" id="subjectName" required>
                 </div>
-                <div class="form-group">
-                    <label for="subjectCourse" data-translate="course_division">Curso y División</label>
-                    <input type="text" id="subjectCourse" placeholder="Ej: 10º Curso - División A" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="subjectCourse" data-translate="course">Curso</label>
+                        <select id="subjectCourse" required>
+                            <option value="" data-translate="select_course">- Seleccionar Curso -</option>
+                            <option value="1">1º Curso</option>
+                            <option value="2">2º Curso</option>
+                            <option value="3">3º Curso</option>
+                            <option value="4">4º Curso</option>
+                            <option value="5">5º Curso</option>
+                            <option value="6">6º Curso</option>
+                            <option value="7">7º Curso</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="subjectDivision" data-translate="division">División</label>
+                        <select id="subjectDivision" required>
+                            <option value="" data-translate="select_division">- Seleccionar División -</option>
+                            <option value="A">División A</option>
+                            <option value="B">División B</option>
+                            <option value="C">División C</option>
+                            <option value="D">División D</option>
+                            <option value="E">División E</option>
+                            <option value="F">División F</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="subjectDescription" data-translate="description">Descripción</label>
