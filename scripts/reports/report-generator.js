@@ -103,15 +103,38 @@ function populateFilters() {
     
     // Get current user's subjects
     const userSubjects = getCurrentUserSubjects();
+    console.log('populateFilters: User subjects found', {
+        count: userSubjects.length,
+        subjects: userSubjects.map(m => ({ id: m.ID_materia, name: m.Nombre }))
+    });
+    
     if (userSubjects.length > 0) {
         userSubjects.forEach(materia => {
             const option = document.createElement('option');
             option.value = materia.ID_materia;
             option.textContent = materia.Nombre;
             
-            if (gradesFilter) gradesFilter.appendChild(option.cloneNode(true));
-            if (attendanceFilter) attendanceFilter.appendChild(option.cloneNode(true));
+            if (gradesFilter) {
+                // Check if option already exists to avoid duplicates
+                const existingOption = Array.from(gradesFilter.options).find(
+                    opt => opt.value === String(materia.ID_materia)
+                );
+                if (!existingOption) {
+                    gradesFilter.appendChild(option.cloneNode(true));
+                }
+            }
+            if (attendanceFilter) {
+                // Check if option already exists to avoid duplicates
+                const existingOption = Array.from(attendanceFilter.options).find(
+                    opt => opt.value === String(materia.ID_materia)
+                );
+                if (!existingOption) {
+                    attendanceFilter.appendChild(option.cloneNode(true));
+                }
+            }
         });
+    } else {
+        console.warn('populateFilters: No subjects found for current user');
     }
 
     // Populate student filter with current user's students

@@ -8,11 +8,35 @@ function getCurrentUserId() {
 
 function getCurrentUserSubjects() {
     const userId = getCurrentUserId();
-    if (!userId || !window.data || !window.data.materia) return [];
+    if (!userId || !window.data || !window.data.materia) {
+        console.log('getCurrentUserSubjects: Missing data', {
+            userId,
+            hasData: !!window.data,
+            hasMateria: !!(window.data && window.data.materia)
+        });
+        return [];
+    }
     
-    return window.data.materia.filter(subject => 
-        subject.Usuarios_docente_ID_docente === userId
-    );
+    // Ensure both values are compared as integers to avoid type mismatch issues
+    const userIdInt = parseInt(userId, 10);
+    const subjects = window.data.materia.filter(subject => {
+        const subjectTeacherId = parseInt(subject.Usuarios_docente_ID_docente, 10);
+        return subjectTeacherId === userIdInt;
+    });
+    
+    console.log('getCurrentUserSubjects: Found subjects', {
+        userId: userIdInt,
+        totalSubjects: window.data.materia.length,
+        userSubjects: subjects.length,
+        allSubjects: window.data.materia.map(m => ({
+            id: m.ID_materia,
+            name: m.Nombre,
+            teacherId: m.Usuarios_docente_ID_docente,
+            teacherIdType: typeof m.Usuarios_docente_ID_docente
+        }))
+    });
+    
+    return subjects;
 }
 
 function getCurrentUserStudents() {

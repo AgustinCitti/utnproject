@@ -119,7 +119,7 @@ function generatePDFContent() {
 
             <!-- Top Performing Students -->
             <div style="margin-bottom: 30px;">
-                <h2 style="color: #2d3748; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Top Performing Students</h2>
+                <h2 style="color: #2d3748; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Estudiantes con Mejor Rendimiento</h2>
                 <div style="margin-top: 20px;">
                     ${generateTopStudentsPDF()}
                 </div>
@@ -127,7 +127,7 @@ function generatePDFContent() {
 
             <!-- Attendance Summary -->
             <div style="margin-bottom: 30px;">
-                <h2 style="color: #2d3748; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Attendance Summary</h2>
+                <h2 style="color: #2d3748; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Resumen de Asistencia</h2>
                 <div style="margin-top: 20px;">
                     ${generateAttendancePDF()}
                 </div>
@@ -135,7 +135,7 @@ function generatePDFContent() {
 
             <!-- Grades Distribution -->
             <div style="margin-bottom: 30px;">
-                <h2 style="color: #2d3748; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Grades Distribution</h2>
+                <h2 style="color: #2d3748; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Distribución de Calificaciones</h2>
                 <div style="margin-top: 20px;">
                     ${generateGradesDistributionPDF()}
                 </div>

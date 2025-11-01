@@ -44,6 +44,29 @@ function createGradesChart(subjectId = 'all') {
 
     const gradesData = getGradesDistribution(subjectId);
     
+    // Handle empty data - show message but keep canvas structure
+    if (!gradesData || !gradesData.labels || gradesData.labels.length === 0 || 
+        !gradesData.data || gradesData.data.every(val => val === 0)) {
+        // Remove any existing overlay
+        const container = ctx.parentElement;
+        const existingOverlay = container.querySelector('.chart-empty-message');
+        if (existingOverlay) existingOverlay.remove();
+        
+        // Create overlay message
+        const overlay = document.createElement('div');
+        overlay.className = 'chart-empty-message';
+        overlay.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.9); z-index: 10; color: #666;';
+        overlay.innerHTML = '<p>No hay datos de calificaciones disponibles</p>';
+        container.style.position = 'relative';
+        container.appendChild(overlay);
+        return;
+    }
+    
+    // Remove empty message if data is now available
+    const container = ctx.parentElement;
+    const existingOverlay = container.querySelector('.chart-empty-message');
+    if (existingOverlay) existingOverlay.remove();
+    
     reportsCharts.grades = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -102,6 +125,28 @@ function createAttendanceChart(subjectId = 'all') {
 
     const attendanceData = getAttendanceTrends(subjectId);
     
+    // Handle empty data - show message but keep canvas structure
+    if (!attendanceData || !attendanceData.labels || attendanceData.labels.length === 0) {
+        // Remove any existing overlay
+        const container = ctx.parentElement;
+        const existingOverlay = container.querySelector('.chart-empty-message');
+        if (existingOverlay) existingOverlay.remove();
+        
+        // Create overlay message
+        const overlay = document.createElement('div');
+        overlay.className = 'chart-empty-message';
+        overlay.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.9); z-index: 10; color: #666;';
+        overlay.innerHTML = '<p>No hay datos de asistencia disponibles</p>';
+        container.style.position = 'relative';
+        container.appendChild(overlay);
+        return;
+    }
+    
+    // Remove empty message if data is now available
+    const container = ctx.parentElement;
+    const existingOverlay = container.querySelector('.chart-empty-message');
+    if (existingOverlay) existingOverlay.remove();
+    
     reportsCharts.attendance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -150,6 +195,29 @@ function createPerformanceChart(studentId = 'all') {
 
     const performanceData = getStudentPerformance(studentId);
     
+    // Handle empty data - show message but keep canvas structure
+    if (!performanceData || !performanceData.labels || performanceData.labels.length === 0 || 
+        !performanceData.datasets || performanceData.datasets.length === 0) {
+        // Remove any existing overlay
+        const container = ctx.parentElement;
+        const existingOverlay = container.querySelector('.chart-empty-message');
+        if (existingOverlay) existingOverlay.remove();
+        
+        // Create overlay message
+        const overlay = document.createElement('div');
+        overlay.className = 'chart-empty-message';
+        overlay.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.9); z-index: 10; color: #666;';
+        overlay.innerHTML = '<p>No hay datos de rendimiento disponibles</p>';
+        container.style.position = 'relative';
+        container.appendChild(overlay);
+        return;
+    }
+    
+    // Remove empty message if data is now available
+    const container = ctx.parentElement;
+    const existingOverlay = container.querySelector('.chart-empty-message');
+    if (existingOverlay) existingOverlay.remove();
+    
     reportsCharts.performance = new Chart(ctx, {
         type: 'radar',
         data: {
@@ -185,6 +253,28 @@ function createSubjectChart() {
     }
 
     const subjectData = getSubjectComparison();
+    
+    // Handle empty data - show message but keep canvas structure
+    if (!subjectData || !subjectData.labels || subjectData.labels.length === 0) {
+        // Remove any existing overlay
+        const container = ctx.parentElement;
+        const existingOverlay = container.querySelector('.chart-empty-message');
+        if (existingOverlay) existingOverlay.remove();
+        
+        // Create overlay message
+        const overlay = document.createElement('div');
+        overlay.className = 'chart-empty-message';
+        overlay.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.9); z-index: 10; color: #666;';
+        overlay.innerHTML = '<p>No hay datos de materias disponibles</p>';
+        container.style.position = 'relative';
+        container.appendChild(overlay);
+        return;
+    }
+    
+    // Remove empty message if data is now available
+    const container = ctx.parentElement;
+    const existingOverlay = container.querySelector('.chart-empty-message');
+    if (existingOverlay) existingOverlay.remove();
     
     reportsCharts.subject = new Chart(ctx, {
         type: 'doughnut',
