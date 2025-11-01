@@ -784,11 +784,21 @@ function filterSubjects() {
 
 // Helper functions
 function getTeacherById(teacherId) {
-    return appData.usuarios_docente.find(t => t.ID_docente === teacherId);
+    if (!appData || !appData.usuarios_docente || !Array.isArray(appData.usuarios_docente)) {
+        return null;
+    }
+    const id = parseInt(teacherId, 10);
+    return appData.usuarios_docente.find(t => parseInt(t.ID_docente, 10) === id);
 }
 
 function getSubjectById(subjectId) {
-    return appData.materia.find(s => s.ID_materia === subjectId);
+    if (!appData || !appData.materia || !Array.isArray(appData.materia)) {
+        console.error('appData.materia is not available or is not an array');
+        return null;
+    }
+    // Convert both to numbers for proper comparison
+    const id = parseInt(subjectId, 10);
+    return appData.materia.find(s => parseInt(s.ID_materia, 10) === id);
 }
 
 
@@ -865,9 +875,17 @@ function populateSubjectSelect() {
     });
 }
 
-function viewSubjectDetails(subjectId) {
+async function viewSubjectDetails(subjectId) {
     // Store the current subject ID for the details view
     window.currentSubjectId = subjectId;
+    
+    // Ensure data is loaded before showing details
+    if (!appData || !appData.materia || !Array.isArray(appData.materia)) {
+        console.log('Data not loaded, attempting to load...');
+        if (typeof loadData === 'function') {
+            await loadData();
+        }
+    }
     
     // Hide subjects content and show subject details view
     const subjectsContainer = document.getElementById('subjectsContainer');
@@ -908,8 +926,25 @@ function backToSubjects() {
 }
 
 function loadSubjectDetailsView(subjectId) {
+    // Ensure appData is loaded
+    if (!appData || typeof appData !== 'object') {
+        console.error('appData is not loaded');
+        alert('Error: Los datos no están cargados. Por favor, recarga la página.');
+        return;
+    }
+
     const subject = getSubjectById(subjectId);
-    if (!subject) return;
+    if (!subject) {
+        console.error(`Subject with ID ${subjectId} not found`);
+        alert(`Error: No se encontró la materia con ID ${subjectId}.`);
+        return;
+    }
+
+    // Ensure required arrays exist
+    if (!Array.isArray(appData.alumnos_x_materia)) appData.alumnos_x_materia = [];
+    if (!Array.isArray(appData.estudiante)) appData.estudiante = [];
+    if (!Array.isArray(appData.evaluacion)) appData.evaluacion = [];
+    if (!Array.isArray(appData.contenido)) appData.contenido = [];
 
     const teacher = getTeacherById(subject.Usuarios_docente_ID_docente);
     const enrolledStudents = appData.alumnos_x_materia.filter(axm => axm.Materia_ID_materia === subjectId);
@@ -921,7 +956,10 @@ function loadSubjectDetailsView(subjectId) {
     const content = appData.contenido.filter(c => c.Materia_ID_materia === subjectId);
 
     // Update title
-    document.getElementById('subjectDetailsTitle').textContent = subject.Nombre;
+    const titleElement = document.getElementById('subjectDetailsTitle');
+    if (titleElement) {
+        titleElement.textContent = subject.Nombre;
+    }
 
     // Load details tab content
     loadSubjectDetailsTab(subject, teacher, students, evaluations);
@@ -934,6 +972,7 @@ function loadSubjectDetailsTab(subject, teacher, students, evaluations) {
     // Subject info summary
     const subjectInfoSummary = document.getElementById('subjectInfoSummary');
     if (!subjectInfoSummary) {
+        console.error('subjectInfoSummary element not found');
         return;
     }
     
@@ -971,6 +1010,7 @@ function loadSubjectDetailsTab(subject, teacher, students, evaluations) {
     // Subject details content
     const subjectDetailsContent = document.getElementById('subjectDetailsContent');
     if (!subjectDetailsContent) {
+        console.error('subjectDetailsContent element not found');
         return;
     }
     
@@ -1022,12 +1062,51 @@ function loadSubjectContentTab(subjectId, content) {
         return;
     }
     
+    // Ensure tema_estudiante array exists
+    if (!Array.isArray(appData.tema_estudiante)) {
+        appData.tema_estudiante = [];
+    }
+    
+    // Get enrolled students for this subject
+    const enrolledStudents = appData.alumnos_x_materia.filter(axm => axm.Materia_ID_materia === subjectId);
+    const students = enrolledStudents.map(axm => 
+        appData.estudiante.find(e => e.ID_Estudiante === axm.Estudiante_ID_Estudiante)
+    ).filter(Boolean);
+    
     if (content.length > 0) {
-        contentListContainer.innerHTML = content.map(item => `
+        contentListContainer.innerHTML = content.map(item => {
+            // Get students assigned to this contenido for recuperatorios
+            const assignedStudents = appData.tema_estudiante
+                .filter(te => te.Contenido_ID_contenido === item.ID_contenido)
+                .map(te => {
+                    const student = appData.estudiante.find(e => e.ID_Estudiante === te.Estudiante_ID_Estudiante);
+                    return student ? { ...te, student } : null;
+                })
+                .filter(Boolean);
+            
+            return `
             <div class="content-item">
                 <div class="content-info">
                     <span class="content-topic">${item.Tema}</span>
                     <span class="content-description">${item.Descripcion || 'Sin descripción'}</span>
+                    ${assignedStudents.length > 0 ? `
+                        <div class="assigned-students-list" style="margin-top: 10px;">
+                            <strong style="font-size: 0.9em; color: #666;">Estudiantes asignados para recuperatorio (${assignedStudents.length}):</strong>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+                                ${assignedStudents.map(te => `
+                                    <span class="student-assignment-badge" style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; background: #e3f2fd; border-radius: 12px; font-size: 0.85em;">
+                                        <span>${te.student.Nombre} ${te.student.Apellido}</span>
+                                        <span class="status-badge status-${te.Estado.toLowerCase()}" style="font-size: 0.8em; padding: 2px 6px;">${getStatusText(te.Estado)}</span>
+                                        <button class="btn-icon-small" onclick="removeStudentFromContent(${te.ID_Tema_estudiante}, ${item.ID_contenido})" title="Quitar asignación" style="margin-left: 5px; padding: 2px 4px; border: none; background: transparent; cursor: pointer; color: #666;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : `
+                        <div style="margin-top: 10px; font-size: 0.9em; color: #999;">No hay estudiantes asignados</div>
+                    `}
                 </div>
                 <div class="content-actions">
                     <select class="content-status-selector" onchange="changeContentStatus(${item.ID_contenido}, this.value)" title="Cambiar Estado">
@@ -1037,6 +1116,9 @@ function loadSubjectContentTab(subjectId, content) {
                         <option value="CANCELADO" ${item.Estado === 'CANCELADO' ? 'selected' : ''}>Cancelado</option>
                     </select>
                     <div class="content-action-buttons">
+                        <button class="btn-icon btn-secondary" onclick="assignStudentsToContent(${item.ID_contenido}, ${subjectId})" title="Asignar Estudiantes para Recuperatorio">
+                            <i class="fas fa-user-plus"></i>
+                        </button>
                         <button class="btn-icon btn-edit" onclick="editContent(${item.ID_contenido})" title="Editar Contenido">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -1046,7 +1128,8 @@ function loadSubjectContentTab(subjectId, content) {
                     </div>
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
     } else {
         contentListContainer.innerHTML = '<p class="empty-state">No hay contenidos registrados para esta materia</p>';
     }
@@ -1181,21 +1264,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Add content button
+    // Add content button - use contentEditModal for both add and edit
     const addContentBtn = document.getElementById('addContentBtn');
     if (addContentBtn) {
         addContentBtn.addEventListener('click', () => {
-            // For now, just show an alert. You can implement a modal later
-            alert('Función de agregar contenido próximamente disponible');
+            if (!window.currentSubjectId) {
+                alert('Por favor, selecciona una materia primero');
+                return;
+            }
+            // Reset to add mode
+            currentContentId = null;
+            clearContentForm();
+            // Update modal title
+            const modalTitle = document.querySelector('#contentEditModal .modal-header h3');
+            if (modalTitle) {
+                modalTitle.textContent = 'Agregar Contenido';
+                const translateAttr = modalTitle.getAttribute('data-translate');
+                if (translateAttr) {
+                    // Restore translation attribute if needed
+                    modalTitle.setAttribute('data-translate', 'add_content');
+                }
+            }
+            showModal('contentEditModal');
         });
     }
     
-    // Content edit form
+    // Content edit form - handles both add and edit
     const contentEditForm = document.getElementById('contentEditForm');
     if (contentEditForm) {
         contentEditForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            saveContentEdit();
+            if (currentContentId) {
+                saveContentEdit();
+            } else {
+                saveContent();
+            }
         });
     }
     
@@ -1228,6 +1331,76 @@ function changeContentStatus(contentId, newStatus) {
     showNotification(`Estado actualizado a: ${getStatusText(newStatus)}`, 'success');
 }
 
+function clearContentForm() {
+    document.getElementById('editContentTopic').value = '';
+    document.getElementById('editContentDescription').value = '';
+    document.getElementById('editContentStatus').value = 'PENDIENTE';
+}
+
+async function saveContent() {
+    if (!window.currentSubjectId) {
+        alert('Error: No se encontró la materia seleccionada');
+        return;
+    }
+    
+    const topic = document.getElementById('editContentTopic').value.trim();
+    const description = document.getElementById('editContentDescription').value.trim();
+    const status = document.getElementById('editContentStatus').value;
+    
+    if (!topic) {
+        alert('El tema es obligatorio');
+        return;
+    }
+    
+    const payload = {
+        Tema: topic,
+        Descripcion: description || null,
+        Estado: status || 'PENDIENTE',
+        Materia_ID_materia: window.currentSubjectId
+    };
+    
+    try {
+        const res = await fetch('../api/contenido.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+        
+        let data = {};
+        const text = await res.text();
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            throw new Error(`Error del servidor (${res.status})`);
+        }
+        
+        if (!res.ok) {
+            const errorMsg = data.error ? `${data.message || 'Error'}: ${data.error}` : (data.message || 'No se pudo crear el contenido');
+            throw new Error(errorMsg);
+        }
+        
+        // Reload data from backend
+        if (typeof loadData === 'function') await loadData();
+        
+        // Close modal
+        closeModal('contentEditModal');
+        
+        // Reload the content tab to show new content
+        if (window.currentSubjectId) {
+            const content = appData.contenido.filter(c => c.Materia_ID_materia === window.currentSubjectId);
+            loadSubjectContentTab(window.currentSubjectId, content);
+        }
+        
+        // Show success message
+        showNotification('Contenido creado correctamente', 'success');
+        
+        currentContentId = null;
+    } catch (err) {
+        alert('Error: ' + (err.message || 'No se pudo crear el contenido'));
+    }
+}
+
 function editContent(contentId) {
     const content = appData.contenido.find(c => c.ID_contenido === contentId);
     if (!content) return;
@@ -1239,64 +1412,53 @@ function editContent(contentId) {
     document.getElementById('editContentDescription').value = content.Descripcion || '';
     document.getElementById('editContentStatus').value = content.Estado;
     
+    // Update modal title for edit mode
+    const modalTitle = document.querySelector('#contentEditModal .modal-header h3');
+    if (modalTitle) {
+        modalTitle.textContent = 'Editar Contenido';
+        modalTitle.setAttribute('data-translate', 'edit_content');
+    }
+    
     // Show modal
     showModal('contentEditModal');
 }
 
-function saveContentEdit() {
+async function saveContentEdit() {
     if (!currentContentId) return;
     
-    const topic = document.getElementById('editContentTopic').value;
-    const description = document.getElementById('editContentDescription').value;
+    const topic = document.getElementById('editContentTopic').value.trim();
+    const description = document.getElementById('editContentDescription').value.trim();
     const status = document.getElementById('editContentStatus').value;
     
-    // Update content
-    const contentIndex = appData.contenido.findIndex(c => c.ID_contenido === currentContentId);
-    if (contentIndex !== -1) {
-        appData.contenido[contentIndex].Tema = topic;
-        appData.contenido[contentIndex].Descripcion = description;
-        appData.contenido[contentIndex].Estado = status;
-        appData.contenido[contentIndex].Fecha_actualizacion = new Date().toISOString().split('T')[0];
+    if (!topic) {
+        alert('El tema es obligatorio');
+        return;
     }
     
-    // Update tema_estudiante records for this content
-    const temaEstudianteRecords = appData.tema_estudiante.filter(te => te.Contenido_ID_contenido === currentContentId);
-    temaEstudianteRecords.forEach(te => {
-        te.Estado = status;
-        te.Fecha_actualizacion = new Date().toISOString().split('T')[0];
-    });
+    const payload = {
+        Tema: topic,
+        Descripcion: description || null,
+        Estado: status
+    };
     
-    // Save data
-    saveData();
-    
-    // Close modal
-    closeModal('contentEditModal');
-    
-    // Reload the content tab to show updated content
-    if (window.currentSubjectId) {
-        const content = appData.contenido.filter(c => c.Materia_ID_materia === window.currentSubjectId);
-        loadSubjectContentTab(window.currentSubjectId, content);
-    }
-    
-    // Show success message
-    showNotification('Contenido actualizado correctamente', 'success');
-    
-    currentContentId = null;
-}
-
-function deleteContent(contentId) {
-    const content = appData.contenido.find(c => c.ID_contenido === contentId);
-    if (!content) return;
-    
-    if (confirm(`¿Estás seguro de que quieres eliminar el contenido "${content.Tema}"?`)) {
-        // Remove content
-        appData.contenido = appData.contenido.filter(c => c.ID_contenido !== contentId);
+    try {
+        const res = await fetch(`../api/contenido.php?id=${currentContentId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
         
-        // Remove related tema_estudiante records
-        appData.tema_estudiante = appData.tema_estudiante.filter(te => te.Contenido_ID_contenido !== contentId);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            throw new Error(data.message || 'No se pudo actualizar el contenido');
+        }
         
-        // Save data
-        saveData();
+        // Reload data from backend
+        if (typeof loadData === 'function') await loadData();
+        
+        // Close modal
+        closeModal('contentEditModal');
         
         // Reload the content tab to show updated content
         if (window.currentSubjectId) {
@@ -1305,7 +1467,45 @@ function deleteContent(contentId) {
         }
         
         // Show success message
-        showNotification('Contenido eliminado correctamente', 'success');
+        showNotification('Contenido actualizado correctamente', 'success');
+        
+        currentContentId = null;
+    } catch (err) {
+        alert('Error: ' + (err.message || 'No se pudo actualizar el contenido'));
+    }
+}
+
+async function deleteContent(contentId) {
+    const content = appData.contenido.find(c => c.ID_contenido === contentId);
+    if (!content) return;
+    
+    if (confirm(`¿Estás seguro de que quieres eliminar el contenido "${content.Tema}"?`)) {
+        try {
+            const res = await fetch(`../api/contenido.php?id=${contentId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                credentials: 'include'
+            });
+            
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.message || 'No se pudo eliminar el contenido');
+            }
+            
+            // Reload data from backend
+            if (typeof loadData === 'function') await loadData();
+            
+            // Reload the content tab to show updated content
+            if (window.currentSubjectId) {
+                const content = appData.contenido.filter(c => c.Materia_ID_materia === window.currentSubjectId);
+                loadSubjectContentTab(window.currentSubjectId, content);
+            }
+            
+            // Show success message
+            showNotification('Contenido eliminado correctamente', 'success');
+        } catch (err) {
+            alert('Error: ' + (err.message || 'No se pudo eliminar el contenido'));
+        }
     }
 }
 
@@ -1345,6 +1545,211 @@ function exportSubjects() {
     a.download = 'materias.csv';
     a.click();
     window.URL.revokeObjectURL(url);
+}
+
+// Functions for assigning students to contenido (recuperatorios)
+async function assignStudentsToContent(contenidoId, subjectId) {
+    if (!contenidoId || !subjectId) {
+        alert('Error: Faltan parámetros necesarios');
+        return;
+    }
+    
+    // Ensure tema_estudiante array exists
+    if (!Array.isArray(appData.tema_estudiante)) {
+        appData.tema_estudiante = [];
+    }
+    
+    // Get enrolled students for this subject
+    const enrolledStudents = appData.alumnos_x_materia.filter(axm => axm.Materia_ID_materia === subjectId);
+    const students = enrolledStudents.map(axm => 
+        appData.estudiante.find(e => e.ID_Estudiante === axm.Estudiante_ID_Estudiante)
+    ).filter(Boolean);
+    
+    if (students.length === 0) {
+        alert('No hay estudiantes inscritos en esta materia');
+        return;
+    }
+    
+    // Get already assigned students
+    const assignedStudentIds = appData.tema_estudiante
+        .filter(te => te.Contenido_ID_contenido === contenidoId)
+        .map(te => te.Estudiante_ID_Estudiante);
+    
+    // Create modal content with checkboxes for students
+    const content = appData.contenido.find(c => c.ID_contenido === contenidoId);
+    const modalContent = `
+        <div style="padding: 20px;">
+            <h3 style="margin-bottom: 15px;">Asignar Estudiantes para Recuperatorio</h3>
+            <p style="margin-bottom: 15px; color: #666;"><strong>Contenido:</strong> ${content ? content.Tema : 'N/A'}</p>
+            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px;">
+                ${students.map(student => {
+                    const isAssigned = assignedStudentIds.includes(student.ID_Estudiante);
+                    return `
+                        <label style="display: flex; align-items: center; padding: 8px; cursor: pointer; ${isAssigned ? 'background: #e8f5e9;' : ''}">
+                            <input type="checkbox" 
+                                   value="${student.ID_Estudiante}" 
+                                   ${isAssigned ? 'checked disabled' : ''}
+                                   class="student-checkbox-${contenidoId}"
+                                   style="margin-right: 10px;">
+                            <span style="flex: 1;">${student.Nombre} ${student.Apellido}</span>
+                            ${isAssigned ? '<span style="color: #4caf50; font-size: 0.9em;">(Ya asignado)</span>' : ''}
+                        </label>
+                    `;
+                }).join('')}
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button id="cancelAssignBtn" class="btn-secondary" style="padding: 8px 16px;">Cancelar</button>
+                <button id="saveAssignBtn" class="btn-primary" style="padding: 8px 16px;">Guardar Asignaciones</button>
+            </div>
+        </div>
+    `;
+    
+    // Create or update modal
+    let modal = document.getElementById('assignStudentsModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'assignStudentsModal';
+        modal.className = 'modal';
+        document.body.appendChild(modal);
+    }
+    
+    const modalWrapper = document.createElement('div');
+    modalWrapper.className = 'modal-content';
+    modalWrapper.innerHTML = `
+        <div class="modal-header">
+            <h3>Asignar Estudiantes</h3>
+            <button class="close-modal">&times;</button>
+        </div>
+        ${modalContent}
+    `;
+    
+    modal.innerHTML = '';
+    modal.appendChild(modalWrapper);
+    
+    // Setup modal handlers
+    setupModalHandlers('assignStudentsModal');
+    
+    // Setup event listeners
+    const cancelBtn = modalWrapper.querySelector('#cancelAssignBtn');
+    const saveBtn = modalWrapper.querySelector('#saveAssignBtn');
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            closeModal('assignStudentsModal');
+        });
+    }
+    
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            const checkboxes = modalWrapper.querySelectorAll(`.student-checkbox-${contenidoId}:not(:disabled)`);
+            const selectedStudentIds = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => parseInt(cb.value));
+            
+            if (selectedStudentIds.length === 0) {
+                alert('Selecciona al menos un estudiante');
+                return;
+            }
+            
+            // Save assignments
+            await saveStudentAssignments(contenidoId, selectedStudentIds);
+            closeModal('assignStudentsModal');
+        });
+    }
+    
+    // Show modal
+    showModal('assignStudentsModal');
+}
+
+async function saveStudentAssignments(contenidoId, studentIds) {
+    try {
+        let successCount = 0;
+        let errorCount = 0;
+        
+        for (const estudianteId of studentIds) {
+            try {
+                const payload = {
+                    Contenido_ID_contenido: contenidoId,
+                    Estudiante_ID_Estudiante: estudianteId,
+                    Estado: 'PENDIENTE'
+                };
+                
+                const res = await fetch('../api/tema_estudiante.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json().catch(() => ({}));
+                
+                if (res.ok) {
+                    successCount++;
+                } else {
+                    // Check if it's a conflict (already assigned)
+                    if (res.status === 409) {
+                        successCount++; // Already assigned, count as success
+                    } else {
+                        errorCount++;
+                        console.error(`Error assigning student ${estudianteId}:`, data.message);
+                    }
+                }
+            } catch (err) {
+                errorCount++;
+                console.error(`Error assigning student ${estudianteId}:`, err);
+            }
+        }
+        
+        // Reload data from backend
+        if (typeof loadData === 'function') await loadData();
+        
+        // Reload the content tab to show updated assignments
+        if (window.currentSubjectId) {
+            const content = appData.contenido.filter(c => c.Materia_ID_materia === window.currentSubjectId);
+            loadSubjectContentTab(window.currentSubjectId, content);
+        }
+        
+        if (errorCount === 0) {
+            showNotification(`Se asignaron ${successCount} estudiante(s) correctamente`, 'success');
+        } else {
+            alert(`Se asignaron ${successCount} estudiante(s). ${errorCount} error(es).`);
+        }
+    } catch (err) {
+        alert('Error al guardar las asignaciones: ' + (err.message || 'Error desconocido'));
+    }
+}
+
+async function removeStudentFromContent(temaEstudianteId, contenidoId) {
+    if (!confirm('¿Estás seguro de que quieres quitar esta asignación?')) {
+        return;
+    }
+    
+    try {
+        const res = await fetch(`../api/tema_estudiante.php?id=${temaEstudianteId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            credentials: 'include'
+        });
+        
+        const data = await res.json().catch(() => ({}));
+        
+        if (!res.ok) {
+            throw new Error(data.message || 'No se pudo quitar la asignación');
+        }
+        
+        // Reload data from backend
+        if (typeof loadData === 'function') await loadData();
+        
+        // Reload the content tab to show updated assignments
+        if (window.currentSubjectId) {
+            const content = appData.contenido.filter(c => c.Materia_ID_materia === window.currentSubjectId);
+            loadSubjectContentTab(window.currentSubjectId, content);
+        }
+        
+        showNotification('Asignación eliminada correctamente', 'success');
+    } catch (err) {
+        alert('Error: ' + (err.message || 'No se pudo quitar la asignación'));
+    }
 }
 
 // Initialize export button
