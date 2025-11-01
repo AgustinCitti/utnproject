@@ -174,7 +174,6 @@ function loadReports() {
         initAttempts++;
         
         if (!window.data) {
-            console.log(`Reports initialization attempt ${initAttempts}: Waiting for window.data...`);
             if (initAttempts < maxAttempts) {
                 setTimeout(initializeReportsContent, 300);
             } else {
@@ -188,12 +187,6 @@ function loadReports() {
                        Array.isArray(window.data.materia) && Array.isArray(window.data.estudiante);
         
         if (!hasData) {
-            console.log(`Reports initialization attempt ${initAttempts}: Data arrays not ready yet`, {
-                hasMateria: !!window.data.materia,
-                hasEstudiante: !!window.data.estudiante,
-                materiaIsArray: Array.isArray(window.data.materia),
-                estudianteIsArray: Array.isArray(window.data.estudiante)
-            });
             if (initAttempts < maxAttempts) {
                 setTimeout(initializeReportsContent, 300);
             } else {
@@ -201,16 +194,6 @@ function loadReports() {
             }
             return;
         }
-
-        // Log current user info for debugging
-        const userId = getCurrentUserId();
-        const userSubjects = getCurrentUserSubjects();
-        console.log('Reports: Initializing with data', {
-            userId,
-            totalSubjects: window.data.materia.length,
-            userSubjectsCount: userSubjects.length,
-            userSubjects: userSubjects.map(m => m.Nombre)
-        });
 
         // Data is ready, initialize components
         try {
@@ -226,8 +209,6 @@ function loadReports() {
             
             // Update KPI values with fresh data
             updateReportsKPIs();
-            
-            console.log('Reports: Successfully initialized');
         } catch (error) {
             console.error('Error initializing reports:', error);
         }

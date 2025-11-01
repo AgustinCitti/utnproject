@@ -103,10 +103,6 @@ function populateFilters() {
     
     // Get current user's subjects
     const userSubjects = getCurrentUserSubjects();
-    console.log('populateFilters: User subjects found', {
-        count: userSubjects.length,
-        subjects: userSubjects.map(m => ({ id: m.ID_materia, name: m.Nombre }))
-    });
     
     if (userSubjects.length > 0) {
         userSubjects.forEach(materia => {
