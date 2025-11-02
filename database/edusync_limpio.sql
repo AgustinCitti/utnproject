@@ -68,10 +68,12 @@ CREATE TABLE Estudiante (
     Fecha_nacimiento DATE,
     Fecha_inscripcion DATE DEFAULT (CURRENT_DATE),
     Estado ENUM('ACTIVO', 'INACTIVO', 'EGRESADO', 'SUSPENDIDO') DEFAULT 'ACTIVO',
+    INTENSIFICA BOOLEAN DEFAULT FALSE,
     Tema_estudiante_ID_Tema_estudiante INT,
     INDEX idx_nombre_estudiante (Nombre, Apellido),
     INDEX idx_email_estudiante (Email),
-    INDEX idx_estado_estudiante (Estado)
+    INDEX idx_estado_estudiante (Estado),
+    INDEX idx_intensifica (INTENSIFICA)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
