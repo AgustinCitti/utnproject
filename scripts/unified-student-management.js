@@ -215,18 +215,42 @@ function loadUnifiedStudentData() {
 
     // Grid view - Student cards with integrated data
     unifiedStudentCards.innerHTML = filteredStudents.map(student => {
-        const studentGrades = appData.notas.filter(g => g.Estudiante_ID_Estudiante === student.ID_Estudiante);
+        // Obtener notas del estudiante y ordenarlas por fecha más reciente
+        const studentIdNum = parseInt(student.ID_Estudiante);
+        
+        // Verificar que appData.notas existe
+        if (!appData.notas || !Array.isArray(appData.notas)) {
+            appData.notas = [];
+        }
+        
+        const studentGrades = appData.notas
+            .filter(g => {
+                const gradeStudentId = parseInt(g.Estudiante_ID_Estudiante);
+                return gradeStudentId === studentIdNum;
+            })
+            .sort((a, b) => {
+                // Ordenar por fecha de calificación (más reciente primero)
+                const dateA = a.Fecha_calificacion ? new Date(a.Fecha_calificacion) : 
+                              (a.Fecha_registro ? new Date(a.Fecha_registro) : new Date(0));
+                const dateB = b.Fecha_calificacion ? new Date(b.Fecha_calificacion) : 
+                              (b.Fecha_registro ? new Date(b.Fecha_registro) : new Date(0));
+                return dateB - dateA;
+            });
+        
         const studentAttendance = appData.asistencia.filter(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante);
         
-        const averageGrade = studentGrades.length > 0 
-            ? Math.round(studentGrades.reduce((sum, g) => sum + g.Calificacion, 0) / studentGrades.length)
+        // Calcular promedio (excluyendo ausentes si se desea, o incluyéndolos como 0)
+        const gradesForAverage = studentGrades.filter(g => g.Calificacion > 0); // Excluir ausentes del promedio
+        const averageGrade = gradesForAverage.length > 0 
+            ? Math.round(gradesForAverage.reduce((sum, g) => sum + parseFloat(g.Calificacion), 0) / gradesForAverage.length * 10)
             : 0;
         
         const attendanceRate = studentAttendance.length > 0
             ? Math.round((studentAttendance.filter(a => a.Presente === 'Y').length / studentAttendance.length) * 100)
             : 0;
 
-        const recentGrades = studentGrades.slice(-3).reverse();
+        // Obtener las 3 calificaciones más recientes
+        const recentGrades = studentGrades.slice(0, 3);
         const recentAttendance = studentAttendance.slice(-5).reverse();
 
         return `
@@ -269,11 +293,28 @@ function loadUnifiedStudentData() {
                             <h4>Calificaciones Recientes</h4>
                             <div class="activity-list">
                                 ${recentGrades.map(grade => {
-                                    const evaluation = appData.evaluacion.find(e => e.ID_evaluacion === grade.Evaluacion_ID_evaluacion);
+                                    const evaluacionId = parseInt(grade.Evaluacion_ID_evaluacion);
+                                    const evaluation = appData.evaluacion ? appData.evaluacion.find(e => parseInt(e.ID_evaluacion) === evaluacionId) : null;
+                                    const materia = evaluation && appData.materia ? appData.materia.find(m => parseInt(m.ID_materia) === parseInt(evaluation.Materia_ID_materia)) : null;
+                                    const calificacion = parseFloat(grade.Calificacion) || 0;
+                                    const esAusente = calificacion === 0 && (
+                                        (grade.Observacion && grade.Observacion.toUpperCase().includes('AUSENTE')) || 
+                                        !grade.Observacion || 
+                                        grade.Observacion.trim() === ''
+                                    );
+                                    const fecha = grade.Fecha_calificacion || grade.Fecha_registro || '';
+                                    const fechaShort = fecha ? (fecha.split(' ')[0] || fecha.split('T')[0]).split('-').slice(1).join('/') : '';
+                                    
                                     return `
                                         <div class="activity-item">
-                                            <span class="activity-subject">${evaluation ? evaluation.Titulo : 'Unknown'}</span>
-                                            <span class="activity-grade grade-${grade.Calificacion >= 8 ? 'excellent' : grade.Calificacion >= 6 ? 'good' : 'poor'}">${grade.Calificacion}</span>
+                                            <div style="flex: 1;">
+                                                <div class="activity-subject">${evaluation ? evaluation.Titulo : 'Unknown'}</div>
+                                                ${materia ? `<div style="font-size: 0.75em; color: #666;">${materia.Nombre}</div>` : ''}
+                                                ${fechaShort ? `<div style="font-size: 0.7em; color: #999;">${fechaShort}</div>` : ''}
+                                            </div>
+                                            <span class="activity-grade ${esAusente ? 'status-absent' : calificacion >= 8 ? 'grade-excellent' : calificacion >= 6 ? 'grade-good' : 'grade-poor'}">
+                                                ${esAusente ? 'Ausente' : calificacion.toFixed(2)}
+                                            </span>
                                         </div>
                                     `;
                                 }).join('')}
@@ -320,18 +361,39 @@ function loadUnifiedStudentData() {
                 </thead>
                 <tbody>
                     ${filteredStudents.map(student => {
-                        const studentGrades = appData.notas.filter(g => g.Estudiante_ID_Estudiante === student.ID_Estudiante);
+                        // Obtener notas del estudiante ordenadas por fecha más reciente
+                        const studentIdNum = parseInt(student.ID_Estudiante);
+                        
+                        // Verificar que appData.notas existe
+                        if (!appData.notas || !Array.isArray(appData.notas)) {
+                            appData.notas = [];
+                        }
+                        
+                        const studentGrades = appData.notas
+                            .filter(g => {
+                                const gradeStudentId = parseInt(g.Estudiante_ID_Estudiante);
+                                return gradeStudentId === studentIdNum;
+                            })
+                            .sort((a, b) => {
+                                const dateA = a.Fecha_calificacion ? new Date(a.Fecha_calificacion) : 
+                                              (a.Fecha_registro ? new Date(a.Fecha_registro) : new Date(0));
+                                const dateB = b.Fecha_calificacion ? new Date(b.Fecha_calificacion) : 
+                                              (b.Fecha_registro ? new Date(b.Fecha_registro) : new Date(0));
+                                return dateB - dateA;
+                            });
                         const studentAttendance = appData.asistencia.filter(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante);
                         
-                        const averageGrade = studentGrades.length > 0 
-                            ? Math.round(studentGrades.reduce((sum, g) => sum + g.Calificacion, 0) / studentGrades.length)
+                        // Calcular promedio (excluyendo ausentes)
+                        const gradesForAverage = studentGrades.filter(g => parseFloat(g.Calificacion) > 0);
+                        const averageGrade = gradesForAverage.length > 0 
+                            ? Math.round(gradesForAverage.reduce((sum, g) => sum + parseFloat(g.Calificacion), 0) / gradesForAverage.length * 10)
                             : 0;
                         
                         const attendanceRate = studentAttendance.length > 0
                             ? Math.round((studentAttendance.filter(a => a.Presente === 'Y').length / studentAttendance.length) * 100)
                             : 0;
 
-                        const lastGrade = studentGrades.sort((a, b) => new Date(b.Fecha_calificacion) - new Date(a.Fecha_calificacion))[0];
+                        const lastGrade = studentGrades[0]; // Ya está ordenado, tomar el primero
                         const lastAttendance = studentAttendance.sort((a, b) => new Date(b.Fecha) - new Date(a.Fecha))[0];
                         
                         let lastActivity = 'Sin actividad';
@@ -800,11 +862,36 @@ function showStudentDetail(studentId) {
     const student = appData.estudiante.find(s => s.ID_Estudiante === studentId);
     if (!student) return;
 
-    const studentGrades = appData.notas.filter(g => g.Estudiante_ID_Estudiante === studentId);
+    // Obtener notas del estudiante y ordenarlas por fecha más reciente
+    // Asegurar que ambos valores sean del mismo tipo para la comparación
+    const studentIdNum = parseInt(studentId);
+    
+    // Verificar que appData.notas existe y es un array
+    if (!appData.notas || !Array.isArray(appData.notas)) {
+        console.warn('appData.notas no está disponible o no es un array');
+        appData.notas = [];
+    }
+    
+    const studentGrades = appData.notas
+        .filter(g => {
+            const gradeStudentId = parseInt(g.Estudiante_ID_Estudiante);
+            return gradeStudentId === studentIdNum;
+        })
+        .sort((a, b) => {
+            // Ordenar por fecha de calificación (más reciente primero)
+            const dateA = a.Fecha_calificacion ? new Date(a.Fecha_calificacion) : 
+                          (a.Fecha_registro ? new Date(a.Fecha_registro) : new Date(0));
+            const dateB = b.Fecha_calificacion ? new Date(b.Fecha_calificacion) : 
+                          (b.Fecha_registro ? new Date(b.Fecha_registro) : new Date(0));
+            return dateB - dateA;
+        });
+    
     const studentAttendance = appData.asistencia.filter(a => a.Estudiante_ID_Estudiante === studentId);
     
-    const averageGrade = studentGrades.length > 0 
-        ? Math.round(studentGrades.reduce((sum, g) => sum + g.Calificacion, 0) / studentGrades.length)
+    // Calcular promedio (excluyendo ausentes)
+    const gradesForAverage = studentGrades.filter(g => parseFloat(g.Calificacion) > 0);
+    const averageGrade = gradesForAverage.length > 0 
+        ? Math.round(gradesForAverage.reduce((sum, g) => sum + parseFloat(g.Calificacion), 0) / gradesForAverage.length * 10)
         : 0;
     
     const attendanceRate = studentAttendance.length > 0
@@ -813,36 +900,78 @@ function showStudentDetail(studentId) {
 
     // Update panel content
     document.getElementById('selectedStudentName').textContent = `${student.Nombre} ${student.Apellido}`;
-    document.getElementById('studentAverage').textContent = `${averageGrade}%`;
-    document.getElementById('studentAttendance').textContent = `${attendanceRate}%`;
-    document.getElementById('studentTotalGrades').textContent = studentGrades.length;
+    
+    // Mostrar porcentaje de asistencias
+    const attendanceElement = document.getElementById('studentAttendance');
+    if (attendanceElement) {
+        attendanceElement.textContent = `${attendanceRate}%`;
+        // Cambiar color según el porcentaje
+        if (attendanceRate >= 80) {
+            attendanceElement.style.color = '#28a745';
+        } else if (attendanceRate >= 60) {
+            attendanceElement.style.color = '#ffc107';
+        } else {
+            attendanceElement.style.color = '#dc3545';
+        }
+    }
 
-    // Recent grades
-    const recentGrades = studentGrades.slice(-5).reverse();
-    document.getElementById('studentRecentGrades').innerHTML = recentGrades.map(grade => {
-        const evaluation = appData.evaluacion.find(e => e.ID_evaluacion === grade.Evaluacion_ID_evaluacion);
-        return `
-            <div class="grade-item">
-                <span class="grade-subject">${evaluation ? evaluation.Titulo : 'Unknown'}</span>
-                <span class="grade-value grade-${grade.Calificacion >= 8 ? 'excellent' : grade.Calificacion >= 6 ? 'good' : 'poor'}">${grade.Calificacion}</span>
-                <span class="grade-date">${grade.Fecha_calificacion}</span>
-            </div>
-        `;
-    }).join('') || '<p class="no-data">Sin calificaciones</p>';
-
-    // Attendance history
-    const recentAttendance = studentAttendance.slice(-10).reverse();
-    document.getElementById('studentAttendanceHistory').innerHTML = recentAttendance.map(attendance => {
-        const subject = appData.materia.find(s => s.ID_materia === attendance.Materia_ID_materia);
-        const status = attendance.Presente === 'Y' ? 'present' : attendance.Presente === 'N' ? 'absent' : attendance.Presente === 'T' ? 'tardy' : 'justified';
-        return `
-            <div class="attendance-item">
-                <span class="attendance-date">${attendance.Fecha}</span>
-                <span class="attendance-subject">${subject ? subject.Nombre : 'Unknown'}</span>
-                <span class="attendance-status status-${status}">${status}</span>
-            </div>
-        `;
-    }).join('') || '<p class="no-data">Sin registros de asistencia</p>';
+    // Mostrar todas las calificaciones (nombre del examen + nota en la misma línea)
+    const recentGradesElement = document.getElementById('studentRecentGrades');
+    if (!recentGradesElement) {
+        console.error('studentRecentGrades element not found!');
+        return;
+    }
+    
+    // Verificar que appData.evaluacion y appData.materia existen
+    if (!appData.evaluacion || !Array.isArray(appData.evaluacion)) {
+        appData.evaluacion = [];
+    }
+    if (!appData.materia || !Array.isArray(appData.materia)) {
+        appData.materia = [];
+    }
+    
+    if (studentGrades.length > 0) {
+        const htmlContent = studentGrades.map(grade => {
+            // Asegurar comparación de tipos correcta
+            const evaluacionId = parseInt(grade.Evaluacion_ID_evaluacion);
+            const evaluation = appData.evaluacion.find(e => parseInt(e.ID_evaluacion) === evaluacionId);
+            const calificacion = parseFloat(grade.Calificacion) || 0;
+            const esAusente = calificacion === 0 && (
+                (grade.Observacion && grade.Observacion.toUpperCase().includes('AUSENTE')) || 
+                !grade.Observacion || 
+                (grade.Observacion && grade.Observacion.trim() === '')
+            );
+            
+            // Determinar color según calificación
+            let notaColor = '#dc3545'; // Rojo por defecto
+            let notaBg = '#ffebee';
+            if (esAusente) {
+                notaColor = '#dc3545';
+                notaBg = '#fee';
+            } else if (calificacion >= 8) {
+                notaColor = '#28a745';
+                notaBg = '#e8f5e9';
+            } else if (calificacion >= 6) {
+                notaColor = '#ffc107';
+                notaBg = '#fff3e0';
+            }
+            
+            return `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid ${notaColor};">
+                    <span style="font-weight: 500; color: #333; flex: 1;">
+                        ${evaluation ? evaluation.Titulo : 'Evaluación no encontrada'}
+                    </span>
+                    <span style="font-weight: 700; font-size: 1.1em; color: ${notaColor}; background: ${notaBg}; padding: 4px 10px; border-radius: 4px; min-width: 60px; text-align: center;">
+                        ${esAusente ? 'Ausente' : calificacion.toFixed(2)}
+                    </span>
+                </div>
+            `;
+        }).join('');
+        
+        recentGradesElement.innerHTML = htmlContent;
+    } else {
+        recentGradesElement.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Sin calificaciones</p>';
+    }
 
     // Show panel
     document.getElementById('studentDetailPanel').style.display = 'block';

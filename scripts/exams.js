@@ -767,6 +767,11 @@ async function saveGrades(event, examId) {
             // Recargar exámenes
             loadExams();
             
+            // Recargar vista de estudiantes para mostrar calificaciones recientes actualizadas
+            if (typeof loadUnifiedStudentData === 'function') {
+                loadUnifiedStudentData();
+            }
+            
             // Mostrar mensaje de éxito
             const message = failed > 0 
                 ? `Se guardaron ${saved} calificación(es). ${failed} fallaron.` 

@@ -421,32 +421,17 @@
                             </button>
                         </div>
                         <div class="panel-content">
-                            <div class="student-stats">
-                                <div class="stat-item">
-                                    <span class="stat-label" data-translate="average_grade">Promedio:</span>
-                                    <span class="stat-value" id="studentAverage">0%</span>
-                                </div>
-                                <div class="stat-item">
-                                    <span class="stat-label" data-translate="attendance_rate">Asistencia:</span>
-                                    <span class="stat-value" id="studentAttendance">0%</span>
-                                </div>
-                                <div class="stat-item">
-                                    <span class="stat-label" data-translate="total_grades">Calificaciones:</span>
-                                    <span class="stat-value" id="studentTotalGrades">0</span>
-                                </div>
+                            <!-- Porcentaje de Asistencias -->
+                            <div style="padding: 15px 0; border-bottom: 1px solid #e0e0e0;">
+                                <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Asistencia</div>
+                                <div id="studentAttendance" style="font-size: 1.8em; font-weight: 700; color: #667eea;">0%</div>
                             </div>
-                            <div class="student-details">
-                                <div class="detail-section">
-                                    <h4 data-translate="recent_grades">Calificaciones Recientes</h4>
-                                    <div id="studentRecentGrades" class="grades-list">
-                                        <!-- Recent grades will be loaded here -->
-                                    </div>
-                                </div>
-                                <div class="detail-section">
-                                    <h4 data-translate="attendance_history">Historial de Asistencia</h4>
-                                    <div id="studentAttendanceHistory" class="attendance-list">
-                                        <!-- Attendance history will be loaded here -->
-                                    </div>
+                            
+                            <!-- Sección de Calificaciones -->
+                            <div style="padding: 15px 0;">
+                                <div style="font-size: 0.9em; color: #666; margin-bottom: 15px; font-weight: 600;">Calificaciones</div>
+                                <div id="studentRecentGrades" style="display: flex; flex-direction: column; gap: 12px;">
+                                    <!-- Calificaciones will be loaded here -->
                                 </div>
                             </div>
                         </div>

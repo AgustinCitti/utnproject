@@ -121,10 +121,11 @@ try {
             INNER JOIN Evaluacion ev ON n.Evaluacion_ID_evaluacion = ev.ID_evaluacion
             INNER JOIN Materia m ON ev.Materia_ID_materia = m.ID_materia
             WHERE m.Usuarios_docente_ID_docente = ?
+            ORDER BY n.Fecha_calificacion DESC, n.Fecha_registro DESC, n.ID_Nota DESC
         ");
         $stmt->execute([$docente_id]);
     } else {
-        $stmt = $pdo->query("SELECT * FROM Notas");
+        $stmt = $pdo->query("SELECT * FROM Notas ORDER BY Fecha_calificacion DESC, Fecha_registro DESC, ID_Nota DESC");
     }
     $notas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
