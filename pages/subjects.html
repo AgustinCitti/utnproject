@@ -230,41 +230,19 @@
                         <!-- Detailed subject information will be loaded dynamically -->
                     </div>
 
-                    <!-- Subject Detail Panel -->
-                    <div class="subject-detail-panel" id="subjectDetailPanel" style="display: none;">
+                    <!-- Subject Themes Panel (similar to student detail panel) -->
+                    <div class="subject-detail-panel" id="subjectThemesPanel" style="display: none;">
                         <div class="panel-header">
-                            <h3 id="selectedSubjectName">Subject Name</h3>
-                            <button id="closeSubjectDetail" class="btn-icon">
+                            <h3 id="selectedSubjectName">Nombre de la Materia</h3>
+                            <button id="closeSubjectThemesPanel" class="btn-icon" onclick="closeSubjectThemesPanel()">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
                         <div class="panel-content">
-                            <div class="subject-stats">
-                                <div class="stat-item">
-                                    <span class="stat-label" data-translate="total_students">Estudiantes:</span>
-                                    <span class="stat-value" id="subjectStudents">0</span>
-                                </div>
-                                <div class="stat-item">
-                                    <span class="stat-label" data-translate="total_evaluations">Evaluaciones:</span>
-                                    <span class="stat-value" id="subjectEvaluations">0</span>
-                                </div>
-                                <div class="stat-item">
-                                    <span class="stat-label" data-translate="total_content">Contenidos:</span>
-                                    <span class="stat-value" id="subjectContent">0</span>
-                                </div>
-                            </div>
-                            <div class="subject-details">
-                                <div class="detail-section">
-                                    <h4 data-translate="subject_info">Información de la Materia</h4>
-                                    <div id="subjectInfo" class="info-list">
-                                        <!-- Subject information will be loaded here -->
-                                    </div>
-                                </div>
-                                <div class="detail-section">
-                                    <h4 data-translate="enrolled_students">Estudiantes Inscritos</h4>
-                                    <div id="subjectEnrolledStudents" class="students-list">
-                                        <!-- Enrolled students will be loaded here -->
-                                    </div>
+                            <div style="padding: 15px 0;">
+                                <div style="font-size: 0.9em; color: #666; margin-bottom: 15px; font-weight: 600;">Temas de la Materia</div>
+                                <div id="subjectThemesList" style="max-height: 500px; overflow-y: auto;">
+                                    <!-- Temas will be loaded here -->
                                 </div>
                             </div>
                         </div>

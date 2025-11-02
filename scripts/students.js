@@ -67,6 +67,13 @@ function handleSubjectSelection() {
     
     // Resetear el dropdown
     subjectsSelect.value = '';
+    
+    // Si está activo el selector de temas de intensificación, recargar temas
+    const studentStatus = document.getElementById('studentStatus');
+    const themesContainer = document.getElementById('intensificacionThemesContainer');
+    if (studentStatus && themesContainer && studentStatus.value === 'INTENSIFICA' && themesContainer.style.display !== 'none') {
+        loadIntensificacionThemes();
+    }
 }
 
 function renderSelectedSubjects() {
@@ -98,14 +105,554 @@ function removeSubject(index) {
 // Make removeSubject globally accessible
 window.removeSubject = removeSubject;
 
+// Lista de temas seleccionados para intensificación
+let selectedIntensificacionThemes = [];
+
+// Función para mostrar/ocultar selector de temas según el estado
+window.toggleIntensificacionThemes = function() {
+    const studentStatus = document.getElementById('studentStatus');
+    const themesContainer = document.getElementById('intensificacionThemesContainer');
+    
+    if (!studentStatus || !themesContainer) return;
+    
+    if (studentStatus.value === 'INTENSIFICA') {
+        themesContainer.style.display = 'block';
+        loadIntensificacionThemes();
+    } else {
+        themesContainer.style.display = 'none';
+        selectedIntensificacionThemes = [];
+        renderIntensificacionThemes();
+    }
+};
+
+// Función para cargar los temas disponibles para intensificación
+// Solo muestra temas de las materias seleccionadas en el formulario
+function loadIntensificacionThemes() {
+    const themesList = document.getElementById('intensificacionThemesList');
+    if (!themesList) return;
+    
+    // Asegurar que los datos estén disponibles
+    if (!appData.contenido || !Array.isArray(appData.contenido)) {
+        appData.contenido = [];
+    }
+    if (!appData.materia || !Array.isArray(appData.materia)) {
+        appData.materia = [];
+    }
+    
+    // Verificar que haya materias seleccionadas
+    if (selectedSubjectsList.length === 0) {
+        themesList.innerHTML = '<p style="color: #999; padding: 10px; text-align: center;">Primero selecciona las materias del estudiante.</p>';
+        return;
+    }
+    
+    // Obtener IDs de las materias seleccionadas
+    const selectedSubjectIds = selectedSubjectsList.map(s => parseInt(s.id));
+    
+    // Renderizar temas agrupados por materia
+    let htmlContent = '';
+    
+    selectedSubjectsList.forEach(subject => {
+        const subjectId = parseInt(subject.id);
+        const materia = appData.materia.find(m => parseInt(m.ID_materia) === subjectId);
+        
+        if (!materia) return;
+        
+        // Obtener temas de esta materia específica
+        const temasDeMateria = appData.contenido.filter(c => 
+            parseInt(c.Materia_ID_materia) === subjectId
+        );
+        
+        htmlContent += `
+            <div style="margin-bottom: 20px; padding: 12px; background: #fff; border-radius: 6px; border: 1px solid #e0e0e0;">
+                <div style="font-weight: 600; color: #333; margin-bottom: 10px; font-size: 0.95em;">
+                    <i class="fas fa-book" style="margin-right: 6px; color: #667eea;"></i>
+                    ${materia.Nombre} ${materia.Curso_division ? `- ${materia.Curso_division}` : ''}
+                </div>
+        `;
+        
+        if (temasDeMateria.length > 0) {
+            // Mostrar temas existentes con checkboxes
+            temasDeMateria.forEach(contenido => {
+                const isSelected = selectedIntensificacionThemes.includes(contenido.ID_contenido);
+                
+                htmlContent += `
+                    <label style="display: flex; align-items: start; padding: 8px; cursor: pointer; margin-bottom: 5px; border-radius: 4px; ${isSelected ? 'background: #e8f5e9;' : 'background: #f9f9f9;'}">
+                        <input type="checkbox" 
+                               value="${contenido.ID_contenido}" 
+                               ${isSelected ? 'checked' : ''}
+                               onchange="toggleIntensificacionTheme(${contenido.ID_contenido}, this.checked)"
+                               style="margin-right: 10px; margin-top: 3px;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500; color: #333;">${contenido.Tema || 'Sin título'}</div>
+                            ${contenido.Descripcion ? `<div style="font-size: 0.85em; color: #999; margin-top: 2px;">${contenido.Descripcion.substring(0, 50)}${contenido.Descripcion.length > 50 ? '...' : ''}</div>` : ''}
+                        </div>
+                    </label>
+                `;
+            });
+        } else {
+            // Si no hay temas, mostrar text box para crear uno nuevo
+            htmlContent += `
+                <div style="padding: 10px; background: #fff9e6; border: 1px dashed #ffc107; border-radius: 4px;">
+                    <small style="display: block; color: #856404; margin-bottom: 8px;">
+                        <i class="fas fa-info-circle" style="margin-right: 4px;"></i>
+                        Esta materia no tiene temas. Agrega uno aquí:
+                    </small>
+                    <div style="display: flex; gap: 8px; align-items: flex-start;">
+                        <input type="text" 
+                               id="newThemeInput_${subjectId}" 
+                               placeholder="Nombre del tema..." 
+                               style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em;"
+                               onkeypress="if(event.key === 'Enter') createIntensificacionTheme(${subjectId})">
+                        <button type="button" 
+                                onclick="createIntensificacionTheme(${subjectId})"
+                                class="btn-primary" 
+                                style="padding: 8px 12px; font-size: 0.85em; white-space: nowrap;">
+                            <i class="fas fa-plus"></i> Crear
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        htmlContent += `</div>`;
+    });
+    
+    themesList.innerHTML = htmlContent;
+}
+
+// Función para crear un tema nuevo desde el formulario de intensificación
+window.createIntensificacionTheme = async function(materiaId) {
+    const input = document.getElementById(`newThemeInput_${materiaId}`);
+    if (!input) return;
+    
+    const temaNombre = input.value.trim();
+    if (!temaNombre) {
+        alert('Por favor ingresa el nombre del tema');
+        return;
+    }
+    
+    try {
+        // Crear el tema en la BD
+        const response = await fetch('../api/contenido.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                Tema: temaNombre,
+                Descripcion: '',
+                Estado: 'PENDIENTE',
+                Materia_ID_materia: materiaId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success !== false) {
+            // Recargar datos
+            if (typeof loadData === 'function') {
+                await loadData();
+            }
+            
+            // Recargar la lista de temas
+            loadIntensificacionThemes();
+            
+            // Limpiar el input
+            input.value = '';
+            
+            // Seleccionar automáticamente el tema recién creado
+            if (result.id || result.data?.ID_contenido) {
+                const nuevoTemaId = result.id || result.data.ID_contenido;
+                if (!selectedIntensificacionThemes.includes(nuevoTemaId)) {
+                    selectedIntensificacionThemes.push(nuevoTemaId);
+                }
+                // Recargar para mostrar el checkbox seleccionado
+                loadIntensificacionThemes();
+            }
+        } else {
+            alert('Error al crear el tema: ' + (result.message || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('Error creando tema:', error);
+        alert('Error al conectar con el servidor');
+    }
+};
+
+// Función para crear tema desde el modal de asignación de temas
+window.createIntensificacionThemeFromModal = async function(materiaId, studentId) {
+    const input = document.getElementById(`newThemeModalInput_${materiaId}`);
+    if (!input) return;
+    
+    const temaNombre = input.value.trim();
+    if (!temaNombre) {
+        alert('Por favor ingresa el nombre del tema');
+        return;
+    }
+    
+    try {
+        // Crear el tema en la BD
+        const response = await fetch('../api/contenido.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                Tema: temaNombre,
+                Descripcion: '',
+                Estado: 'PENDIENTE',
+                Materia_ID_materia: materiaId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success !== false) {
+            // Recargar datos
+            if (typeof loadData === 'function') {
+                await loadData();
+            }
+            
+            // Recargar el modal con los nuevos temas
+            assignThemesToIntensificador(studentId);
+            
+            // Seleccionar automáticamente el tema recién creado
+            if (result.id || result.data?.ID_contenido) {
+                const nuevoTemaId = result.id || result.data.ID_contenido;
+                if (!selectedIntensificacionThemes.includes(nuevoTemaId)) {
+                    selectedIntensificacionThemes.push(nuevoTemaId);
+                }
+                // Esperar un poco y recargar el modal para mostrar el checkbox seleccionado
+                setTimeout(() => {
+                    assignThemesToIntensificador(studentId);
+                }, 300);
+            }
+        } else {
+            alert('Error al crear el tema: ' + (result.message || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('Error creando tema desde modal:', error);
+        alert('Error al conectar con el servidor');
+    }
+};
+
+// Función para toggle de tema individual
+window.toggleIntensificacionTheme = function(contenidoId, isChecked) {
+    if (isChecked) {
+        if (!selectedIntensificacionThemes.includes(contenidoId)) {
+            selectedIntensificacionThemes.push(contenidoId);
+        }
+    } else {
+        selectedIntensificacionThemes = selectedIntensificacionThemes.filter(id => id !== contenidoId);
+    }
+    renderIntensificacionThemes();
+};
+
+// Función para renderizar los temas seleccionados (chips)
+function renderIntensificacionThemes() {
+    // No necesitamos mostrar chips separados, los checkboxes ya muestran el estado
+    // Pero podemos agregar un contador si es necesario
+}
+
+// Función para asignar temas a un estudiante intensificador
+window.assignThemesToIntensificador = function(studentId) {
+    if (!studentId) {
+        alert('Error: ID de estudiante no válido');
+        return;
+    }
+    
+    const student = appData.estudiante.find(s => s.ID_Estudiante === studentId);
+    if (!student) {
+        alert('Error: Estudiante no encontrado');
+        return;
+    }
+    
+    // Verificar que es intensificador (INACTIVO en la BD)
+    const estado = (student.Estado || '').toUpperCase();
+    if (estado !== 'INACTIVO') {
+        alert('Esta función solo está disponible para estudiantes intensificadores');
+        return;
+    }
+    
+    // Cargar temas disponibles
+    if (!appData.contenido || !Array.isArray(appData.contenido)) {
+        appData.contenido = [];
+    }
+    if (!appData.materia || !Array.isArray(appData.materia)) {
+        appData.materia = [];
+    }
+    
+    // Obtener las materias en las que el estudiante está inscrito
+    if (!appData.alumnos_x_materia || !Array.isArray(appData.alumnos_x_materia)) {
+        appData.alumnos_x_materia = [];
+    }
+    
+    const studentIdNum = parseInt(studentId);
+    const materiasDelEstudiante = appData.alumnos_x_materia
+        .filter(axm => parseInt(axm.Estudiante_ID_Estudiante) === studentIdNum)
+        .map(axm => parseInt(axm.Materia_ID_materia));
+    
+    if (materiasDelEstudiante.length === 0) {
+        alert('Este estudiante no está inscrito en ninguna materia. Por favor, primero asigna materias al estudiante.');
+        return;
+    }
+    
+    // Obtener temas solo de las materias que el estudiante cursa
+    const availableThemes = (appData.contenido || []).filter(c => 
+        materiasDelEstudiante.includes(parseInt(c.Materia_ID_materia))
+    );
+    
+    // No retornar aquí - mostrar todas las materias del estudiante, incluso sin temas
+    // para permitir crear temas directamente desde el modal
+    
+    // Obtener temas ya asignados al estudiante
+    if (!appData.tema_estudiante || !Array.isArray(appData.tema_estudiante)) {
+        appData.tema_estudiante = [];
+    }
+    
+    const assignedThemeIds = appData.tema_estudiante
+        .filter(te => parseInt(te.Estudiante_ID_Estudiante) === parseInt(studentId))
+        .map(te => parseInt(te.Contenido_ID_contenido));
+    
+    // Agrupar temas por materia
+    const temasPorMateria = {};
+    materiasDelEstudiante.forEach(materiaId => {
+        const materia = appData.materia.find(m => parseInt(m.ID_materia) === materiaId);
+        if (materia) {
+            const temas = availableThemes.filter(c => parseInt(c.Materia_ID_materia) === materiaId);
+            if (temas.length > 0 || true) { // Mostrar todas las materias, incluso sin temas
+                temasPorMateria[materiaId] = {
+                    materia: materia,
+                    temas: temas
+                };
+            }
+        }
+    });
+    
+    // Crear modal para seleccionar temas, agrupados por materia
+    const modalContent = `
+        <div style="padding: 20px;">
+            <h3 style="margin-bottom: 15px;">Asignar Temas de Intensificación</h3>
+            <p style="margin-bottom: 15px; color: #666;"><strong>Estudiante:</strong> ${student.Nombre} ${student.Apellido}</p>
+            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background: #f9f9f9;">
+                ${Object.keys(temasPorMateria).map(materiaId => {
+                    const { materia, temas } = temasPorMateria[materiaId];
+                    
+                    let temasHTML = '';
+                    
+                    if (temas.length > 0) {
+                        temasHTML = temas.map(contenido => {
+                            const isAssigned = assignedThemeIds.includes(contenido.ID_contenido);
+                            
+                            return `
+                                <label style="display: flex; align-items: start; padding: 10px; cursor: pointer; margin-bottom: 8px; border-radius: 4px; ${isAssigned ? 'background: #e8f5e9;' : 'background: #fff;'} border: 1px solid #e0e0e0;">
+                                    <input type="checkbox" 
+                                           value="${contenido.ID_contenido}" 
+                                           ${isAssigned ? 'checked disabled' : ''}
+                                           class="theme-checkbox-${studentId}"
+                                           style="margin-right: 10px; margin-top: 3px;">
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; color: #333; margin-bottom: 4px;">${contenido.Tema || 'Sin título'}</div>
+                                        ${contenido.Descripcion ? `<div style="font-size: 0.85em; color: #999; margin-top: 4px;">${contenido.Descripcion}</div>` : ''}
+                                        ${isAssigned ? '<span style="color: #4caf50; font-size: 0.85em; margin-left: 10px;">(Ya asignado)</span>' : ''}
+                                    </div>
+                                </label>
+                            `;
+                        }).join('');
+                    } else {
+                        // Si la materia no tiene temas, mostrar text box para crear uno
+                        temasHTML = `
+                            <div style="padding: 10px; background: #fff9e6; border: 1px dashed #ffc107; border-radius: 4px;">
+                                <small style="display: block; color: #856404; margin-bottom: 8px;">
+                                    <i class="fas fa-info-circle" style="margin-right: 4px;"></i>
+                                    Esta materia no tiene temas. Agrega uno aquí:
+                                </small>
+                                <div style="display: flex; gap: 8px; align-items: flex-start;">
+                                    <input type="text" 
+                                           id="newThemeModalInput_${materiaId}" 
+                                           placeholder="Nombre del tema..." 
+                                           style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em;"
+                                           onkeypress="if(event.key === 'Enter') createIntensificacionThemeFromModal(${materiaId}, ${studentId})">
+                                    <button type="button" 
+                                            onclick="createIntensificacionThemeFromModal(${materiaId}, ${studentId})"
+                                            class="btn-primary" 
+                                            style="padding: 8px 12px; font-size: 0.85em; white-space: nowrap;">
+                                        <i class="fas fa-plus"></i> Crear
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    return `
+                        <div style="margin-bottom: 20px; padding: 12px; background: #fff; border-radius: 6px; border: 1px solid #e0e0e0;">
+                            <div style="font-weight: 600; color: #333; margin-bottom: 10px; font-size: 0.95em;">
+                                <i class="fas fa-book" style="margin-right: 6px; color: #667eea;"></i>
+                                ${materia.Nombre} ${materia.Curso_division ? `- ${materia.Curso_division}` : ''}
+                            </div>
+                            ${temasHTML}
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button id="cancelAssignThemesBtn" class="btn-secondary" style="padding: 8px 16px;">Cancelar</button>
+                <button id="saveAssignThemesBtn" class="btn-primary" style="padding: 8px 16px;">Guardar Asignaciones</button>
+            </div>
+        </div>
+    `;
+    
+    // Crear o actualizar modal
+    let modal = document.getElementById('assignThemesModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'assignThemesModal';
+        modal.className = 'modal';
+        document.body.appendChild(modal);
+    }
+    
+    const modalWrapper = document.createElement('div');
+    modalWrapper.className = 'modal-content';
+    modalWrapper.innerHTML = `
+        <div class="modal-header">
+            <h3>Asignar Temas de Intensificación</h3>
+            <button class="close-modal">&times;</button>
+        </div>
+        ${modalContent}
+    `;
+    
+    modal.innerHTML = '';
+    modal.appendChild(modalWrapper);
+    
+    // Setup modal handlers
+    if (typeof setupModalHandlers === 'function') {
+        setupModalHandlers('assignThemesModal');
+    }
+    
+    // Setup event listeners
+    const cancelBtn = modalWrapper.querySelector('#cancelAssignThemesBtn');
+    const saveBtn = modalWrapper.querySelector('#saveAssignThemesBtn');
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            if (typeof closeModal === 'function') {
+                closeModal('assignThemesModal');
+            } else {
+                modal.classList.remove('active');
+            }
+        });
+    }
+    
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            const checkboxes = modalWrapper.querySelectorAll(`.theme-checkbox-${studentId}:not(:disabled)`);
+            const selectedThemeIds = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => parseInt(cb.value));
+            
+            await saveThemesAssignment(studentId, selectedThemeIds);
+            if (typeof closeModal === 'function') {
+                closeModal('assignThemesModal');
+            } else {
+                modal.classList.remove('active');
+            }
+        });
+    }
+    
+    // Show modal
+    if (typeof showModal === 'function') {
+        showModal('assignThemesModal');
+    } else {
+        modal.classList.add('active');
+    }
+};
+
+// Función para guardar las asignaciones de temas
+async function saveThemesAssignment(studentId, themeIds) {
+    try {
+        let successCount = 0;
+        let errorCount = 0;
+        
+        for (const contenidoId of themeIds) {
+            try {
+                const payload = {
+                    Contenido_ID_contenido: contenidoId,
+                    Estudiante_ID_Estudiante: studentId,
+                    Estado: 'PENDIENTE'
+                };
+                
+                const res = await fetch('../api/tema_estudiante.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json().catch(() => ({}));
+                
+                if (res.ok) {
+                    successCount++;
+                } else {
+                    // Check if it's a conflict (already assigned)
+                    if (res.status === 409) {
+                        successCount++; // Already assigned, count as success
+                    } else {
+                        errorCount++;
+                        console.error(`Error assigning theme ${contenidoId}:`, data.message);
+                    }
+                }
+            } catch (err) {
+                errorCount++;
+                console.error(`Error assigning theme ${contenidoId}:`, err);
+            }
+        }
+        
+        // Reload data from backend
+        if (typeof loadData === 'function') await loadData();
+        
+        // Reload student data
+        if (typeof loadUnifiedStudentData === 'function') {
+            loadUnifiedStudentData();
+        }
+        
+        // If panel is open, refresh it
+        const panel = document.getElementById('studentDetailPanel');
+        if (panel && panel.style.display === 'block') {
+            const currentStudentId = panel.getAttribute('data-student-id');
+            if (currentStudentId && typeof showStudentDetail === 'function') {
+                showStudentDetail(parseInt(currentStudentId));
+            }
+        }
+        
+        if (errorCount === 0) {
+            if (typeof showNotification === 'function') {
+                showNotification(`Se asignaron ${successCount} tema(s) correctamente`, 'success');
+            } else {
+                alert(`Se asignaron ${successCount} tema(s) correctamente`);
+            }
+        } else {
+            alert(`Se asignaron ${successCount} tema(s). ${errorCount} error(es).`);
+        }
+    } catch (err) {
+        alert('Error al guardar las asignaciones: ' + (err.message || 'Error desconocido'));
+    }
+}
+
 // Función actualizada para GUARDAR/CREAR estudiante
 async function saveStudent() {
+    const studentStatus = document.getElementById('studentStatus');
+    const estadoSeleccionado = studentStatus ? studentStatus.value : 'ACTIVO';
+    
+    // Ahora el backend maneja INTENSIFICA directamente usando la columna INTENSIFICA
     const formData = {
         Nombre: document.getElementById('studentFirstName').value,
         Apellido: document.getElementById('studentLastName').value,
         Email: document.getElementById('studentEmail').value || null,
         Fecha_nacimiento: null, // Fecha de nacimiento no se captura en el formulario
-        Estado: 'ACTIVO'
+        Estado: estadoSeleccionado  // Enviar 'INTENSIFICA', 'ACTIVO' o 'INACTIVO' directamente
     };
 
     // Validación
@@ -150,10 +697,23 @@ async function saveStudent() {
             
             
             // Guardar relaciones alumno-materia si hay materias seleccionadas
+            // Y guardar temas de intensificación si es intensificador
             if (!studentId) {
                 alert('Estudiante guardado pero no se pudieron guardar las materias. ID no disponible.');
             } else {
                 const selectedSubjects = selectedSubjectsList.map(s => s.id);
+                
+                // Guardar temas de intensificación si es INTENSIFICA
+                if (estadoSeleccionado === 'INTENSIFICA' && selectedIntensificacionThemes.length > 0) {
+                    try {
+                        await saveThemesAssignment(studentId, selectedIntensificacionThemes);
+                        // Limpiar después de guardar
+                        selectedIntensificacionThemes = [];
+                    } catch (err) {
+                        console.error('Error guardando temas de intensificación:', err);
+                        alert('Estudiante guardado pero hubo un error al asignar los temas de intensificación.');
+                    }
+                }
                 
                 if (selectedSubjects.length > 0) {
                     try {
@@ -257,6 +817,39 @@ function editStudent(id) {
     document.getElementById('studentLastName').value = student.Apellido || '';
     document.getElementById('studentEmail').value = student.Email || '';
     
+        // Establecer estado basado en la columna INTENSIFICA de la BD
+        const studentStatus = document.getElementById('studentStatus');
+        if (studentStatus) {
+            // Usar la columna INTENSIFICA para determinar el estado a mostrar
+            const esIntensifica = student.INTENSIFICA === true || student.INTENSIFICA === 1 || student.INTENSIFICA === '1';
+            
+            if (esIntensifica) {
+                studentStatus.value = 'INTENSIFICA';
+                // Mostrar selector de temas y cargar temas asignados
+                const themesContainer = document.getElementById('intensificacionThemesContainer');
+                if (themesContainer) {
+                    themesContainer.style.display = 'block';
+                    // Cargar temas ya asignados al estudiante
+                    selectedIntensificacionThemes = appData.tema_estudiante && Array.isArray(appData.tema_estudiante)
+                        ? appData.tema_estudiante
+                            .filter(te => parseInt(te.Estudiante_ID_Estudiante) === parseInt(id))
+                            .map(te => parseInt(te.Contenido_ID_contenido))
+                        : [];
+                    loadIntensificacionThemes();
+                }
+            } else {
+                // ACTIVO o INACTIVO (no intensificador)
+                const estado = (student.Estado || '').toUpperCase();
+                studentStatus.value = estado === 'ACTIVO' ? 'ACTIVO' : 'INACTIVO';
+                // Ocultar selector de temas
+                const themesContainer = document.getElementById('intensificacionThemesContainer');
+                if (themesContainer) {
+                    themesContainer.style.display = 'none';
+                }
+                selectedIntensificacionThemes = [];
+            }
+        }
+    
     // Limpiar y poblar materias seleccionadas
     selectedSubjectsList = [];
     
@@ -288,7 +881,14 @@ function editStudent(id) {
 }
 
 // Función actualizada para ELIMINAR estudiante
-async function deleteStudent(id) {
+// Hacer la función globalmente accesible
+window.deleteStudent = async function(id) {
+    if (!id) {
+        console.error('deleteStudent: ID no proporcionado');
+        alert('Error: ID de estudiante no válido');
+        return;
+    }
+
     if (!confirm('¿Estás seguro de que deseas eliminar este estudiante?')) {
         return;
     }
@@ -298,14 +898,26 @@ async function deleteStudent(id) {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            credentials: 'include'
         });
 
-        const result = await response.json();
+        // Verificar si la respuesta es JSON
+        let result;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            result = await response.json();
+        } else {
+            const text = await response.text();
+            console.error('Respuesta no JSON:', text);
+            throw new Error('Respuesta del servidor no válida');
+        }
 
         if (response.ok && result.success) {
             // Actualizar datos locales
-            await loadData();
+            if (typeof loadData === 'function') {
+                await loadData();
+            }
             
             // Recargar vista
             if (typeof loadStudents === 'function') {
@@ -320,22 +932,34 @@ async function deleteStudent(id) {
             
             // Mostrar notificación
             if (typeof showNotification === 'function') {
-                showNotification('Estudiante eliminado exitosamente', 'success');
+                showNotification(result.message || 'Estudiante eliminado exitosamente', 'success');
+            } else {
+                alert(result.message || 'Estudiante eliminado exitosamente');
             }
         } else {
-            alert(result.message || 'Error al eliminar el estudiante');
+            const errorMsg = result.message || 'Error al eliminar el estudiante';
+            console.error('Error al eliminar estudiante:', errorMsg);
+            alert(errorMsg);
         }
     } catch (error) {
-        alert('Error al conectar con el servidor');
+        console.error('Error en deleteStudent:', error);
+        alert('Error al conectar con el servidor: ' + (error.message || 'Error desconocido'));
     }
-}
+};
 
 function clearStudentForm() {
     document.getElementById('studentForm').reset();
     editingStudentId = null;
     selectedSubjectsList = [];
+    selectedIntensificacionThemes = [];
     renderSelectedSubjects();
     populateStudentSubjectsSelect(); // Repoblar las materias
+    
+    // Ocultar selector de temas de intensificación
+    const themesContainer = document.getElementById('intensificacionThemesContainer');
+    if (themesContainer) {
+        themesContainer.style.display = 'none';
+    }
 }
 
 // Variable para trackear si los handlers ya fueron configurados

@@ -5,10 +5,14 @@ let currentLanguage = 'es'; // Default to Spanish
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded');
     initializeApp();
 });
 
 async function initializeApp() {
+    // Initialize dark mode
+    initializeDarkMode();
+    
     // Initialize language system
     initializeLanguage();
     
@@ -126,6 +130,54 @@ async function loadData() {
 
 function saveData() {
     // In a real application, this would save to a database
+}
+
+// Dark Mode Functionality
+function initializeDarkMode() {
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    if (!darkModeToggle) {
+        console.warn('Toggle de modo oscuro no encontrado');
+        return;
+    }
+    
+    // Cargar preferencia guardada
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Aplicar tema guardado o detectar preferencia del sistema
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        darkModeToggle.checked = true;
+    } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        darkModeToggle.checked = false;
+    }
+    
+    // Event listener para el toggle
+    darkModeToggle.addEventListener('change', function() {
+        if (this.checked) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            localStorage.setItem('theme', 'light');
+        }
+    });
+    
+    // Escuchar cambios en las preferencias del sistema (solo si no hay preferencia guardada)
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                if (e.matches) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    darkModeToggle.checked = true;
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    darkModeToggle.checked = false;
+                }
+            }
+        });
+    }
 }
 
 // Utility function to clear authentication data

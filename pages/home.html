@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="../styles/components.css">
     <link rel="stylesheet" href="../styles/responsive.css">
     <link rel="stylesheet" href="../styles/scrollbar-fix.css">
+    <link rel="stylesheet" href="../styles/dark-mode.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" href="../styles/assets/icon.ico" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -94,6 +95,16 @@
                 <img src="../styles/assets/icon.ico" alt="EduSync" style="width:50px;height:50px;">
                 <span>EduSync</span>
             </div>
+            
+            <!-- Dark Mode Toggle Switch -->
+            <div class="dark-mode-toggle-container">
+                <label class="dark-mode-toggle" for="darkModeToggle">
+                    <input type="checkbox" id="darkModeToggle" aria-label="Toggle dark mode">
+                    <span class="toggle-slider"></span>
+                    <i class="fas fa-moon toggle-icon"></i>
+                </label>
+            </div>
+            
             <div class="nav-menu" id="desktopNavMenu">
                 <a href="#dashboard" class="nav-link" data-section="dashboard">
                     <span data-translate="dashboard">Panel de Control</span>
@@ -423,11 +434,11 @@
                                 <div id="studentAttendance" style="font-size: 1.8em; font-weight: 700; color: #667eea;">0%</div>
                             </div>
                             
-                            <!-- Sección de Calificaciones -->
+                            <!-- Sección de Calificaciones o Temas de Intensificación -->
                             <div style="padding: 15px 0;">
-                                <div style="font-size: 0.9em; color: #666; margin-bottom: 15px; font-weight: 600;">Calificaciones</div>
+                                <div id="studentGradesTitle" style="font-size: 0.9em; color: #666; margin-bottom: 15px; font-weight: 600;">Calificaciones</div>
                                 <div id="studentRecentGrades" style="display: flex; flex-direction: column; gap: 12px;">
-                                    <!-- Calificaciones will be loaded here -->
+                                    <!-- Calificaciones o Temas de Intensificación will be loaded here -->
                                 </div>
                             </div>
                         </div>
@@ -756,6 +767,24 @@
                     <!-- Detailed subject information will be loaded dynamically -->
                 </div>
 
+                <!-- Subject Themes Panel (similar to student detail panel) -->
+                <div class="subject-detail-panel" id="subjectThemesPanel" style="display: none;">
+                    <div class="panel-header">
+                        <h3 id="selectedSubjectName">Nombre de la Materia</h3>
+                        <button id="closeSubjectThemesPanel" class="btn-icon" onclick="closeSubjectThemesPanel()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="panel-content">
+                        <div style="padding: 15px 0;">
+                            <div style="font-size: 0.9em; color: #666; margin-bottom: 15px; font-weight: 600;">Temas de la Materia</div>
+                            <div id="subjectThemesList" style="max-height: 500px; overflow-y: auto;">
+                                <!-- Temas will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Subject Details View -->
                 <div id="subjectDetailsView" class="subject-details-view" style="display: none;">
                     <div class="section-header">
@@ -873,6 +902,25 @@
                         <!-- Selected subjects will be displayed here as chips -->
                     </div>
                     <small style="display: block; margin-top: 5px; color: #666;">Puedes seleccionar múltiples materias. El curso se determina automáticamente según la materia seleccionada.</small>
+                </div>
+                <div class="form-group">
+                    <label for="studentStatus" data-translate="status">Estado</label>
+                    <select id="studentStatus" required onchange="toggleIntensificacionThemes()">
+                        <option value="ACTIVO" data-translate="active">Activo</option>
+                        <option value="INACTIVO" data-translate="inactive">Inactivo</option>
+                        <option value="INTENSIFICA" data-translate="intensifica">Intensifica</option>
+                    </select>
+                    <small style="display: block; margin-top: 5px; color: #666;">Los estudiantes en Intensifica aparecerán destacados y verán temas de recuperación.</small>
+                </div>
+                <!-- Selector de temas para intensificadores -->
+                <div id="intensificacionThemesContainer" class="form-group" style="display: none;">
+                    <label for="intensificacionThemes" data-translate="themes_to_intensify">Temas a Intensificar</label>
+                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background: #f9f9f9;">
+                        <div id="intensificacionThemesList">
+                            <!-- Los temas se cargarán dinámicamente -->
+                        </div>
+                    </div>
+                    <small style="display: block; margin-top: 5px; color: #666;">Los temas mostrados corresponden a las materias seleccionadas arriba. Si una materia no tiene temas, puedes crearlos directamente desde aquí.</small>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
@@ -1041,6 +1089,46 @@
                 <div class="form-actions">
                     <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
                     <button type="submit" class="btn-primary" data-translate="save_subject">Guardar Materia</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Content Modal (para crear tema desde acciones de materias) -->
+    <div id="contentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-translate="add_edit_content">Agregar/Editar Contenido</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="contentForm" class="modal-form">
+                <div class="form-group">
+                    <label for="contentSubject" data-translate="subject">Materia</label>
+                    <select id="contentSubject" required>
+                        <option value="" data-translate="select_subject">- Seleccionar Materia -</option>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="contentTopic" data-translate="topic">Tema</label>
+                    <input type="text" id="contentTopic" required>
+                </div>
+                <div class="form-group">
+                    <label for="contentDescription" data-translate="description">Descripción</label>
+                    <textarea id="contentDescription" rows="3" placeholder="Descripción del tema..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="contentStatus" data-translate="status">Estado</label>
+                    <select id="contentStatus">
+                        <option value="PENDIENTE" data-translate="pending">Pendiente</option>
+                        <option value="EN_PROGRESO" data-translate="in_progress">En Progreso</option>
+                        <option value="COMPLETADO" data-translate="completed">Completado</option>
+                        <option value="CANCELADO" data-translate="cancelled">Cancelado</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
+                    <button type="submit" class="btn-primary" data-translate="save_content">Guardar Contenido</button>
                 </div>
             </form>
         </div>

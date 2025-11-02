@@ -1,4 +1,22 @@
 // Attendance Management
+
+// Función para obtener el estado a mostrar del estudiante
+// Usa la columna INTENSIFICA de la base de datos
+function getStudentDisplayEstado(student) {
+    if (!student) return 'ACTIVO';
+    
+    // Verificar la columna INTENSIFICA directamente
+    const esIntensifica = student.INTENSIFICA === true || student.INTENSIFICA === 1 || student.INTENSIFICA === '1';
+    
+    if (esIntensifica) {
+        return 'INTENSIFICA';
+    }
+    
+    // Retornar el estado tal cual si no es intensificador
+    const estado = (student.Estado || '').toUpperCase();
+    return estado === 'ACTIVO' ? 'ACTIVO' : (estado === 'INACTIVO' ? 'INACTIVO' : estado);
+}
+
 function initializeAttendance() {
     const markAttendanceBtn = document.getElementById('markAttendanceBtn');
     const attendanceSubjectSelect = document.getElementById('attendanceSubjectSelect');
@@ -262,7 +280,7 @@ function loadStudentsForAttendanceView() {
                 </td>
                 <td class="absences-count">${studentAbsences}/0</td>
                 <td class="student-status">
-                    <span class="status-badge habilitado">[Habilitado]</span>
+                    <span class="status-badge">${getStudentDisplayEstado(student)}</span>
                 </td>
             </tr>
         `;

@@ -1266,6 +1266,14 @@
     color: #dc3545;
 }
 
+.btn-assign {
+    color: #ff9800;
+}
+
+.btn-assign:hover {
+    background: rgba(255, 152, 0, 0.1);
+}
+
 /* Modals */
 .modal {
     display: none;

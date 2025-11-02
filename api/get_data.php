@@ -33,19 +33,96 @@ try {
 
     // 2. OBTENER ESTUDIANTES
     // Si hay docente logueado, filtrar solo estudiantes de sus materias
+    // Verificar si la columna INTENSIFICA existe antes de usarla
+    try {
+        // Intentar verificar si la columna INTENSIFICA existe
+        $stmtCheck = $pdo->query("SHOW COLUMNS FROM Estudiante LIKE 'INTENSIFICA'");
+        $hasIntensificaColumn = $stmtCheck->rowCount() > 0;
+    } catch (Exception $e) {
+        $hasIntensificaColumn = false;
+    }
+    
     if ($docente_id) {
-        $stmt = $pdo->prepare("
-            SELECT DISTINCT e.* FROM Estudiante e
-            INNER JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
-            INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
-            WHERE m.Usuarios_docente_ID_docente = ?
-            ORDER BY e.Apellido, e.Nombre
-        ");
+        if ($hasIntensificaColumn) {
+            // Usar la columna INTENSIFICA
+            $stmt = $pdo->prepare("
+                SELECT DISTINCT e.* FROM Estudiante e
+                INNER JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
+                INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+                WHERE m.Usuarios_docente_ID_docente = ?
+                  AND (
+                      e.Estado != 'INACTIVO' 
+                      OR e.INTENSIFICA = TRUE
+                  )
+                ORDER BY e.Apellido, e.Nombre
+            ");
+        } else {
+            // Fallback: usar lógica anterior con temas asignados
+            $stmt = $pdo->prepare("
+                SELECT DISTINCT e.* FROM Estudiante e
+                INNER JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
+                INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+                LEFT JOIN Tema_estudiante te ON e.ID_Estudiante = te.Estudiante_ID_Estudiante
+                WHERE m.Usuarios_docente_ID_docente = ?
+                  AND (
+                      e.Estado != 'INACTIVO' 
+                      OR (e.Estado = 'INACTIVO' AND te.ID_Tema_estudiante IS NOT NULL)
+                  )
+                ORDER BY e.Apellido, e.Nombre
+            ");
+        }
         $stmt->execute([$docente_id]);
     } else {
-        $stmt = $pdo->query("SELECT * FROM Estudiante ORDER BY Apellido, Nombre");
+        if ($hasIntensificaColumn) {
+            // Usar la columna INTENSIFICA
+            $stmt = $pdo->query("
+                SELECT DISTINCT e.* FROM Estudiante e
+                WHERE e.Estado != 'INACTIVO' 
+                   OR e.INTENSIFICA = TRUE
+                ORDER BY e.Apellido, e.Nombre
+            ");
+        } else {
+            // Fallback: usar lógica anterior con temas asignados
+            $stmt = $pdo->query("
+                SELECT DISTINCT e.* FROM Estudiante e
+                LEFT JOIN Tema_estudiante te ON e.ID_Estudiante = te.Estudiante_ID_Estudiante
+                WHERE e.Estado != 'INACTIVO' 
+                   OR (e.Estado = 'INACTIVO' AND te.ID_Tema_estudiante IS NOT NULL)
+                ORDER BY e.Apellido, e.Nombre
+            ");
+        }
     }
-    $estudiante = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    try {
+        $estudiante = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error obteniendo estudiantes: " . $e->getMessage());
+        // Si falla, intentar query simple sin filtros complejos
+        if ($docente_id) {
+            try {
+                $stmt = $pdo->prepare("
+                    SELECT DISTINCT e.* FROM Estudiante e
+                    INNER JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
+                    INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+                    WHERE m.Usuarios_docente_ID_docente = ?
+                    ORDER BY e.Apellido, e.Nombre
+                ");
+                $stmt->execute([$docente_id]);
+                $estudiante = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (PDOException $e2) {
+                error_log("Error en query fallback: " . $e2->getMessage());
+                $estudiante = [];
+            }
+        } else {
+            try {
+                $stmt = $pdo->query("SELECT * FROM Estudiante ORDER BY Apellido, Nombre");
+                $estudiante = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (PDOException $e2) {
+                error_log("Error en query fallback: " . $e2->getMessage());
+                $estudiante = [];
+            }
+        }
+    }
 
     // 3. OBTENER MATERIAS
     // Si hay docente logueado, filtrar por sus materias
@@ -225,11 +302,14 @@ try {
     ]);
 } catch (Exception $e) {
     // Error general
+    error_log("Error en get_data.php: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
     http_response_code(500);
     echo json_encode([
         'success' => false,
         'message' => 'Error inesperado.',
-        'error' => $e->getMessage()
-    ]);
+        'error' => $e->getMessage(),
+        'details' => $e->getFile() . ':' . $e->getLine()
+    ], JSON_UNESCAPED_UNICODE);
 }
 ?>

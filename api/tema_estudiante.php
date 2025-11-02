@@ -181,14 +181,23 @@ try {
 			$fields = ['Estado','Observaciones'];
 			$sets = [];
 			$params = [];
+			
+			// Validar estado si viene en el body
+			if (isset($body['Estado'])) {
+				$validEstados = ['PENDIENTE', 'EN_PROGRESO', 'COMPLETADO', 'CANCELADO'];
+				if (in_array($body['Estado'], $validEstados)) {
+					$sets[] = "Estado = ?";
+					$params[] = $body['Estado'];
+				} else {
+					respond(400, ['success'=>false,'message'=>'Estado inválido. Debe ser: PENDIENTE, EN_PROGRESO, COMPLETADO o CANCELADO']);
+				}
+			}
+			
 			foreach ($fields as $f) {
-				if (array_key_exists($f, $body)) {
+				if (array_key_exists($f, $body) && $f !== 'Estado') {
 					if ($f === 'Observaciones') {
 						$sets[] = "$f = ?";
 						$params[] = $body[$f] === '' ? null : trim($body[$f]);
-					} else {
-						$sets[] = "$f = ?";
-						$params[] = $body[$f];
 					}
 				}
 			}

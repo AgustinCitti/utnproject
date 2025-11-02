@@ -1,4 +1,22 @@
 // Subjects Management
+
+// Función para obtener el estado a mostrar del estudiante
+// Usa la columna INTENSIFICA de la base de datos
+function getStudentDisplayEstado(student) {
+    if (!student) return 'ACTIVO';
+    
+    // Verificar la columna INTENSIFICA directamente
+    const esIntensifica = student.INTENSIFICA === true || student.INTENSIFICA === 1 || student.INTENSIFICA === '1';
+    
+    if (esIntensifica) {
+        return 'INTENSIFICA';
+    }
+    
+    // Retornar el estado tal cual si no es intensificador
+    const estado = (student.Estado || '').toUpperCase();
+    return estado === 'ACTIVO' ? 'ACTIVO' : (estado === 'INACTIVO' ? 'INACTIVO' : estado);
+}
+
 let currentSubjectId = null;
 let isSubmitting = false; // Flag para prevenir doble submit
 let subjectsInitialized = false; // Flag para prevenir múltiples inicializaciones
@@ -130,6 +148,25 @@ function initializeSubjects() {
     // Content management
     if (addContentBtn) {
         addContentBtn.addEventListener('click', () => {
+            // Asegurar que el campo de materia esté visible y habilitado cuando se abre desde la pestaña de contenido
+            const contentSubject = document.getElementById('contentSubject');
+            if (contentSubject) {
+                contentSubject.style.display = '';
+                const contentSubjectGroup = contentSubject.closest('.form-group');
+                if (contentSubjectGroup) {
+                    contentSubjectGroup.style.display = '';
+                }
+                if (contentSubject.options.length <= 1) {
+                    populateSubjectSelect();
+                }
+                contentSubject.value = '';
+            }
+            // Actualizar el título del modal
+            const modalTitle = document.querySelector('#contentModal .modal-header h3');
+            if (modalTitle) {
+                modalTitle.textContent = 'Agregar Contenido';
+                modalTitle.setAttribute('data-translate', 'add_content');
+            }
             showModal('contentModal');
             clearContentForm();
         });
@@ -138,7 +175,7 @@ function initializeSubjects() {
     if (contentForm) {
         contentForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            saveContent();
+            saveContentFromModal();
         });
     }
 
@@ -206,15 +243,15 @@ function loadSubjects() {
         const contentCount = getContentCountBySubject(subject.ID_materia);
 
         return `
-            <div class="card">
+            <div class="card clickable-card" onclick="showSubjectThemesPanel(${subject.ID_materia})" style="cursor: pointer;">
                 <div class="card-header">
                     <h3 class="card-title">${subject.Nombre}</h3>
-                    <div class="card-actions">
-                        <button class="btn-icon btn-view" onclick="viewSubjectDetails(${subject.ID_materia})" title="View Details">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                    <div class="card-actions" onclick="event.stopPropagation();">
                         <button class="btn-icon btn-edit" onclick="editSubject(${subject.ID_materia})" title="Edit">
                             <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon btn-create" onclick="createThemeForSubject(${subject.ID_materia})" title="Crear Tema">
+                            <i class="fas fa-book-open"></i>
                         </button>
                         <button class="btn-icon btn-delete" onclick="deleteSubject(${subject.ID_materia})" title="Delete">
                             <i class="fas fa-trash"></i>
@@ -238,7 +275,7 @@ function loadSubjects() {
                         </div>
                         <div class="stat-item">
                             <i class="fas fa-list"></i>
-                            <span>${contentCount} contenidos</span>
+                            <span>${contentCount} temas</span>
                         </div>
                     </div>
                 </div>
@@ -268,7 +305,7 @@ function loadSubjects() {
                         const studentCount = getStudentCountBySubject(subject.ID_materia);
                         
                         return `
-                            <tr>
+                            <tr onclick="showSubjectThemesPanel(${subject.ID_materia})" class="clickable-row">
                                 <td><strong>${subject.Nombre}</strong></td>
                                 <td>${subject.Curso_division}</td>
                                 <td>${teacher ? `${teacher.Nombre_docente} ${teacher.Apellido_docente}` : 'N/A'}</td>
@@ -277,12 +314,12 @@ function loadSubjects() {
                                 <td><span class="table-status ${subject.Estado.toLowerCase()}">${getStatusText(subject.Estado)}</span></td>
                                 <td>${studentCount}</td>
                                 <td>
-                                    <div class="table-actions">
-                                        <button class="btn-icon btn-view" onclick="viewSubjectDetails(${subject.ID_materia})" title="View Details">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+                                    <div class="table-actions" onclick="event.stopPropagation();">
                                         <button class="btn-icon btn-edit" onclick="editSubject(${subject.ID_materia})" title="Editar">
                                             <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-icon btn-create" onclick="createThemeForSubject(${subject.ID_materia})" title="Crear Tema">
+                                            <i class="fas fa-book-open"></i>
                                         </button>
                                         <button class="btn-icon btn-delete" onclick="deleteSubject(${subject.ID_materia})" title="Eliminar">
                                             <i class="fas fa-trash"></i>
@@ -483,6 +520,183 @@ function editSubject(id) {
     showModal('subjectModal');
 }
 
+
+// Función para crear tema desde las acciones de materias
+// Asegurar que esté en el scope global para que funcione desde onclick
+window.createThemeForSubject = function(subjectId) {
+    console.log('createThemeForSubject llamado con subjectId:', subjectId);
+    
+    if (!subjectId) {
+        alert('Error: ID de materia no válido');
+        console.error('subjectId no válido:', subjectId);
+        return;
+    }
+    
+    const subject = getSubjectById(subjectId);
+    if (!subject) {
+        alert('Error: No se encontró la materia seleccionada');
+        console.error('Materia no encontrada para ID:', subjectId);
+        return;
+    }
+    
+    console.log('Materia encontrada:', subject);
+    
+    // Resetear el formulario
+    const contentForm = document.getElementById('contentForm');
+    if (contentForm) {
+        contentForm.reset();
+        console.log('Formulario reseteado');
+    } else {
+        console.warn('No se encontró el formulario contentForm');
+    }
+    
+    // Pre-llenar el campo de materia y ocultarlo
+    const contentSubject = document.getElementById('contentSubject');
+    const contentSubjectGroup = contentSubject ? contentSubject.closest('.form-group') : null;
+    if (contentSubject) {
+        // Asegurar que las opciones están cargadas
+        if (contentSubject.options.length <= 1) {
+            console.log('Cargando opciones de materias...');
+            populateSubjectSelect();
+        }
+        contentSubject.value = subjectId;
+        contentSubject.style.display = 'none'; // Ocultar el campo
+        if (contentSubjectGroup) {
+            contentSubjectGroup.style.display = 'none'; // Ocultar todo el grupo del formulario
+        }
+        console.log('Campo de materia prellenado y ocultado con:', subjectId);
+    } else {
+        console.error('No se encontró el campo contentSubject');
+    }
+    
+    // Resetear el estado a PENDIENTE por defecto
+    const contentStatus = document.getElementById('contentStatus');
+    if (contentStatus) {
+        contentStatus.value = 'PENDIENTE';
+        console.log('Estado establecido a PENDIENTE');
+    } else {
+        console.warn('No se encontró el campo contentStatus');
+    }
+    
+    // Actualizar el título del modal
+    const modalTitle = document.querySelector('#contentModal .modal-header h3');
+    if (modalTitle) {
+        modalTitle.textContent = 'Crear Tema';
+        modalTitle.setAttribute('data-translate', 'create_theme');
+        console.log('Título del modal actualizado');
+    } else {
+        console.warn('No se encontró el título del modal');
+    }
+    
+    // Mostrar el modal
+    const modal = document.getElementById('contentModal');
+    if (!modal) {
+        alert('Error: No se encontró el modal de contenido. Por favor, asegúrate de estar en la página correcta.');
+        console.error('No se encontró el modal contentModal');
+        return;
+    }
+    
+    console.log('Mostrando modal...');
+    if (typeof setupModalHandlers === 'function') {
+        setupModalHandlers('contentModal');
+    }
+    if (typeof showModal === 'function') {
+        showModal('contentModal');
+    } else {
+        modal.classList.add('active');
+    }
+    console.log('Modal mostrado');
+};
+
+// Función para mostrar el panel de temas de una materia (similar al panel de estudiantes)
+window.showSubjectThemesPanel = function(subjectId) {
+    const subject = getSubjectById(subjectId);
+    if (!subject) {
+        console.error('Materia no encontrada para ID:', subjectId);
+        return;
+    }
+    
+    // Obtener los temas de esta materia
+    if (!appData.contenido || !Array.isArray(appData.contenido)) {
+        appData.contenido = [];
+    }
+    
+    const themes = appData.contenido
+        .filter(c => parseInt(c.Materia_ID_materia) === parseInt(subjectId))
+        .sort((a, b) => {
+            // Ordenar por fecha de creación (más reciente primero)
+            const dateA = a.Fecha_creacion ? new Date(a.Fecha_creacion) : new Date(0);
+            const dateB = b.Fecha_creacion ? new Date(b.Fecha_creacion) : new Date(0);
+            return dateB - dateA;
+        });
+    
+    // Actualizar el panel
+    const panel = document.getElementById('subjectThemesPanel');
+    if (!panel) {
+        console.error('No se encontró el panel subjectThemesPanel');
+        return;
+    }
+    
+    // Actualizar título
+    const panelTitle = document.getElementById('selectedSubjectName');
+    if (panelTitle) {
+        panelTitle.textContent = subject.Nombre;
+    }
+    
+    // Mostrar lista de temas
+    const themesList = document.getElementById('subjectThemesList');
+    if (themesList) {
+        if (themes.length > 0) {
+            themesList.innerHTML = themes.map(theme => {
+                return `
+                    <div class="theme-item" style="padding: 12px; margin-bottom: 10px; border: 1px solid #e0e0e0; border-radius: 6px; background: #f9f9f9;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                            <div style="flex: 1;">
+                                <strong style="display: block; margin-bottom: 5px; color: #333;">${theme.Tema || 'Sin título'}</strong>
+                                ${theme.Descripcion ? `<div style="font-size: 0.9em; color: #666; margin-bottom: 8px;">${theme.Descripcion}</div>` : ''}
+                                <div style="display: flex; gap: 15px; align-items: center;">
+                                    <span class="status-badge status-${(theme.Estado || 'PENDIENTE').toLowerCase()}" style="font-size: 0.85em; padding: 4px 10px; border-radius: 12px;">
+                                        ${getStatusText(theme.Estado || 'PENDIENTE')}
+                                    </span>
+                                    ${theme.Fecha_creacion ? `<small style="color: #999; font-size: 0.85em;">Creado: ${new Date(theme.Fecha_creacion).toLocaleDateString('es-ES')}</small>` : ''}
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 5px;">
+                                <button class="btn-icon btn-edit" onclick="event.stopPropagation(); editContent(${theme.ID_contenido})" title="Editar Tema" style="padding: 6px 8px;">
+                                    <i class="fas fa-edit" style="font-size: 0.9em;"></i>
+                                </button>
+                                <button class="btn-icon btn-delete" onclick="event.stopPropagation(); deleteContent(${theme.ID_contenido})" title="Eliminar Tema" style="padding: 6px 8px;">
+                                    <i class="fas fa-trash" style="font-size: 0.9em;"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            themesList.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px; color: #999;">
+                    <i class="fas fa-book-open" style="font-size: 2.5em; margin-bottom: 15px; opacity: 0.3;"></i>
+                    <p>No hay temas registrados para esta materia</p>
+                    <button class="btn-primary" onclick="createThemeForSubject(${subjectId})" style="margin-top: 15px;">
+                        <i class="fas fa-plus"></i> Crear Primer Tema
+                    </button>
+                </div>
+            `;
+        }
+    }
+    
+    // Mostrar el panel
+    panel.style.display = 'block';
+};
+
+// Función para cerrar el panel de temas (disponible globalmente)
+window.closeSubjectThemesPanel = function() {
+    const panel = document.getElementById('subjectThemesPanel');
+    if (panel) {
+        panel.style.display = 'none';
+    }
+};
 
 async function deleteSubject(id) {
     if (!confirm('¿Estás seguro de que quieres eliminar esta materia?')) {
@@ -1026,7 +1240,7 @@ function loadSubjectDetailsTab(subject, teacher, students, evaluations) {
                             ${students.map(student => `
                                 <div class="student-item">
                                     <span class="student-name">${student.Nombre} ${student.Apellido}</span>
-                                    <span class="student-status">${student.Estado || 'Activo'}</span>
+                                    <span class="student-status">${getStudentDisplayEstado(student) || 'Activo'}</span>
                                 </div>
                             `).join('')}
                         </div>
@@ -1177,7 +1391,7 @@ function showSubjectDetail(subjectId) {
     document.getElementById('subjectEnrolledStudents').innerHTML = students.map(student => `
         <div class="student-item">
             <span class="student-name">${student.Nombre} ${student.Apellido}</span>
-            <span class="student-status">${student.Estado}</span>
+            <span class="student-status">${getStudentDisplayEstado(student)}</span>
         </div>
     `).join('') || '<p>No hay estudiantes inscritos</p>';
 
@@ -1332,9 +1546,131 @@ function changeContentStatus(contentId, newStatus) {
 }
 
 function clearContentForm() {
-    document.getElementById('editContentTopic').value = '';
-    document.getElementById('editContentDescription').value = '';
-    document.getElementById('editContentStatus').value = 'PENDIENTE';
+    // Limpiar campos del modal de contenido (contentModal)
+    const contentTopic = document.getElementById('contentTopic');
+    const contentDescription = document.getElementById('contentDescription');
+    const contentStatus = document.getElementById('contentStatus');
+    
+    if (contentTopic) contentTopic.value = '';
+    if (contentDescription) contentDescription.value = '';
+    if (contentStatus) contentStatus.value = 'PENDIENTE';
+    
+    // Limpiar campos del modal de edición de contenido (contentEditModal)
+    const editContentTopic = document.getElementById('editContentTopic');
+    const editContentDescription = document.getElementById('editContentDescription');
+    const editContentStatus = document.getElementById('editContentStatus');
+    
+    if (editContentTopic) editContentTopic.value = '';
+    if (editContentDescription) editContentDescription.value = '';
+    if (editContentStatus) editContentStatus.value = 'PENDIENTE';
+}
+
+// Función para guardar contenido desde el modal de contenido (contenidoModal)
+async function saveContentFromModal() {
+    const contentSubject = document.getElementById('contentSubject');
+    const contentTopic = document.getElementById('contentTopic');
+    const contentDescription = document.getElementById('contentDescription');
+    const contentStatus = document.getElementById('contentStatus');
+    
+    if (!contentSubject || !contentTopic) {
+        alert('Error: No se encontraron los campos del formulario');
+        return;
+    }
+    
+    const subjectId = parseInt(contentSubject.value);
+    const topic = contentTopic.value.trim();
+    const description = contentDescription ? contentDescription.value.trim() : '';
+    const status = contentStatus ? contentStatus.value : 'PENDIENTE';
+    
+    if (!subjectId || subjectId <= 0) {
+        alert('Por favor, selecciona una materia');
+        return;
+    }
+    
+    if (!topic) {
+        alert('El tema es obligatorio');
+        return;
+    }
+    
+    const payload = {
+        Tema: topic,
+        Descripcion: description || null,
+        Estado: status || 'PENDIENTE',
+        Materia_ID_materia: subjectId
+    };
+    
+    try {
+        const res = await fetch('../api/contenido.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+        
+        let data = {};
+        const text = await res.text();
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            throw new Error(`Error del servidor (${res.status})`);
+        }
+        
+        if (!res.ok) {
+            const errorMsg = data.error ? `${data.message || 'Error'}: ${data.error}` : (data.message || 'No se pudo crear el tema');
+            throw new Error(errorMsg);
+        }
+        
+        // Reload data from backend
+        if (typeof loadData === 'function') await loadData();
+        
+        // Close modal
+        if (typeof closeModal === 'function') {
+            closeModal('contentModal');
+        } else {
+            const modal = document.getElementById('contentModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+        
+        // Re-mostrar el campo de materia si estaba oculto
+        if (contentSubject) {
+            contentSubject.style.display = '';
+            const contentSubjectGroup = contentSubject.closest('.form-group');
+            if (contentSubjectGroup) {
+                contentSubjectGroup.style.display = '';
+            }
+        }
+        
+        // Recargar la vista de materias para mostrar el nuevo tema
+        loadSubjects();
+        
+        // Si el panel de temas está abierto, actualizarlo
+        const themesPanel = document.getElementById('subjectThemesPanel');
+        if (themesPanel && themesPanel.style.display === 'block') {
+            // Recargar el panel con los nuevos temas
+            if (typeof showSubjectThemesPanel === 'function') {
+                showSubjectThemesPanel(subjectId);
+            }
+        }
+        
+        // Si estamos en la vista de detalles de la materia, recargar esa vista también
+        if (window.currentSubjectId === subjectId || contentSubject.value == subjectId) {
+            const content = appData.contenido.filter(c => c.Materia_ID_materia === subjectId);
+            if (typeof loadSubjectContentTab === 'function') {
+                loadSubjectContentTab(subjectId, content);
+            }
+        }
+        
+        // Show success message
+        if (typeof showNotification === 'function') {
+            showNotification('Tema creado correctamente', 'success');
+        } else {
+            alert('Tema creado correctamente');
+        }
+    } catch (err) {
+        alert('Error: ' + (err.message || 'No se pudo crear el tema'));
+    }
 }
 
 async function saveContent() {
@@ -1457,6 +1793,15 @@ async function saveContentEdit() {
         // Reload data from backend
         if (typeof loadData === 'function') await loadData();
         
+        // Si el panel de temas está abierto, actualizarlo
+        const themesPanel = document.getElementById('subjectThemesPanel');
+        if (themesPanel && themesPanel.style.display === 'block') {
+            const updatedContent = appData.contenido.find(c => c.ID_contenido === currentContentId);
+            if (updatedContent && typeof showSubjectThemesPanel === 'function') {
+                showSubjectThemesPanel(updatedContent.Materia_ID_materia);
+            }
+        }
+        
         // Close modal
         closeModal('contentEditModal');
         
@@ -1465,6 +1810,9 @@ async function saveContentEdit() {
             const content = appData.contenido.filter(c => c.Materia_ID_materia === window.currentSubjectId);
             loadSubjectContentTab(window.currentSubjectId, content);
         }
+        
+        // Recargar la vista de materias
+        loadSubjects();
         
         // Show success message
         showNotification('Contenido actualizado correctamente', 'success');
@@ -1495,11 +1843,34 @@ async function deleteContent(contentId) {
             // Reload data from backend
             if (typeof loadData === 'function') await loadData();
             
+            // Si el panel de temas está abierto, actualizarlo
+            const themesPanel = document.getElementById('subjectThemesPanel');
+            if (themesPanel && themesPanel.style.display === 'block') {
+                const deletedContent = appData.contenido.find(c => c.ID_contenido === contentId);
+                if (deletedContent && typeof showSubjectThemesPanel === 'function') {
+                    showSubjectThemesPanel(deletedContent.Materia_ID_materia);
+                } else {
+                    // Si no encontramos el contenido, recargar el panel con la materia actual
+                    // Buscar en el panel actual qué materia está abierta
+                    const panelTitle = document.getElementById('selectedSubjectName');
+                    if (panelTitle) {
+                        const subjectName = panelTitle.textContent;
+                        const subject = appData.materia.find(s => s.Nombre === subjectName);
+                        if (subject && typeof showSubjectThemesPanel === 'function') {
+                            showSubjectThemesPanel(subject.ID_materia);
+                        }
+                    }
+                }
+            }
+            
             // Reload the content tab to show updated content
             if (window.currentSubjectId) {
                 const content = appData.contenido.filter(c => c.Materia_ID_materia === window.currentSubjectId);
                 loadSubjectContentTab(window.currentSubjectId, content);
             }
+            
+            // Recargar la vista de materias
+            loadSubjects();
             
             // Show success message
             showNotification('Contenido eliminado correctamente', 'success');

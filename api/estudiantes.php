@@ -70,34 +70,118 @@ try {
             // Si hay docente logueado, filtrar solo estudiantes de sus materias
             $estado = $_GET['estado'] ?? null;
             
+            // Verificar si la columna INTENSIFICA existe
+            try {
+                $stmtCheck = $pdo->query("SHOW COLUMNS FROM Estudiante LIKE 'INTENSIFICA'");
+                $hasIntensificaColumn = $stmtCheck->rowCount() > 0;
+            } catch (Exception $e) {
+                $hasIntensificaColumn = false;
+            }
+            
             if ($docente_id) {
                 // Filtrar por docente y opcionalmente por estado
                 if ($estado) {
-                    $stmt = $pdo->prepare("
-                        SELECT DISTINCT e.* FROM Estudiante e
-                        INNER JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
-                        INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
-                        WHERE m.Usuarios_docente_ID_docente = ? AND e.Estado = ?
-                        ORDER BY e.Apellido, e.Nombre
-                    ");
+                    if ($hasIntensificaColumn) {
+                        $stmt = $pdo->prepare("
+                            SELECT DISTINCT e.* FROM Estudiante e
+                            INNER JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
+                            INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+                            WHERE m.Usuarios_docente_ID_docente = ? 
+                              AND e.Estado = ?
+                              AND (
+                                  e.Estado != 'INACTIVO' 
+                                  OR e.INTENSIFICA = TRUE
+                              )
+                            ORDER BY e.Apellido, e.Nombre
+                        ");
+                    } else {
+                        $stmt = $pdo->prepare("
+                            SELECT DISTINCT e.* FROM Estudiante e
+                            INNER JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
+                            INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+                            LEFT JOIN Tema_estudiante te ON e.ID_Estudiante = te.Estudiante_ID_Estudiante
+                            WHERE m.Usuarios_docente_ID_docente = ? 
+                              AND e.Estado = ?
+                              AND (
+                                  e.Estado != 'INACTIVO' 
+                                  OR (e.Estado = 'INACTIVO' AND te.ID_Tema_estudiante IS NOT NULL)
+                              )
+                            ORDER BY e.Apellido, e.Nombre
+                        ");
+                    }
                     $stmt->execute([$docente_id, $estado]);
                 } else {
-                    $stmt = $pdo->prepare("
-                        SELECT DISTINCT e.* FROM Estudiante e
-                        INNER JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
-                        INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
-                        WHERE m.Usuarios_docente_ID_docente = ?
-                        ORDER BY e.Apellido, e.Nombre
-                    ");
+                    if ($hasIntensificaColumn) {
+                        $stmt = $pdo->prepare("
+                            SELECT DISTINCT e.* FROM Estudiante e
+                            INNER JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
+                            INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+                            WHERE m.Usuarios_docente_ID_docente = ?
+                              AND (
+                                  e.Estado != 'INACTIVO' 
+                                  OR e.INTENSIFICA = TRUE
+                              )
+                            ORDER BY e.Apellido, e.Nombre
+                        ");
+                    } else {
+                        $stmt = $pdo->prepare("
+                            SELECT DISTINCT e.* FROM Estudiante e
+                            INNER JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
+                            INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+                            LEFT JOIN Tema_estudiante te ON e.ID_Estudiante = te.Estudiante_ID_Estudiante
+                            WHERE m.Usuarios_docente_ID_docente = ?
+                              AND (
+                                  e.Estado != 'INACTIVO' 
+                                  OR (e.Estado = 'INACTIVO' AND te.ID_Tema_estudiante IS NOT NULL)
+                              )
+                            ORDER BY e.Apellido, e.Nombre
+                        ");
+                    }
                     $stmt->execute([$docente_id]);
                 }
             } else {
-                // Sin docente logueado, mostrar todos (para admin)
+                // Sin docente logueado: excluir INACTIVO sin temas (no intensificadores)
                 if ($estado) {
-                    $stmt = $pdo->prepare("SELECT * FROM Estudiante WHERE Estado = ? ORDER BY Apellido, Nombre");
+                    if ($hasIntensificaColumn) {
+                        $stmt = $pdo->prepare("
+                            SELECT DISTINCT e.* FROM Estudiante e
+                            WHERE e.Estado = ?
+                              AND (
+                                  e.Estado != 'INACTIVO' 
+                                  OR e.INTENSIFICA = TRUE
+                              )
+                            ORDER BY e.Apellido, e.Nombre
+                        ");
+                    } else {
+                        $stmt = $pdo->prepare("
+                            SELECT DISTINCT e.* FROM Estudiante e
+                            LEFT JOIN Tema_estudiante te ON e.ID_Estudiante = te.Estudiante_ID_Estudiante
+                            WHERE e.Estado = ?
+                              AND (
+                                  e.Estado != 'INACTIVO' 
+                                  OR (e.Estado = 'INACTIVO' AND te.ID_Tema_estudiante IS NOT NULL)
+                              )
+                            ORDER BY e.Apellido, e.Nombre
+                        ");
+                    }
                     $stmt->execute([$estado]);
                 } else {
-                    $stmt = $pdo->query("SELECT * FROM Estudiante ORDER BY Apellido, Nombre");
+                    if ($hasIntensificaColumn) {
+                        $stmt = $pdo->query("
+                            SELECT DISTINCT e.* FROM Estudiante e
+                            WHERE e.Estado != 'INACTIVO' 
+                               OR e.INTENSIFICA = TRUE
+                            ORDER BY e.Apellido, e.Nombre
+                        ");
+                    } else {
+                        $stmt = $pdo->query("
+                            SELECT DISTINCT e.* FROM Estudiante e
+                            LEFT JOIN Tema_estudiante te ON e.ID_Estudiante = te.Estudiante_ID_Estudiante
+                            WHERE e.Estado != 'INACTIVO' 
+                               OR (e.Estado = 'INACTIVO' AND te.ID_Tema_estudiante IS NOT NULL)
+                            ORDER BY e.Apellido, e.Nombre
+                        ");
+                    }
                 }
             }
             
@@ -149,18 +233,46 @@ try {
         }
 
         // Insertar nuevo estudiante
-        $sql = "INSERT INTO Estudiante (Apellido, Nombre, Email, Fecha_nacimiento, Estado) 
-                VALUES (?, ?, ?, ?, ?)";
+        // Verificar si la columna INTENSIFICA existe
+        try {
+            $stmtCheck = $pdo->query("SHOW COLUMNS FROM Estudiante LIKE 'INTENSIFICA'");
+            $hasIntensificaColumn = $stmtCheck->rowCount() > 0;
+        } catch (Exception $e) {
+            $hasIntensificaColumn = false;
+        }
         
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            
-            $data['Apellido'],
-            $data['Nombre'],
-            $data['Email'] ?? null,
-            $data['Fecha_nacimiento'] ?? null,
-            $data['Estado'] ?? 'ACTIVO'
-        ]);
+        // Si es INTENSIFICA, marcar la columna INTENSIFICA=TRUE y Estado='ACTIVO'
+        // ACTIVO e INACTIVO se guardan directamente con INTENSIFICA=FALSE
+        $estadoInput = $data['Estado'] ?? null;
+        $esIntensifica = ($estadoInput === 'INTENSIFICA');
+        $estadoParaBD = $esIntensifica ? 'ACTIVO' : ($estadoInput ?? 'ACTIVO');
+        
+        if ($hasIntensificaColumn) {
+            $sql = "INSERT INTO Estudiante (Apellido, Nombre, Email, Fecha_nacimiento, Estado, INTENSIFICA) 
+                    VALUES (?, ?, ?, ?, ?, ?)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                $data['Apellido'],
+                $data['Nombre'],
+                $data['Email'] ?? null,
+                $data['Fecha_nacimiento'] ?? null,
+                $estadoParaBD,
+                $esIntensifica ? 1 : 0  // BOOLEAN en MySQL: 1 = TRUE, 0 = FALSE
+            ]);
+        } else {
+            // Fallback: usar lógica anterior (guardar como INACTIVO si es INTENSIFICA)
+            $estadoParaBD = $esIntensifica ? 'INACTIVO' : ($estadoInput ?? 'ACTIVO');
+            $sql = "INSERT INTO Estudiante (Apellido, Nombre, Email, Fecha_nacimiento, Estado) 
+                    VALUES (?, ?, ?, ?, ?)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                $data['Apellido'],
+                $data['Nombre'],
+                $data['Email'] ?? null,
+                $data['Fecha_nacimiento'] ?? null,
+                $estadoParaBD
+            ]);
+        }
 
         $estudianteId = $pdo->lastInsertId();
 
@@ -230,16 +342,49 @@ try {
             }
         }
 
+        // Verificar si la columna INTENSIFICA existe
+        try {
+            $stmtCheck = $pdo->query("SHOW COLUMNS FROM Estudiante LIKE 'INTENSIFICA'");
+            $hasIntensificaColumn = $stmtCheck->rowCount() > 0;
+        } catch (Exception $e) {
+            $hasIntensificaColumn = false;
+        }
+        
         // Actualizar solo los campos proporcionados
         $camposPermitidos = ['Nombre', 'Apellido', 'Email', 'Fecha_nacimiento', 'Estado'];
         $updates = [];
         $valores = [];
+        $intensificaValue = null;
 
         foreach ($camposPermitidos as $campo) {
             if (isset($data[$campo])) {
-                $updates[] = "$campo = ?";
-                $valores[] = $data[$campo];
+                if ($campo === 'Estado') {
+                    // Si es INTENSIFICA, marcar INTENSIFICA=TRUE y Estado='ACTIVO'
+                    // ACTIVO e INACTIVO se guardan directamente con INTENSIFICA=FALSE
+                    $estadoInput = $data[$campo];
+                    $esIntensifica = ($estadoInput === 'INTENSIFICA');
+                    
+                    if ($hasIntensificaColumn) {
+                        $estadoValor = $esIntensifica ? 'ACTIVO' : $estadoInput;
+                        $intensificaValue = $esIntensifica ? 1 : 0;  // BOOLEAN en MySQL
+                    } else {
+                        // Fallback: usar lógica anterior
+                        $estadoValor = $esIntensifica ? 'INACTIVO' : $estadoInput;
+                    }
+                    
+                    $updates[] = "$campo = ?";
+                    $valores[] = $estadoValor;
+                } else {
+                    $updates[] = "$campo = ?";
+                    $valores[] = $data[$campo];
+                }
             }
+        }
+        
+        // Si se actualizó el estado a INTENSIFICA o desde INTENSIFICA, actualizar la columna INTENSIFICA
+        if ($intensificaValue !== null && $hasIntensificaColumn) {
+            $updates[] = "INTENSIFICA = ?";
+            $valores[] = $intensificaValue;
         }
 
         if (empty($updates)) {
@@ -283,45 +428,77 @@ try {
             exit;
         }
 
-        // Verificar que el estudiante existe
-        $stmt = $pdo->prepare("SELECT * FROM Estudiante WHERE ID_Estudiante = ?");
-        $stmt->execute([$id]);
-        $estudiante = $stmt->fetch(PDO::FETCH_ASSOC);
+        // Verificar que el estudiante existe y pertenece al docente actual
+        if ($docente_id) {
+            // Verificar que el estudiante está asociado a alguna materia del docente
+            $stmt = $pdo->prepare("
+                SELECT e.* FROM Estudiante e
+                INNER JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
+                INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+                WHERE e.ID_Estudiante = ? AND m.Usuarios_docente_ID_docente = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$id, $docente_id]);
+            $estudiante = $stmt->fetch(PDO::FETCH_ASSOC);
+        } else {
+            // Si no hay docente logueado, verificar solo existencia (solo para desarrollo)
+            $stmt = $pdo->prepare("SELECT * FROM Estudiante WHERE ID_Estudiante = ?");
+            $stmt->execute([$id]);
+            $estudiante = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
 
         if (!$estudiante) {
             http_response_code(404);
             echo json_encode([
                 'success' => false,
-                'message' => 'Estudiante no encontrado.'
-            ]);
+                'message' => 'Estudiante no encontrado o no tienes permiso para eliminarlo.'
+            ], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
-        // Verificar si tiene registros relacionados
-        $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM Alumnos_X_Materia WHERE Estudiante_ID_Estudiante = ?");
-        $stmt->execute([$id]);
-        $tieneMaterias = $stmt->fetch(PDO::FETCH_ASSOC)['total'] > 0;
-
-        if ($tieneMaterias) {
-            // En lugar de eliminar, cambiar estado a INACTIVO
-            $stmt = $pdo->prepare("UPDATE Estudiante SET Estado = 'INACTIVO' WHERE ID_Estudiante = ?");
+        // Eliminar todas las relaciones primero, luego eliminar el estudiante
+        try {
+            // Iniciar transacción para asegurar que todas las eliminaciones se completen
+            $pdo->beginTransaction();
+            
+            // 1. Eliminar temas del estudiante
+            $stmt = $pdo->prepare("DELETE FROM Tema_estudiante WHERE Estudiante_ID_Estudiante = ?");
             $stmt->execute([$id]);
             
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'message' => 'Estudiante marcado como inactivo (tiene materias relacionadas).'
-            ]);
-        } else {
-            // Eliminar completamente
+            // 2. Eliminar notas del estudiante
+            $stmt = $pdo->prepare("DELETE FROM Notas WHERE Estudiante_ID_Estudiante = ?");
+            $stmt->execute([$id]);
+            
+            // 3. Eliminar asistencia del estudiante
+            $stmt = $pdo->prepare("DELETE FROM Asistencia WHERE Estudiante_ID_Estudiante = ?");
+            $stmt->execute([$id]);
+            
+            // 4. Eliminar relaciones materia-estudiante
+            $stmt = $pdo->prepare("DELETE FROM Alumnos_X_Materia WHERE Estudiante_ID_Estudiante = ?");
+            $stmt->execute([$id]);
+            
+            // 5. Finalmente, eliminar el estudiante
             $stmt = $pdo->prepare("DELETE FROM Estudiante WHERE ID_Estudiante = ?");
             $stmt->execute([$id]);
             
+            // Confirmar todas las eliminaciones
+            $pdo->commit();
+            
             http_response_code(200);
             echo json_encode([
                 'success' => true,
-                'message' => 'Estudiante eliminado exitosamente.'
-            ]);
+                'message' => 'Estudiante y todas sus relaciones eliminadas exitosamente.'
+            ], JSON_UNESCAPED_UNICODE);
+            
+        } catch (PDOException $e) {
+            // Revertir en caso de error
+            $pdo->rollBack();
+            error_log("Error al eliminar estudiante y relaciones: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al eliminar el estudiante: ' . $e->getMessage()
+            ], JSON_UNESCAPED_UNICODE);
         }
     }
 

@@ -1,4 +1,31 @@
 // Unified Student Management - Combines Students, Grades, Attendance, and Exams
+
+// Función para obtener el estado a mostrar del estudiante
+// Usa la columna INTENSIFICA de la base de datos
+function getStudentDisplayEstado(student) {
+    if (!student) return 'ACTIVO';
+    
+    // Verificar la columna INTENSIFICA directamente
+    const esIntensifica = student.INTENSIFICA === true || student.INTENSIFICA === 1 || student.INTENSIFICA === '1';
+    
+    if (esIntensifica) {
+        return 'INTENSIFICA';
+    }
+    
+    // Retornar el estado tal cual si no es intensificador
+    const estado = (student.Estado || '').toUpperCase();
+    return estado === 'ACTIVO' ? 'ACTIVO' : (estado === 'INACTIVO' ? 'INACTIVO' : estado);
+}
+
+// Función para verificar si un estudiante es intensificador
+// Usa la columna INTENSIFICA de la base de datos
+function isStudentIntensificador(student) {
+    if (!student) return false;
+    
+    // Verificar la columna INTENSIFICA directamente
+    return student.INTENSIFICA === true || student.INTENSIFICA === 1 || student.INTENSIFICA === '1';
+}
+
 function initializeUnifiedStudentManagement() {
     const addStudentBtn = document.getElementById('addStudentBtn');
     const markAttendanceBtn = document.getElementById('markAttendanceBtn');
@@ -243,18 +270,28 @@ function loadUnifiedStudentData() {
         const recentGrades = studentGrades.slice(0, 3);
         const recentAttendance = studentAttendance.slice(-5).reverse();
 
+        // Verificar si el estudiante es intensificador
+        const isIntensificador = isStudentIntensificador(student);
+        const cardClass = isIntensificador ? 'unified-student-card intensificador-card' : 'unified-student-card';
+        const displayEstado = getStudentDisplayEstado(student);
+        
         return `
-            <div class="unified-student-card" onclick="showStudentDetail(${student.ID_Estudiante})">
+            <div class="${cardClass}" onclick="showStudentDetail(${student.ID_Estudiante})" style="${isIntensificador ? 'background-color: #fff3e0; border-left: 4px solid #ff9800;' : ''}">
                 <div class="card-header">
                     <div class="student-avatar">
                         <i class="fas fa-user"></i>
                     </div>
                     <div class="student-info">
-                        <h3 class="student-name">${student.Nombre} ${student.Apellido}</h3>
+                        <h3 class="student-name">${student.Nombre} ${student.Apellido}${isIntensificador ? ' <span style="color: #ff9800; font-size: 0.8em;">(Intensificador)</span>' : ''}</h3>
                         <p class="student-id">ID: ${student.ID_Estudiante}</p>
                         <p class="student-course">Estudiante</p>
                     </div>
                     <div class="student-actions">
+                        ${isIntensificador ? `
+                            <button class="btn-icon btn-assign" onclick="event.stopPropagation(); assignThemesToIntensificador(${student.ID_Estudiante})" title="Asignar Temas de Intensificación">
+                                <i class="fas fa-book-reader"></i>
+                            </button>
+                        ` : ''}
                         <button class="btn-icon btn-edit" onclick="event.stopPropagation(); editStudent(${student.ID_Estudiante})">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -407,15 +444,20 @@ function loadUnifiedStudentData() {
                             lastActivityDate = lastAttendance.Fecha;
                         }
 
+                        // Verificar si el estudiante es intensificador
+                        const isIntensificador = isStudentIntensificador(student);
+                        const rowStyle = isIntensificador ? 'background-color: #fff3e0; border-left: 3px solid #ff9800;' : '';
+                        const displayEstado = getStudentDisplayEstado(student);
+                        
                         return `
-                            <tr onclick="showStudentDetail(${student.ID_Estudiante})" class="clickable-row">
+                            <tr onclick="showStudentDetail(${student.ID_Estudiante})" class="clickable-row" style="${rowStyle}">
                                 <td>
                                     <div class="student-cell">
                                         <div class="student-avatar-small">
                                             <i class="fas fa-user"></i>
                                         </div>
                                         <div class="student-info">
-                                            <strong>${student.Nombre} ${student.Apellido}</strong>
+                                            <strong>${student.Nombre} ${student.Apellido}${isIntensificador ? ' <span style="color: #ff9800;">(Intensificador)</span>' : ''}</strong>
                                             <small>${student.ID_Estudiante}</small>
                                         </div>
                                     </div>
@@ -440,6 +482,11 @@ function loadUnifiedStudentData() {
                                 </td>
                                 <td>
                                     <div class="table-actions">
+                                        ${isIntensificador ? `
+                                            <button class="btn-icon btn-assign" onclick="event.stopPropagation(); assignThemesToIntensificador(${student.ID_Estudiante})" title="Asignar Temas de Intensificación">
+                                                <i class="fas fa-book-reader"></i>
+                                            </button>
+                                        ` : ''}
                                         <button class="btn-icon btn-edit" onclick="event.stopPropagation(); editStudent(${student.ID_Estudiante})" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </button>
@@ -848,48 +895,72 @@ function populateExamsSubjectFilter() {
     `;
 }
 
+// Función para actualizar el estado de un tema de intensificación
+window.updateIntensificacionThemeStatus = async function(temaEstudianteId, nuevoEstado, studentId) {
+    if (!temaEstudianteId || !nuevoEstado) {
+        alert('Error: Datos incompletos');
+        return;
+    }
+    
+    try {
+        // El endpoint espera el ID en la URL o en query string
+        const response = await fetch(`../api/tema_estudiante.php?id=${temaEstudianteId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                Estado: nuevoEstado
+                // La fecha de actualización se maneja automáticamente en el backend
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success !== false) {
+            // Recargar datos
+            if (typeof loadData === 'function') {
+                await loadData();
+            }
+            
+            // Recargar el panel de detalles del estudiante
+            if (typeof showStudentDetail === 'function') {
+                showStudentDetail(studentId);
+            }
+            
+            // Mostrar notificación
+            const estadoTexto = nuevoEstado === 'COMPLETADO' ? 'Terminado' : nuevoEstado;
+            if (typeof showNotification === 'function') {
+                showNotification(`Tema marcado como ${estadoTexto}`, 'success');
+            } else {
+                alert(`Tema marcado como ${estadoTexto}`);
+            }
+        } else {
+            alert('Error al actualizar el estado del tema: ' + (result.message || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('Error actualizando estado del tema:', error);
+        alert('Error al conectar con el servidor');
+    }
+};
+
 function showStudentDetail(studentId) {
     const student = appData.estudiante.find(s => s.ID_Estudiante === studentId);
     if (!student) return;
 
-    // Obtener notas del estudiante y ordenarlas por fecha más reciente
-    // Asegurar que ambos valores sean del mismo tipo para la comparación
     const studentIdNum = parseInt(studentId);
-    
-    // Verificar que appData.notas existe y es un array
-    if (!appData.notas || !Array.isArray(appData.notas)) {
-        console.warn('appData.notas no está disponible o no es un array');
-        appData.notas = [];
-    }
-    
-    const studentGrades = appData.notas
-        .filter(g => {
-            const gradeStudentId = parseInt(g.Estudiante_ID_Estudiante);
-            return gradeStudentId === studentIdNum;
-        })
-        .sort((a, b) => {
-            // Ordenar por fecha de calificación (más reciente primero)
-            const dateA = a.Fecha_calificacion ? new Date(a.Fecha_calificacion) : 
-                          (a.Fecha_registro ? new Date(a.Fecha_registro) : new Date(0));
-            const dateB = b.Fecha_calificacion ? new Date(b.Fecha_calificacion) : 
-                          (b.Fecha_registro ? new Date(b.Fecha_registro) : new Date(0));
-            return dateB - dateA;
-        });
+    // Verificar si el estudiante es intensificador usando la columna INTENSIFICA
+    const isIntensificador = isStudentIntensificador(student);
     
     const studentAttendance = appData.asistencia.filter(a => a.Estudiante_ID_Estudiante === studentId);
-    
-    // Calcular promedio (excluyendo ausentes) - formato decimal (0-10)
-    const gradesForAverage = studentGrades.filter(g => parseFloat(g.Calificacion) > 0);
-    const averageGrade = gradesForAverage.length > 0 
-        ? parseFloat((gradesForAverage.reduce((sum, g) => sum + parseFloat(g.Calificacion), 0) / gradesForAverage.length).toFixed(1))
-        : 0;
-    
     const attendanceRate = studentAttendance.length > 0
         ? Math.round((studentAttendance.filter(a => a.Presente === 'Y').length / studentAttendance.length) * 100)
         : 0;
 
     // Update panel content
-    document.getElementById('selectedStudentName').textContent = `${student.Nombre} ${student.Apellido}`;
+    document.getElementById('selectedStudentName').textContent = `${student.Nombre} ${student.Apellido}${isIntensificador ? ' (Intensificador)' : ''}`;
     
     // Mostrar porcentaje de asistencias
     const attendanceElement = document.getElementById('studentAttendance');
@@ -905,62 +976,221 @@ function showStudentDetail(studentId) {
         }
     }
 
-    // Mostrar todas las calificaciones (nombre del examen + nota en la misma línea)
+    // Mostrar temas de intensificación O calificaciones según el estado
     const recentGradesElement = document.getElementById('studentRecentGrades');
     if (!recentGradesElement) {
         console.error('studentRecentGrades element not found!');
         return;
     }
     
-    // Verificar que appData.evaluacion y appData.materia existen
-    if (!appData.evaluacion || !Array.isArray(appData.evaluacion)) {
-        appData.evaluacion = [];
+    // Asegurar que los arrays existan
+    if (!appData.tema_estudiante || !Array.isArray(appData.tema_estudiante)) {
+        appData.tema_estudiante = [];
+    }
+    if (!appData.contenido || !Array.isArray(appData.contenido)) {
+        appData.contenido = [];
     }
     if (!appData.materia || !Array.isArray(appData.materia)) {
         appData.materia = [];
     }
+    if (!appData.notas || !Array.isArray(appData.notas)) {
+        appData.notas = [];
+    }
     
-    if (studentGrades.length > 0) {
-        const htmlContent = studentGrades.map(grade => {
-            // Asegurar comparación de tipos correcta
-            const evaluacionId = parseInt(grade.Evaluacion_ID_evaluacion);
-            const evaluation = appData.evaluacion.find(e => parseInt(e.ID_evaluacion) === evaluacionId);
-            const calificacion = parseFloat(grade.Calificacion) || 0;
-            const esAusente = calificacion === 0 && (
-                (grade.Observacion && grade.Observacion.toUpperCase().includes('AUSENTE')) || 
-                !grade.Observacion || 
-                (grade.Observacion && grade.Observacion.trim() === '')
-            );
+    if (isIntensificador) {
+        // Mostrar temas de intensificación
+        const intensificacionTemas = appData.tema_estudiante
+            .filter(te => parseInt(te.Estudiante_ID_Estudiante) === studentIdNum)
+            .map(te => {
+                const contenido = appData.contenido.find(c => parseInt(c.ID_contenido) === parseInt(te.Contenido_ID_contenido));
+                const materia = contenido ? appData.materia.find(m => parseInt(m.ID_materia) === parseInt(contenido.Materia_ID_materia)) : null;
+                return { tema_estudiante: te, contenido, materia };
+            })
+            .filter(item => item.contenido)
+            .sort((a, b) => {
+                // Ordenar por fecha de actualización (más reciente primero)
+                const dateA = a.tema_estudiante.Fecha_actualizacion ? new Date(a.tema_estudiante.Fecha_actualizacion) : new Date(0);
+                const dateB = b.tema_estudiante.Fecha_actualizacion ? new Date(b.tema_estudiante.Fecha_actualizacion) : new Date(0);
+                return dateB - dateA;
+            });
+        
+        if (intensificacionTemas.length > 0) {
+            const htmlContent = intensificacionTemas.map(item => {
+                const { tema_estudiante, contenido, materia } = item;
+                
+                // Buscar nota del tema (si hay evaluación relacionada con el contenido)
+                // Esto es complejo, así que por ahora solo mostramos el estado y observaciones
+                const estado = tema_estudiante.Estado || 'PENDIENTE';
+                const observaciones = tema_estudiante.Observaciones || '';
+                
+                // Determinar color según estado
+                let estadoColor = '#ff9800'; // Naranja por defecto (pendiente)
+                let estadoBg = '#fff3e0';
+                if (estado === 'COMPLETADO') {
+                    estadoColor = '#28a745';
+                    estadoBg = '#e8f5e9';
+                } else if (estado === 'EN_PROGRESO') {
+                    estadoColor = '#ffc107';
+                    estadoBg = '#fff9c4';
+                } else if (estado === 'CANCELADO') {
+                    estadoColor = '#dc3545';
+                    estadoBg = '#ffebee';
+                }
+                
+                // Buscar notas asociadas al tema (evaluaciones de la misma materia que el contenido)
+                let notaDisplay = '';
+                if (materia && appData.notas && appData.evaluacion) {
+                    // Buscar evaluaciones de la materia
+                    const evaluacionesMateria = appData.evaluacion.filter(e => parseInt(e.Materia_ID_materia) === parseInt(materia.ID_materia));
+                    // Buscar notas del estudiante en esas evaluaciones
+                    const notasMateria = appData.notas.filter(n => 
+                        parseInt(n.Estudiante_ID_Estudiante) === studentIdNum &&
+                        evaluacionesMateria.some(e => parseInt(e.ID_evaluacion) === parseInt(n.Evaluacion_ID_evaluacion))
+                    );
+                    
+                    if (notasMateria.length > 0) {
+                        // Tomar la nota más reciente de la materia
+                        const notaReciente = notasMateria.sort((a, b) => {
+                            const dateA = a.Fecha_calificacion ? new Date(a.Fecha_calificacion) : new Date(0);
+                            const dateB = b.Fecha_calificacion ? new Date(b.Fecha_calificacion) : new Date(0);
+                            return dateB - dateA;
+                        })[0];
+                        
+                        const calificacion = parseFloat(notaReciente.Calificacion) || 0;
+                        if (calificacion > 0) {
+                            let notaColor = '#dc3545';
+                            if (calificacion >= 8) notaColor = '#28a745';
+                            else if (calificacion >= 6) notaColor = '#ffc107';
+                            
+                            notaDisplay = `<div style="margin-top: 6px;"><span style="font-weight: 600; color: ${notaColor}; font-size: 0.95em;">Nota: ${calificacion.toFixed(1)}</span></div>`;
+                        }
+                    }
+                }
+                
+                // Botón para cambiar estado (si está PENDIENTE o EN_PROGRESO, mostrar botón para marcar como COMPLETADO)
+                let estadoButton = '';
+                if (estado === 'PENDIENTE' || estado === 'EN_PROGRESO') {
+                    estadoButton = `
+                        <button onclick="event.stopPropagation(); updateIntensificacionThemeStatus(${tema_estudiante.ID_Tema_estudiante}, 'COMPLETADO', ${studentIdNum})" 
+                                class="btn-primary" 
+                                style="padding: 6px 12px; font-size: 0.85em; margin-top: 8px; white-space: nowrap;"
+                                title="Marcar como Terminado">
+                            <i class="fas fa-check"></i> Marcar como Terminado
+                        </button>
+                    `;
+                } else if (estado === 'COMPLETADO') {
+                    estadoButton = `
+                        <button onclick="event.stopPropagation(); updateIntensificacionThemeStatus(${tema_estudiante.ID_Tema_estudiante}, 'PENDIENTE', ${studentIdNum})" 
+                                class="btn-secondary" 
+                                style="padding: 6px 12px; font-size: 0.85em; margin-top: 8px; white-space: nowrap;"
+                                title="Marcar como Pendiente">
+                            <i class="fas fa-undo"></i> Marcar como Pendiente
+                        </button>
+                    `;
+                }
+                
+                return `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #fff; border-radius: 6px; border-left: 3px solid ${estadoColor}; margin-bottom: 8px;">
+                        <div style="flex: 1;">
+                            <span style="font-weight: 600; color: #333; display: block; margin-bottom: 4px;">
+                                ${contenido.Tema || 'Tema sin nombre'}
+                            </span>
+                            ${materia ? `<small style="color: #666; font-size: 0.85em;">${materia.Nombre}</small>` : ''}
+                            ${notaDisplay}
+                            ${observaciones ? `<div style="margin-top: 4px; font-size: 0.85em; color: #666; font-style: italic;">${observaciones}</div>` : ''}
+                            ${estadoButton}
+                        </div>
+                        <span style="font-weight: 600; font-size: 0.9em; color: ${estadoColor}; background: ${estadoBg}; padding: 6px 12px; border-radius: 4px; white-space: nowrap; margin-left: 10px;">
+                            ${typeof getStatusText === 'function' ? getStatusText(estado) : estado}
+                        </span>
+                    </div>
+                `;
+            }).join('');
             
-            // Determinar color según calificación
-            let notaColor = '#dc3545'; // Rojo por defecto
-            let notaBg = '#ffebee';
-            if (esAusente) {
-                notaColor = '#dc3545';
-                notaBg = '#fee';
-            } else if (calificacion >= 8) {
-                notaColor = '#28a745';
-                notaBg = '#e8f5e9';
-            } else if (calificacion >= 6) {
-                notaColor = '#ffc107';
-                notaBg = '#fff3e0';
+            // Actualizar título
+            const gradesTitle = document.getElementById('studentGradesTitle');
+            if (gradesTitle) {
+                gradesTitle.textContent = 'Temas de Intensificación';
             }
             
-            return `
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid ${notaColor};">
-                    <span style="font-weight: 500; color: #333; flex: 1;">
-                        ${evaluation ? evaluation.Titulo : 'Evaluación no encontrada'}
-                    </span>
-                    <span style="font-weight: 700; font-size: 1.1em; color: ${notaColor}; background: ${notaBg}; padding: 4px 10px; border-radius: 4px; min-width: 60px; text-align: center;">
-                        ${esAusente ? 'Ausente' : calificacion.toFixed(2)}
-                    </span>
-                </div>
+            recentGradesElement.innerHTML = htmlContent;
+        } else {
+            recentGradesElement.innerHTML = `
+                <p style="color: #999; text-align: center; padding: 20px;">
+                    No hay temas de intensificación asignados
+                </p>
             `;
-        }).join('');
-        
-        recentGradesElement.innerHTML = htmlContent;
+        }
     } else {
-        recentGradesElement.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Sin calificaciones</p>';
+        // Mostrar calificaciones normales
+        const studentGrades = appData.notas
+            .filter(g => {
+                const gradeStudentId = parseInt(g.Estudiante_ID_Estudiante);
+                return gradeStudentId === studentIdNum;
+            })
+            .sort((a, b) => {
+                const dateA = a.Fecha_calificacion ? new Date(a.Fecha_calificacion) : 
+                              (a.Fecha_registro ? new Date(a.Fecha_registro) : new Date(0));
+                const dateB = b.Fecha_calificacion ? new Date(b.Fecha_calificacion) : 
+                              (b.Fecha_registro ? new Date(b.Fecha_registro) : new Date(0));
+                return dateB - dateA;
+            });
+        
+        // Verificar que appData.evaluacion existe
+        if (!appData.evaluacion || !Array.isArray(appData.evaluacion)) {
+            appData.evaluacion = [];
+        }
+        
+        if (studentGrades.length > 0) {
+            const htmlContent = studentGrades.map(grade => {
+                const evaluacionId = parseInt(grade.Evaluacion_ID_evaluacion);
+                const evaluation = appData.evaluacion.find(e => parseInt(e.ID_evaluacion) === evaluacionId);
+                const calificacion = parseFloat(grade.Calificacion) || 0;
+                const esAusente = calificacion === 0 && (
+                    (grade.Observacion && grade.Observacion.toUpperCase().includes('AUSENTE')) || 
+                    !grade.Observacion || 
+                    (grade.Observacion && grade.Observacion.trim() === '')
+                );
+                
+                let notaColor = '#dc3545';
+                let notaBg = '#ffebee';
+                if (esAusente) {
+                    notaColor = '#dc3545';
+                    notaBg = '#fee';
+                } else if (calificacion >= 8) {
+                    notaColor = '#28a745';
+                    notaBg = '#e8f5e9';
+                } else if (calificacion >= 6) {
+                    notaColor = '#ffc107';
+                    notaBg = '#fff3e0';
+                }
+                
+                return `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid ${notaColor};">
+                        <span style="font-weight: 500; color: #333; flex: 1;">
+                            ${evaluation ? evaluation.Titulo : 'Evaluación no encontrada'}
+                        </span>
+                        <span style="font-weight: 700; font-size: 1.1em; color: ${notaColor}; background: ${notaBg}; padding: 4px 10px; border-radius: 4px; min-width: 60px; text-align: center;">
+                            ${esAusente ? 'Ausente' : calificacion.toFixed(2)}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+            
+            // Actualizar título
+            const gradesTitle = document.getElementById('studentGradesTitle');
+            if (gradesTitle) {
+                gradesTitle.textContent = 'Calificaciones';
+            }
+            
+            recentGradesElement.innerHTML = htmlContent;
+        } else {
+            const gradesTitle = document.getElementById('studentGradesTitle');
+            if (gradesTitle) {
+                gradesTitle.textContent = 'Calificaciones';
+            }
+            recentGradesElement.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Sin calificaciones</p>';
+        }
     }
 
     // Show panel
