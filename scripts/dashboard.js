@@ -19,6 +19,62 @@ function initializeDashboard() {
         // Debug functionality removed for security
     };
     
+    // Function to navigate to attendance for a specific class
+    window.navigateToAttendanceForClass = function(subjectId) {
+        console.log('navigateToAttendanceForClass called with subjectId:', subjectId);
+        
+        // Navigate to attendance section
+        if (typeof showSection === 'function') {
+            console.log('Calling showSection("attendance")');
+            showSection('attendance');
+        } else {
+            console.error('showSection function not found');
+            // Fallback: manually show the section
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            const attendanceSection = document.getElementById('attendance');
+            if (attendanceSection) {
+                attendanceSection.classList.add('active');
+                console.log('Manually activated attendance section');
+            } else {
+                console.error('Attendance section not found');
+            }
+        }
+        
+        // Wait a bit for the section to load, then show attendance view and select subject
+        setTimeout(() => {
+            console.log('Setting up attendance view for subject:', subjectId);
+            
+            // Show attendance view
+            if (typeof showAttendanceView === 'function') {
+                showAttendanceView();
+                console.log('Called showAttendanceView()');
+            } else {
+                console.error('showAttendanceView function not found');
+            }
+            
+            // Select the subject in the dropdown
+            const attendanceSubjectSelect = document.getElementById('attendanceSubjectSelect');
+            if (attendanceSubjectSelect) {
+                attendanceSubjectSelect.value = subjectId;
+                console.log('Set attendanceSubjectSelect value to:', subjectId);
+                
+                // Trigger change event to load students
+                const changeEvent = new Event('change', { bubbles: true });
+                attendanceSubjectSelect.dispatchEvent(changeEvent);
+                
+                // Also try calling loadStudentsForAttendanceView directly if available
+                if (typeof loadStudentsForAttendanceView === 'function') {
+                    loadStudentsForAttendanceView();
+                    console.log('Called loadStudentsForAttendanceView()');
+                }
+            } else {
+                console.error('attendanceSubjectSelect element not found');
+            }
+        }, 300);
+    };
+    
     // Test function to verify the logic
     window.testLatestNotifications = function() {
         const now = new Date();
@@ -594,37 +650,65 @@ function loadUnifiedNotifications() {
         });
     });
 
-    // Add upcoming classes
+    // Add upcoming classes and in-progress classes
     upcomingClasses.forEach((upcomingClass, index) => {
-        const classDate = new Date(upcomingClass.dateTime);
-        const evaluations = typeof getEvaluationsForDate === 'function' ? getEvaluationsForDate(upcomingClass.date) : [];
+        // Recrear dateTime si no existe
+        const [year, month, day] = upcomingClass.date.split('-');
+        const [hours, minutes] = upcomingClass.time.split(':');
+        const classDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), 0);
+        
+        // Obtener evaluaciones para esta materia (mostrar todas las evaluaciones de la materia, no solo las del mismo día)
+        let evaluations = [];
+        const evalList = appData.evaluacion || [];
+        const subjectIdNum = parseInt(upcomingClass.subjectId);
+        
+        // Filtrar por materia
+        evaluations = evalList.filter(eval => {
+            const evalMateriaId = parseInt(eval.Materia_ID_materia);
+            return evalMateriaId === subjectIdNum;
+        });
+        
+        // Opcionalmente, también buscar evaluaciones del mismo día si se desea
+        // Por ahora mostramos todas las evaluaciones de la materia
+        
+        const isInProgress = upcomingClass.status === 'en_curso';
+        const classLabel = isInProgress ? 'En Curso' : 'Próxima clase';
         
         allItems.push({
             type: 'upcoming_class',
             id: `class_${upcomingClass.subjectId}_${upcomingClass.date}_${upcomingClass.time}`,
             title: upcomingClass.subjectName,
-            description: `Próxima clase`,
+            description: classLabel,
             date: classDate,
             dateStr: upcomingClass.date,
             time: upcomingClass.time,
+            endTime: upcomingClass.endTime,
             classroom: upcomingClass.classroom,
             subjectId: upcomingClass.subjectId,
             evaluations: evaluations,
+            status: upcomingClass.status || 'proxima',
             data: upcomingClass
         });
     });
 
-    // Sort by date (upcoming first, then by creation date for past items)
+    // Sort by priority: in-progress classes first, then upcoming classes, then past items
     const now = new Date();
     allItems.sort((a, b) => {
-        // Prioritize upcoming items (future dates first)
-        const aIsUpcoming = a.date > now;
-        const bIsUpcoming = b.date > now;
+        // Priorizar clases en curso
+        const aIsInProgress = a.type === 'upcoming_class' && a.status === 'en_curso';
+        const bIsInProgress = b.type === 'upcoming_class' && b.status === 'en_curso';
+        
+        if (aIsInProgress && !bIsInProgress) return -1;
+        if (!aIsInProgress && bIsInProgress) return 1;
+        
+        // Si ambas son en curso o ambas no lo son, verificar si son próximas
+        const aIsUpcoming = a.type === 'upcoming_class' && a.status === 'proxima' && a.date > now;
+        const bIsUpcoming = b.type === 'upcoming_class' && b.status === 'proxima' && b.date > now;
         
         if (aIsUpcoming && !bIsUpcoming) return -1;
         if (!aIsUpcoming && bIsUpcoming) return 1;
         
-        // Both are upcoming or both are past, sort by date
+        // Ambos son del mismo tipo, ordenar por fecha
         return a.date - b.date;
     });
 
@@ -643,21 +727,33 @@ function loadUnifiedNotifications() {
     // Display unified list
     unifiedList.innerHTML = allItems.map(item => {
         if (item.type === 'upcoming_class') {
-            // Format upcoming class
+            // Format upcoming class or in-progress class
             const displayDate = item.dateStr ? formatDate(item.dateStr) : formatNotificationDate(item.date);
-            const hasEvaluations = item.evaluations && item.evaluations.length > 0;
+            // Verificar evaluaciones
+            const evaluations = item.evaluations || [];
+            const hasEvaluations = Array.isArray(evaluations) && evaluations.length > 0;
+            const isInProgress = item.status === 'en_curso';
+            
+            // Color según el estado
+            const statusColor = isInProgress ? '#f59e0b' : '#10b981'; // Naranja para en curso, verde para próxima
+            const statusIcon = isInProgress ? 'fa-play-circle' : 'fa-calendar-day';
+            const statusLabel = isInProgress ? 'En Curso' : 'Próxima';
+            
+            const cursorStyle = isInProgress && item.subjectId ? 'cursor: pointer;' : '';
+            const dataSubjectId = isInProgress && item.subjectId ? `data-subject-id="${item.subjectId}"` : '';
             
             return `
-                <div class="class-item upcoming-class-item ${hasEvaluations ? 'has-evaluations' : ''}">
+                <div class="class-item upcoming-class-item ${hasEvaluations ? 'has-evaluations' : ''} ${isInProgress ? 'in-progress' : ''} ${isInProgress && item.subjectId ? 'clickable-class' : ''}" style="${cursorStyle}" ${dataSubjectId} ${isInProgress && item.subjectId ? 'title="Click para tomar asistencia"' : ''}>
                     <div class="class-header">
-                        <div class="class-time" style="color: #10b981;">
-                            <i class="fas fa-calendar-day"></i>
+                        <div class="class-time" style="color: ${statusColor};">
+                            <i class="fas ${statusIcon}"></i>
                             <span>${displayDate}</span>
+                            ${isInProgress ? `<span class="status-badge" style="background: ${statusColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75em; margin-left: 8px;">${statusLabel}</span>` : ''}
                         </div>
                         ${item.time ? `
                             <div class="class-schedule">
                                 <i class="fas fa-clock"></i>
-                                <span>${item.time}</span>
+                                <span>${item.time}${item.endTime ? ` - ${item.endTime}` : ''}</span>
                             </div>
                         ` : ''}
                     </div>
@@ -665,21 +761,12 @@ function loadUnifiedNotifications() {
                         <h4>${item.title}</h4>
                         <p class="class-info">
                             <span class="classroom">• ${item.classroom || 'Aula por asignar'}</span>
-                        </p>
-                        ${hasEvaluations ? `
-                            <div class="evaluations">
-                                <div class="evaluation-header">
-                                    <i class="fas fa-clipboard-list"></i>
-                                    <span data-translate="evaluations_today">Evaluaciones:</span>
-                                </div>
-                                ${item.evaluations.map(eval => `
-                                    <div class="evaluation-item">
-                                        <span class="evaluation-title">${eval.Titulo}</span>
-                                        <span class="evaluation-type">${typeof getEvaluationTypeLabel === 'function' ? getEvaluationTypeLabel(eval.Tipo) : eval.Tipo}</span>
-                                    </div>
+                            ${hasEvaluations ? `
+                                ${evaluations.map(eval => `
+                                    <span style="margin-left: 12px; color: #6b7280; font-size: 0.95em; font-weight: 500;">• Examen: <strong style="color: #111827; font-size: 1.05em;">${eval.Titulo || 'Sin título'}</strong></span>
                                 `).join('')}
-                            </div>
-                        ` : ''}
+                            ` : ''}
+                        </p>
                     </div>
                 </div>
             `;
@@ -717,6 +804,25 @@ function loadUnifiedNotifications() {
             `;
         }
     }).join('');
+    
+    // Add event listeners to clickable classes after rendering
+    setTimeout(() => {
+        const clickableClasses = unifiedList.querySelectorAll('.clickable-class');
+        clickableClasses.forEach(element => {
+            const subjectId = element.getAttribute('data-subject-id');
+            if (subjectId) {
+                // Remove existing listeners to avoid duplicates
+                const newElement = element.cloneNode(true);
+                element.parentNode.replaceChild(newElement, element);
+                
+                newElement.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    console.log('Click detected on class item with subjectId:', subjectId);
+                    navigateToAttendanceForClass(parseInt(subjectId));
+                });
+            }
+        });
+    }, 100);
 }
 
 function loadNextClass() {
@@ -749,45 +855,79 @@ function loadNextClass() {
         return;
     }
 
-    // Display only the first (next) class
-    const nextClass = nextClasses[0];
-    const evaluations = getEvaluationsForDate(nextClass.date);
-    const hasEvaluations = evaluations.length > 0;
-    
-    nextClassList.innerHTML = `
-        <div class="class-item ${hasEvaluations ? 'has-evaluations' : ''}">
-            <div class="class-header">
-                <div class="class-time">
-                    <i class="fas fa-calendar-day"></i>
-                    <span>${formatDate(nextClass.date)}</span>
-                </div>
-                <div class="class-schedule">
-                    <i class="fas fa-clock"></i>
-                    <span>${nextClass.time}</span>
-                </div>
+    // Mostrar todas las clases (en curso y próximas, hasta 2)
+    if (nextClasses.length === 0) {
+        nextClassList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-calendar-check"></i>
+                <h3 data-translate="no_upcoming_classes">No hay clases próximas</h3>
+                <p data-translate="no_classes_message">No hay clases programadas para los próximos días.</p>
             </div>
-            <div class="class-details">
-                <h4>${nextClass.subjectName}</h4>
-                <p class="class-info">                    
-                    <span class="classroom">• ${nextClass.classroom}</span>
-                </p>
-                ${hasEvaluations ? `
-                    <div class="evaluations">
-                        <div class="evaluation-header">
-                            <i class="fas fa-clipboard-list"></i>
-                            <span data-translate="evaluations_today">Evaluaciones hoy:</span>
-                        </div>
-                        ${evaluations.map(eval => `
-                            <div class="evaluation-item">
-                                <span class="evaluation-title">${eval.Titulo}</span>
-                                <span class="evaluation-type">${getEvaluationTypeLabel(eval.Tipo)}</span>
-                            </div>
-                        `).join('')}
+        `;
+        return;
+    }
+
+    nextClassList.innerHTML = nextClasses.map(nextClass => {
+        const isInProgress = nextClass.status === 'en_curso';
+        
+        // Obtener todas las evaluaciones de la materia de esta clase
+        const evalList = appData.evaluacion || [];
+        const subjectIdNum = parseInt(nextClass.subjectId);
+        const evaluations = evalList.filter(eval => {
+            const evalMateriaId = parseInt(eval.Materia_ID_materia);
+            return evalMateriaId === subjectIdNum;
+        });
+        
+        const hasEvaluations = evaluations.length > 0;
+        const statusColor = isInProgress ? '#f59e0b' : '#10b981';
+        const statusIcon = isInProgress ? 'fa-play-circle' : 'fa-calendar-day';
+        const statusLabel = isInProgress ? 'En Curso' : 'Próxima';
+        
+        const cursorStyle = isInProgress && nextClass.subjectId ? 'cursor: pointer; margin-bottom: 15px;' : 'margin-bottom: 15px;';
+        const dataSubjectId = isInProgress && nextClass.subjectId ? `data-subject-id="${nextClass.subjectId}"` : '';
+        
+        return `
+            <div class="class-item ${hasEvaluations ? 'has-evaluations' : ''} ${isInProgress ? 'in-progress' : ''} ${isInProgress && nextClass.subjectId ? 'clickable-class' : ''}" style="${cursorStyle}" ${dataSubjectId} ${isInProgress && nextClass.subjectId ? 'title="Click para tomar asistencia"' : ''}>
+                <div class="class-header">
+                    <div class="class-time" style="color: ${statusColor};">
+                        <i class="fas ${statusIcon}"></i>
+                        <span>${formatDate(nextClass.date)}</span>
+                        ${isInProgress ? `<span class="status-badge" style="background: ${statusColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75em; margin-left: 8px;">${statusLabel}</span>` : ''}
                     </div>
-                ` : ''}
+                    <div class="class-schedule">
+                        <i class="fas fa-clock"></i>
+                        <span>${nextClass.time}${nextClass.endTime ? ` - ${nextClass.endTime}` : ''}</span>
+                    </div>
+                </div>
+                <div class="class-details">
+                    <h4>${nextClass.subjectName}</h4>
+                    <p class="class-info">                    
+                        <span class="classroom">• ${nextClass.classroom}</span>
+                        ${hasEvaluations ? `
+                            ${evaluations.map(eval => `
+                                <span style="margin-left: 12px; color: #6b7280; font-size: 0.95em; font-weight: 500;">• Examen: <strong style="color: #111827; font-size: 1.05em;">${eval.Titulo || 'Sin título'}</strong></span>
+                            `).join('')}
+                        ` : ''}
+                    </p>
+                </div>
             </div>
-        </div>
-    `;
+        `;
+    }).join('');
+    
+    // Add event listeners to clickable classes after rendering
+    setTimeout(() => {
+        const clickableClasses = nextClassList.querySelectorAll('.clickable-class');
+        clickableClasses.forEach(element => {
+            const subjectId = element.getAttribute('data-subject-id');
+            if (subjectId) {
+                element.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    console.log('Click detected on class item with subjectId:', subjectId);
+                    navigateToAttendanceForClass(parseInt(subjectId));
+                });
+            }
+        });
+    }, 100);
 }
 
 function getNextTwoClasses() {
@@ -795,6 +935,7 @@ function getNextTwoClasses() {
     const subjects = appData.materia || [];
     const teachers = appData.usuarios_docente || [];
     const allClasses = [];
+    const inProgressClasses = [];
 
     // Get current user ID to filter subjects
     const currentUserId = localStorage.getItem('userId');
@@ -802,23 +943,15 @@ function getNextTwoClasses() {
         return [];
     }
 
-
-    let userSubjectsCount = 0;
     subjects.forEach(subject => {
-        // Check if subject belongs to user (compare both as numbers and as strings to handle type mismatches)
+        // Check if subject belongs to user
         const subjectTeacherId = parseInt(subject.Usuarios_docente_ID_docente);
         const userId = parseInt(currentUserId);
         const matches = subjectTeacherId === userId;
         
-        if (!matches) {
+        if (!matches || !subject.Horario || subject.Estado !== 'ACTIVA') {
             return;
         }
-        
-        if (!subject.Horario || subject.Estado !== 'ACTIVA') {
-            return;
-        }
-
-        userSubjectsCount++;
 
         const schedule = parseSchedule(subject.Horario);
         if (!schedule) {
@@ -828,7 +961,34 @@ function getNextTwoClasses() {
         const teacher = teachers.find(t => t.ID_docente === subject.Usuarios_docente_ID_docente);
         const teacherName = teacher ? `${teacher.Nombre_docente} ${teacher.Apellido_docente}` : 'Profesor no asignado';
 
-        // Look ahead for next 8 weeks to find next class (even if it's far in the future)
+        // Buscar clases "en curso" (hoy, dentro del rango horario)
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if (schedule.days.includes(today.getDay())) {
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+            
+            // Verificar si la clase está en curso
+            if (isClassInProgress(dateStr, schedule.startTime, schedule.endTime)) {
+                const [hours, minutes] = schedule.startTime.split(':');
+                const classDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), parseInt(hours), parseInt(minutes), 0);
+                
+                inProgressClasses.push({
+                    date: dateStr,
+                    time: schedule.startTime,
+                    endTime: schedule.endTime,
+                    subjectName: subject.Nombre,
+                    teacherName: teacherName,
+                    classroom: subject.Aula || 'Aula por asignar',
+                    subjectId: subject.ID_materia,
+                    dateTime: classDateTime,
+                    status: 'en_curso'
+                });
+            }
+        }
+
+        // Look ahead for next 8 weeks to find upcoming classes
         for (let daysAhead = 0; daysAhead < 56; daysAhead++) {
             const checkDate = new Date(now);
             checkDate.setDate(now.getDate() + daysAhead);
@@ -844,27 +1004,39 @@ function getNextTwoClasses() {
                 const [hours, minutes] = schedule.startTime.split(':');
                 const classDateTime = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate(), parseInt(hours), parseInt(minutes), 0);
                 
-                // Only include if class is in the future
+                // Incluir clases futuras o que aún no han comenzado hoy
                 if (classDateTime > now) {
-                    allClasses.push({
-                        date: dateStr,
-                        time: schedule.startTime,
-                        subjectName: subject.Nombre,
-                        teacherName: teacherName,
-                        classroom: subject.Aula || 'Aula por asignar',
-                        subjectId: subject.ID_materia,
-                        dateTime: classDateTime
-                    });
+                    // Verificar que no esté en curso (ya la agregamos arriba)
+                    const isToday = checkDate.getTime() === today.getTime();
+                    const isInProgress = isToday && isClassInProgress(dateStr, schedule.startTime, schedule.endTime);
+                    
+                    if (!isInProgress) {
+                        allClasses.push({
+                            date: dateStr,
+                            time: schedule.startTime,
+                            endTime: schedule.endTime,
+                            subjectName: subject.Nombre,
+                            teacherName: teacherName,
+                            classroom: subject.Aula || 'Aula por asignar',
+                            subjectId: subject.ID_materia,
+                            dateTime: classDateTime,
+                            status: 'proxima'
+                        });
+                    }
                 }
             }
         }
     });
 
-    // Sort by dateTime and take first 2
-    const result = allClasses
-        .sort((a, b) => a.dateTime - b.dateTime)
-        .slice(0, 2)
-        .map(({ dateTime, ...rest }) => rest); // Remove dateTime from result
+    // Combinar clases en curso (prioritarias) con clases próximas
+    // Las clases en curso van primero, luego las próximas ordenadas por fecha
+    const combined = [
+        ...inProgressClasses,
+        ...allClasses.sort((a, b) => a.dateTime - b.dateTime).slice(0, 2 - inProgressClasses.length)
+    ].slice(0, 2); // Limitar a 2 clases totales
+    
+    // Remover dateTime pero mantener todos los demás campos incluyendo endTime
+    const result = combined.map(({ dateTime, ...rest }) => rest);
 
     return result;
 }
@@ -986,9 +1158,65 @@ function getNextClassOccurrences(schedule, fromDate, count) {
     return occurrences;
 }
 
-function getEvaluationsForDate(date) {
+function getEvaluationsForDate(date, subjectId = null) {
     const evaluations = appData.evaluacion || [];
-    return evaluations.filter(eval => eval.Fecha === date);
+    
+    if (!evaluations || evaluations.length === 0) {
+        return [];
+    }
+    
+    // Normalizar la fecha para comparación (formato YYYY-MM-DD)
+    const normalizedDate = date.includes('T') ? date.split('T')[0] : date.split(' ')[0];
+    
+    // Filtrar por fecha primero
+    let filtered = evaluations.filter(eval => {
+        // Normalizar la fecha de la evaluación también
+        const evalDate = eval.Fecha ? (eval.Fecha.includes('T') ? eval.Fecha.split('T')[0] : eval.Fecha.split(' ')[0]) : null;
+        return evalDate === normalizedDate;
+    });
+    
+    // Si se proporciona subjectId, filtrar también por materia
+    if (subjectId !== null && subjectId !== undefined) {
+        filtered = filtered.filter(eval => {
+            const evalMateriaId = parseInt(eval.Materia_ID_materia);
+            const classSubjectId = parseInt(subjectId);
+            return evalMateriaId === classSubjectId;
+        });
+    }
+    
+    return filtered;
+}
+
+// Función para verificar si una clase está "en curso" (dentro del rango horario actual)
+function isClassInProgress(classDate, classStartTime, classEndTime) {
+    const now = new Date();
+    
+    // Verificar que sea el mismo día
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // Parsear la fecha de clase (formato YYYY-MM-DD)
+    const [year, month, day] = classDate.split('-').map(Number);
+    const classDay = new Date(year, month - 1, day);
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const classDayStart = new Date(classDay.getFullYear(), classDay.getMonth(), classDay.getDate());
+    
+    if (todayStart.getTime() !== classDayStart.getTime()) {
+        return false;
+    }
+    
+    // Obtener la hora actual
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+    const currentTime = currentHours * 60 + currentMinutes; // Convertir a minutos desde medianoche
+    
+    // Parsear hora de inicio y fin
+    const [startHour, startMin] = classStartTime.split(':').map(Number);
+    const [endHour, endMin] = classEndTime.split(':').map(Number);
+    
+    const startTime = startHour * 60 + startMin;
+    const endTime = endHour * 60 + endMin;
+    
+    // Verificar si la hora actual está dentro del rango
+    return currentTime >= startTime && currentTime <= endTime;
 }
 
 function formatDate(dateStr) {
