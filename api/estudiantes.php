@@ -21,6 +21,9 @@ require_once __DIR__ . '/../config/database.php';
 // Iniciar sesión
 session_start();
 
+// Obtener ID del docente logueado (si existe)
+$docente_id = $_SESSION['user_id'] ?? null;
+
 // Obtener método HTTP
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -64,13 +67,38 @@ try {
             }
         } else {
             // Obtener todos los estudiantes (opcional: filtrar por estado)
+            // Si hay docente logueado, filtrar solo estudiantes de sus materias
             $estado = $_GET['estado'] ?? null;
             
-            if ($estado) {
-                $stmt = $pdo->prepare("SELECT * FROM Estudiante WHERE Estado = ? ORDER BY Apellido, Nombre");
-                $stmt->execute([$estado]);
+            if ($docente_id) {
+                // Filtrar por docente y opcionalmente por estado
+                if ($estado) {
+                    $stmt = $pdo->prepare("
+                        SELECT DISTINCT e.* FROM Estudiante e
+                        INNER JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
+                        INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+                        WHERE m.Usuarios_docente_ID_docente = ? AND e.Estado = ?
+                        ORDER BY e.Apellido, e.Nombre
+                    ");
+                    $stmt->execute([$docente_id, $estado]);
+                } else {
+                    $stmt = $pdo->prepare("
+                        SELECT DISTINCT e.* FROM Estudiante e
+                        INNER JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
+                        INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+                        WHERE m.Usuarios_docente_ID_docente = ?
+                        ORDER BY e.Apellido, e.Nombre
+                    ");
+                    $stmt->execute([$docente_id]);
+                }
             } else {
-                $stmt = $pdo->query("SELECT * FROM Estudiante ORDER BY Apellido, Nombre");
+                // Sin docente logueado, mostrar todos (para admin)
+                if ($estado) {
+                    $stmt = $pdo->prepare("SELECT * FROM Estudiante WHERE Estado = ? ORDER BY Apellido, Nombre");
+                    $stmt->execute([$estado]);
+                } else {
+                    $stmt = $pdo->query("SELECT * FROM Estudiante ORDER BY Apellido, Nombre");
+                }
             }
             
             $estudiantes = $stmt->fetchAll(PDO::FETCH_ASSOC);

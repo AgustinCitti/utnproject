@@ -32,7 +32,19 @@ try {
     }
 
     // 2. OBTENER ESTUDIANTES
-    $stmt = $pdo->query("SELECT * FROM Estudiante");
+    // Si hay docente logueado, filtrar solo estudiantes de sus materias
+    if ($docente_id) {
+        $stmt = $pdo->prepare("
+            SELECT DISTINCT e.* FROM Estudiante e
+            INNER JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
+            INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+            WHERE m.Usuarios_docente_ID_docente = ?
+            ORDER BY e.Apellido, e.Nombre
+        ");
+        $stmt->execute([$docente_id]);
+    } else {
+        $stmt = $pdo->query("SELECT * FROM Estudiante ORDER BY Apellido, Nombre");
+    }
     $estudiante = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 3. OBTENER MATERIAS
@@ -46,7 +58,18 @@ try {
     $materia = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 4. OBTENER INSCRIPCIONES (Alumnos_X_Materia)
-    $stmt = $pdo->query("SELECT * FROM Alumnos_X_Materia");
+    // Si hay docente logueado, filtrar solo inscripciones de sus materias
+    if ($docente_id) {
+        $stmt = $pdo->prepare("
+            SELECT axm.* FROM Alumnos_X_Materia axm
+            INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+            WHERE m.Usuarios_docente_ID_docente = ?
+            ORDER BY axm.Fecha_inscripcion DESC
+        ");
+        $stmt->execute([$docente_id]);
+    } else {
+        $stmt = $pdo->query("SELECT * FROM Alumnos_X_Materia ORDER BY Fecha_inscripcion DESC");
+    }
     $alumnos_x_materia = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 5. OBTENER CONTENIDO
@@ -63,7 +86,19 @@ try {
     $contenido = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 6. OBTENER TEMA_ESTUDIANTE
-    $stmt = $pdo->query("SELECT * FROM Tema_estudiante");
+    // Si hay docente logueado, filtrar solo temas de estudiantes en sus materias
+    if ($docente_id) {
+        $stmt = $pdo->prepare("
+            SELECT te.* FROM Tema_estudiante te
+            INNER JOIN Contenido c ON te.Contenido_ID_contenido = c.ID_contenido
+            INNER JOIN Materia m ON c.Materia_ID_materia = m.ID_materia
+            WHERE m.Usuarios_docente_ID_docente = ?
+            ORDER BY te.Fecha_actualizacion DESC, te.ID_Tema_estudiante DESC
+        ");
+        $stmt->execute([$docente_id]);
+    } else {
+        $stmt = $pdo->query("SELECT * FROM Tema_estudiante ORDER BY Fecha_actualizacion DESC, ID_Tema_estudiante DESC");
+    }
     $tema_estudiante = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 7. OBTENER EVALUACIONES

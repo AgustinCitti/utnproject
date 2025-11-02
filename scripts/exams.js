@@ -5,7 +5,7 @@ function initializeExams() {
     
     if (createExamBtn) {
         createExamBtn.addEventListener('click', () => {
-            showExamModal();
+            showExamModal(); // Sin ID = crear nueva
         });
     }
     
@@ -102,7 +102,10 @@ function loadExams() {
                 <div class="card-header">
                     <h3 class="card-title">${exam.Titulo}</h3>
                     <div class="card-actions">
-                        <button class="btn-icon btn-view" onclick="viewExamNotes(${exam.ID_evaluacion})" title="View Notes">
+                        <button class="btn-icon btn-grade" onclick="gradeExam(${exam.ID_evaluacion})" title="Calificar Estudiantes">
+                            <i class="fas fa-clipboard-check"></i>
+                        </button>
+                        <button class="btn-icon btn-view" onclick="viewExamNotes(${exam.ID_evaluacion})" title="Ver Notas">
                             <i class="fas fa-eye"></i>
                         </button>
                         <button class="btn-icon btn-edit" onclick="editExam(${exam.ID_evaluacion})">
@@ -151,7 +154,10 @@ function loadExams() {
                                 <td>${exam.Estado}</td>
                                 <td>
                                     <div class="table-actions">
-                                        <button class="btn-icon btn-view" onclick="viewExamNotes(${exam.ID_evaluacion})" title="View Notes">
+                                        <button class="btn-icon btn-grade" onclick="gradeExam(${exam.ID_evaluacion})" title="Calificar Estudiantes">
+                                            <i class="fas fa-clipboard-check"></i>
+                                        </button>
+                                        <button class="btn-icon btn-view" onclick="viewExamNotes(${exam.ID_evaluacion})" title="Ver Notas">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         <button class="btn-icon btn-edit" onclick="editExam(${exam.ID_evaluacion})" title="Edit">
@@ -171,96 +177,612 @@ function loadExams() {
     `;
 }
 
-function showExamModal() {
+function showExamModal(examId = null) {
     const modal = document.createElement('div');
     modal.className = 'modal active';
+    modal.id = 'examModal';
+    if (examId) {
+        modal.dataset.examId = examId;
+    }
+    
+    // Obtener materias del docente actual
+    const currentUserId = localStorage.getItem('userId');
+    const teacherId = currentUserId ? parseInt(currentUserId) : null;
+    let teacherSubjects = appData.materia || [];
+    
+    if (teacherId) {
+        teacherSubjects = teacherSubjects.filter(s => s.Usuarios_docente_ID_docente === teacherId);
+    }
+    
+    const exam = examId ? appData.evaluacion.find(e => e.ID_evaluacion === examId) : null;
+    const isEdit = !!exam;
+    
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Create Exam</h3>
+                <h3>${isEdit ? 'Editar Evaluación' : 'Crear Evaluación'}</h3>
                 <button class="close-modal">&times;</button>
             </div>
-            <form class="modal-form" onsubmit="saveExam(event)">
+            <form class="modal-form" id="examForm" onsubmit="saveExam(event); return false;">
                 <div class="form-group">
-                    <label for="examTitle">Title</label>
-                    <input type="text" id="examTitle" required>
+                    <label for="examTitle">Título *</label>
+                    <input type="text" id="examTitle" name="examTitle" required value="${exam ? exam.Titulo : ''}" autocomplete="off">
                 </div>
                 <div class="form-group">
-                    <label for="examSubject">Subject</label>
-                    <select id="examSubject" required>
-                        ${appData.materia.map(s => `<option value="${s.ID_materia}">${s.Nombre}</option>`).join('')}
+                    <label for="examSubject">Materia *</label>
+                    <select id="examSubject" name="examSubject" required>
+                        <option value="">Seleccione una materia</option>
+                        ${teacherSubjects.map(s => 
+                            `<option value="${s.ID_materia}" ${exam && exam.Materia_ID_materia === s.ID_materia ? 'selected' : ''}>${s.Nombre}</option>`
+                        ).join('')}
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="examDate">Date</label>
-                    <input type="date" id="examDate" required>
+                    <label for="examDate">Fecha *</label>
+                    <input type="date" id="examDate" name="examDate" required value="${exam ? exam.Fecha : ''}">
                 </div>
                 <div class="form-group">
-                    <label for="examDuration">Duration (minutes)</label>
-                    <input type="number" id="examDuration" required>
-                </div>
-                <div class="form-group">
-                    <label for="examType">Type</label>
-                    <select id="examType" required>
-                        <option value="written">Written</option>
-                        <option value="practical">Practical</option>
-                        <option value="oral">Oral</option>
+                    <label for="examType">Tipo *</label>
+                    <select id="examType" name="examType" required>
+                        <option value="">Seleccione un tipo</option>
+                        <option value="EXAMEN" ${exam && exam.Tipo === 'EXAMEN' ? 'selected' : ''}>Examen</option>
+                        <option value="PARCIAL" ${exam && exam.Tipo === 'PARCIAL' ? 'selected' : ''}>Parcial</option>
+                        <option value="TRABAJO_PRACTICO" ${exam && exam.Tipo === 'TRABAJO_PRACTICO' ? 'selected' : ''}>Trabajo Práctico</option>
+                        <option value="PROYECTO" ${exam && exam.Tipo === 'PROYECTO' ? 'selected' : ''}>Proyecto</option>
+                        <option value="ORAL" ${exam && exam.Tipo === 'ORAL' ? 'selected' : ''}>Oral</option>
+                        <option value="PRACTICO" ${exam && exam.Tipo === 'PRACTICO' ? 'selected' : ''}>Práctico</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="examDescription">Description</label>
-                    <textarea id="examDescription"></textarea>
+                    <label for="examPeso">Peso (0.00 - 9.99)</label>
+                    <input type="number" id="examPeso" name="examPeso" step="0.01" min="0" max="9.99" value="${exam ? exam.Peso || 1.00 : 1.00}">
+                </div>
+                <div class="form-group">
+                    <label for="examEstado">Estado</label>
+                    <select id="examEstado" name="examEstado">
+                        <option value="PROGRAMADA" ${exam && exam.Estado === 'PROGRAMADA' ? 'selected' : ''}>Programada</option>
+                        <option value="EN_CURSO" ${exam && exam.Estado === 'EN_CURSO' ? 'selected' : ''}>En Curso</option>
+                        <option value="FINALIZADA" ${exam && exam.Estado === 'FINALIZADA' ? 'selected' : ''}>Finalizada</option>
+                        <option value="CANCELADA" ${exam && exam.Estado === 'CANCELADA' ? 'selected' : ''}>Cancelada</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="examDescription">Descripción</label>
+                    <textarea id="examDescription" name="examDescription">${exam ? (exam.Descripcion || '') : ''}</textarea>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary close-modal">Cancel</button>
-                    <button type="submit" class="btn-primary">Save Exam</button>
+                    <button type="button" class="btn-secondary close-modal">Cancelar</button>
+                    <button type="submit" class="btn-primary">${isEdit ? 'Actualizar' : 'Crear'} Evaluación</button>
                 </div>
             </form>
         </div>
     `;
     
     document.body.appendChild(modal);
-    setupModalHandlers(modal);
+    if (typeof setupModalHandlers === 'function') {
+        setupModalHandlers(modal);
+    } else {
+        // Fallback si no existe setupModalHandlers
+        modal.querySelector('.close-modal').addEventListener('click', () => {
+            modal.remove();
+        });
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+    }
 }
 
-function saveExam(event) {
+async function saveExam(event) {
     event.preventDefault();
+    event.stopPropagation();
     
-    const newExam = {
-        ID_evaluacion: Date.now(),
-        Titulo: document.getElementById('examTitle').value,
-        Materia_ID_materia: parseInt(document.getElementById('examSubject').value),
-        Fecha: document.getElementById('examDate').value,
-        Tipo: document.getElementById('examType').value,
-        Descripcion: document.getElementById('examDescription').value,
-        Estado: 'PROGRAMADA'
+    const isInPages = window.location.pathname.includes('/pages/');
+    const baseUrl = isInPages ? '../api' : 'api';
+    
+    // Obtener el formulario desde el evento
+    const form = event.target;
+    if (!form || form.tagName !== 'FORM') {
+        console.error('El evento no viene de un formulario:', event.target);
+        alert('Error: No se pudo encontrar el formulario.');
+        return;
+    }
+    
+    // Obtener valores usando FormData (más confiable)
+    const formData = new FormData(form);
+    
+    // También obtener directamente de los elementos usando el formulario como contexto
+    const titulo = (form.querySelector('#examTitle')?.value || '').trim();
+    const materiaValue = form.querySelector('#examSubject')?.value || '';
+    const materiaId = materiaValue && !isNaN(parseInt(materiaValue)) ? parseInt(materiaValue) : 0;
+    const fecha = form.querySelector('#examDate')?.value || '';
+    const tipo = (form.querySelector('#examType')?.value || '').trim().toUpperCase();
+    const descripcion = (form.querySelector('#examDescription')?.value || '').trim() || null;
+    const peso = parseFloat(form.querySelector('#examPeso')?.value || '1.00') || 1.00;
+    const estado = form.querySelector('#examEstado')?.value || 'PROGRAMADA';
+    
+    // Debug: Mostrar valores capturados
+    console.log('=== DEBUG VALIDACIÓN FORMULARIO ===');
+    console.log('Form encontrado:', !!form);
+    console.log('Valores capturados:', {
+        titulo: titulo,
+        materiaValue: materiaValue,
+        materiaId: materiaId,
+        fecha: fecha,
+        tipo: tipo,
+        descripcion: descripcion,
+        peso: peso,
+        estado: estado
+    });
+    
+    // Verificar elementos directamente
+    const titleEl = form.querySelector('#examTitle');
+    const subjectEl = form.querySelector('#examSubject');
+    const dateEl = form.querySelector('#examDate');
+    const typeEl = form.querySelector('#examType');
+    
+    console.log('Elementos encontrados en form:', {
+        titleEl: !!titleEl,
+        'titleEl.value': titleEl?.value,
+        subjectEl: !!subjectEl,
+        'subjectEl.value': subjectEl?.value,
+        dateEl: !!dateEl,
+        'dateEl.value': dateEl?.value,
+        typeEl: !!typeEl,
+        'typeEl.value': typeEl?.value
+    });
+    console.log('===================================');
+    
+    // Validar campos requeridos
+    const missingFields = [];
+    const errors = [];
+    
+    // Validar Título
+    if (!titulo || titulo.length === 0) {
+        missingFields.push('Título');
+        errors.push('El título está vacío');
+        if (titleEl) titleEl.focus();
+    }
+    
+    // Validar Materia
+    if (!materiaValue || materiaValue === '' || materiaValue === '0' || isNaN(materiaId) || materiaId <= 0) {
+        missingFields.push('Materia');
+        errors.push('Debe seleccionar una materia válida (valor recibido: "' + materiaValue + '")');
+        if (subjectEl) subjectEl.focus();
+    }
+    
+    // Validar Fecha
+    if (!fecha || fecha.trim() === '') {
+        missingFields.push('Fecha');
+        errors.push('La fecha está vacía');
+        if (dateEl) dateEl.focus();
+    }
+    
+    // Validar Tipo
+    if (!tipo || tipo.trim() === '') {
+        missingFields.push('Tipo');
+        errors.push('Debe seleccionar un tipo de evaluación');
+        if (typeEl) typeEl.focus();
+    }
+    
+    if (missingFields.length > 0) {
+        const message = 'Por favor, complete todos los campos requeridos:\n\n' + 
+                       missingFields.map((field, idx) => `• ${field}: ${errors[idx] || 'Campo requerido'}`).join('\n') +
+                       '\n\nNOTA: Si completó los campos, puede ser un problema técnico. Verifique la consola para más detalles.';
+        alert(message);
+        console.error('Campos faltantes:', missingFields);
+        console.error('Valores actuales:', {
+            titulo: titulo,
+            materia: materiaValue,
+            fecha: fecha,
+            tipo: tipo
+        });
+        console.error('FormData entries:', Array.from(formData.entries()));
+        return;
+    }
+    
+    // Construir objeto con datos validados
+    const examData = {
+        Titulo: titulo,
+        Materia_ID_materia: materiaId,
+        Fecha: fecha,
+        Tipo: tipo,
+        Descripcion: descripcion,
+        Peso: peso,
+        Estado: estado
     };
     
-    appData.evaluacion.push(newExam);
-    saveData();
-    closeModal(document.querySelector('.modal'));
-    loadExams();
+    console.log('Datos finales a enviar:', examData);
+    
+    // Determinar si es crear o actualizar
+    const existingExamId = document.getElementById('examModal').dataset.examId;
+    const isEdit = existingExamId && !isNaN(parseInt(existingExamId));
+    const url = isEdit ? `${baseUrl}/evaluacion.php?id=${existingExamId}` : `${baseUrl}/evaluacion.php`;
+    const method = isEdit ? 'PUT' : 'POST';
+    
+    try {
+        const response = await fetch(url, {
+            method: method,
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(examData)
+        });
+        
+        const result = await response.json();
+        
+        // Log para debug
+        console.log('Response status:', response.status);
+        console.log('Response result:', result);
+        
+        if (response.ok && (result.success !== false && result.id)) {
+            // Recargar datos desde el servidor
+            await loadData();
+            
+            // Cerrar modal
+            const modal = document.getElementById('examModal');
+            if (modal) {
+                modal.remove();
+            }
+            
+            loadExams();
+            
+            // Mostrar mensaje de éxito
+            if (typeof showNotification === 'function') {
+                showNotification(isEdit ? 'Evaluación actualizada exitosamente' : 'Evaluación creada exitosamente', 'success');
+            } else {
+                alert(isEdit ? 'Evaluación actualizada exitosamente' : 'Evaluación creada exitosamente');
+            }
+        } else {
+            const errorMsg = result.message || result.error || 'Error al guardar la evaluación';
+            console.error('Error del servidor:', result);
+            throw new Error(errorMsg);
+        }
+    } catch (error) {
+        console.error('Error al guardar evaluación:', error);
+        alert('Error: ' + error.message + '\n\nPor favor, verifique la consola para más detalles.');
+    }
 }
 
 function editExam(id) {
     const exam = appData.evaluacion.find(e => e.ID_evaluacion === id);
-    if (!exam) return;
-
-    showExamModal();
+    if (!exam) {
+        alert('Evaluación no encontrada.');
+        return;
+    }
     
-    // Populate form with existing data
-    document.getElementById('examTitle').value = exam.Titulo;
-    document.getElementById('examSubject').value = exam.Materia_ID_materia;
-    document.getElementById('examDate').value = exam.Fecha;
-    document.getElementById('examType').value = exam.Tipo;
-    document.getElementById('examDescription').value = exam.Descripcion || '';
+    showExamModal(id);
 }
 
-function deleteExam(id) {
-    if (confirm('Are you sure you want to delete this exam?')) {
-        appData.evaluacion = appData.evaluacion.filter(e => e.ID_evaluacion !== id);
-        saveData();
-        loadExams();
+async function deleteExam(id) {
+    const exam = appData.evaluacion.find(e => e.ID_evaluacion === id);
+    if (!exam) {
+        alert('Evaluación no encontrada.');
+        return;
+    }
+    
+    if (!confirm(`¿Está seguro de que desea eliminar la evaluación "${exam.Titulo}"?`)) {
+        return;
+    }
+    
+    const isInPages = window.location.pathname.includes('/pages/');
+    const baseUrl = isInPages ? '../api' : 'api';
+    
+    try {
+        const response = await fetch(`${baseUrl}/evaluacion.php?id=${id}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success !== false) {
+            // Recargar datos desde el servidor
+            await loadData();
+            loadExams();
+            
+            // Mostrar mensaje de éxito
+            if (typeof showNotification === 'function') {
+                showNotification('Evaluación eliminada exitosamente', 'success');
+            }
+        } else {
+            throw new Error(result.message || 'Error al eliminar la evaluación');
+        }
+    } catch (error) {
+        console.error('Error al eliminar evaluación:', error);
+        alert(error.message || 'Error al eliminar la evaluación. Por favor, intente nuevamente.');
+    }
+}
+
+function gradeExam(examId) {
+    const exam = appData.evaluacion.find(e => e.ID_evaluacion === examId);
+    if (!exam) {
+        alert('Evaluación no encontrada.');
+        return;
+    }
+    
+    // Obtener la materia
+    const materia = appData.materia.find(m => m.ID_materia === exam.Materia_ID_materia);
+    if (!materia) {
+        alert('Materia no encontrada.');
+        return;
+    }
+    
+    // Obtener estudiantes inscritos en esta materia
+    const estudiantesInscritos = appData.alumnos_x_materia
+        .filter(axm => axm.Materia_ID_materia === exam.Materia_ID_materia)
+        .map(axm => {
+            const estudiante = appData.estudiante.find(e => e.ID_Estudiante === axm.Estudiante_ID_Estudiante);
+            return estudiante;
+        })
+        .filter(e => e !== undefined);
+    
+    if (estudiantesInscritos.length === 0) {
+        alert('No hay estudiantes inscritos en esta materia.');
+        return;
+    }
+    
+    // Obtener notas existentes para esta evaluación
+    const notasExistentes = appData.notas.filter(n => n.Evaluacion_ID_evaluacion === examId);
+    
+    // Crear modal de calificación
+    showGradeModal(exam, materia, estudiantesInscritos, notasExistentes);
+}
+
+function showGradeModal(exam, materia, estudiantes, notasExistentes) {
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.id = 'gradeModal';
+    
+    // Crear mapa de notas por estudiante para fácil acceso
+    const notasMap = {};
+    notasExistentes.forEach(nota => {
+        notasMap[nota.Estudiante_ID_Estudiante] = nota;
+    });
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Calificar Estudiantes - ${exam.Titulo}</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                    <p><strong>Materia:</strong> ${materia.Nombre}</p>
+                    <p><strong>Fecha:</strong> ${exam.Fecha}</p>
+                    <p><strong>Tipo:</strong> ${exam.Tipo}</p>
+                </div>
+                
+                <form id="gradeForm" onsubmit="saveGrades(event, ${exam.ID_evaluacion})">
+                    <div class="table-responsive">
+                        <table class="data-table" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">#</th>
+                                    <th>Estudiante</th>
+                                    <th style="width: 150px;">Calificación</th>
+                                    <th style="width: 120px;">Estado</th>
+                                    <th style="width: 200px;">Observaciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${estudiantes.map((estudiante, index) => {
+                                    const notaExistente = notasMap[estudiante.ID_Estudiante];
+                                    const calificacion = notaExistente ? notaExistente.Calificacion : '';
+                                    // Detectar ausente: calificación 0 y observación contiene "AUSENTE" o es null/empty
+                                    const esAusente = notaExistente && notaExistente.Calificacion == 0 && 
+                                                     (notaExistente.Observacion === 'AUSENTE' || 
+                                                      !notaExistente.Observacion || 
+                                                      notaExistente.Observacion.trim() === '');
+                                    const observacion = notaExistente ? (notaExistente.Observacion || '') : '';
+                                    
+                                    return `
+                                        <tr data-student-id="${estudiante.ID_Estudiante}">
+                                            <td>${index + 1}</td>
+                                            <td><strong>${estudiante.Apellido}, ${estudiante.Nombre}</strong></td>
+                                            <td>
+                                                <div style="display: flex; gap: 5px; align-items: center;">
+                                                    <input type="number" 
+                                                           id="grade_${estudiante.ID_Estudiante}"
+                                                           name="grade_${estudiante.ID_Estudiante}"
+                                                           class="grade-input" 
+                                                           min="1" 
+                                                           max="10" 
+                                                           step="0.01" 
+                                                           value="${calificacion && calificacion > 0 ? calificacion : ''}"
+                                                           placeholder="1-10"
+                                                           style="width: 80px; padding: 5px;"
+                                                           ${esAusente ? 'disabled' : ''}>
+                                                    <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; white-space: nowrap;">
+                                                        <input type="checkbox" 
+                                                               id="ausente_${estudiante.ID_Estudiante}"
+                                                               name="ausente_${estudiante.ID_Estudiante}"
+                                                               class="ausente-checkbox"
+                                                               ${esAusente ? 'checked' : ''}
+                                                               onchange="toggleAusente(${estudiante.ID_Estudiante}, this.checked)">
+                                                        Ausente
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="status-badge ${notaExistente ? 'graded' : 'pending'}">
+                                                    ${notaExistente ? 'Calificado' : 'Pendiente'}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <input type="text" 
+                                                       id="observacion_${estudiante.ID_Estudiante}"
+                                                       name="observacion_${estudiante.ID_Estudiante}"
+                                                       class="observacion-input"
+                                                       value="${observacion}"
+                                                       placeholder="Observaciones..."
+                                                       style="width: 100%; padding: 5px;">
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="form-actions" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+                        <button type="button" class="btn-secondary close-modal">Cancelar</button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Guardar Calificaciones
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Setup modal handlers
+    if (typeof setupModalHandlers === 'function') {
+        setupModalHandlers(modal);
+    } else {
+        modal.querySelector('.close-modal').addEventListener('click', () => {
+            modal.remove();
+        });
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+    }
+}
+
+function toggleAusente(studentId, isAusente) {
+    const gradeInput = document.getElementById(`grade_${studentId}`);
+    if (gradeInput) {
+        gradeInput.disabled = isAusente;
+        if (isAusente) {
+            gradeInput.value = '';
+        }
+    }
+}
+
+async function saveGrades(event, examId) {
+    event.preventDefault();
+    
+    const isInPages = window.location.pathname.includes('/pages/');
+    const baseUrl = isInPages ? '../api' : 'api';
+    
+    const form = event.target;
+    const rows = form.querySelectorAll('tbody tr[data-student-id]');
+    
+    const notas = [];
+    const errors = [];
+    
+    rows.forEach(row => {
+        const studentId = parseInt(row.dataset.studentId);
+        const gradeInput = document.getElementById(`grade_${studentId}`);
+        const ausenteCheckbox = document.getElementById(`ausente_${studentId}`);
+        const observacionInput = document.getElementById(`observacion_${studentId}`);
+        
+        const esAusente = ausenteCheckbox ? ausenteCheckbox.checked : false;
+        const calificacion = gradeInput ? gradeInput.value.trim() : '';
+        const observacion = observacionInput ? observacionInput.value.trim() : null;
+        
+        // Solo agregar si hay calificación o está marcado como ausente
+        if (calificacion || esAusente) {
+            const notaData = {
+                Evaluacion_ID_evaluacion: examId,
+                Estudiante_ID_Estudiante: studentId,
+                Calificacion: esAusente ? 'AUSENTE' : parseFloat(calificacion),
+                Observacion: observacion || null,
+                Estado: 'DEFINITIVA'
+            };
+            
+            // Validar calificación si no es ausente
+            if (!esAusente) {
+                const calif = parseFloat(calificacion);
+                if (isNaN(calif) || calif < 1 || calif > 10) {
+                    errors.push(`Estudiante ${studentId}: Calificación inválida (debe ser entre 1 y 10)`);
+                    return;
+                }
+            }
+            
+            notas.push(notaData);
+        }
+    });
+    
+    if (notas.length === 0 && errors.length === 0) {
+        alert('Debe ingresar al menos una calificación o marcar al menos un estudiante como ausente.');
+        return;
+    }
+    
+    if (errors.length > 0) {
+        alert('Errores encontrados:\n\n' + errors.join('\n'));
+        return;
+    }
+    
+    // Guardar notas (puede ser múltiple)
+    try {
+        let saved = 0;
+        let failed = 0;
+        
+        for (const nota of notas) {
+            try {
+                const response = await fetch(`${baseUrl}/notas.php`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(nota)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success !== false) {
+                    saved++;
+                } else {
+                    failed++;
+                    console.error(`Error guardando nota para estudiante ${nota.Estudiante_ID_Estudiante}:`, result);
+                }
+            } catch (error) {
+                failed++;
+                console.error(`Error guardando nota para estudiante ${nota.Estudiante_ID_Estudiante}:`, error);
+            }
+        }
+        
+        if (saved > 0) {
+            // Recargar datos
+            await loadData();
+            
+            // Cerrar modal
+            const modal = document.getElementById('gradeModal');
+            if (modal) {
+                modal.remove();
+            }
+            
+            // Recargar exámenes
+            loadExams();
+            
+            // Mostrar mensaje de éxito
+            const message = failed > 0 
+                ? `Se guardaron ${saved} calificación(es). ${failed} fallaron.` 
+                : `Se guardaron ${saved} calificación(es) exitosamente.`;
+            
+            if (typeof showNotification === 'function') {
+                showNotification(message, saved === notas.length ? 'success' : 'warning');
+            } else {
+                alert(message);
+            }
+        } else {
+            alert('No se pudo guardar ninguna calificación. Por favor, intente nuevamente.');
+        }
+    } catch (error) {
+        console.error('Error al guardar calificaciones:', error);
+        alert('Error al guardar las calificaciones. Por favor, intente nuevamente.');
     }
 }
 

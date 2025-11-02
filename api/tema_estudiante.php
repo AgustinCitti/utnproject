@@ -10,6 +10,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 // Incluir configuración de base de datos
 require_once __DIR__ . '/../config/database.php';
 
+// Iniciar sesión para obtener el docente logueado
+session_start();
+
 function respond($code, $data) { http_response_code($code); echo json_encode($data); exit; }
 
 function pdo() {
@@ -34,34 +37,82 @@ function readJson() {
 	return is_array($decoded) ? $decoded : [];
 }
 
+function validarContenidoDelDocente($db, $contenidoId, $docenteId) {
+	if (!$docenteId) return true; // Sin docente, permitir (admin)
+	$stmt = $db->prepare("
+		SELECT c.ID_contenido FROM Contenido c
+		INNER JOIN Materia m ON c.Materia_ID_materia = m.ID_materia
+		WHERE c.ID_contenido = ? AND m.Usuarios_docente_ID_docente = ?
+	");
+	$stmt->execute([$contenidoId, $docenteId]);
+	return $stmt->fetch() !== false;
+}
+
 try {
 	$db = pdo();
 	$method = $_SERVER['REQUEST_METHOD'];
 	$id = isset($_GET['id']) ? (int)$_GET['id'] : null;
+	
+	// Obtener ID del docente logueado (si existe)
+	$docente_id = $_SESSION['user_id'] ?? null;
 
 	switch ($method) {
 		case 'GET':
 			// Filtros opcionales: ?id=, ?contenidoId=, ?estudianteId=
 			if ($id) {
-				$stmt = $db->prepare("SELECT * FROM Tema_estudiante WHERE ID_Tema_estudiante = ?");
-				$stmt->execute([$id]);
+				// Si hay docente logueado, verificar que el tema pertenece a una de sus materias
+				if ($docente_id) {
+					$stmt = $db->prepare("
+						SELECT te.* FROM Tema_estudiante te
+						INNER JOIN Contenido c ON te.Contenido_ID_contenido = c.ID_contenido
+						INNER JOIN Materia m ON c.Materia_ID_materia = m.ID_materia
+						WHERE te.ID_Tema_estudiante = ? AND m.Usuarios_docente_ID_docente = ?
+					");
+					$stmt->execute([$id, $docente_id]);
+				} else {
+					$stmt = $db->prepare("SELECT * FROM Tema_estudiante WHERE ID_Tema_estudiante = ?");
+					$stmt->execute([$id]);
+				}
 				$row = $stmt->fetch();
 				if (!$row) respond(404, ['success'=>false,'message'=>'Registro no encontrado']);
 				respond(200, $row);
 			}
 			$where = [];
 			$params = [];
-			if (isset($_GET['contenidoId'])) { 
-				$where[] = "Contenido_ID_contenido = ?"; 
-				$params[] = (int)$_GET['contenidoId']; 
+			
+			// Si hay docente logueado, filtrar solo temas de estudiantes en sus materias
+			if ($docente_id) {
+				$sql = "SELECT te.* FROM Tema_estudiante te
+						INNER JOIN Contenido c ON te.Contenido_ID_contenido = c.ID_contenido
+						INNER JOIN Materia m ON c.Materia_ID_materia = m.ID_materia
+						WHERE m.Usuarios_docente_ID_docente = ?";
+				$params[] = $docente_id;
+				
+				if (isset($_GET['contenidoId'])) { 
+					$where[] = "te.Contenido_ID_contenido = ?"; 
+					$params[] = (int)$_GET['contenidoId']; 
+				}
+				if (isset($_GET['estudianteId'])) { 
+					$where[] = "te.Estudiante_ID_Estudiante = ?"; 
+					$params[] = (int)$_GET['estudianteId']; 
+				}
+				
+				if ($where) $sql .= " AND " . implode(' AND ', $where);
+				$sql .= " ORDER BY te.Fecha_actualizacion DESC, te.ID_Tema_estudiante DESC";
+			} else {
+				// Sin docente logueado, mostrar todos (para admin)
+				if (isset($_GET['contenidoId'])) { 
+					$where[] = "Contenido_ID_contenido = ?"; 
+					$params[] = (int)$_GET['contenidoId']; 
+				}
+				if (isset($_GET['estudianteId'])) { 
+					$where[] = "Estudiante_ID_Estudiante = ?"; 
+					$params[] = (int)$_GET['estudianteId']; 
+				}
+				$sql = "SELECT * FROM Tema_estudiante";
+				if ($where) $sql .= " WHERE " . implode(' AND ', $where);
+				$sql .= " ORDER BY Fecha_actualizacion DESC, ID_Tema_estudiante DESC";
 			}
-			if (isset($_GET['estudianteId'])) { 
-				$where[] = "Estudiante_ID_Estudiante = ?"; 
-				$params[] = (int)$_GET['estudianteId']; 
-			}
-			$sql = "SELECT * FROM Tema_estudiante";
-			if ($where) $sql .= " WHERE " . implode(' AND ', $where);
-			$sql .= " ORDER BY Fecha_actualizacion DESC, ID_Tema_estudiante DESC";
 			$stmt = $db->prepare($sql);
 			$stmt->execute($params);
 			respond(200, $stmt->fetchAll());
@@ -81,6 +132,11 @@ try {
 			// Validar que los IDs sean válidos
 			if ($Contenido_ID_contenido <= 0 || $Estudiante_ID_Estudiante <= 0) {
 				respond(400, ['success'=>false,'message'=>'IDs inválidos']);
+			}
+
+			// Validar que el contenido pertenezca a una materia del docente logueado
+			if (!validarContenidoDelDocente($db, $Contenido_ID_contenido, $docente_id)) {
+				respond(403, ['success'=>false,'message'=>'No tiene permiso para asignar este contenido']);
 			}
 
 			// Validar estado
@@ -105,6 +161,21 @@ try {
 
 		case 'PUT':
 			if (!$id) respond(400, ['success'=>false,'message'=>'Falta id']);
+			
+			// Validar que el tema pertenezca a una materia del docente logueado
+			if ($docente_id) {
+				$stmt = $db->prepare("
+					SELECT te.ID_Tema_estudiante FROM Tema_estudiante te
+					INNER JOIN Contenido c ON te.Contenido_ID_contenido = c.ID_contenido
+					INNER JOIN Materia m ON c.Materia_ID_materia = m.ID_materia
+					WHERE te.ID_Tema_estudiante = ? AND m.Usuarios_docente_ID_docente = ?
+				");
+				$stmt->execute([$id, $docente_id]);
+				if (!$stmt->fetch()) {
+					respond(403, ['success'=>false,'message'=>'No tiene permiso para modificar este registro']);
+				}
+			}
+			
 			$body = readJson();
 			// Campos actualizables
 			$fields = ['Estado','Observaciones'];
@@ -133,6 +204,21 @@ try {
 
 		case 'DELETE':
 			if (!$id) respond(400, ['success'=>false,'message'=>'Falta id']);
+			
+			// Validar que el tema pertenezca a una materia del docente logueado
+			if ($docente_id) {
+				$stmt = $db->prepare("
+					SELECT te.ID_Tema_estudiante FROM Tema_estudiante te
+					INNER JOIN Contenido c ON te.Contenido_ID_contenido = c.ID_contenido
+					INNER JOIN Materia m ON c.Materia_ID_materia = m.ID_materia
+					WHERE te.ID_Tema_estudiante = ? AND m.Usuarios_docente_ID_docente = ?
+				");
+				$stmt->execute([$id, $docente_id]);
+				if (!$stmt->fetch()) {
+					respond(403, ['success'=>false,'message'=>'No tiene permiso para eliminar este registro']);
+				}
+			}
+			
 			$stmt = $db->prepare("DELETE FROM Tema_estudiante WHERE ID_Tema_estudiante = ?");
 			$stmt->execute([$id]);
 			respond(200, ['success'=>true]);

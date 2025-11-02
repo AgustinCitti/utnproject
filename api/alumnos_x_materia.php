@@ -10,6 +10,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 // Incluir configuración de base de datos
 require_once __DIR__ . '/../config/database.php';
 
+// Iniciar sesión para obtener el docente logueado
+session_start();
+
 function respond($code, $data) { http_response_code($code); echo json_encode($data); exit; }
 
 function pdo() {
@@ -34,9 +37,19 @@ function readJson() {
 	return is_array($decoded) ? $decoded : [];
 }
 
+function validarMateriaDelDocente($db, $materiaId, $docenteId) {
+	if (!$docenteId) return true; // Sin docente, permitir (admin)
+	$stmt = $db->prepare("SELECT ID_materia FROM Materia WHERE ID_materia = ? AND Usuarios_docente_ID_docente = ?");
+	$stmt->execute([$materiaId, $docenteId]);
+	return $stmt->fetch() !== false;
+}
+
 try {
 	$db = pdo();
 	$method = $_SERVER['REQUEST_METHOD'];
+	
+	// Obtener ID del docente logueado (si existe)
+	$docente_id = $_SESSION['user_id'] ?? null;
 
 	switch ($method) {
 		case 'GET':
@@ -44,18 +57,39 @@ try {
 			$where = [];
 			$params = [];
 			
-			if (isset($_GET['estudianteId'])) {
-				$where[] = "Estudiante_ID_Estudiante = ?";
-				$params[] = (int)$_GET['estudianteId'];
+			// Si hay docente logueado, filtrar solo inscripciones de sus materias
+			if ($docente_id) {
+				$sql = "SELECT axm.* FROM Alumnos_X_Materia axm
+						INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+						WHERE m.Usuarios_docente_ID_docente = ?";
+				$params[] = $docente_id;
+				
+				if (isset($_GET['estudianteId'])) {
+					$where[] = "axm.Estudiante_ID_Estudiante = ?";
+					$params[] = (int)$_GET['estudianteId'];
+				}
+				if (isset($_GET['materiaId'])) {
+					$where[] = "axm.Materia_ID_materia = ?";
+					$params[] = (int)$_GET['materiaId'];
+				}
+				
+				if ($where) $sql .= " AND " . implode(' AND ', $where);
+				$sql .= " ORDER BY axm.Fecha_inscripcion DESC";
+			} else {
+				// Sin docente logueado, mostrar todos (para admin)
+				if (isset($_GET['estudianteId'])) {
+					$where[] = "Estudiante_ID_Estudiante = ?";
+					$params[] = (int)$_GET['estudianteId'];
+				}
+				if (isset($_GET['materiaId'])) {
+					$where[] = "Materia_ID_materia = ?";
+					$params[] = (int)$_GET['materiaId'];
+				}
+				
+				$sql = "SELECT * FROM Alumnos_X_Materia";
+				if ($where) $sql .= " WHERE " . implode(' AND ', $where);
+				$sql .= " ORDER BY Fecha_inscripcion DESC";
 			}
-			if (isset($_GET['materiaId'])) {
-				$where[] = "Materia_ID_materia = ?";
-				$params[] = (int)$_GET['materiaId'];
-			}
-			
-			$sql = "SELECT * FROM Alumnos_X_Materia";
-			if ($where) $sql .= " WHERE " . implode(' AND ', $where);
-			$sql .= " ORDER BY Fecha_inscripcion DESC";
 			
 			$stmt = $db->prepare($sql);
 			$stmt->execute($params);
@@ -93,6 +127,12 @@ try {
 					// Validar que los IDs sean válidos
 					if ($materiaId <= 0 || $estudianteId <= 0) {
 						$errors[] = "IDs inválidos: materia=$materiaId, estudiante=$estudianteId";
+						continue;
+					}
+					
+					// Validar que la materia pertenezca al docente logueado
+					if (!validarMateriaDelDocente($db, $materiaId, $docente_id)) {
+						$errors[] = "No tiene permiso para inscribir en la materia ID=$materiaId";
 						continue;
 					}
 					
@@ -136,6 +176,11 @@ try {
 				
 				if ($materiaId <= 0 || $estudianteId <= 0) {
 					respond(400, ['success' => false, 'message' => 'IDs inválidos']);
+				}
+				
+				// Validar que la materia pertenezca al docente logueado
+				if (!validarMateriaDelDocente($db, $materiaId, $docente_id)) {
+					respond(403, ['success' => false, 'message' => 'No tiene permiso para inscribir en esta materia']);
 				}
 				
 				try {
