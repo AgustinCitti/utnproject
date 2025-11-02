@@ -112,21 +112,11 @@ function initializeUnifiedStudentManagement() {
 
     // Exams functionality (now using global action buttons)
     const globalCreateExamBtn = document.getElementById('createExamBtn');
-    const globalGradeStudentsBtn = document.getElementById('gradeStudentsBtn');
+    // Botón gradeStudentsBtn eliminado - ya no se necesita
     
     if (globalCreateExamBtn) {
         globalCreateExamBtn.addEventListener('click', () => {
             showExamModal();
-        });
-    }
-
-    if (globalGradeStudentsBtn) {
-        globalGradeStudentsBtn.addEventListener('click', () => {
-            // Navigate to grade marking section and show the grade marking view
-            showSection('student-management');
-            setTimeout(() => {
-                showGradeMarkingView();
-            }, 100);
         });
     }
 
@@ -239,10 +229,10 @@ function loadUnifiedStudentData() {
         
         const studentAttendance = appData.asistencia.filter(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante);
         
-        // Calcular promedio (excluyendo ausentes si se desea, o incluyéndolos como 0)
-        const gradesForAverage = studentGrades.filter(g => g.Calificacion > 0); // Excluir ausentes del promedio
+        // Calcular promedio (excluyendo ausentes) - formato decimal (0-10)
+        const gradesForAverage = studentGrades.filter(g => parseFloat(g.Calificacion) > 0); // Excluir ausentes del promedio
         const averageGrade = gradesForAverage.length > 0 
-            ? Math.round(gradesForAverage.reduce((sum, g) => sum + parseFloat(g.Calificacion), 0) / gradesForAverage.length * 10)
+            ? parseFloat((gradesForAverage.reduce((sum, g) => sum + parseFloat(g.Calificacion), 0) / gradesForAverage.length).toFixed(1))
             : 0;
         
         const attendanceRate = studentAttendance.length > 0
@@ -277,7 +267,7 @@ function loadUnifiedStudentData() {
                     <div class="student-stats">
                         <div class="stat-item">
                             <span class="stat-label">Promedio</span>
-                            <span class="stat-value grade-${averageGrade >= 80 ? 'excellent' : averageGrade >= 60 ? 'good' : 'poor'}">${averageGrade}%</span>
+                            <span class="stat-value grade-${averageGrade >= 8.0 ? 'excellent' : averageGrade >= 6.0 ? 'good' : 'poor'}">${averageGrade.toFixed(1)}</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-label">Asistencia</span>
@@ -383,10 +373,10 @@ function loadUnifiedStudentData() {
                             });
                         const studentAttendance = appData.asistencia.filter(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante);
                         
-                        // Calcular promedio (excluyendo ausentes)
+                        // Calcular promedio (excluyendo ausentes) - formato decimal (0-10)
                         const gradesForAverage = studentGrades.filter(g => parseFloat(g.Calificacion) > 0);
                         const averageGrade = gradesForAverage.length > 0 
-                            ? Math.round(gradesForAverage.reduce((sum, g) => sum + parseFloat(g.Calificacion), 0) / gradesForAverage.length * 10)
+                            ? parseFloat((gradesForAverage.reduce((sum, g) => sum + parseFloat(g.Calificacion), 0) / gradesForAverage.length).toFixed(1))
                             : 0;
                         
                         const attendanceRate = studentAttendance.length > 0
@@ -432,8 +422,8 @@ function loadUnifiedStudentData() {
                                 </td>
                                 <td>Estudiante</td>
                                 <td>
-                                    <span class="table-status grade-${averageGrade >= 80 ? 'excellent' : averageGrade >= 60 ? 'good' : 'poor'}">
-                                        ${averageGrade}%
+                                    <span class="table-status grade-${averageGrade >= 8.0 ? 'excellent' : averageGrade >= 6.0 ? 'good' : 'poor'}">
+                                        ${averageGrade.toFixed(1)}
                                     </span>
                                 </td>
                                 <td>
@@ -888,10 +878,10 @@ function showStudentDetail(studentId) {
     
     const studentAttendance = appData.asistencia.filter(a => a.Estudiante_ID_Estudiante === studentId);
     
-    // Calcular promedio (excluyendo ausentes)
+    // Calcular promedio (excluyendo ausentes) - formato decimal (0-10)
     const gradesForAverage = studentGrades.filter(g => parseFloat(g.Calificacion) > 0);
     const averageGrade = gradesForAverage.length > 0 
-        ? Math.round(gradesForAverage.reduce((sum, g) => sum + parseFloat(g.Calificacion), 0) / gradesForAverage.length * 10)
+        ? parseFloat((gradesForAverage.reduce((sum, g) => sum + parseFloat(g.Calificacion), 0) / gradesForAverage.length).toFixed(1))
         : 0;
     
     const attendanceRate = studentAttendance.length > 0

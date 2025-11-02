@@ -260,7 +260,7 @@ function showExamModal(examId = null) {
     
     document.body.appendChild(modal);
     if (typeof setupModalHandlers === 'function') {
-        setupModalHandlers(modal);
+    setupModalHandlers(modal);
     } else {
         // Fallback si no existe setupModalHandlers
         modal.querySelector('.close-modal').addEventListener('click', () => {
@@ -428,7 +428,7 @@ async function saveExam(event) {
                 modal.remove();
             }
             
-            loadExams();
+    loadExams();
             
             // Mostrar mensaje de éxito
             if (typeof showNotification === 'function') {
@@ -765,7 +765,7 @@ async function saveGrades(event, examId) {
             }
             
             // Recargar exámenes
-            loadExams();
+        loadExams();
             
             // Recargar vista de estudiantes para mostrar calificaciones recientes actualizadas
             if (typeof loadUnifiedStudentData === 'function') {

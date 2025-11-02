@@ -294,7 +294,7 @@ function setupAttendanceStatusButtons() {
     });
 }
 
-function saveAttendanceBulk() {
+async function saveAttendanceBulk() {
     const date = document.getElementById('attendanceDate').value;
     const subjectSelect = document.getElementById('attendanceSubjectSelect');
     const notes = document.getElementById('attendanceNotes').value;
@@ -308,8 +308,9 @@ function saveAttendanceBulk() {
     }
     
     const tableRows = document.querySelectorAll('#attendanceTableBody tr');
-    let attendanceRecords = [];
+    const attendanceRecords = [];
     
+    // Recopilar todos los registros de asistencia
     tableRows.forEach(row => {
         const studentId = parseInt(row.dataset.studentId);
         const activeButton = row.querySelector('.status-btn.active');
@@ -317,53 +318,205 @@ function saveAttendanceBulk() {
         if (activeButton) {
             const status = activeButton.dataset.status;
             
-            // Convert status to database format (only Y/N according to schema)
+            // Convert status to database format
             let presente = 'N';
             if (status === 'present') presente = 'Y';
             
-            // Check if attendance already exists
-            const existingIndex = appData.asistencia.findIndex(att => 
-                att.Estudiante_ID_Estudiante === studentId && 
-                att.Materia_ID_materia === selectedSubjectId && 
-                att.Fecha === date
-            );
-    
-            const attendanceRecord = {
-                ID_Asistencia: existingIndex >= 0 ? appData.asistencia[existingIndex].ID_Asistencia : Date.now(),
+            attendanceRecords.push({
                 Estudiante_ID_Estudiante: studentId,
                 Materia_ID_materia: selectedSubjectId,
                 Fecha: date,
                 Presente: presente,
-                Observaciones: notes || ''
-            };
-        
-            if (existingIndex >= 0) {
-                appData.asistencia[existingIndex] = attendanceRecord;
-            } else {
-                appData.asistencia.push(attendanceRecord);
-            }
+                Observaciones: notes || null
+            });
         }
     });
     
-    saveData();
-    hideAttendanceView();
-    loadAttendance();
-    updateDashboard();
+    if (attendanceRecords.length === 0) {
+        alert('Debe marcar al menos un estudiante (presente o ausente).');
+        return;
+    }
     
-    // Show success message
-    showNotification('Asistencia guardada exitosamente', 'success');
+    // Determinar la URL base según desde dónde se carga
+    const isInPages = window.location.pathname.includes('/pages/');
+    const baseUrl = isInPages ? '../api' : 'api';
+    
+    try {
+        let saved = 0;
+        let failed = 0;
+        
+        // Guardar cada registro de asistencia
+        console.log('Guardando asistencia - Total registros:', attendanceRecords.length);
+        console.log('Registros a guardar:', attendanceRecords);
+        
+        for (const record of attendanceRecords) {
+            try {
+                console.log(`Enviando asistencia para estudiante ${record.Estudiante_ID_Estudiante}:`, record);
+                
+                const response = await fetch(`${baseUrl}/asistencia.php`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(record)
+                });
+                
+                console.log(`Response status para estudiante ${record.Estudiante_ID_Estudiante}:`, response.status);
+                
+                const result = await response.json();
+                console.log(`Response result para estudiante ${record.Estudiante_ID_Estudiante}:`, result);
+                
+                if (response.ok && result.success !== false) {
+                    saved++;
+                    console.log(`✓ Asistencia guardada para estudiante ${record.Estudiante_ID_Estudiante}`);
+                } else {
+                    failed++;
+                    console.error(`✗ Error guardando asistencia para estudiante ${record.Estudiante_ID_Estudiante}:`, result);
+                    alert(`Error para estudiante ${record.Estudiante_ID_Estudiante}: ${result.message || 'Error desconocido'}`);
+                }
+            } catch (error) {
+                failed++;
+                console.error(`✗ Excepción guardando asistencia para estudiante ${record.Estudiante_ID_Estudiante}:`, error);
+                alert(`Error de red para estudiante ${record.Estudiante_ID_Estudiante}: ${error.message}`);
+            }
+        }
+        
+        if (saved > 0) {
+            // Recargar datos desde el servidor
+            await loadData();
+            
+            hideAttendanceView();
+            loadAttendance();
+            
+            // Actualizar dashboard si existe la función
+            if (typeof updateDashboard === 'function') {
+                updateDashboard();
+            }
+            
+            // Recargar vista de estudiantes si existe
+            if (typeof loadUnifiedStudentData === 'function') {
+                loadUnifiedStudentData();
+            }
+            
+            // Mostrar mensaje de éxito
+            const message = failed > 0 
+                ? `Se guardaron ${saved} registro(s) de asistencia. ${failed} fallaron.` 
+                : `Se guardaron ${saved} registro(s) de asistencia exitosamente.`;
+            
+            if (typeof showNotification === 'function') {
+                showNotification(message, 'success');
+            } else {
+                alert(message);
+            }
+        } else {
+            throw new Error('No se pudo guardar ninguna asistencia');
+        }
+    } catch (error) {
+        console.error('Error al guardar asistencia:', error);
+        alert('Error al guardar la asistencia: ' + error.message);
+    }
 }
 
-function editAttendance(attendanceId) {
-    // Implementation for editing attendance
+async function editAttendance(attendanceId) {
+    // Buscar el registro de asistencia
+    const attendance = appData.asistencia.find(a => a.ID_Asistencia === attendanceId);
+    if (!attendance) {
+        alert('Registro de asistencia no encontrado');
+        return;
+    }
+    
+    // Mostrar modal o formulario para editar
+    const newPresente = prompt('Estado de asistencia (Y=Presente, N=Ausente, J=Justificado):', attendance.Presente || 'Y');
+    if (newPresente === null) return;
+    
+    const newObservaciones = prompt('Observaciones:', attendance.Observaciones || '');
+    if (newObservaciones === null) return;
+    
+    const isInPages = window.location.pathname.includes('/pages/');
+    const baseUrl = isInPages ? '../api' : 'api';
+    
+    try {
+        const response = await fetch(`${baseUrl}/asistencia.php?id=${attendanceId}`, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                Presente: newPresente.toUpperCase(),
+                Observaciones: newObservaciones
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success !== false) {
+            // Recargar datos desde el servidor
+            await loadData();
+            
+            loadAttendance();
+            
+            if (typeof showNotification === 'function') {
+                showNotification('Asistencia actualizada exitosamente', 'success');
+            } else {
+                alert('Asistencia actualizada exitosamente');
+            }
+        } else {
+            throw new Error(result.message || 'Error al actualizar la asistencia');
+        }
+    } catch (error) {
+        console.error('Error al actualizar asistencia:', error);
+        alert('Error al actualizar la asistencia: ' + error.message);
+    }
 }
 
-function deleteAttendance(attendanceId) {
-    if (confirm('¿Está seguro de que desea eliminar este registro de asistencia?')) {
-        appData.asistencia = appData.asistencia.filter(att => att.ID_Asistencia !== attendanceId);
-        saveData();
-        loadAttendance();
-        updateDashboard();
+async function deleteAttendance(attendanceId) {
+    if (!confirm('¿Está seguro de que desea eliminar este registro de asistencia?')) {
+        return;
+    }
+    
+    const isInPages = window.location.pathname.includes('/pages/');
+    const baseUrl = isInPages ? '../api' : 'api';
+    
+    try {
+        const response = await fetch(`${baseUrl}/asistencia.php?id=${attendanceId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success !== false) {
+            // Recargar datos desde el servidor
+            await loadData();
+            
+            loadAttendance();
+            
+            if (typeof updateDashboard === 'function') {
+                updateDashboard();
+            }
+            
+            if (typeof loadUnifiedStudentData === 'function') {
+                loadUnifiedStudentData();
+            }
+            
+            if (typeof showNotification === 'function') {
+                showNotification('Asistencia eliminada exitosamente', 'success');
+            } else {
+                alert('Asistencia eliminada exitosamente');
+            }
+        } else {
+            throw new Error(result.message || 'Error al eliminar la asistencia');
+        }
+    } catch (error) {
+        console.error('Error al eliminar asistencia:', error);
+        alert('Error al eliminar la asistencia: ' + error.message);
     }
 }
 
