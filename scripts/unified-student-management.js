@@ -228,7 +228,28 @@ function loadUnifiedStudentData() {
     
     if (!unifiedStudentCards || !unifiedStudentList) return;
 
+    // Ensure appData is initialized
+    if (!appData) appData = {};
+    if (!Array.isArray(appData.estudiante)) appData.estudiante = [];
+    if (!Array.isArray(appData.notas)) appData.notas = [];
+    if (!Array.isArray(appData.asistencia)) appData.asistencia = [];
+    if (!Array.isArray(appData.evaluacion)) appData.evaluacion = [];
+    if (!Array.isArray(appData.materia)) appData.materia = [];
+
     const filteredStudents = getFilteredUnifiedStudents();
+    
+    // Show empty state if no students
+    if (!filteredStudents || filteredStudents.length === 0) {
+        unifiedStudentList.innerHTML = `
+            <div class="no-data-message" style="text-align: center; padding: 40px; color: #666;">
+                <i class="fas fa-users" style="font-size: 3em; margin-bottom: 20px; color: #ccc;"></i>
+                <p style="font-size: 1.1em; margin-bottom: 10px;">No hay estudiantes disponibles</p>
+                <p style="color: #999;">Agrega estudiantes o verifica los filtros aplicados.</p>
+            </div>
+        `;
+        unifiedStudentCards.innerHTML = '';
+        return;
+    }
 
     // Grid view - Student cards with integrated data
     unifiedStudentCards.innerHTML = filteredStudents.map(student => {
@@ -254,7 +275,7 @@ function loadUnifiedStudentData() {
                 return dateB - dateA;
             });
         
-        const studentAttendance = appData.asistencia.filter(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante);
+        const studentAttendance = (appData.asistencia || []).filter(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante);
         
         // Calcular promedio (excluyendo ausentes) - formato decimal (0-10)
         const gradesForAverage = studentGrades.filter(g => parseFloat(g.Calificacion) > 0); // Excluir ausentes del promedio
@@ -352,7 +373,7 @@ function loadUnifiedStudentData() {
                             <h4>Asistencia Reciente</h4>
                             <div class="activity-list">
                                 ${recentAttendance.map(attendance => {
-                                    const subject = appData.materia.find(s => s.ID_materia === attendance.Materia_ID_materia);
+                                    const subject = (appData.materia || []).find(s => s.ID_materia === attendance.Materia_ID_materia);
                                     const shortDate = attendance.Fecha.split('-').slice(1).join('/');
                                     const status = attendance.Presente === 'Y' ? 'present' : attendance.Presente === 'N' ? 'absent' : attendance.Presente === 'T' ? 'tardy' : 'justified';
                                     return `
@@ -408,7 +429,7 @@ function loadUnifiedStudentData() {
                                               (b.Fecha_registro ? new Date(b.Fecha_registro) : new Date(0));
                                 return dateB - dateA;
                             });
-                        const studentAttendance = appData.asistencia.filter(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante);
+                        const studentAttendance = (appData.asistencia || []).filter(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante);
                         
                         // Calcular promedio (excluyendo ausentes) - formato decimal (0-10)
                         const gradesForAverage = studentGrades.filter(g => parseFloat(g.Calificacion) > 0);
@@ -516,12 +537,19 @@ function getFilteredUnifiedStudents() {
     const currentUserId = localStorage.getItem('userId');
     const teacherId = currentUserId ? parseInt(currentUserId) : null;
     
+    // Ensure appData arrays exist
+    if (!appData) appData = {};
+    if (!Array.isArray(appData.estudiante)) appData.estudiante = [];
+    if (!Array.isArray(appData.materia)) appData.materia = [];
+    if (!Array.isArray(appData.alumnos_x_materia)) appData.alumnos_x_materia = [];
+    if (!Array.isArray(appData.tema_estudiante)) appData.tema_estudiante = [];
+    
     // Start with all students enrolled in subjects taught by current teacher
-    let filteredStudents = appData.estudiante;
+    let filteredStudents = appData.estudiante || [];
 
     if (teacherId) {
         // Get subjects taught by current teacher
-        let teacherSubjects = appData.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
+        let teacherSubjects = (appData.materia || []).filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
         
         // Si el profesor tiene materias, mostrar estudiantes inscritos en esas materias
         // PERO también mostrar estudiantes que no tienen materias asignadas aún
@@ -562,7 +590,7 @@ function getFilteredUnifiedStudents() {
     // Filter by subject (students enrolled in this subject)
     if (selectedSubject) {
         const subjectId = parseInt(selectedSubject);
-        const enrolledStudentIds = appData.alumnos_x_materia
+        const enrolledStudentIds = (appData.alumnos_x_materia || [])
             .filter(enrollment => enrollment.Materia_ID_materia === subjectId)
             .map(enrollment => enrollment.Estudiante_ID_Estudiante);
         
@@ -573,7 +601,7 @@ function getFilteredUnifiedStudents() {
     
     // Filter by tema_estudiante status (topic progress)
     if (selectedTopic) {
-        const studentIdsWithTopicStatus = appData.tema_estudiante
+        const studentIdsWithTopicStatus = (appData.tema_estudiante || [])
             .filter(tema => tema.Estado === selectedTopic)
             .map(tema => tema.Estudiante_ID_Estudiante);
         

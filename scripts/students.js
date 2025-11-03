@@ -36,27 +36,43 @@ function populateStudentSubjectsSelect() {
     }
     
     // Agregar event listener para cuando se selecciona una materia
-    subjectsSelect.removeEventListener('change', handleSubjectSelection);
-    subjectsSelect.addEventListener('change', handleSubjectSelection);
+    // Use a wrapper to ensure we only have one listener
+    if (!subjectsSelect._hasSubjectListener) {
+        subjectsSelect.addEventListener('change', handleSubjectSelection);
+        subjectsSelect._hasSubjectListener = true;
+    }
 }
 
 function handleSubjectSelection() {
     const subjectsSelect = document.getElementById('studentSubjects');
     const selectedValue = subjectsSelect.value;
     
-    if (!selectedValue) return;
+    console.log('handleSubjectSelection called with value:', selectedValue);
+    
+    if (!selectedValue) {
+        console.log('No value selected, returning');
+        return;
+    }
     
     // Encontrar la materia seleccionada
-    const subject = appData.materia.find(m => m.ID_materia === parseInt(selectedValue));
-    if (!subject) return;
+    const subject = appData.materia.find(m => parseInt(m.ID_materia) === parseInt(selectedValue));
+    if (!subject) {
+        console.error('Subject not found for ID:', selectedValue);
+        return;
+    }
+    
+    console.log('Found subject:', subject);
     
     // Agregar a la lista de seleccionadas si no está ya
-    if (!selectedSubjectsList.some(s => s.id === subject.ID_materia)) {
+    if (!selectedSubjectsList.some(s => parseInt(s.id) === parseInt(subject.ID_materia))) {
         selectedSubjectsList.push({
-            id: subject.ID_materia,
+            id: parseInt(subject.ID_materia),
             name: subject.Nombre,
             curso: subject.Curso_division
         });
+        console.log('Added subject to list. Current list:', selectedSubjectsList);
+    } else {
+        console.log('Subject already in list');
     }
     
     // Renderizar las materias seleccionadas
@@ -700,8 +716,15 @@ async function saveStudent() {
             // Y guardar temas de intensificación si es intensificador
             if (!studentId) {
                 alert('Estudiante guardado pero no se pudieron guardar las materias. ID no disponible.');
+                console.error('Student ID not available:', result);
             } else {
                 const selectedSubjects = selectedSubjectsList.map(s => s.id);
+                
+                console.log('Saving student enrollments:', {
+                    studentId: studentId,
+                    selectedSubjects: selectedSubjects,
+                    selectedSubjectsList: selectedSubjectsList
+                });
                 
                 // Guardar temas de intensificación si es INTENSIFICA
                 if (estadoSeleccionado === 'INTENSIFICA' && selectedIntensificacionThemes.length > 0) {
@@ -724,15 +747,17 @@ async function saveStudent() {
                                 headers: { 'Content-Type': 'application/json' }
                             });
                             const deleteResult = await deleteResponse.json().catch(() => ({}));
+                            console.log('Deleted existing enrollments:', deleteResult);
                         }
                         
                         // Crear nuevas relaciones
                         const relations = selectedSubjects.map(materiaId => ({
-                            Materia_ID_materia: materiaId,
-                            Estudiante_ID_Estudiante: studentId,
+                            Materia_ID_materia: parseInt(materiaId),
+                            Estudiante_ID_Estudiante: parseInt(studentId),
                             Estado: 'INSCRITO'
                         }));
                         
+                        console.log('Sending enrollment relations:', relations);
                         
                         const relationsResponse = await fetch('../api/alumnos_x_materia.php', {
                             method: 'POST',
@@ -741,21 +766,30 @@ async function saveStudent() {
                         });
                         
                         const relationsText = await relationsResponse.text();
+                        console.log('Enrollment API response status:', relationsResponse.status);
+                        console.log('Enrollment API response text:', relationsText);
                         
                         let relationsData = {};
                         try {
                             relationsData = JSON.parse(relationsText);
+                            console.log('Enrollment API response data:', relationsData);
                         } catch (e) {
-                            // Error parsing response - silently continue
+                            console.error('Error parsing enrollment response:', e, relationsText);
                         }
                         
                         if (!relationsResponse.ok) {
-                            alert('Estudiante guardado pero hubo un error al guardar las materias. Revisa la consola.');
+                            const errorMsg = relationsData.message || relationsText || 'Error desconocido';
+                            console.error('Error saving enrollments:', errorMsg);
+                            alert('Estudiante guardado pero hubo un error al guardar las materias: ' + errorMsg);
                         } else {
+                            console.log('Enrollments saved successfully:', relationsData);
                         }
                     } catch (error) {
+                        console.error('Exception saving enrollments:', error);
                         alert('Estudiante guardado pero hubo un error al guardar las materias: ' + error.message);
                     }
+                } else {
+                    console.warn('No subjects selected for student:', studentId);
                 }
             }
             
@@ -953,6 +987,13 @@ function clearStudentForm() {
     selectedSubjectsList = [];
     selectedIntensificacionThemes = [];
     renderSelectedSubjects();
+    
+    // Reset the event listener flag
+    const subjectsSelect = document.getElementById('studentSubjects');
+    if (subjectsSelect) {
+        subjectsSelect._hasSubjectListener = false;
+    }
+    
     populateStudentSubjectsSelect(); // Repoblar las materias
     
     // Ocultar selector de temas de intensificación
