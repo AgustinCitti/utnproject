@@ -498,6 +498,25 @@
     color: white;
 }
 
+/* Dark mode styles for general view-toggle buttons (subjects section, etc.) */
+[data-theme="dark"] .view-toggle {
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .view-toggle .view-btn {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .view-toggle .view-btn:hover:not(.active) {
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .view-toggle .view-btn.active {
+    background: #667eea;
+    color: white;
+}
+
 [data-theme="dark"] #calendar .date-navigation .nav-btn {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
