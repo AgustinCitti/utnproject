@@ -1,0 +1,207 @@
+/* Notifications Grid */
+.notifications-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+
+/* Notification Card */
+.notification-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.notification-card:hover {
+    transform: translateY(-2px);
+}
+
+.notification-card.unread {
+    border-left: 4px solid #4CAF50;
+}
+
+.notification-card .notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.notification-card .notification-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.notification-card .notification-meta {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.notification-card .notification-message {
+    margin: 0.5rem 0;
+    color: #333;
+}
+
+.notification-card .notification-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+/* Notification Table */
+.notifications-table {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.notifications-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.notifications-table th,
+.notifications-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.notifications-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+/* Empty State */
+.notifications-empty {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+.notifications-empty i {
+    font-size: 3rem;
+    color: #ccc;
+    margin-bottom: 1rem;
+}
+
+/* Notification Types */
+.notification-card.INFO { border-left-color: #2196F3; }
+.notification-card.SUCCESS { border-left-color: #4CAF50; }
+.notification-card.WARNING { border-left-color: #FFC107; }
+.notification-card.ERROR { border-left-color: #F44336; }
+
+/* Status Badges */
+.table-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+}
+
+.table-status.unread {
+    background-color: #e8f5e9;
+    color: #4CAF50;
+}
+
+.table-status.read {
+    background-color: #f5f5f5;
+    color: #666;
+}
+
+/* Actions */
+.notification-actions button,
+.table-actions button {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background: white;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.notification-actions button:hover,
+.table-actions button:hover {
+    background: #f5f5f5;
+}
+
+.btn-success {
+    color: #4CAF50;
+    border-color: #4CAF50;
+}
+
+.btn-success:hover {
+    background: #e8f5e9 !important;
+}
+
+.btn-outline-danger {
+    color: #F44336;
+    border-color: #F44336;
+}
+
+.btn-outline-danger:hover {
+    background: #ffebee !important;
+}
+
+/* Priority Badges */
+.priority-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.priority-badge.alta {
+    background-color: #ffebee;
+    color: #F44336;
+}
+
+.priority-badge.media {
+    background-color: #fff3e0;
+    color: #FF9800;
+}
+
+.priority-badge.baja {
+    background-color: #e8f5e9;
+    color: #4CAF50;
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .notification-card {
+    background: #2d2d2d;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+[data-theme="dark"] .notification-card .notification-title {
+    color: #fff;
+}
+
+[data-theme="dark"] .notification-card .notification-message {
+    color: #ccc;
+}
+
+[data-theme="dark"] .notifications-table th {
+    background-color: #2d2d2d;
+    color: #fff;
+}
+
+[data-theme="dark"] .notifications-table td {
+    border-bottom-color: #444;
+}
+
+[data-theme="dark"] .notification-actions button,
+[data-theme="dark"] .table-actions button {
+    background: #2d2d2d;
+    border-color: #444;
+    color: #fff;
+}
+
+[data-theme="dark"] .notification-actions button:hover,
+[data-theme="dark"] .table-actions button:hover {
+    background: #3d3d3d;
+}
