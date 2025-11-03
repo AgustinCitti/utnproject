@@ -410,7 +410,7 @@
 
 [data-theme="dark"] .calendar-widget-month {
     background: var(--bg-secondary);
-    color: white;
+    color: white !important;
 }
 
 [data-theme="dark"] .calendar-widget-grid .calendar-day-header {
@@ -469,5 +469,175 @@
     background: #667eea;
     border-color: #667eea;
     color: white;
+}
+
+/* Dark mode styles for calendar section */
+[data-theme="dark"] #calendar .calendar-title {
+    color: white !important;
+}
+
+[data-theme="dark"] #calendar .current-date-range {
+    color: white !important;
+}
+
+[data-theme="dark"] #calendar .view-toggle {
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] #calendar .view-toggle .view-btn {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #calendar .view-toggle .view-btn:hover:not(.active) {
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #calendar .view-toggle .view-btn.active {
+    background: #667eea;
+    color: white;
+}
+
+[data-theme="dark"] #calendar .date-navigation .nav-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #calendar .date-navigation .nav-btn:hover {
+    background: var(--bg-secondary);
+    border-color: #667eea;
+    color: #667eea;
+}
+
+[data-theme="dark"] #calendar .action-btn {
+    background: #667eea;
+    color: white;
+}
+
+[data-theme="dark"] #calendar .action-btn:hover {
+    background: #5a6fd8;
+}
+
+/* Calendar week view */
+[data-theme="dark"] #calendar .calendar-week-view {
+    background: var(--card-bg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] #calendar .calendar-time-column {
+    border-right: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] #calendar .time-header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] #calendar .time-slot {
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] #calendar .calendar-days-header {
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-color);
+}
+
+[data-theme="dark"] #calendar .calendar-day-header-item {
+    border-right: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] #calendar .calendar-day-header-item.today {
+    background: rgba(102, 126, 234, 0.2);
+}
+
+[data-theme="dark"] #calendar .calendar-day-header-item .day-name {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #calendar .calendar-day-header-item.today .day-name {
+    color: #667eea;
+}
+
+[data-theme="dark"] #calendar .calendar-day-header-item .day-number {
+    color: white;
+}
+
+[data-theme="dark"] #calendar .calendar-day-header-item.today .day-number {
+    color: #667eea;
+}
+
+[data-theme="dark"] #calendar .calendar-cell {
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--card-bg);
+}
+
+/* Calendar month view */
+[data-theme="dark"] #calendar .calendar-month-view {
+    background: var(--card-bg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] #calendar .calendar-month-grid {
+    background: var(--border-color);
+}
+
+[data-theme="dark"] #calendar .month-day-header {
+    background: #667eea;
+    color: white;
+}
+
+[data-theme="dark"] #calendar .month-day-cell {
+    background: var(--card-bg);
+}
+
+[data-theme="dark"] #calendar .month-day-cell.other-month {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] #calendar .month-day-cell.today {
+    background: rgba(102, 126, 234, 0.1);
+}
+
+[data-theme="dark"] #calendar .month-day-cell .day-number {
+    color: white;
+}
+
+[data-theme="dark"] #calendar .month-day-cell.other-month .day-number {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] #calendar .month-day-cell.today .day-number {
+    background: #667eea;
+    color: white;
+}
+
+/* Dark mode styles for event details modal */
+[data-theme="dark"] .modern-body {
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .event-detail-item {
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .event-detail-label {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .event-detail-label i {
+    color: #667eea;
+}
+
+[data-theme="dark"] .event-detail-value {
+    color: white !important;
+}
+
+[data-theme="dark"] .modern-body p {
+    color: var(--text-primary);
 }
 
