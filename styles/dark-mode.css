@@ -181,6 +181,18 @@
     border-bottom: 1px solid var(--border-color);
 }
 
+[data-theme="dark"] .modal-header h3 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .close-modal {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .close-modal:hover {
+    color: #667eea;
+}
+
 [data-theme="dark"] input,
 [data-theme="dark"] select,
 [data-theme="dark"] textarea {
@@ -194,6 +206,59 @@
 [data-theme="dark"] textarea:focus {
     border-color: #667eea;
     outline: none;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] select option {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-group label {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .schedule-sub-label {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .time-separator {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal-form {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal-form small {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .time-select {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .time-select:focus {
+    border-color: #667eea;
+}
+
+[data-theme="dark"] .day-chip {
+    background: #667eea;
+    color: white;
+}
+
+[data-theme="dark"] .day-chip .remove-day-btn {
+    color: white;
+}
+
+[data-theme="dark"] .day-chip .remove-day-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 [data-theme="dark"] .student-detail-panel {
