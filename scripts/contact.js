@@ -91,11 +91,45 @@ async function handleFormSubmission() {
     // Hide any existing messages
     hideFormMessages();
     
-    // Get the phone number with country code
-    const countryCode = contactForm.querySelector('.country-code').value;
-    const phoneInput = contactForm.querySelector('#phone');
-    if (phoneInput.value) {
-        phoneInput.value = countryCode + ' ' + phoneInput.value.replace(/^\+\d+\s*/, '');
+    try {
+        // Prepare form data
+        const formData = new FormData(contactForm);
+        
+        // Get and format the phone number with country code
+        const countryCode = contactForm.querySelector('.country-code').value;
+        const phoneInput = contactForm.querySelector('#phone');
+        if (phoneInput.value) {
+            formData.set('phone', countryCode + ' ' + phoneInput.value.replace(/^\+\d+\s*/, ''));
+        }
+        
+        // Log form data for debugging
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+        
+        // Submit form
+        const response = await fetch('../api/contact.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccessMessage(result.message || getTranslatedText('form_success_message'));
+            contactForm.reset();
+        } else {
+            showErrorMessage(result.message || getTranslatedText('form_error_message'));
+        }
+        
+    } catch (error) {
+        console.error('Error submitting form:', error);
+        showErrorMessage(getTranslatedText('form_error_message'));
+    } finally {
+        // Reset button state
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
     }
     
     try {
@@ -109,8 +143,11 @@ async function handleFormSubmission() {
         }
         
         // Submit form
-        const response = await fetch('api/contact.php', {
+        const response = await fetch('../api/contact.php', {
             method: 'POST',
+            headers: {
+                'Accept': 'application/json'
+            },
             body: formData
         });
         

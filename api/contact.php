@@ -29,6 +29,11 @@ if (!is_array($input)) {
     $input = $_POST; // fallback cuando el form envía application/x-www-form-urlencoded
 }
 
+// Debug logging
+error_log('Contact form input: ' . print_r($input, true));
+error_log('POST data: ' . print_r($_POST, true));
+error_log('Raw input: ' . $raw);
+
 function sanitize_input($data) {
     $data = trim((string)$data);
     $data = stripslashes($data);
