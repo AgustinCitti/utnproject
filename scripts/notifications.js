@@ -64,10 +64,14 @@ async function loadNotifications() {
     const notificationsContainer = document.getElementById('notificationsContainer');
     const notificationsList = document.getElementById('notificationsList');
     
-    if (!notificationsContainer || !notificationsList) return;
-
     // Check if appData is loaded
     if (!appData) {
+        return;
+    }
+    
+    // Si ninguno de los contenedores está disponible, no hay donde mostrar las notificaciones
+    if (!notificationsContainer && !notificationsList) {
+        console.warn('No se encontraron contenedores para mostrar notificaciones');
         return;
     }
 
@@ -85,8 +89,16 @@ async function loadNotifications() {
     // Get current docente user
     const currentUser = getCurrentUser();
     if (!currentUser) {
+        console.warn('No hay usuario actual, no se pueden cargar las notificaciones');
         return;
     }
+    
+    // Log para depuración
+    console.log('Estado de notificaciones:', {
+        appData: appData,
+        notifications: appData.notifications,
+        recordatorios: getRecordatoriosForDocente(currentUser.ID_docente)
+    });
 
     // Get recordatorios for current docente's subjects
     const recordatorios = getRecordatoriosForDocente(currentUser.ID_docente);

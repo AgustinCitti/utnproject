@@ -141,14 +141,29 @@ function toggleView(section, view) {
     const gridBtn = document.getElementById(`${section}GridViewBtn`);
     const listBtn = document.getElementById(`${section}ListViewBtn`);
 
+    console.log('Cambiando vista:', {
+        section,
+        view,
+        gridView,
+        listView,
+        gridBtn,
+        listBtn
+    });
+
     if (view === 'grid') {
-        if (gridView) gridView.style.display = 'grid';
+        if (gridView) {
+            gridView.style.display = 'grid';
+            console.log('Mostrando vista grid');
+        }
         if (listView) listView.style.display = 'none';
         if (gridBtn) gridBtn.classList.add('active');
         if (listBtn) listBtn.classList.remove('active');
     } else {
         if (gridView) gridView.style.display = 'none';
-        if (listView) listView.style.display = 'block';
+        if (listView) {
+            listView.style.display = 'block';
+            console.log('Mostrando vista lista');
+        }
         if (gridBtn) gridBtn.classList.remove('active');
         if (listBtn) listBtn.classList.add('active');
     }
