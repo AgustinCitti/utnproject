@@ -205,7 +205,8 @@ function generateAttendancePDF() {
             record.Estudiante_ID_Estudiante === student.ID_Estudiante
         );
         
-        const presentCount = studentAttendance.filter(record => record.Presente === 'Y').length;
+        // Support both 'P' (new format) and 'Y' (old format for compatibility)
+        const presentCount = studentAttendance.filter(record => record.Presente === 'P' || record.Presente === 'Y').length;
         const attendanceRate = studentAttendance.length > 0 
             ? Math.round((presentCount / studentAttendance.length) * 100)
             : 0;
@@ -328,7 +329,8 @@ function generateStudentsCSV() {
             record.Estudiante_ID_Estudiante === student.ID_Estudiante
         ) : [];
         
-        const presentCount = studentAttendance.filter(record => record.Presente === 'Y').length;
+        // Support both 'P' (new format) and 'Y' (old format for compatibility)
+        const presentCount = studentAttendance.filter(record => record.Presente === 'P' || record.Presente === 'Y').length;
         const attendanceRate = studentAttendance.length > 0 
             ? Math.round((presentCount / studentAttendance.length) * 100)
             : 0;
@@ -361,7 +363,10 @@ function generateAttendanceCSV() {
             'Date': record.Fecha,
             'Student Name': student ? `${student.Nombre} ${student.Apellido}` : 'Unknown',
             'Subject': materia ? materia.Nombre : 'Unknown',
-            'Status': record.Presente === 'Y' ? 'Present' : record.Presente === 'N' ? 'Absent' : record.Presente === 'T' ? 'Late' : 'Unknown',
+            'Status': record.Presente === 'P' || record.Presente === 'Y' ? 'Present' : 
+                     record.Presente === 'A' || record.Presente === 'N' ? 'Absent' : 
+                     record.Presente === 'J' ? 'Justified' :
+                     record.Presente === 'T' ? 'Late' : 'Unknown',
             'Notes': record.Observaciones || ''
         };
     });

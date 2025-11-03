@@ -183,14 +183,18 @@ function loadReports() {
         }
 
         // Check if we have the essential data arrays
-        const hasData = window.data.materia && window.data.estudiante && 
-                       Array.isArray(window.data.materia) && Array.isArray(window.data.estudiante);
+        const hasData = window.data.materia && window.data.estudiante && window.data.asistencia &&
+                       Array.isArray(window.data.materia) && Array.isArray(window.data.estudiante) && Array.isArray(window.data.asistencia);
         
         if (!hasData) {
             if (initAttempts < maxAttempts) {
                 setTimeout(initializeReportsContent, 300);
             } else {
-                console.error('Reports: Max attempts reached, data arrays not available');
+                console.error('Reports: Max attempts reached, data arrays not available', {
+                    hasMateria: !!window.data.materia,
+                    hasEstudiante: !!window.data.estudiante,
+                    hasAsistencia: !!window.data.asistencia
+                });
             }
             return;
         }

@@ -19,7 +19,7 @@ function generateTopStudentsReport() {
 
     const studentAverages = teacherStudents.map(student => {
         const studentGrades = filteredGrades.filter(nota => 
-            nota.Estudiante_ID_Estudiante === student.ID_Estudiante
+            parseInt(nota.Estudiante_ID_Estudiante, 10) === parseInt(student.ID_Estudiante, 10)
         );
         
         const average = studentGrades.length > 0 
@@ -64,10 +64,11 @@ function generateAttendanceReport() {
 
     const attendanceStats = teacherStudents.map(student => {
         const studentAttendance = filteredAttendance.filter(record => 
-            record.Estudiante_ID_Estudiante === student.ID_Estudiante
+            parseInt(record.Estudiante_ID_Estudiante, 10) === parseInt(student.ID_Estudiante, 10)
         );
         
-        const presentCount = studentAttendance.filter(record => record.Presente === 'Y').length;
+        // Support both 'P' (new format) and 'Y' (old format for compatibility)
+        const presentCount = studentAttendance.filter(record => record.Presente === 'P' || record.Presente === 'Y').length;
         const attendanceRate = studentAttendance.length > 0 
             ? Math.round((presentCount / studentAttendance.length) * 100)
             : 0;

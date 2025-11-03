@@ -315,7 +315,8 @@ function calculateAverageGrade() {
 
 function calculateAttendanceRate() {
     if (!appData.asistencia || appData.asistencia.length === 0) return 0;
-    const presentCount = appData.asistencia.filter(a => a.Presente === 'Y').length;
+    // Support both 'P' (new format) and 'Y' (old format for compatibility)
+    const presentCount = appData.asistencia.filter(a => a.Presente === 'P' || a.Presente === 'Y').length;
     return Math.round((presentCount / appData.asistencia.length) * 100);
 }
 

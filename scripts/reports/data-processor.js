@@ -27,15 +27,15 @@ function getCurrentUserStudents() {
     if (!userId || !window.data || !window.data.estudiante) return [];
     
     const userSubjects = getCurrentUserSubjects();
-    const userSubjectIds = userSubjects.map(subject => subject.ID_materia);
+    const userSubjectIds = userSubjects.map(subject => parseInt(subject.ID_materia, 10));
     
     // Get students enrolled in user's subjects
     const enrolledStudentIds = window.data.alumnos_x_materia
-        .filter(enrollment => userSubjectIds.includes(enrollment.Materia_ID_materia))
-        .map(enrollment => enrollment.Estudiante_ID_Estudiante);
+        .filter(enrollment => userSubjectIds.includes(parseInt(enrollment.Materia_ID_materia, 10)))
+        .map(enrollment => parseInt(enrollment.Estudiante_ID_Estudiante, 10));
     
     return window.data.estudiante.filter(student => 
-        enrolledStudentIds.includes(student.ID_Estudiante)
+        enrolledStudentIds.includes(parseInt(student.ID_Estudiante, 10))
     );
 }
 
@@ -44,30 +44,39 @@ function getCurrentUserGrades() {
     if (!userId || !window.data || !window.data.notas) return [];
     
     const userSubjects = getCurrentUserSubjects();
-    const userSubjectIds = userSubjects.map(subject => subject.ID_materia);
+    const userSubjectIds = userSubjects.map(subject => parseInt(subject.ID_materia, 10));
     
     // Get evaluations for user's subjects
     const userEvaluations = window.data.evaluacion.filter(evaluation => 
-        userSubjectIds.includes(evaluation.Materia_ID_materia)
+        userSubjectIds.includes(parseInt(evaluation.Materia_ID_materia, 10))
     );
-    const userEvaluationIds = userEvaluations.map(evaluation => evaluation.ID_evaluacion);
+    const userEvaluationIds = userEvaluations.map(evaluation => parseInt(evaluation.ID_evaluacion, 10));
     
     // Get grades for these evaluations
     return window.data.notas.filter(nota => 
-        userEvaluationIds.includes(nota.Evaluacion_ID_evaluacion)
+        userEvaluationIds.includes(parseInt(nota.Evaluacion_ID_evaluacion, 10))
     );
 }
 
 function getCurrentUserAttendance() {
     const userId = getCurrentUserId();
-    if (!userId || !window.data || !window.data.asistencia) return [];
+    if (!userId || !window.data || !window.data.asistencia) {
+        console.warn('getCurrentUserAttendance: Missing prerequisites', {
+            userId: userId,
+            hasData: !!window.data,
+            hasAsistencia: window.data && !!window.data.asistencia
+        });
+        return [];
+    }
     
     const userSubjects = getCurrentUserSubjects();
-    const userSubjectIds = userSubjects.map(subject => subject.ID_materia);
+    const userSubjectIds = userSubjects.map(subject => parseInt(subject.ID_materia, 10));
     
-    return window.data.asistencia.filter(attendance => 
-        userSubjectIds.includes(attendance.Materia_ID_materia)
+    const filtered = window.data.asistencia.filter(attendance => 
+        userSubjectIds.includes(parseInt(attendance.Materia_ID_materia, 10))
     );
+    
+    return filtered;
 }
 
 function getGradesDistribution(subjectId = 'all') {
@@ -80,13 +89,14 @@ function getGradesDistribution(subjectId = 'all') {
     
     // Filter by subject if specified
     if (subjectId !== 'all') {
+        const targetSubjectId = parseInt(subjectId, 10);
         const subjectEvaluations = window.data.evaluacion.filter(eval => 
-            eval.Materia_ID_materia === parseInt(subjectId)
+            parseInt(eval.Materia_ID_materia, 10) === targetSubjectId
         );
-        const subjectEvaluationIds = subjectEvaluations.map(eval => eval.ID_evaluacion);
+        const subjectEvaluationIds = subjectEvaluations.map(eval => parseInt(eval.ID_evaluacion, 10));
         
         filteredGrades = filteredGrades.filter(nota => 
-            subjectEvaluationIds.includes(nota.Evaluacion_ID_evaluacion)
+            subjectEvaluationIds.includes(parseInt(nota.Evaluacion_ID_evaluacion, 10))
         );
     }
 
@@ -113,6 +123,10 @@ function getGradesDistribution(subjectId = 'all') {
 
 function getAttendanceTrends(subjectId = 'all') {
     if (!window.data || !window.data.asistencia) {
+        console.warn('getAttendanceTrends: No data or asistencia array available', {
+            hasData: !!window.data,
+            hasAsistencia: window.data && !!window.data.asistencia
+        });
         return { labels: [], data: [] };
     }
 
@@ -121,15 +135,47 @@ function getAttendanceTrends(subjectId = 'all') {
     
     // Filter by subject if specified
     if (subjectId !== 'all') {
+        const targetSubjectId = parseInt(subjectId, 10);
         filteredAttendance = filteredAttendance.filter(record => 
-            record.Materia_ID_materia === parseInt(subjectId)
+            parseInt(record.Materia_ID_materia, 10) === targetSubjectId
         );
+    }
+
+    if (filteredAttendance.length === 0) {
+        console.warn('getAttendanceTrends: No attendance records after filtering');
+        return { labels: [], data: [] };
     }
 
     // Group attendance by month
     const monthlyAttendance = {};
     filteredAttendance.forEach(record => {
-        const date = new Date(record.Fecha);
+        // Skip records with NULL or empty Presente (invalid attendance records)
+        if (!record.Presente || record.Presente === null || record.Presente === '') {
+            console.warn('getAttendanceTrends: Skipping record with NULL or empty Presente', record);
+            return; // Skip invalid attendance records
+        }
+        
+        // Handle date parsing more robustly
+        let date;
+        if (record.Fecha) {
+            // If Fecha is already a string in YYYY-MM-DD format, parse it directly
+            if (typeof record.Fecha === 'string' && record.Fecha.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const [year, month, day] = record.Fecha.split('-').map(Number);
+                date = new Date(year, month - 1, day); // month is 0-indexed in Date
+            } else {
+                date = new Date(record.Fecha);
+            }
+        } else {
+            console.warn('getAttendanceTrends: Record missing Fecha field', record);
+            return; // Skip records without dates
+        }
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            console.warn('getAttendanceTrends: Invalid date for record', record.Fecha, record);
+            return; // Skip invalid dates
+        }
+        
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         
         if (!monthlyAttendance[monthKey]) {
@@ -137,7 +183,10 @@ function getAttendanceTrends(subjectId = 'all') {
         }
         
         monthlyAttendance[monthKey].total++;
-        if (record.Presente === 'Y') {
+        // Check for present values: 'P' (new format) or 'Y' (old format for compatibility)
+        // Also handle uppercase/lowercase variations
+        const presente = String(record.Presente).toUpperCase();
+        if (presente === 'P' || presente === 'Y') {
             monthlyAttendance[monthKey].present++;
         }
     });
@@ -145,10 +194,20 @@ function getAttendanceTrends(subjectId = 'all') {
     const labels = Object.keys(monthlyAttendance).sort();
     const data = labels.map(month => {
         const stats = monthlyAttendance[month];
-        return Math.round((stats.present / stats.total) * 100);
+        // Calculate percentage, avoiding division by zero
+        const percentage = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
+        return percentage;
     });
-
-    return { labels, data };
+    
+    // Format labels for better display (e.g., "2024-11" -> "Nov 2024")
+    const formattedLabels = labels.map(month => {
+        const [year, monthNum] = month.split('-');
+        const date = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
+        const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        return `${monthNames[date.getMonth()]} ${year}`;
+    });
+    
+    return { labels: formattedLabels, data };
 }
 
 function getStudentPerformance(studentId = 'all') {
@@ -171,13 +230,15 @@ function getStudentPerformance(studentId = 'all') {
     
     const datasets = teacherStudents.slice(0, 3).map((student, index) => {
         const studentGrades = window.data.notas.filter(nota => 
-            nota.Estudiante_ID_Estudiante === student.ID_Estudiante
+            parseInt(nota.Estudiante_ID_Estudiante, 10) === parseInt(student.ID_Estudiante, 10)
         );
         
         const data = teacherSubjects.map(materia => {
             const materiaGrades = studentGrades.filter(nota => {
-                const evaluacion = window.data.evaluacion.find(eval => eval.ID_evaluacion === nota.Evaluacion_ID_evaluacion);
-                return evaluacion && evaluacion.Materia_ID_materia === materia.ID_materia;
+                const evaluacion = window.data.evaluacion.find(eval => 
+                    parseInt(eval.ID_evaluacion, 10) === parseInt(nota.Evaluacion_ID_evaluacion, 10)
+                );
+                return evaluacion && parseInt(evaluacion.Materia_ID_materia, 10) === parseInt(materia.ID_materia, 10);
             });
             
             if (materiaGrades.length === 0) return 0;
@@ -207,11 +268,11 @@ function getSubjectComparison() {
 
     const subjectStats = teacherSubjects.map(materia => {
         const materiaEvaluaciones = window.data.evaluacion.filter(eval => 
-            eval.Materia_ID_materia === materia.ID_materia
+            parseInt(eval.Materia_ID_materia, 10) === parseInt(materia.ID_materia, 10)
         );
         
         const materiaNotas = window.data.notas.filter(nota => 
-            materiaEvaluaciones.some(eval => eval.ID_evaluacion === nota.Evaluacion_ID_evaluacion)
+            materiaEvaluaciones.some(eval => parseInt(eval.ID_evaluacion, 10) === parseInt(nota.Evaluacion_ID_evaluacion, 10))
         );
         
         const averageGrade = materiaNotas.length > 0 
@@ -260,7 +321,8 @@ function calculateAttendanceRate() {
     }
     
     const totalRecords = filteredAttendance.length;
-    const presentRecords = filteredAttendance.filter(record => record.Presente === 'Y').length;
+    // Support both 'P' (new format) and 'Y' (old format for compatibility)
+    const presentRecords = filteredAttendance.filter(record => record.Presente === 'P' || record.Presente === 'Y').length;
     const attendanceRate = (presentRecords / totalRecords) * 100;
     return Math.round(attendanceRate);
 }
@@ -276,7 +338,7 @@ function getPassingStudents() {
     
     const passingStudents = teacherStudents.filter(student => {
         const studentGrades = filteredGrades.filter(nota => 
-            nota.Estudiante_ID_Estudiante === student.ID_Estudiante
+            parseInt(nota.Estudiante_ID_Estudiante, 10) === parseInt(student.ID_Estudiante, 10)
         );
         
         if (studentGrades.length === 0) return false;

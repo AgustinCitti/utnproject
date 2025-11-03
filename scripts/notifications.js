@@ -30,7 +30,7 @@ async function syncNotifications() {
             }
         }
     } catch (err) {
-        console.error('Error syncing notifications:', err);
+        // Error syncing notifications - silently handled
     }
 }
 

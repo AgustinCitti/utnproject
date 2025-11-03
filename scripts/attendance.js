@@ -126,7 +126,8 @@ function loadAttendance() {
                         const student = appData.estudiante.find(s => s.ID_Estudiante === attendance.Estudiante_ID_Estudiante);
                         const subject = appData.materia.find(s => s.ID_materia === attendance.Materia_ID_materia);
                         const shortDate = attendance.Fecha.split('-').slice(1).join('/');
-                        const statusText = attendance.Presente === 'Y' ? 'present' : 'absent';
+                        // Support both 'P' (new format) and 'Y' (old format for compatibility)
+                        const statusText = (attendance.Presente === 'P' || attendance.Presente === 'Y') ? 'present' : 'absent';
                         return `
                             <tr>
                                 <td><strong>${student ? student.Apellido + ', ' + student.Nombre : 'Unknown'}</strong></td>
@@ -246,8 +247,6 @@ function populateAttendanceMateriaSelect() {
         option.textContent = displayText;
         subjectSelect.appendChild(option);
     });
-    
-    console.log(`Populated attendance materia select with ${userSubjects.length} materias for user ${currentUserId}`);
 }
 
 function loadStudentsForAttendanceView() {
@@ -406,7 +405,8 @@ function loadStudentsForAttendanceView() {
             att.Materia_ID_materia === selectedSubjectId
         ).length;
         
-        const currentStatus = existingAttendance ? (existingAttendance.Presente === 'Y' ? 'present' : 'absent') : '';
+        // Support both 'P' (new format) and 'Y' (old format for compatibility)
+        const currentStatus = existingAttendance ? ((existingAttendance.Presente === 'P' || existingAttendance.Presente === 'Y') ? 'present' : 'absent') : '';
         
         return `
             <tr data-student-id="${student.ID_Estudiante}">
@@ -434,30 +434,57 @@ function loadStudentsForAttendanceView() {
     
     // Add event listeners to status buttons
     setupAttendanceStatusButtons();
-    
-    console.log(`Loaded ${enrolledStudents.length} students for materia ${selectedSubjectId}`);
 }
 
 
 function setupAttendanceStatusButtons() {
     const statusButtons = document.querySelectorAll('.status-btn');
     
+    // Remove old event listeners by cloning and replacing
     statusButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        // Remove any existing listeners by replacing the button
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+    });
+    
+    // Re-query to get the new buttons
+    const newStatusButtons = document.querySelectorAll('.status-btn');
+    
+    newStatusButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
             const studentId = parseInt(this.dataset.studentId);
             const status = this.dataset.status;
             const row = this.closest('tr');
             
+            if (!row) {
+                console.error('Could not find row for button:', this);
+                return;
+            }
+            
+            console.log(`Button clicked for student ${studentId}, status: ${status}`);
+            
             // Remove active class from all buttons in this row
-            row.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
+            row.querySelectorAll('.status-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.removeAttribute('data-selected');
+            });
             
             // Add active class to clicked button
             this.classList.add('active');
+            this.setAttribute('data-selected', 'true');
             
-            // Store the attendance status in the button's data attribute
-            this.dataset.selected = 'true';
+            console.log(`Student ${studentId} marked as ${status}`, {
+                activeButton: this,
+                hasActiveClass: this.classList.contains('active'),
+                rowButtons: row.querySelectorAll('.status-btn').length
+            });
         });
     });
+    
+    console.log(`Setup ${newStatusButtons.length} attendance status buttons`);
 }
 
 async function saveAttendanceBulk() {
@@ -479,24 +506,56 @@ async function saveAttendanceBulk() {
     // Recopilar todos los registros de asistencia
     tableRows.forEach(row => {
         const studentId = parseInt(row.dataset.studentId);
+        if (!studentId || isNaN(studentId)) {
+            console.warn('Skipping row with invalid student ID:', row);
+            return;
+        }
+        
+        // Find which button is active (present or absent)
+        const presentButton = row.querySelector('.status-btn.present-btn');
+        const absentButton = row.querySelector('.status-btn.absent-btn');
         const activeButton = row.querySelector('.status-btn.active');
         
+        // Determine the status
+        // Database uses: P=Presente, A=Ausente, J=Justificado
+        let presente = 'A'; // Default to absent
         if (activeButton) {
             const status = activeButton.dataset.status;
-            
-            // Convert status to database format
-            let presente = 'N';
-            if (status === 'present') presente = 'Y';
-            
-            attendanceRecords.push({
-                Estudiante_ID_Estudiante: studentId,
-                Materia_ID_materia: selectedSubjectId,
-                Fecha: date,
-                Presente: presente,
-                Observaciones: notes || null
-            });
+            if (status === 'present') {
+                presente = 'P'; // P for Presente
+            } else if (status === 'absent') {
+                presente = 'A'; // A for Ausente
+            }
+        } else {
+            // If no button is active, check if present button has active class (might be CSS issue)
+            if (presentButton && presentButton.classList.contains('active')) {
+                presente = 'P';
+            } else if (absentButton && absentButton.classList.contains('active')) {
+                presente = 'A';
+            } else {
+                // No button selected - skip this student (don't save unmarked attendance)
+                console.log(`Skipping student ${studentId} - no attendance status selected`);
+                return;
+            }
         }
+        
+        console.log(`Saving attendance for student ${studentId}:`, {
+            studentId: studentId,
+            status: activeButton ? activeButton.dataset.status : 'none',
+            presente: presente,
+            hasActiveButton: !!activeButton
+        });
+        
+        attendanceRecords.push({
+            Estudiante_ID_Estudiante: studentId,
+            Materia_ID_materia: selectedSubjectId,
+            Fecha: date,
+            Presente: presente,
+            Observaciones: notes || null
+        });
     });
+    
+    console.log('Total attendance records to save:', attendanceRecords.length, attendanceRecords);
     
     if (attendanceRecords.length === 0) {
         alert('Debe marcar al menos un estudiante (presente o ausente).');
@@ -567,6 +626,20 @@ async function saveAttendanceBulk() {
             // Recargar vista de estudiantes si existe
             if (typeof loadUnifiedStudentData === 'function') {
                 loadUnifiedStudentData();
+            }
+            
+            // Refresh reports if currently visible
+            const reportsSection = document.getElementById('reports');
+            if (reportsSection && reportsSection.style.display !== 'none') {
+                // Refresh reports charts with new data
+                if (typeof refreshReports === 'function') {
+                    refreshReports();
+                } else if (typeof initializeCharts === 'function') {
+                    initializeCharts();
+                    if (typeof generateDetailedReports === 'function') {
+                        generateDetailedReports();
+                    }
+                }
             }
             
             // Mostrar mensaje de éxito
@@ -722,7 +795,8 @@ function loadAttendance() {
         
         acc[key].students.push({
             studentName: studentName,
-            status: att.Presente === 'Y' ? 'present' : 'absent',
+            // Support both 'P' (new format) and 'Y' (old format for compatibility)
+            status: (att.Presente === 'P' || att.Presente === 'Y') ? 'present' : 'absent',
             observaciones: att.Observaciones
         });
         return acc;

@@ -250,7 +250,17 @@ function showSection(sectionName, subsection = null) {
             loadNotifications();
             break;
         case 'reports':
-            loadReports();
+            // Reload data to ensure reports have latest information
+            if (typeof loadData === 'function') {
+                loadData().then(() => {
+                    loadReports();
+                }).catch(err => {
+                    console.error('Error loading data for reports:', err);
+                    loadReports(); // Still try to load reports even if data load fails
+                });
+            } else {
+                loadReports();
+            }
             break;
         case 'calendar':
             // Reset calendar initialization to allow re-render

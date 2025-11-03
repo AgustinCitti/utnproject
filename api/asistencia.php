@@ -138,42 +138,57 @@ try {
 		case 'POST':
 			$body = readJson();
 			
-			// Log para debugging
-			if (defined('APP_DEBUG') && APP_DEBUG) {
-				error_log("POST asistencia - Body recibido: " . json_encode($body));
-			}
+			// Log para debugging - siempre loguear para identificar problemas
+			error_log("POST asistencia - Body recibido: " . json_encode($body));
 			
+			// Validar que todos los campos requeridos estén presentes
 			if (!isset($body['Estudiante_ID_Estudiante']) || !isset($body['Materia_ID_materia']) || !isset($body['Fecha']) || !isset($body['Presente'])) {
+				error_log("POST asistencia - Faltan campos requeridos: " . json_encode($body));
 				respond(400, ['success'=>false,'message'=>'Faltan campos requeridos: Estudiante_ID_Estudiante, Materia_ID_materia, Fecha, Presente']);
 			}
 			
 			$Estudiante_ID_Estudiante = (int)$body['Estudiante_ID_Estudiante'];
 			$Materia_ID_materia = (int)$body['Materia_ID_materia'];
 			$Fecha = trim($body['Fecha']);
+			
+			// Validar y procesar Presente - debe ser un string no vacío
+			if (empty($body['Presente']) || trim($body['Presente']) === '' || $body['Presente'] === null) {
+				error_log("POST asistencia - Presente está vacío o null: " . json_encode($body));
+				respond(400, ['success'=>false,'message'=>'El campo Presente es requerido y no puede estar vacío']);
+			}
+			
 			$Presente = strtoupper(trim($body['Presente'])); // Y, N, P, A, J según schema
 			$Observaciones = isset($body['Observaciones']) ? trim($body['Observaciones']) : null;
 			
 			// Log valores procesados
-			if (defined('APP_DEBUG') && APP_DEBUG) {
-				error_log("POST asistencia - Valores procesados: Estudiante=$Estudiante_ID_Estudiante, Materia=$Materia_ID_materia, Fecha=$Fecha, Presente=$Presente");
-			}
+			error_log("POST asistencia - Valores procesados: Estudiante=$Estudiante_ID_Estudiante, Materia=$Materia_ID_materia, Fecha=$Fecha, Presente=$Presente");
 			
 			// Validar formato de fecha
 			if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $Fecha)) {
 				respond(400, ['success'=>false,'message'=>'Formato de fecha inválido. Use YYYY-MM-DD']);
 			}
 			
-			// Validar Presente - Intentar con diferentes formatos según el schema
-			// Primero verificar si la BD acepta Y/N/T o P/A/J
-			// Por ahora aceptamos ambos formatos y convertimos
+			// Validar Presente - La BD usa ENUM('P', 'A', 'J')
+			// P=Presente, A=Ausente, J=Justificado
+			// También aceptamos Y/N para compatibilidad y convertimos
 			$validValues = ['Y', 'N', 'T', 'P', 'A', 'J'];
 			if (!in_array($Presente, $validValues)) {
-				respond(400, ['success'=>false,'message'=>'Valor de Presente inválido. Use Y o P (presente), N o A (ausente), T (tarde), J (justificado)']);
+				respond(400, ['success'=>false,'message'=>'Valor de Presente inválido. Use P o Y (presente), A o N (ausente), J (justificado)']);
 			}
 			
-			// Convertir formato si es necesario (normalizar a Y/N/T para compatibilidad)
-			if ($Presente === 'P') $Presente = 'Y';
-			if ($Presente === 'A') $Presente = 'N';
+			// Convertir formato antiguo (Y/N) al formato de la BD (P/A)
+			// La BD usa P/A/J, no Y/N/T
+			if ($Presente === 'Y') $Presente = 'P'; // Y -> P (Presente)
+			if ($Presente === 'N') $Presente = 'A'; // N -> A (Ausente)
+			// T (tarde) no está en el schema actual, se tratará como error
+			if ($Presente === 'T') {
+				respond(400, ['success'=>false,'message'=>'El valor "T" (tarde) no está soportado. Use P (presente), A (ausente), o J (justificado)']);
+			}
+			
+			// Asegurar que el valor final sea válido para la BD
+			if (!in_array($Presente, ['P', 'A', 'J'])) {
+				respond(400, ['success'=>false,'message'=>'Valor final de Presente inválido. Use P (presente), A (ausente), o J (justificado)']);
+			}
 			
 			if ($Estudiante_ID_Estudiante <= 0 || $Materia_ID_materia <= 0) {
 				respond(400, ['success'=>false,'message'=>'IDs inválidos']);
@@ -192,41 +207,54 @@ try {
 			if ($existing) {
 				// Actualizar registro existente
 				try {
+					error_log("UPDATE asistencia - Ejecutando UPDATE con valores: Presente=$Presente, Observaciones=" . ($Observaciones ?: 'NULL') . ", ID=" . $existing['ID_Asistencia']);
 					$stmt = $db->prepare("UPDATE Asistencia SET Presente = ?, Observaciones = ? WHERE ID_Asistencia = ?");
-					$stmt->execute([$Presente, $Observaciones, $existing['ID_Asistencia']]);
+					$result = $stmt->execute([$Presente, $Observaciones, $existing['ID_Asistencia']]);
 					
-					if (defined('APP_DEBUG') && APP_DEBUG) {
-						error_log("UPDATE asistencia exitoso - ID: " . $existing['ID_Asistencia']);
-					}
+					error_log("UPDATE asistencia - Resultado: " . ($result ? 'SUCCESS' : 'FAILED') . ", Rows affected: " . $stmt->rowCount());
+					
+					// Verificar que se actualizó correctamente
+					$verifyStmt = $db->prepare("SELECT Presente FROM Asistencia WHERE ID_Asistencia = ?");
+					$verifyStmt->execute([$existing['ID_Asistencia']]);
+					$verify = $verifyStmt->fetch();
+					error_log("UPDATE asistencia - Valor guardado en BD: " . ($verify['Presente'] ?? 'NULL'));
 					
 					respond(200, [
 						'success' => true,
 						'message' => 'Asistencia actualizada exitosamente',
-						'id' => $existing['ID_Asistencia']
+						'id' => $existing['ID_Asistencia'],
+						'presente' => $verify['Presente'] ?? null
 					]);
 				} catch (PDOException $e) {
 					error_log("Error UPDATE asistencia: " . $e->getMessage());
+					error_log("Error UPDATE asistencia - Trace: " . $e->getTraceAsString());
 					respond(500, ['success'=>false,'message'=>'Error al actualizar asistencia: ' . $e->getMessage()]);
 				}
 			} else {
 				// Insertar nuevo registro
 				try {
+					error_log("INSERT asistencia - Ejecutando INSERT con valores: Estudiante=$Estudiante_ID_Estudiante, Materia=$Materia_ID_materia, Fecha=$Fecha, Presente=$Presente, Observaciones=" . ($Observaciones ?: 'NULL'));
 					$stmt = $db->prepare("INSERT INTO Asistencia (Estudiante_ID_Estudiante, Materia_ID_materia, Fecha, Presente, Observaciones) VALUES (?, ?, ?, ?, ?)");
-					$stmt->execute([$Estudiante_ID_Estudiante, $Materia_ID_materia, $Fecha, $Presente, $Observaciones]);
+					$result = $stmt->execute([$Estudiante_ID_Estudiante, $Materia_ID_materia, $Fecha, $Presente, $Observaciones]);
 					
 					$newId = $db->lastInsertId();
+					error_log("INSERT asistencia - Resultado: " . ($result ? 'SUCCESS' : 'FAILED') . ", New ID: $newId");
 					
-					if (defined('APP_DEBUG') && APP_DEBUG) {
-						error_log("INSERT asistencia exitoso - ID: " . $newId);
-					}
+					// Verificar que se insertó correctamente
+					$verifyStmt = $db->prepare("SELECT Presente FROM Asistencia WHERE ID_Asistencia = ?");
+					$verifyStmt->execute([$newId]);
+					$verify = $verifyStmt->fetch();
+					error_log("INSERT asistencia - Valor guardado en BD: " . ($verify['Presente'] ?? 'NULL'));
 					
 					respond(201, [
 						'success' => true,
 						'message' => 'Asistencia guardada exitosamente',
-						'id' => $newId
+						'id' => $newId,
+						'presente' => $verify['Presente'] ?? null
 					]);
 				} catch (PDOException $e) {
 					error_log("Error INSERT asistencia: " . $e->getMessage());
+					error_log("Error INSERT asistencia - Trace: " . $e->getTraceAsString());
 					respond(500, ['success'=>false,'message'=>'Error al guardar asistencia: ' . $e->getMessage()]);
 				}
 			}

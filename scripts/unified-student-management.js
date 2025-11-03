@@ -284,8 +284,9 @@ function loadUnifiedStudentData() {
             ? parseFloat((gradesForAverage.reduce((sum, g) => sum + parseFloat(g.Calificacion), 0) / gradesForAverage.length).toFixed(1))
             : 0;
         
+        // Support both 'P' (new format) and 'Y' (old format for compatibility)
         const attendanceRate = studentAttendance.length > 0
-            ? Math.round((studentAttendance.filter(a => a.Presente === 'Y').length / studentAttendance.length) * 100)
+            ? Math.round((studentAttendance.filter(a => a.Presente === 'P' || a.Presente === 'Y').length / studentAttendance.length) * 100)
             : 0;
 
         // Obtener las 3 calificaciones más recientes
@@ -376,7 +377,11 @@ function loadUnifiedStudentData() {
                                 ${recentAttendance.map(attendance => {
                                     const subject = (appData.materia || []).find(s => s.ID_materia === attendance.Materia_ID_materia);
                                     const shortDate = attendance.Fecha.split('-').slice(1).join('/');
-                                    const status = attendance.Presente === 'Y' ? 'present' : attendance.Presente === 'N' ? 'absent' : attendance.Presente === 'T' ? 'tardy' : 'justified';
+                                    // Support both 'P' (new format) and 'Y' (old format for compatibility)
+                                    const status = (attendance.Presente === 'P' || attendance.Presente === 'Y') ? 'present' : 
+                                                  (attendance.Presente === 'A' || attendance.Presente === 'N') ? 'absent' : 
+                                                  attendance.Presente === 'T' ? 'tardy' : 
+                                                  attendance.Presente === 'J' ? 'justified' : 'unknown';
                                     return `
                                         <div class="activity-item">
                                             <span class="activity-date">${shortDate}</span>
