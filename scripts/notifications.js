@@ -1,5 +1,47 @@
+// Global variables and config
+const NOTIFICATION_SYNC_INTERVAL = 30000; // 30 seconds
+let lastSyncTimestamp = 0;
+
+// Sync notifications from server
+async function syncNotifications() {
+    try {
+        const now = Date.now();
+        // Don't sync if less than interval has passed
+        if (now - lastSyncTimestamp < NOTIFICATION_SYNC_INTERVAL) {
+            return;
+        }
+        lastSyncTimestamp = now;
+
+        const response = await fetch('api/notifications.php');
+        const data = await response.json();
+        
+        if (data && data.success && data.notifications) {
+            // Update local notifications
+            if (!appData) appData = {};
+            appData.notifications = data.notifications;
+            saveData();
+            
+            // Only reload UI if we're on a page with notifications
+            const hasNotificationUI = document.getElementById('notificationsContainer') 
+                                 || document.getElementById('notificationsList');
+            if (hasNotificationUI) {
+                loadNotifications();
+                updateNotificationCount();
+            }
+        }
+    } catch (err) {
+        console.error('Error syncing notifications:', err);
+    }
+}
+
+// Start periodic sync when document loads
+document.addEventListener('DOMContentLoaded', () => {
+    syncNotifications();
+    setInterval(syncNotifications, NOTIFICATION_SYNC_INTERVAL);
+});
+
 // Notifications Management
-function initializeNotifications() {
+async function initializeNotifications() {
     const markAllReadBtn = document.getElementById('markAllReadBtn');
     
     if (markAllReadBtn) {
@@ -8,11 +50,17 @@ function initializeNotifications() {
         });
     }
     
+    // Initial sync of notifications from server
+    await syncNotifications();
+    
     // Load recordatorios for docente
     loadRecordatorios();
+    
+    // Update notification counts
+    updateNotificationCount();
 }
 
-function loadNotifications() {
+async function loadNotifications() {
     const notificationsContainer = document.getElementById('notificationsContainer');
     const notificationsList = document.getElementById('notificationsList');
     
@@ -21,6 +69,17 @@ function loadNotifications() {
     // Check if appData is loaded
     if (!appData) {
         return;
+    }
+
+    // If notifications are not present locally or it's been a while since last sync, sync from server
+    const now = Date.now();
+    if (!appData.notifications || (now - lastSyncTimestamp >= NOTIFICATION_SYNC_INTERVAL)) {
+        // Trigger a sync and wait for it
+        await syncNotifications();
+        // If still no notifications after sync, return
+        if (!appData.notifications) {
+            return;
+        }
     }
 
     // Get current docente user
@@ -222,13 +281,25 @@ function markNotificationRead(id) {
         if (!appData.notifications) {
             appData.notifications = [];
         }
-        const notification = appData.notifications.find(n => n.id === id);
-        if (notification) {
-            notification.read = true;
-            saveData();
-            loadNotifications();
-            updateNotificationCount();
-        }
+        // call API to mark as read
+        fetch('api/notifications.php', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id, action: 'mark_read' })
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp && resp.success) {
+                const notification = appData.notifications.find(n => n.id === id);
+                if (notification) notification.read = true;
+                saveData();
+                loadNotifications();
+                updateNotificationCount();
+            } else {
+                console.error('Failed to mark notification read', resp);
+            }
+        })
+        .catch(err => console.error('Error marking notification read', err));
     }
 }
 
@@ -240,11 +311,22 @@ function markAllNotificationsRead() {
     if (!appData.notifications) {
         appData.notifications = [];
     }
-    
-    appData.notifications.forEach(n => n.read = true);
-    saveData();
-    loadNotifications();
-    updateNotificationCount();
+    // mark each notification via API and update local state
+    const promises = appData.notifications.map(n => {
+        if (n.read) return Promise.resolve();
+        return fetch('api/notifications.php', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: n.id, action: 'mark_read' })
+        }).then(r => r.json()).catch(() => null);
+    });
+
+    Promise.all(promises).then(() => {
+        appData.notifications.forEach(n => n.read = true);
+        saveData();
+        loadNotifications();
+        updateNotificationCount();
+    });
 }
 
 function deleteNotification(id) {
@@ -258,15 +340,29 @@ function deleteNotification(id) {
             const recordatorioId = parseInt(id.replace('recordatorio_', ''));
             appData.recordatorio = appData.recordatorio.filter(r => r.ID_recordatorio !== recordatorioId);
         } else {
-            // Handle regular notification deletion
-            if (!appData.notifications) {
-                appData.notifications = [];
-            }
-            appData.notifications = appData.notifications.filter(n => n.id !== id);
+            // Handle regular notification deletion via API
+            fetch('api/notifications.php', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id })
+            }).then(r => r.json()).then(resp => {
+                if (resp && resp.success) {
+                    if (!appData.notifications) appData.notifications = [];
+                    appData.notifications = appData.notifications.filter(n => n.id !== id);
+                    saveData();
+                    loadNotifications();
+                    updateNotificationCount();
+                } else {
+                    console.error('Failed to delete notification', resp);
+                }
+            }).catch(err => console.error('Error deleting notification', err));
         }
-        saveData();
-        loadNotifications();
-        updateNotificationCount();
+        // for recordatorio case, we still need to save and rerender
+        if (id.startsWith('recordatorio_')) {
+            saveData();
+            loadNotifications();
+            updateNotificationCount();
+        }
     }
 }
 

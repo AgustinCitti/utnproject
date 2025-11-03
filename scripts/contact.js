@@ -102,7 +102,7 @@ async function handleFormSubmission() {
         }
         
         // Submit form
-        const response = await fetch('contact_handler.php', {
+        const response = await fetch('api/contact.php', {
             method: 'POST',
             body: formData
         });
