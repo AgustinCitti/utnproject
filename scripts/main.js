@@ -33,6 +33,11 @@ async function initializeApp() {
     // Load data
     await loadData();
     
+    // Populate attendance materia select after data is loaded
+    if (typeof populateAttendanceMateriaSelect === 'function') {
+        populateAttendanceMateriaSelect();
+    }
+    
     // Initialize components
     if (typeof initializeNavigation === 'function') {
         initializeNavigation();

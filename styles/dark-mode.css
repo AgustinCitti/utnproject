@@ -812,6 +812,39 @@
 [data-theme="dark"] .attendance-table td {
     border-bottom-color: var(--border-color);
     color: var(--text-primary);
+    background-color: var(--card-bg);
+}
+
+/* Dark mode styles for student cells in attendance table */
+[data-theme="dark"] .attendance-table .student-id {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+[data-theme="dark"] .attendance-table .student-name {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+[data-theme="dark"] .attendance-table .student-status {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .attendance-table .text-center {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .attendance-table tbody tr {
+    background-color: var(--card-bg);
+    transition: background-color 0.2s ease;
+}
+
+[data-theme="dark"] .attendance-table tbody tr:hover {
+    background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .attendance-table tbody tr:last-child td {
+    border-bottom: none;
 }
 
 [data-theme="dark"] .attendance-actions {
@@ -822,11 +855,13 @@
 [data-theme="dark"] .status-btn {
     border-color: var(--border-color);
     color: var(--text-primary);
+    background-color: transparent;
 }
 
 [data-theme="dark"] .status-btn:hover {
     border-color: #667eea;
-    background-color: var(--bg-secondary);
+    background-color: rgba(102, 126, 234, 0.1);
+    color: #667eea;
 }
 
 [data-theme="dark"] .status-btn.active {
@@ -835,10 +870,30 @@
     color: white;
 }
 
+[data-theme="dark"] .present-btn {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .present-btn:hover:not(.active) {
+    border-color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
 [data-theme="dark"] .present-btn.active {
     background-color: #28a745;
     border-color: #28a745;
     color: white;
+}
+
+[data-theme="dark"] .absent-btn {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .absent-btn:hover:not(.active) {
+    border-color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
 }
 
 [data-theme="dark"] .absent-btn.active {
@@ -849,25 +904,52 @@
 
 [data-theme="dark"] .absences-count {
     color: #ff6b6b;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .attendance-table .absences-count {
+    color: #ff6b6b;
 }
 
 [data-theme="dark"] .status-badge {
     color: var(--text-primary);
+    background: transparent;
 }
 
 [data-theme="dark"] .status-badge.habilitado {
     background: rgba(40, 167, 69, 0.2);
     color: #4ade80;
+    border: 1px solid rgba(40, 167, 69, 0.3);
 }
 
 [data-theme="dark"] .status-badge.present {
     background: rgba(40, 167, 69, 0.2);
     color: #4ade80;
+    border: 1px solid rgba(40, 167, 69, 0.3);
 }
 
 [data-theme="dark"] .status-badge.absent {
     background: rgba(220, 53, 69, 0.2);
     color: #ff6b6b;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+[data-theme="dark"] .status-badge.ACTIVO {
+    background: rgba(40, 167, 69, 0.2);
+    color: #4ade80;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+[data-theme="dark"] .status-badge.INACTIVO {
+    background: rgba(220, 53, 69, 0.2);
+    color: #ff6b6b;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+[data-theme="dark"] .status-badge.INTENSIFICA {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffb74d;
+    border: 1px solid rgba(255, 193, 7, 0.3);
 }
 
 [data-theme="dark"] .attendance-summary-card {

@@ -220,6 +220,10 @@ function showSection(sectionName, subsection = null) {
                 if (typeof showAttendanceView === 'function') {
                     showAttendanceView();
                 }
+                // Ensure materia select is populated with user's materias
+                if (typeof populateAttendanceMateriaSelect === 'function') {
+                    populateAttendanceMateriaSelect();
+                }
             }, 100);
             if (typeof loadAttendance === 'function') {
                 loadAttendance();

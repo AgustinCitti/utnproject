@@ -30,10 +30,21 @@ function initializeAttendance() {
         });
     }
     
-    // Attendance view filter
+    // Attendance view filter - reload students when materia changes
     if (attendanceSubjectSelect) {
         attendanceSubjectSelect.addEventListener('change', () => {
             loadStudentsForAttendanceView();
+        });
+    }
+    
+    // Attendance date filter - reload students when date changes
+    const attendanceDateInput = document.getElementById('attendanceDate');
+    if (attendanceDateInput) {
+        attendanceDateInput.addEventListener('change', () => {
+            // Only reload if a materia is already selected
+            if (attendanceSubjectSelect && attendanceSubjectSelect.value) {
+                loadStudentsForAttendanceView();
+            }
         });
     }
     
@@ -185,87 +196,222 @@ function hideAttendanceView() {
 // Populate materia select with logged-in user's materias
 function populateAttendanceMateriaSelect() {
     const subjectSelect = document.getElementById('attendanceSubjectSelect');
-    if (!subjectSelect) return;
+    if (!subjectSelect) {
+        console.warn('attendanceSubjectSelect element not found');
+        return;
+    }
     
     // Get current user ID
     const currentUserId = localStorage.getItem('userId');
     if (!currentUserId) {
+        console.warn('No user ID found in localStorage');
         subjectSelect.innerHTML = '<option value="" data-translate="select_subject">- Seleccionar -</option>';
         return;
     }
     
-    // Get user's materias
+    // Ensure appData.materia exists
+    if (!appData || !appData.materia || !Array.isArray(appData.materia)) {
+        console.warn('appData.materia is not available or not an array');
+        subjectSelect.innerHTML = '<option value="" data-translate="select_subject">- Seleccionar -</option>';
+        return;
+    }
+    
+    // Get user's materias - filter by logged-in user's ID
     const userSubjects = appData.materia.filter(subject => 
-        subject.Usuarios_docente_ID_docente === parseInt(currentUserId)
+        subject && subject.Usuarios_docente_ID_docente && 
+        parseInt(subject.Usuarios_docente_ID_docente) === parseInt(currentUserId)
     );
     
     // Clear and populate subject filter
     subjectSelect.innerHTML = '<option value="" data-translate="select_subject">- Seleccionar -</option>';
     
+    if (userSubjects.length === 0) {
+        console.warn('No materias found for user ID:', currentUserId);
+        const noMateriasOption = document.createElement('option');
+        noMateriasOption.value = '';
+        noMateriasOption.textContent = 'No hay materias disponibles';
+        noMateriasOption.disabled = true;
+        subjectSelect.appendChild(noMateriasOption);
+        return;
+    }
+    
     userSubjects.forEach(subject => {
         const option = document.createElement('option');
-        option.value = subject.ID_materia;
+        // Ensure ID_materia is converted to string for option value (HTML attributes are strings)
+        option.value = String(subject.ID_materia || '');
         // Display materia name with curso and division info
-        option.textContent = `${subject.Nombre} (${subject.Curso_division || ''})`;
+        const displayText = subject.Curso_division 
+            ? `${subject.Nombre} (${subject.Curso_division})`
+            : subject.Nombre;
+        option.textContent = displayText;
         subjectSelect.appendChild(option);
     });
+    
+    console.log(`Populated attendance materia select with ${userSubjects.length} materias for user ${currentUserId}`);
 }
 
 function loadStudentsForAttendanceView() {
     const subjectSelect = document.getElementById('attendanceSubjectSelect');
     const tableBody = document.getElementById('attendanceTableBody');
     
-    if (!subjectSelect || !tableBody) return;
+    if (!subjectSelect || !tableBody) {
+        console.warn('Required elements not found for loadStudentsForAttendanceView');
+        return;
+    }
     
-    const selectedSubjectId = parseInt(subjectSelect.value);
-    
-    if (!selectedSubjectId) {
+    const selectedValue = subjectSelect.value;
+    if (!selectedValue || selectedValue === '') {
         tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Seleccione una materia para ver los estudiantes</td></tr>';
         return;
     }
     
-    const subject = appData.materia.find(s => s.ID_materia === selectedSubjectId);
+    const selectedSubjectId = parseInt(selectedValue, 10);
+    
+    if (isNaN(selectedSubjectId)) {
+        console.error('Invalid materia ID selected:', selectedValue);
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Error: ID de materia inválido</td></tr>';
+        return;
+    }
+    
+    // Get current user ID and verify the materia belongs to the logged-in user
+    const currentUserId = localStorage.getItem('userId');
+    if (!currentUserId) {
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No hay usuario logueado</td></tr>';
+        return;
+    }
+    
+    // Validate data structures exist
+    if (!appData || !appData.materia || !Array.isArray(appData.materia)) {
+        console.warn('appData.materia is not available or not an array');
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Error: Datos no disponibles</td></tr>';
+        return;
+    }
+    
+    if (!appData.alumnos_x_materia || !Array.isArray(appData.alumnos_x_materia)) {
+        console.warn('appData.alumnos_x_materia is not available or not an array');
+        appData.alumnos_x_materia = [];
+    }
+    
+    if (!appData.estudiante || !Array.isArray(appData.estudiante)) {
+        console.warn('appData.estudiante is not available or not an array');
+        appData.estudiante = [];
+    }
+    
+    if (!appData.asistencia || !Array.isArray(appData.asistencia)) {
+        appData.asistencia = [];
+    }
+    
+    // Find the selected subject and verify it belongs to the logged-in user
+    // Use parseInt on both sides to ensure proper comparison (ID_materia might be string or number)
+    const subject = appData.materia.find(s => {
+        if (!s || !s.ID_materia) return false;
+        return parseInt(s.ID_materia, 10) === selectedSubjectId;
+    });
+    
     if (!subject) {
+        console.warn('Materia not found:', {
+            selectedSubjectId,
+            selectedSubjectIdType: typeof selectedSubjectId,
+            availableMaterias: appData.materia.map(m => ({
+                id: m.ID_materia,
+                idType: typeof m.ID_materia,
+                nombre: m.Nombre,
+                teacherId: m.Usuarios_docente_ID_docente
+            })),
+            currentUserId
+        });
         tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Materia no encontrada</td></tr>';
+        return;
+    }
+    
+    // Security check: Verify the materia belongs to the logged-in user
+    const subjectTeacherId = subject.Usuarios_docente_ID_docente 
+        ? parseInt(subject.Usuarios_docente_ID_docente, 10) 
+        : null;
+    const currentUserIdInt = parseInt(currentUserId, 10);
+    
+    if (!subjectTeacherId || subjectTeacherId !== currentUserIdInt) {
+        console.warn('Attempted to access materia that does not belong to logged-in user', {
+            subjectTeacherId,
+            currentUserIdInt,
+            subjectId: subject.ID_materia,
+            subjectName: subject.Nombre
+        });
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No tiene permiso para acceder a esta materia</td></tr>';
         return;
     }
     
     // Get students enrolled in this subject using the alumnos_x_materia table
     const enrolledStudentIds = appData.alumnos_x_materia
-        .filter(enrollment => enrollment.Materia_ID_materia === selectedSubjectId)
-        .map(enrollment => enrollment.Estudiante_ID_Estudiante);
+        .filter(enrollment => 
+            enrollment && 
+            enrollment.Materia_ID_materia !== null && 
+            enrollment.Materia_ID_materia !== undefined &&
+            parseInt(enrollment.Materia_ID_materia, 10) === selectedSubjectId
+        )
+        .map(enrollment => enrollment.Estudiante_ID_Estudiante)
+        .filter(id => id !== null && id !== undefined);
     
-    const enrolledStudents = appData.estudiante.filter(student => 
+    // Filter students by enrolled IDs and ensure they exist in the estudiantes array
+    let enrolledStudents = appData.estudiante.filter(student => 
+        student && 
+        student.ID_Estudiante && 
         enrolledStudentIds.includes(student.ID_Estudiante)
     );
+    
+    // Sort students by last name, then first name
+    enrolledStudents.sort((a, b) => {
+        const lastNameA = (a.Apellido || '').toLowerCase();
+        const lastNameB = (b.Apellido || '').toLowerCase();
+        if (lastNameA !== lastNameB) {
+            return lastNameA.localeCompare(lastNameB);
+        }
+        const firstNameA = (a.Nombre || '').toLowerCase();
+        const firstNameB = (b.Nombre || '').toLowerCase();
+        return firstNameA.localeCompare(firstNameB);
+    });
             
     if (enrolledStudents.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No hay estudiantes inscritos en esta materia</td></tr>';
         return;
     }
     
+    // Get attendance date
+    const attendanceDateInput = document.getElementById('attendanceDate');
+    const attendanceDate = attendanceDateInput ? attendanceDateInput.value : '';
+    
     tableBody.innerHTML = enrolledStudents.map(student => {
         // Get existing attendance for this student, subject, and date
-        const attendanceDate = document.getElementById('attendanceDate').value;
-        const existingAttendance = appData.asistencia.find(att => 
-            att.Estudiante_ID_Estudiante === student.ID_Estudiante && 
-            att.Materia_ID_materia === selectedSubjectId && 
-            att.Fecha === attendanceDate
-        );
+        const existingAttendance = attendanceDate 
+            ? appData.asistencia.find(att => 
+                att &&
+                att.Estudiante_ID_Estudiante === student.ID_Estudiante && 
+                att.Materia_ID_materia === selectedSubjectId && 
+                att.Fecha === attendanceDate
+            )
+            : null;
         
-        // Calculate absences for this student
+        // Calculate total absences for this student in this materia
         const studentAbsences = appData.asistencia.filter(att => 
+            att &&
             att.Estudiante_ID_Estudiante === student.ID_Estudiante && 
             att.Materia_ID_materia === selectedSubjectId && 
             att.Presente === 'N'
+        ).length;
+        
+        // Calculate total attendance records for this student in this materia
+        const totalAttendanceRecords = appData.asistencia.filter(att => 
+            att &&
+            att.Estudiante_ID_Estudiante === student.ID_Estudiante && 
+            att.Materia_ID_materia === selectedSubjectId
         ).length;
         
         const currentStatus = existingAttendance ? (existingAttendance.Presente === 'Y' ? 'present' : 'absent') : '';
         
         return `
             <tr data-student-id="${student.ID_Estudiante}">
-                <td class="student-id">${student.ID_Estudiante}</td>
-                <td class="student-name">${student.Apellido}, ${student.Nombre}</td>
+                <td class="student-id">${student.ID_Estudiante || ''}</td>
+                <td class="student-name">${(student.Apellido || '')}, ${(student.Nombre || '')}</td>
                 <td class="status-cell">
                     <button class="status-btn present-btn ${currentStatus === 'present' ? 'active' : ''}" 
                             data-status="present" data-student-id="${student.ID_Estudiante}">
@@ -278,7 +424,7 @@ function loadStudentsForAttendanceView() {
                         <i class="fas fa-times"></i>
                     </button>
                 </td>
-                <td class="absences-count">${studentAbsences}/0</td>
+                <td class="absences-count">${studentAbsences}/${totalAttendanceRecords}</td>
                 <td class="student-status">
                     <span class="status-badge">${getStudentDisplayEstado(student)}</span>
                 </td>
@@ -288,6 +434,8 @@ function loadStudentsForAttendanceView() {
     
     // Add event listeners to status buttons
     setupAttendanceStatusButtons();
+    
+    console.log(`Loaded ${enrolledStudents.length} students for materia ${selectedSubjectId}`);
 }
 
 
@@ -405,6 +553,9 @@ async function saveAttendanceBulk() {
             // Recargar datos desde el servidor
             await loadData();
             
+            // Repopulate materia select after data refresh
+            populateAttendanceMateriaSelect();
+            
             hideAttendanceView();
             loadAttendance();
             
@@ -475,6 +626,9 @@ async function editAttendance(attendanceId) {
             // Recargar datos desde el servidor
             await loadData();
             
+            // Repopulate materia select after data refresh
+            populateAttendanceMateriaSelect();
+            
             loadAttendance();
             
             if (typeof showNotification === 'function') {
@@ -513,6 +667,9 @@ async function deleteAttendance(attendanceId) {
         if (response.ok && result.success !== false) {
             // Recargar datos desde el servidor
             await loadData();
+            
+            // Repopulate materia select after data refresh
+            populateAttendanceMateriaSelect();
             
             loadAttendance();
             
