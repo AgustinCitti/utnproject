@@ -1280,3 +1280,190 @@
     font-weight: 600;
 }
 
+/* ==========================================================================
+   REPORTS DARK MODE STYLES
+   ========================================================================== */
+
+/* Reports dashboard container */
+[data-theme="dark"] .reports-dashboard {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .reports-container {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Charts grid */
+[data-theme="dark"] .charts-grid {
+    background-color: transparent;
+}
+
+/* Chart card */
+[data-theme="dark"] .chart-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+/* Chart header */
+[data-theme="dark"] .chart-header {
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .chart-header h3 {
+    color: var(--text-primary);
+}
+
+/* Chart controls select */
+[data-theme="dark"] .chart-controls select {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23b0b0b0' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+}
+
+[data-theme="dark"] .chart-controls select:hover {
+    border-color: #667eea;
+}
+
+[data-theme="dark"] .chart-controls select:focus {
+    border-color: #667eea;
+    outline: none;
+}
+
+/* Chart container */
+[data-theme="dark"] .chart-container {
+    background-color: var(--card-bg);
+}
+
+/* Detailed reports grid */
+[data-theme="dark"] .detailed-reports {
+    background-color: transparent;
+}
+
+/* Report card */
+[data-theme="dark"] .report-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+/* Report header */
+[data-theme="dark"] .report-header {
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .report-header h3 {
+    color: var(--text-primary);
+}
+
+/* Report content */
+[data-theme="dark"] .report-content {
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+}
+
+/* Top students list */
+[data-theme="dark"] .top-students-list {
+    background-color: transparent;
+}
+
+/* Student rank item */
+[data-theme="dark"] .student-rank {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .student-rank:hover {
+    background-color: var(--card-bg);
+    border-color: #667eea;
+}
+
+/* Rank number */
+[data-theme="dark"] .rank-number {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+/* Student info */
+[data-theme="dark"] .student-info {
+    color: var(--text-primary);
+}
+
+/* Student name */
+[data-theme="dark"] .student-name {
+    color: var(--text-primary);
+}
+
+/* Student average */
+[data-theme="dark"] .student-average {
+    color: var(--text-secondary);
+}
+
+/* Student grades count */
+[data-theme="dark"] .student-grades-count {
+    color: var(--text-secondary);
+}
+
+/* Attendance statistics */
+[data-theme="dark"] .attendance-stats {
+    background-color: transparent;
+}
+
+/* Attendance item */
+[data-theme="dark"] .attendance-item {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+/* Attendance bar */
+[data-theme="dark"] .attendance-bar {
+    background-color: var(--bg-primary);
+}
+
+/* Attendance fill */
+[data-theme="dark"] .attendance-fill {
+    background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* Attendance percentage */
+[data-theme="dark"] .attendance-percentage {
+    color: var(--text-primary);
+}
+
+/* Attendance details */
+[data-theme="dark"] .attendance-details {
+    color: var(--text-secondary);
+}
+
+/* Report actions container */
+[data-theme="dark"] .report-actions {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+/* Summary card */
+[data-theme="dark"] .summary-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+[data-theme="dark"] .summary-card:hover {
+    box-shadow: 0 4px 12px var(--shadow);
+}
+
+/* Summary content */
+[data-theme="dark"] .summary-content h3 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .summary-content p {
+    color: var(--text-secondary);
+}
+
