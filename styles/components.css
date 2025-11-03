@@ -1706,6 +1706,163 @@
     padding: 20px;
 }
 
+/* Student Details Modal Styles */
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.info-label {
+    font-weight: 600;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.info-value {
+    font-size: 1.1em;
+    color: #333;
+    background: transparent;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.9em;
+    font-weight: 600;
+    display: inline-block;
+    background: transparent;
+}
+
+.status-badge.status-intensifica {
+    background: transparent;
+    color: #ff9800;
+}
+
+.status-badge.status-activo {
+    background: transparent;
+    color: #28a745;
+}
+
+/* Tema estudiante status badges - text only */
+.status-badge.status-pendiente {
+    background: transparent;
+    color: #ff9800;
+}
+
+.status-badge.status-en-progreso {
+    background: transparent;
+    color: #ffc107;
+}
+
+.status-badge.status-completado {
+    background: transparent;
+    color: #28a745;
+}
+
+.status-badge.status-cancelado {
+    background: transparent;
+    color: #dc3545;
+}
+
+.grade-excellent {
+    color: #28a745;
+}
+
+.grade-good {
+    color: #ffc107;
+}
+
+.grade-poor {
+    color: #dc3545;
+}
+
+.attendance-good {
+    color: #28a745;
+}
+
+.attendance-warning {
+    color: #ffc107;
+}
+
+.attendance-poor {
+    color: #dc3545;
+}
+
+/* Tema Estudiante Card Styles */
+.tema-estudiante-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.tema-estudiante-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.tema-estudiante-content {
+    flex: 1;
+}
+
+.tema-estudiante-title {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.tema-estudiante-materia {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.tema-estudiante-materia i {
+    margin-right: 0.25rem;
+}
+
+.tema-estudiante-observaciones {
+    font-size: 0.85em;
+    color: #888;
+    font-style: italic;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+
+.tema-estudiante-observaciones i {
+    margin-right: 0.25rem;
+}
+
+.tema-estudiante-fecha {
+    font-size: 0.85em;
+    color: #999;
+    margin-top: 0.5rem;
+}
+
+.tema-estudiante-fecha i {
+    margin-right: 0.25rem;
+}
+
+.tema-estudiante-status {
+    margin-left: 1rem;
+}
+
+.tema-estudiante-status .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
 .form-group {
     margin-bottom: 20px;
 }

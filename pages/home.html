@@ -905,6 +905,18 @@
                     </div>
                     <small style="display: block; margin-top: 5px; color: #666;">Los temas mostrados corresponden a las materias seleccionadas arriba. Si una materia no tiene temas, puedes crearlos directamente desde aquí.</small>
                 </div>
+                <!-- Selector de temas para asignar al estudiante -->
+                <div class="form-group">
+                    <label for="studentTopics" data-translate="assign_topics">Asignar Temas</label>
+                    <select id="studentTopics">
+                        <option value="" data-translate="select_topic">- Seleccionar Tema -</option>
+                        <!-- Se poblará dinámicamente con los temas de las materias seleccionadas -->
+                    </select>
+                    <div id="selectedTopicsContainer" class="selected-subjects-container" style="display: none; margin-top: 10px;">
+                        <!-- Selected topics will be displayed here as chips -->
+                    </div>
+                    <small style="display: block; margin-top: 5px; color: #666;">Selecciona temas específicos para asignar al estudiante. Los temas disponibles corresponden a las materias seleccionadas arriba.</small>
+                </div>
                 <div class="form-actions">
                     <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
                     <button type="button" class="btn-primary" data-translate="save_student" onclick="saveStudent(); event.preventDefault(); return false;">Guardar Estudiante</button>
@@ -1252,6 +1264,45 @@
                 <!-- Event details will be populated here -->
             </div>
             <div class="form-actions" style="padding: 1rem 2rem 2rem;">
+                <button type="button" class="btn-primary close-modal" style="width: 100%;">
+                    <i class="fas fa-check"></i>
+                    <span>Cerrar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Details Modal -->
+    <div id="studentDetailsModal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3 id="studentDetailsModalTitle">Detalles del Estudiante</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-form" style="padding: 1.5rem 2rem;">
+                <!-- Student Basic Information -->
+                <div class="student-details-section" style="margin-bottom: 2rem;">
+                    <h4 style="margin-bottom: 1rem; color: #667eea; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-user"></i>
+                        Información del Estudiante
+                    </h4>
+                    <div id="studentDetailsInfo" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <!-- Student info will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Tema Estudiante Section -->
+                <div class="student-details-section">
+                    <h4 style="margin-bottom: 1rem; color: #667eea; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-book"></i>
+                        Temas del Estudiante
+                    </h4>
+                    <div id="studentTemaEstudianteList" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Tema estudiante records will be populated here -->
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions" style="padding: 1rem 2rem; border-top: 1px solid #e0e0e0;">
                 <button type="button" class="btn-primary close-modal" style="width: 100%;">
                     <i class="fas fa-check"></i>
                     <span>Cerrar</span>

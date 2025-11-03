@@ -2,6 +2,8 @@
 let editingStudentId = null;
 // Lista de materias seleccionadas para el estudiante
 let selectedSubjectsList = [];
+// Lista de temas seleccionados para asignar al estudiante
+let selectedTopicsList = [];
 
 // Función para poblar el select de materias con las del docente actual
 function populateStudentSubjectsSelect() {
@@ -84,6 +86,9 @@ function handleSubjectSelection() {
     // Resetear el dropdown
     subjectsSelect.value = '';
     
+    // Recargar el selector de temas ya que las materias cambiaron
+    populateStudentTopicsSelect();
+    
     // Si está activo el selector de temas de intensificación, recargar temas
     const studentStatus = document.getElementById('studentStatus');
     const themesContainer = document.getElementById('intensificacionThemesContainer');
@@ -116,10 +121,192 @@ function removeSubject(index) {
     selectedSubjectsList.splice(index, 1);
     renderSelectedSubjects();
     populateStudentSubjectsSelect();
+    
+    // Recargar el selector de temas ya que las materias cambiaron
+    populateStudentTopicsSelect();
+    
+    // Remover temas que pertenecen a la materia eliminada
+    if (selectedSubjectsList.length > 0) {
+        const remainingSubjectIds = selectedSubjectsList.map(s => parseInt(s.id));
+        selectedTopicsList = selectedTopicsList.filter(topic => {
+            const topicSubjectId = parseInt(topic.subjectId);
+            return remainingSubjectIds.includes(topicSubjectId);
+        });
+        renderSelectedTopics();
+    } else {
+        selectedTopicsList = [];
+        renderSelectedTopics();
+    }
 }
 
 // Make removeSubject globally accessible
 window.removeSubject = removeSubject;
+
+// Función para poblar el select de temas basado en las materias seleccionadas
+function populateStudentTopicsSelect() {
+    const topicsSelect = document.getElementById('studentTopics');
+    if (!topicsSelect) return;
+    
+    // Limpiar opciones actuales
+    topicsSelect.innerHTML = '<option value="" data-translate="select_topic">- Seleccionar Tema -</option>';
+    
+    // Si no hay materias seleccionadas, no mostrar temas
+    if (selectedSubjectsList.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Primero selecciona materias';
+        option.disabled = true;
+        topicsSelect.appendChild(option);
+        return;
+    }
+    
+    // Asegurar que appData.contenido esté disponible
+    if (!appData.contenido || !Array.isArray(appData.contenido)) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Cargando temas...';
+        option.disabled = true;
+        topicsSelect.appendChild(option);
+        return;
+    }
+    
+    // Obtener IDs de las materias seleccionadas
+    const selectedSubjectIds = selectedSubjectsList.map(s => parseInt(s.id));
+    
+    // Obtener temas ya seleccionados (para no mostrarlos en el dropdown)
+    const selectedTopicIds = selectedTopicsList.map(t => t.id);
+    
+    // Obtener todos los contenidos de las materias seleccionadas
+    const availableTopics = appData.contenido.filter(c => {
+        const materiaId = parseInt(c.Materia_ID_materia);
+        const contenidoId = parseInt(c.ID_contenido);
+        return selectedSubjectIds.includes(materiaId) && !selectedTopicIds.includes(contenidoId);
+    });
+    
+    if (availableTopics.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No hay temas disponibles';
+        option.disabled = true;
+        topicsSelect.appendChild(option);
+        return;
+    }
+    
+    // Agrupar temas por materia para mejor organización
+    const topicsBySubject = {};
+    availableTopics.forEach(topic => {
+        const materiaId = parseInt(topic.Materia_ID_materia);
+        if (!topicsBySubject[materiaId]) {
+            const materia = appData.materia.find(m => parseInt(m.ID_materia) === materiaId);
+            topicsBySubject[materiaId] = {
+                materia: materia,
+                topics: []
+            };
+        }
+        topicsBySubject[materiaId].topics.push(topic);
+    });
+    
+    // Agregar opciones agrupadas por materia
+    selectedSubjectsList.forEach(subject => {
+        const subjectId = parseInt(subject.id);
+        const subjectData = topicsBySubject[subjectId];
+        
+        if (subjectData && subjectData.topics.length > 0) {
+            // Agregar un optgroup para esta materia
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = `${subject.name} - ${subject.curso}`;
+            
+            subjectData.topics.forEach(topic => {
+                const option = document.createElement('option');
+                option.value = topic.ID_contenido;
+                option.textContent = topic.Tema || 'Sin título';
+                option.dataset.subjectId = subjectId;
+                optgroup.appendChild(option);
+            });
+            
+            topicsSelect.appendChild(optgroup);
+        }
+    });
+    
+    // Agregar event listener para cuando se selecciona un tema
+    if (!topicsSelect._hasTopicListener) {
+        topicsSelect.addEventListener('change', handleTopicSelection);
+        topicsSelect._hasTopicListener = true;
+    }
+}
+
+function handleTopicSelection() {
+    const topicsSelect = document.getElementById('studentTopics');
+    const selectedValue = topicsSelect.value;
+    
+    if (!selectedValue) {
+        return;
+    }
+    
+    // Encontrar el tema seleccionado
+    const topic = appData.contenido.find(c => parseInt(c.ID_contenido) === parseInt(selectedValue));
+    if (!topic) {
+        console.error('Topic not found for ID:', selectedValue);
+        return;
+    }
+    
+    // Encontrar la materia del tema
+    const materiaId = parseInt(topic.Materia_ID_materia);
+    const subject = selectedSubjectsList.find(s => parseInt(s.id) === materiaId);
+    
+    if (!subject) {
+        console.error('Subject not found for topic:', topic);
+        return;
+    }
+    
+    // Agregar a la lista de seleccionados si no está ya
+    if (!selectedTopicsList.some(t => parseInt(t.id) === parseInt(topic.ID_contenido))) {
+        selectedTopicsList.push({
+            id: parseInt(topic.ID_contenido),
+            name: topic.Tema || 'Sin título',
+            subjectId: materiaId,
+            subjectName: subject.name
+        });
+    }
+    
+    // Renderizar los temas seleccionados
+    renderSelectedTopics();
+    
+    // Repoblar el dropdown (sin los ya seleccionados)
+    populateStudentTopicsSelect();
+    
+    // Resetear el dropdown
+    topicsSelect.value = '';
+}
+
+function renderSelectedTopics() {
+    const container = document.getElementById('selectedTopicsContainer');
+    if (!container) return;
+    
+    if (selectedTopicsList.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = selectedTopicsList.map((topic, index) => `
+        <span class="subject-chip" data-topic-id="${topic.id}">
+            ${topic.name} <span style="color: #999; font-size: 0.9em;">(${topic.subjectName})</span>
+            <button type="button" class="remove-subject-btn" onclick="removeTopic(${index})" title="Eliminar">
+                <i class="fas fa-times"></i>
+            </button>
+        </span>
+    `).join('');
+}
+
+function removeTopic(index) {
+    selectedTopicsList.splice(index, 1);
+    renderSelectedTopics();
+    populateStudentTopicsSelect();
+}
+
+// Make removeTopic globally accessible
+window.removeTopic = removeTopic;
 
 // Lista de temas seleccionados para intensificación
 let selectedIntensificacionThemes = [];
@@ -657,6 +844,88 @@ async function saveThemesAssignment(studentId, themeIds) {
     }
 }
 
+// Función para crear tema_estudiante records para todos los contenidos de las materias seleccionadas
+async function createTemaEstudianteForSubjects(studentId, subjectIds) {
+    try {
+        // Asegurar que appData.contenido esté disponible
+        if (!appData.contenido || !Array.isArray(appData.contenido)) {
+            console.warn('appData.contenido no disponible, recargando datos...');
+            if (typeof loadData === 'function') {
+                await loadData();
+            }
+            // Si aún no está disponible después de recargar, retornar
+            if (!appData.contenido || !Array.isArray(appData.contenido)) {
+                console.error('No se pudieron cargar los contenidos');
+                return;
+            }
+        }
+        
+        // Obtener todos los contenidos (temas) de las materias seleccionadas
+        const subjectIdsNum = subjectIds.map(id => parseInt(id));
+        const contenidos = appData.contenido.filter(c => 
+            subjectIdsNum.includes(parseInt(c.Materia_ID_materia))
+        );
+        
+        if (contenidos.length === 0) {
+            console.log('No hay contenidos para las materias seleccionadas');
+            return;
+        }
+        
+        console.log(`Creando tema_estudiante para ${contenidos.length} contenido(s) del estudiante ${studentId}`);
+        
+        let successCount = 0;
+        let errorCount = 0;
+        let skippedCount = 0;
+        
+        // Crear tema_estudiante para cada contenido
+        for (const contenido of contenidos) {
+            try {
+                const payload = {
+                    Contenido_ID_contenido: parseInt(contenido.ID_contenido),
+                    Estudiante_ID_Estudiante: parseInt(studentId),
+                    Estado: 'PENDIENTE',
+                    Observaciones: null
+                };
+                
+                const res = await fetch('../api/tema_estudiante.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json().catch(() => ({}));
+                
+                if (res.ok) {
+                    successCount++;
+                } else {
+                    // Si ya existe (409), contar como éxito ya que el registro ya está creado
+                    if (res.status === 409) {
+                        skippedCount++;
+                    } else {
+                        errorCount++;
+                        console.error(`Error creando tema_estudiante para contenido ${contenido.ID_contenido}:`, data.message || 'Error desconocido');
+                    }
+                }
+            } catch (err) {
+                errorCount++;
+                console.error(`Error creando tema_estudiante para contenido ${contenido.ID_contenido}:`, err);
+            }
+        }
+        
+        console.log(`Tema_estudiante creados: ${successCount} nuevos, ${skippedCount} ya existían, ${errorCount} errores`);
+        
+        if (errorCount > 0) {
+            console.warn(`Hubo ${errorCount} error(es) al crear algunos tema_estudiante`);
+        }
+        
+        return { successCount, skippedCount, errorCount };
+    } catch (err) {
+        console.error('Error en createTemaEstudianteForSubjects:', err);
+        throw err;
+    }
+}
+
 // Función actualizada para GUARDAR/CREAR estudiante
 async function saveStudent() {
     const studentStatus = document.getElementById('studentStatus');
@@ -684,7 +953,7 @@ async function saveStudent() {
 
         // Si estamos editando, usar PUT
         if (editingStudentId) {
-            url = `${url}/${editingStudentId}`; // El endpoint lee el ID de la URL segmentada
+            url = `${url}?id=${editingStudentId}`; // Usar query string para compatibilidad con diferentes estructuras de URL
             method = 'PUT';
         }
 
@@ -695,7 +964,17 @@ async function saveStudent() {
             },
             body: body
         });
-        const result = await response.json();
+        
+        let result;
+        try {
+            result = await response.json();
+        } catch (e) {
+            console.error('Error parsing response:', e);
+            const text = await response.text();
+            console.error('Response text:', text);
+            alert('Error al guardar el estudiante: Respuesta inválida del servidor');
+            return;
+        }
 
         if (response.ok && result.success !== false) {
             // Obtener el ID del estudiante (diferentes formas según la respuesta)
@@ -735,6 +1014,19 @@ async function saveStudent() {
                     } catch (err) {
                         console.error('Error guardando temas de intensificación:', err);
                         alert('Estudiante guardado pero hubo un error al asignar los temas de intensificación.');
+                    }
+                }
+                
+                // Guardar temas manualmente seleccionados (guardar flag antes de limpiar)
+                const hasManualTopics = selectedTopicsList.length > 0;
+                if (hasManualTopics) {
+                    try {
+                        const selectedTopicIds = selectedTopicsList.map(t => t.id);
+                        await saveThemesAssignment(studentId, selectedTopicIds);
+                        console.log('Temas manualmente seleccionados guardados:', selectedTopicIds);
+                    } catch (err) {
+                        console.error('Error guardando temas seleccionados:', err);
+                        alert('Estudiante guardado pero hubo un error al asignar los temas seleccionados.');
                     }
                 }
                 
@@ -783,6 +1075,20 @@ async function saveStudent() {
                             alert('Estudiante guardado pero hubo un error al guardar las materias: ' + errorMsg);
                         } else {
                             console.log('Enrollments saved successfully:', relationsData);
+                            
+                            // Crear tema_estudiante records para todos los contenidos de las materias seleccionadas
+                            // Solo si no se han seleccionado temas manualmente (para evitar duplicados)
+                            if (!hasManualTopics) {
+                                try {
+                                    await createTemaEstudianteForSubjects(studentId, selectedSubjects);
+                                } catch (err) {
+                                    console.error('Error creando tema_estudiante records:', err);
+                                    // No mostrar alerta al usuario, solo loguear el error
+                                    // Los tema_estudiante se pueden crear manualmente después si es necesario
+                                }
+                            } else {
+                                console.log('Temas manualmente seleccionados, omitiendo creación automática de todos los temas');
+                            }
                         }
                     } catch (error) {
                         console.error('Exception saving enrollments:', error);
@@ -792,6 +1098,10 @@ async function saveStudent() {
                     console.warn('No subjects selected for student:', studentId);
                 }
             }
+            
+            // Limpiar listas después de guardar exitosamente
+            selectedTopicsList = [];
+            selectedIntensificacionThemes = [];
             
             // Actualizar datos locales recargando desde el servidor
             await loadData();
@@ -828,7 +1138,13 @@ async function saveStudent() {
                 );
             }
         } else {
-            alert(result.message || 'Error al guardar el estudiante');
+            const errorMsg = result.message || result.error || 'Error al guardar el estudiante';
+            console.error('Error saving student:', {
+                status: response.status,
+                statusText: response.statusText,
+                result: result
+            });
+            alert(`Error al guardar el estudiante: ${errorMsg}`);
         }
     } catch (error) {
         alert('Error al conectar con el servidor');
@@ -836,60 +1152,89 @@ async function saveStudent() {
 }
 
 // Función actualizada para EDITAR estudiante
-function editStudent(id) {
-    const student = appData.estudiante.find(s => s.ID_Estudiante === id);
+// Hacer la función globalmente accesible
+window.editStudent = function(id) {
+    // Convertir ID a número para comparación consistente
+    const studentId = parseInt(id);
+    
+    if (!id || isNaN(studentId)) {
+        console.error('editStudent: ID no válido', id);
+        alert('Error: ID de estudiante no válido');
+        return;
+    }
+
+    // Buscar estudiante - manejar tanto string como número
+    const student = appData.estudiante.find(s => 
+        parseInt(s.ID_Estudiante) === studentId
+    );
+    
     if (!student) {
+        console.error('editStudent: Estudiante no encontrado', studentId, appData.estudiante);
         alert('Estudiante no encontrado');
         return;
     }
 
     // Guardar ID para el modo edición
-    editingStudentId = id;
+    editingStudentId = studentId;
 
     // Llenar formulario con datos del estudiante
-    document.getElementById('studentFirstName').value = student.Nombre || '';
-    document.getElementById('studentLastName').value = student.Apellido || '';
-    document.getElementById('studentEmail').value = student.Email || '';
+    const firstNameInput = document.getElementById('studentFirstName');
+    const lastNameInput = document.getElementById('studentLastName');
+    const emailInput = document.getElementById('studentEmail');
     
-        // Establecer estado basado en la columna INTENSIFICA de la BD
-        const studentStatus = document.getElementById('studentStatus');
-        if (studentStatus) {
-            // Usar la columna INTENSIFICA para determinar el estado a mostrar
-            const esIntensifica = student.INTENSIFICA === true || student.INTENSIFICA === 1 || student.INTENSIFICA === '1';
-            
-            if (esIntensifica) {
-                studentStatus.value = 'INTENSIFICA';
-                // Mostrar selector de temas y cargar temas asignados
-                const themesContainer = document.getElementById('intensificacionThemesContainer');
-                if (themesContainer) {
-                    themesContainer.style.display = 'block';
-                    // Cargar temas ya asignados al estudiante
-                    selectedIntensificacionThemes = appData.tema_estudiante && Array.isArray(appData.tema_estudiante)
-                        ? appData.tema_estudiante
-                            .filter(te => parseInt(te.Estudiante_ID_Estudiante) === parseInt(id))
-                            .map(te => parseInt(te.Contenido_ID_contenido))
-                        : [];
+    if (!firstNameInput || !lastNameInput) {
+        console.error('editStudent: Campos del formulario no encontrados');
+        alert('Error: No se pudo encontrar el formulario');
+        return;
+    }
+    
+    firstNameInput.value = student.Nombre || '';
+    lastNameInput.value = student.Apellido || '';
+    if (emailInput) {
+        emailInput.value = student.Email || '';
+    }
+    
+    // Establecer estado basado en la columna INTENSIFICA de la BD
+    const studentStatus = document.getElementById('studentStatus');
+    if (studentStatus) {
+        // Usar la columna INTENSIFICA para determinar el estado a mostrar
+        const esIntensifica = student.INTENSIFICA === true || student.INTENSIFICA === 1 || student.INTENSIFICA === '1';
+        
+        if (esIntensifica) {
+            studentStatus.value = 'INTENSIFICA';
+            // Mostrar selector de temas y cargar temas asignados
+            const themesContainer = document.getElementById('intensificacionThemesContainer');
+            if (themesContainer) {
+                themesContainer.style.display = 'block';
+                // Cargar temas ya asignados al estudiante
+                selectedIntensificacionThemes = appData.tema_estudiante && Array.isArray(appData.tema_estudiante)
+                    ? appData.tema_estudiante
+                        .filter(te => parseInt(te.Estudiante_ID_Estudiante) === studentId)
+                        .map(te => parseInt(te.Contenido_ID_contenido))
+                    : [];
+                if (typeof loadIntensificacionThemes === 'function') {
                     loadIntensificacionThemes();
                 }
-            } else {
-                // ACTIVO o INACTIVO (no intensificador)
-                const estado = (student.Estado || '').toUpperCase();
-                studentStatus.value = estado === 'ACTIVO' ? 'ACTIVO' : 'INACTIVO';
-                // Ocultar selector de temas
-                const themesContainer = document.getElementById('intensificacionThemesContainer');
-                if (themesContainer) {
-                    themesContainer.style.display = 'none';
-                }
-                selectedIntensificacionThemes = [];
             }
+        } else {
+            // ACTIVO o INACTIVO (no intensificador)
+            const estado = (student.Estado || '').toUpperCase();
+            studentStatus.value = estado === 'ACTIVO' ? 'ACTIVO' : 'INACTIVO';
+            // Ocultar selector de temas
+            const themesContainer = document.getElementById('intensificacionThemesContainer');
+            if (themesContainer) {
+                themesContainer.style.display = 'none';
+            }
+            selectedIntensificacionThemes = [];
         }
+    }
     
     // Limpiar y poblar materias seleccionadas
     selectedSubjectsList = [];
     
     // Obtener materias del estudiante
     const studentSubjects = (appData.alumnos_x_materia || [])
-        .filter(axm => axm.Estudiante_ID_Estudiante === id)
+        .filter(axm => parseInt(axm.Estudiante_ID_Estudiante) === studentId)
         .map(axm => {
             const subject = appData.materia.find(m => m.ID_materia === axm.Materia_ID_materia);
             if (subject) {
@@ -906,12 +1251,56 @@ function editStudent(id) {
     selectedSubjectsList = studentSubjects;
     
     // Renderizar materias seleccionadas
-    renderSelectedSubjects();
+    if (typeof renderSelectedSubjects === 'function') {
+        renderSelectedSubjects();
+    }
     
     // Poblar el dropdown con las materias disponibles
     populateStudentSubjectsSelect();
+    
+    // Cargar temas ya asignados al estudiante
+    selectedTopicsList = [];
+    if (appData.tema_estudiante && Array.isArray(appData.tema_estudiante)) {
+        const assignedTopics = appData.tema_estudiante
+            .filter(te => parseInt(te.Estudiante_ID_Estudiante) === studentId)
+            .map(te => {
+                const contenido = appData.contenido.find(c => parseInt(c.ID_contenido) === parseInt(te.Contenido_ID_contenido));
+                if (contenido) {
+                    const materiaId = parseInt(contenido.Materia_ID_materia);
+                    const subject = selectedSubjectsList.find(s => parseInt(s.id) === materiaId);
+                    if (subject) {
+                        return {
+                            id: parseInt(contenido.ID_contenido),
+                            name: contenido.Tema || 'Sin título',
+                            subjectId: materiaId,
+                            subjectName: subject.name
+                        };
+                    }
+                }
+                return null;
+            })
+            .filter(t => t !== null);
+        
+        selectedTopicsList = assignedTopics;
+    }
+    
+    // Renderizar temas seleccionados
+    renderSelectedTopics();
+    
+    // Poblar el selector de temas
+    populateStudentTopicsSelect();
 
-    showModal('studentModal');
+    // Usar setTimeout para asegurar que el modal se abra correctamente
+    setTimeout(() => {
+        if (typeof showModal === 'function') {
+            showModal('studentModal');
+        } else {
+            const modal = document.getElementById('studentModal');
+            if (modal) {
+                modal.classList.add('active');
+            }
+        }
+    }, 50);
 }
 
 // Función actualizada para ELIMINAR estudiante
@@ -986,15 +1375,23 @@ function clearStudentForm() {
     editingStudentId = null;
     selectedSubjectsList = [];
     selectedIntensificacionThemes = [];
+    selectedTopicsList = [];
     renderSelectedSubjects();
+    renderSelectedTopics();
     
-    // Reset the event listener flag
+    // Reset the event listener flags
     const subjectsSelect = document.getElementById('studentSubjects');
     if (subjectsSelect) {
         subjectsSelect._hasSubjectListener = false;
     }
     
+    const topicsSelect = document.getElementById('studentTopics');
+    if (topicsSelect) {
+        topicsSelect._hasTopicListener = false;
+    }
+    
     populateStudentSubjectsSelect(); // Repoblar las materias
+    populateStudentTopicsSelect(); // Repoblar los temas
     
     // Ocultar selector de temas de intensificación
     const themesContainer = document.getElementById('intensificacionThemesContainer');
@@ -1107,6 +1504,8 @@ window.showModal = function(modalId) {
     if (modalId === 'studentModal') {
         // Poblar materias cuando se abre el modal
         populateStudentSubjectsSelect();
+        // Poblar temas cuando se abre el modal
+        populateStudentTopicsSelect();
         
         setTimeout(() => {
             const submitBtn = document.querySelector('#studentForm button[type="submit"]');
