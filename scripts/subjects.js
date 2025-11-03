@@ -21,6 +21,7 @@ let currentSubjectId = null;
 let isSubmitting = false; // Flag para prevenir doble submit
 let subjectsInitialized = false; // Flag para prevenir múltiples inicializaciones
 let subjectFormHandler = null; // Referencia al manejador del formulario
+let currentThemesSubjectId = null; // Store current subject ID for themes modal
 
 function initializeSubjects() {
     // Prevenir múltiples inicializaciones
@@ -84,6 +85,13 @@ function initializeSubjects() {
                     showModal('subjectModal');
                 } else {
                     modalElement.classList.add('active');
+                }
+                
+                // Reset modal title to "Add Subject"
+                const modalTitle = document.querySelector('#subjectModal .modal-header h3');
+                if (modalTitle) {
+                    modalTitle.textContent = 'Agregar Materia';
+                    modalTitle.setAttribute('data-translate', 'add_subject');
                 }
                 
                 // Limpiar el formulario
@@ -486,135 +494,362 @@ function parseCourseDivision(cursoDivision) {
     return { course, division };
 }
 
-function editSubject(id) {
-    const subject = appData.materia.find(s => s.ID_materia === id);
-    if (!subject) return;
+window.editSubject = async function(id) {
+    try {
+        // Ensure appData is loaded
+        if (!appData || !appData.materia || !Array.isArray(appData.materia)) {
+            console.log('appData not loaded, loading data...');
+            if (typeof loadData === 'function') {
+                await loadData();
+            }
+        }
 
-    currentSubjectId = id;
-    document.getElementById('subjectName').value = subject.Nombre;
-    
-    // Parsear curso_division para separar curso y división
-    const { course, division } = parseCourseDivision(subject.Curso_division);
-    const courseSelect = document.getElementById('subjectCourse');
-    const divisionSelect = document.getElementById('subjectDivision');
-    
-    if (courseSelect && course) {
-        courseSelect.value = course;
-    }
-    if (divisionSelect && division) {
-        divisionSelect.value = division;
-    }
-    
-    document.getElementById('subjectDescription').value = subject.Descripcion || '';
-    document.getElementById('subjectClassroom').value = subject.Aula || '';
-    // Note: Teacher is always the logged-in user, so we don't set it in edit mode
-    document.getElementById('subjectStatus').value = subject.Estado;
+        // Use getSubjectById helper which handles type conversion properly
+        let subject = null;
+        if (typeof getSubjectById === 'function') {
+            subject = getSubjectById(id);
+        } else {
+            // Fallback: direct search with type conversion
+            const subjectId = parseInt(id, 10);
+            subject = (appData.materia || []).find(s => parseInt(s.ID_materia, 10) === subjectId);
+        }
 
-    // Populate schedule selector
-    if (subject.Horario) {
-        populateScheduleSelector(subject.Horario);
-    } else {
-        resetScheduleSelector();
-    }
+        // If still not found, try fetching from API as fallback
+        if (!subject) {
+            console.log('Subject not found in appData, fetching from API...');
+            try {
+                const isInPages = window.location.pathname.includes('/pages/');
+                const baseUrl = isInPages ? '../api' : 'api';
+                const response = await fetch(`${baseUrl}/materia.php?id=${id}`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    // API returns the subject object directly when fetching by ID
+                    if (data && (data.ID_materia || data.id_materia)) {
+                        subject = data;
+                        // Normalize ID field name
+                        if (!subject.ID_materia && subject.id_materia) {
+                            subject.ID_materia = subject.id_materia;
+                        }
+                        // Add to appData for future use
+                        if (appData && appData.materia) {
+                            const existingIndex = appData.materia.findIndex(s => parseInt(s.ID_materia, 10) === parseInt(id, 10));
+                            if (existingIndex >= 0) {
+                                appData.materia[existingIndex] = subject;
+                            } else {
+                                appData.materia.push(subject);
+                            }
+                        }
+                    }
+                } else {
+                    console.warn('API returned error status:', response.status);
+                }
+            } catch (apiError) {
+                console.error('Error fetching subject from API:', apiError);
+            }
+        }
 
-    showModal('subjectModal');
+        if (!subject) {
+            console.error('Subject not found:', id);
+            alert('No se pudo encontrar la materia. Por favor, recarga la página.');
+            return;
+        }
+
+        currentSubjectId = parseInt(id, 10);
+        
+        // Populate form fields safely
+        const subjectNameEl = document.getElementById('subjectName');
+        if (subjectNameEl) {
+            subjectNameEl.value = subject.Nombre || '';
+        }
+        
+        // Parsear curso_division para separar curso y división
+        const { course, division } = parseCourseDivision(subject.Curso_division);
+        const courseSelect = document.getElementById('subjectCourse');
+        const divisionSelect = document.getElementById('subjectDivision');
+        
+        if (courseSelect && course) {
+            courseSelect.value = course;
+        }
+        if (divisionSelect && division) {
+            divisionSelect.value = division;
+        }
+        
+        const subjectDescriptionEl = document.getElementById('subjectDescription');
+        if (subjectDescriptionEl) {
+            subjectDescriptionEl.value = subject.Descripcion || '';
+        }
+        
+        const subjectClassroomEl = document.getElementById('subjectClassroom');
+        if (subjectClassroomEl) {
+            subjectClassroomEl.value = subject.Aula || '';
+        }
+        
+        // Note: Teacher is always the logged-in user, so we don't set it in edit mode
+        const subjectStatusEl = document.getElementById('subjectStatus');
+        if (subjectStatusEl) {
+            subjectStatusEl.value = subject.Estado || '';
+        }
+
+        // Populate schedule selector
+        if (subject.Horario) {
+            if (typeof populateScheduleSelector === 'function') {
+                populateScheduleSelector(subject.Horario);
+            }
+        } else {
+            if (typeof resetScheduleSelector === 'function') {
+                resetScheduleSelector();
+            }
+        }
+
+        // Update modal title to indicate edit mode
+        const modalTitle = document.querySelector('#subjectModal .modal-header h3');
+        if (modalTitle) {
+            modalTitle.textContent = 'Editar Materia';
+            modalTitle.setAttribute('data-translate', 'edit_subject');
+        }
+
+        // Show the modal
+        if (typeof showModal === 'function') {
+            showModal('subjectModal');
+        } else {
+            const modal = document.getElementById('subjectModal');
+            if (modal) {
+                modal.style.display = '';
+                modal.classList.add('active');
+                if (typeof setupModalHandlers === 'function') {
+                    setupModalHandlers('subjectModal');
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error in editSubject:', error);
+        alert('Error al abrir el formulario de edición. Por favor, intente nuevamente.');
+    }
 }
 
 
-// Función para crear tema desde las acciones de materias
-// Asegurar que esté en el scope global para que funcione desde onclick
-window.createThemeForSubject = function(subjectId) {
-    console.log('createThemeForSubject llamado con subjectId:', subjectId);
+// Función para mostrar el formulario de crear tema en el modal unificado
+window.showCreateThemeForm = function(subjectId) {
+    if (!subjectId) {
+        subjectId = currentThemesSubjectId;
+    }
     
     if (!subjectId) {
         alert('Error: ID de materia no válido');
-        console.error('subjectId no válido:', subjectId);
         return;
     }
     
     const subject = getSubjectById(subjectId);
     if (!subject) {
         alert('Error: No se encontró la materia seleccionada');
-        console.error('Materia no encontrada para ID:', subjectId);
         return;
     }
     
-    console.log('Materia encontrada:', subject);
+    // Store current subject ID
+    currentThemesSubjectId = subjectId;
     
-    // Resetear el formulario
-    const contentForm = document.getElementById('contentForm');
-    if (contentForm) {
-        contentForm.reset();
-        console.log('Formulario reseteado');
-    } else {
-        console.warn('No se encontró el formulario contentForm');
-    }
-    
-    // Pre-llenar el campo de materia y ocultarlo
-    const contentSubject = document.getElementById('contentSubject');
-    const contentSubjectGroup = contentSubject ? contentSubject.closest('.form-group') : null;
-    if (contentSubject) {
-        // Asegurar que las opciones están cargadas
-        if (contentSubject.options.length <= 1) {
-            console.log('Cargando opciones de materias...');
-            populateSubjectSelect();
-        }
-        contentSubject.value = subjectId;
-        contentSubject.style.display = 'none'; // Ocultar el campo
-        if (contentSubjectGroup) {
-            contentSubjectGroup.style.display = 'none'; // Ocultar todo el grupo del formulario
-        }
-        console.log('Campo de materia prellenado y ocultado con:', subjectId);
-    } else {
-        console.error('No se encontró el campo contentSubject');
-    }
-    
-    // Resetear el estado a PENDIENTE por defecto
-    const contentStatus = document.getElementById('contentStatus');
-    if (contentStatus) {
-        contentStatus.value = 'PENDIENTE';
-        console.log('Estado establecido a PENDIENTE');
-    } else {
-        console.warn('No se encontró el campo contentStatus');
-    }
-    
-    // Actualizar el título del modal
-    const modalTitle = document.querySelector('#contentModal .modal-header h3');
+    // Update modal title
+    const modalTitle = document.getElementById('selectedSubjectName');
     if (modalTitle) {
-        modalTitle.textContent = 'Crear Tema';
-        modalTitle.setAttribute('data-translate', 'create_theme');
-        console.log('Título del modal actualizado');
-    } else {
-        console.warn('No se encontró el título del modal');
+        modalTitle.textContent = subject.Nombre;
     }
     
-    // Mostrar el modal
-    const modal = document.getElementById('contentModal');
-    if (!modal) {
-        alert('Error: No se encontró el modal de contenido. Por favor, asegúrate de estar en la página correcta.');
-        console.error('No se encontró el modal contentModal');
-        return;
+    // Show form view, hide list view
+    const themesListView = document.getElementById('themesListView');
+    const createThemeFormView = document.getElementById('createThemeFormView');
+    if (themesListView) themesListView.style.display = 'none';
+    if (createThemeFormView) createThemeFormView.style.display = 'block';
+    
+    // Reset form
+    const unifiedForm = document.getElementById('unifiedContentForm');
+    if (unifiedForm) {
+        unifiedForm.reset();
     }
     
-    console.log('Mostrando modal...');
-    if (typeof setupModalHandlers === 'function') {
-        setupModalHandlers('contentModal');
+    // Set subject ID in hidden field
+    const unifiedSubjectId = document.getElementById('unifiedContentSubjectId');
+    if (unifiedSubjectId) {
+        unifiedSubjectId.value = subjectId;
     }
-    if (typeof showModal === 'function') {
-        showModal('contentModal');
-    } else {
-        modal.classList.add('active');
+    
+    // Set default status
+    const unifiedStatus = document.getElementById('unifiedContentStatus');
+    if (unifiedStatus) {
+        unifiedStatus.value = 'PENDIENTE';
     }
-    console.log('Modal mostrado');
+    
+    // Show modal if not already visible
+    const modal = document.getElementById('subjectThemesModal');
+    if (modal && !modal.classList.contains('active')) {
+        if (typeof showModal === 'function') {
+            showModal('subjectThemesModal');
+        } else {
+            modal.classList.add('active');
+            if (typeof setupModalHandlers === 'function') {
+                setupModalHandlers('subjectThemesModal');
+            }
+        }
+    }
+    
+    // Setup event handlers
+    setupUnifiedThemesModalHandlers();
 };
 
-// Función para mostrar el panel de temas de una materia (similar al panel de estudiantes)
+// Función para crear tema desde las acciones de materias (mantiene compatibilidad)
+window.createThemeForSubject = function(subjectId) {
+    // If modal is already open, just show the form
+    const modal = document.getElementById('subjectThemesModal');
+    if (modal && modal.classList.contains('active')) {
+        showCreateThemeForm(subjectId);
+    } else {
+        // Otherwise, open the modal with themes list first, then show form
+        showSubjectThemesPanel(subjectId);
+        // Small delay to ensure modal is rendered
+        setTimeout(() => {
+            showCreateThemeForm(subjectId);
+        }, 100);
+    }
+};
+
+// Función para volver a la lista de temas
+window.backToThemesList = function() {
+    if (!currentThemesSubjectId) {
+        return;
+    }
+    
+    // Show list view, hide form view
+    const themesListView = document.getElementById('themesListView');
+    const createThemeFormView = document.getElementById('createThemeFormView');
+    if (themesListView) themesListView.style.display = 'block';
+    if (createThemeFormView) createThemeFormView.style.display = 'none';
+    
+    // Reload themes list
+    showSubjectThemesPanel(currentThemesSubjectId);
+};
+
+// Setup event handlers for unified themes modal
+function setupUnifiedThemesModalHandlers() {
+    // Show create form button
+    const showCreateBtn = document.getElementById('showCreateThemeFormBtn');
+    if (showCreateBtn) {
+        showCreateBtn.onclick = function() {
+            if (currentThemesSubjectId) {
+                showCreateThemeForm(currentThemesSubjectId);
+            }
+        };
+    }
+    
+    // Back to list button
+    const backBtn = document.getElementById('backToThemesListBtn');
+    if (backBtn) {
+        backBtn.onclick = backToThemesList;
+    }
+    
+    // Cancel button
+    const cancelBtn = document.getElementById('cancelCreateThemeBtn');
+    if (cancelBtn) {
+        cancelBtn.onclick = backToThemesList;
+    }
+    
+    // Form submit handler
+    const unifiedForm = document.getElementById('unifiedContentForm');
+    if (unifiedForm) {
+        unifiedForm.onsubmit = function(e) {
+            e.preventDefault();
+            saveUnifiedContent();
+        };
+    }
+}
+
+// Función para guardar contenido desde el formulario unificado
+async function saveUnifiedContent() {
+    const unifiedSubjectId = document.getElementById('unifiedContentSubjectId');
+    const unifiedTopic = document.getElementById('unifiedContentTopic');
+    const unifiedDescription = document.getElementById('unifiedContentDescription');
+    const unifiedStatus = document.getElementById('unifiedContentStatus');
+    
+    if (!unifiedSubjectId || !unifiedTopic) {
+        alert('Error: No se encontraron los campos del formulario');
+        return;
+    }
+    
+    const subjectId = parseInt(unifiedSubjectId.value);
+    const topic = unifiedTopic.value.trim();
+    const description = unifiedDescription ? unifiedDescription.value.trim() : '';
+    const status = unifiedStatus ? unifiedStatus.value : 'PENDIENTE';
+    
+    if (!subjectId || subjectId <= 0) {
+        alert('Error: ID de materia no válido');
+        return;
+    }
+    
+    if (!topic) {
+        alert('El tema es obligatorio');
+        return;
+    }
+    
+    const payload = {
+        Tema: topic,
+        Descripcion: description || null,
+        Estado: status || 'PENDIENTE',
+        Materia_ID_materia: subjectId
+    };
+    
+    try {
+        const res = await fetch('../api/contenido.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+        
+        let data = {};
+        const text = await res.text();
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            throw new Error(`Error del servidor (${res.status})`);
+        }
+        
+        if (!res.ok) {
+            const errorMsg = data.error ? `${data.message || 'Error'}: ${data.error}` : (data.message || 'No se pudo crear el tema');
+            throw new Error(errorMsg);
+        }
+        
+        // Reload data from backend
+        if (typeof loadData === 'function') await loadData();
+        
+        // Reload themes list and go back to list view
+        if (currentThemesSubjectId) {
+            showSubjectThemesPanel(currentThemesSubjectId);
+        }
+        
+        // Show success message
+        if (typeof showNotification === 'function') {
+            showNotification('Tema creado correctamente', 'success');
+        } else {
+            alert('Tema creado correctamente');
+        }
+    } catch (err) {
+        alert('Error: ' + (err.message || 'No se pudo crear el tema'));
+    }
+}
+
+// Función para mostrar el modal de temas de una materia
 window.showSubjectThemesPanel = function(subjectId) {
     const subject = getSubjectById(subjectId);
     if (!subject) {
         console.error('Materia no encontrada para ID:', subjectId);
         return;
     }
+    
+    // Store current subject ID
+    currentThemesSubjectId = subjectId;
     
     // Obtener los temas de esta materia
     if (!appData.contenido || !Array.isArray(appData.contenido)) {
@@ -630,18 +865,24 @@ window.showSubjectThemesPanel = function(subjectId) {
             return dateB - dateA;
         });
     
-    // Actualizar el panel
-    const panel = document.getElementById('subjectThemesPanel');
-    if (!panel) {
-        console.error('No se encontró el panel subjectThemesPanel');
+    // Actualizar el modal
+    const modal = document.getElementById('subjectThemesModal');
+    if (!modal) {
+        console.error('No se encontró el modal subjectThemesModal');
         return;
     }
     
     // Actualizar título
-    const panelTitle = document.getElementById('selectedSubjectName');
-    if (panelTitle) {
-        panelTitle.textContent = subject.Nombre;
+    const modalTitle = document.getElementById('selectedSubjectName');
+    if (modalTitle) {
+        modalTitle.textContent = subject.Nombre;
     }
+    
+    // Show list view, hide form view
+    const themesListView = document.getElementById('themesListView');
+    const createThemeFormView = document.getElementById('createThemeFormView');
+    if (themesListView) themesListView.style.display = 'block';
+    if (createThemeFormView) createThemeFormView.style.display = 'none';
     
     // Mostrar lista de temas
     const themesList = document.getElementById('subjectThemesList');
@@ -649,16 +890,16 @@ window.showSubjectThemesPanel = function(subjectId) {
         if (themes.length > 0) {
             themesList.innerHTML = themes.map(theme => {
                 return `
-                    <div class="theme-item" style="padding: 12px; margin-bottom: 10px; border: 1px solid #e0e0e0; border-radius: 6px; background: #f9f9f9;">
+                    <div class="theme-item" style="padding: 12px; margin-bottom: 10px; border: 1px solid var(--border-color, #e0e0e0); border-radius: 6px; background: var(--card-bg, #f9f9f9);">
                         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
                             <div style="flex: 1;">
-                                <strong style="display: block; margin-bottom: 5px; color: #333;">${theme.Tema || 'Sin título'}</strong>
-                                ${theme.Descripcion ? `<div style="font-size: 0.9em; color: #666; margin-bottom: 8px;">${theme.Descripcion}</div>` : ''}
+                                <strong style="display: block; margin-bottom: 5px; color: var(--text-primary, #333);">${theme.Tema || 'Sin título'}</strong>
+                                ${theme.Descripcion ? `<div style="font-size: 0.9em; color: var(--text-secondary, #666); margin-bottom: 8px;">${theme.Descripcion}</div>` : ''}
                                 <div style="display: flex; gap: 15px; align-items: center;">
                                     <span class="status-badge status-${(theme.Estado || 'PENDIENTE').toLowerCase()}" style="font-size: 0.85em; padding: 4px 10px; border-radius: 12px;">
                                         ${getStatusText(theme.Estado || 'PENDIENTE')}
                                     </span>
-                                    ${theme.Fecha_creacion ? `<small style="color: #999; font-size: 0.85em;">Creado: ${new Date(theme.Fecha_creacion).toLocaleDateString('es-ES')}</small>` : ''}
+                                    ${theme.Fecha_creacion ? `<small style="color: var(--text-secondary, #999); font-size: 0.85em;">Creado: ${new Date(theme.Fecha_creacion).toLocaleDateString('es-ES')}</small>` : ''}
                                 </div>
                             </div>
                             <div style="display: flex; gap: 5px;">
@@ -675,10 +916,10 @@ window.showSubjectThemesPanel = function(subjectId) {
             }).join('');
         } else {
             themesList.innerHTML = `
-                <div style="text-align: center; padding: 40px 20px; color: #999;">
+                <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary, #999);">
                     <i class="fas fa-book-open" style="font-size: 2.5em; margin-bottom: 15px; opacity: 0.3;"></i>
                     <p>No hay temas registrados para esta materia</p>
-                    <button class="btn-primary" onclick="createThemeForSubject(${subjectId})" style="margin-top: 15px;">
+                    <button class="btn-primary" onclick="showCreateThemeForm(${subjectId})" style="margin-top: 15px;">
                         <i class="fas fa-plus"></i> Crear Primer Tema
                     </button>
                 </div>
@@ -686,19 +927,34 @@ window.showSubjectThemesPanel = function(subjectId) {
         }
     }
     
-    // Mostrar el panel
-    panel.style.display = 'block';
+    // Mostrar el modal usando la función showModal
+    if (typeof showModal === 'function') {
+        showModal('subjectThemesModal');
+    } else {
+        // Fallback si showModal no está disponible
+        modal.classList.add('active');
+        if (typeof setupModalHandlers === 'function') {
+            setupModalHandlers('subjectThemesModal');
+        }
+    }
+    
+    // Setup event handlers for the modal buttons
+    setupUnifiedThemesModalHandlers();
 };
 
-// Función para cerrar el panel de temas (disponible globalmente)
+// Función para cerrar el modal de temas (disponible globalmente)
 window.closeSubjectThemesPanel = function() {
-    const panel = document.getElementById('subjectThemesPanel');
-    if (panel) {
-        panel.style.display = 'none';
+    const modal = document.getElementById('subjectThemesModal');
+    if (modal) {
+        if (typeof closeModal === 'function') {
+            closeModal(modal);
+        } else {
+            modal.classList.remove('active');
+        }
     }
 };
 
-async function deleteSubject(id) {
+window.deleteSubject = async function(id) {
     if (!confirm('¿Estás seguro de que quieres eliminar esta materia?')) {
         return;
     }
@@ -751,6 +1007,13 @@ function clearSubjectForm() {
     // Reset schedule selector
     resetScheduleSelector();
     currentSubjectId = null;
+    
+    // Reset modal title to "Add Subject"
+    const modalTitle = document.querySelector('#subjectModal .modal-header h3');
+    if (modalTitle) {
+        modalTitle.textContent = 'Agregar Materia';
+        modalTitle.setAttribute('data-translate', 'add_subject');
+    }
 }
 
 // Schedule Selector Functions
@@ -1645,10 +1908,10 @@ async function saveContentFromModal() {
         // Recargar la vista de materias para mostrar el nuevo tema
         loadSubjects();
         
-        // Si el panel de temas está abierto, actualizarlo
-        const themesPanel = document.getElementById('subjectThemesPanel');
-        if (themesPanel && themesPanel.style.display === 'block') {
-            // Recargar el panel con los nuevos temas
+        // Si el modal de temas está abierto, actualizarlo
+        const themesModal = document.getElementById('subjectThemesModal');
+        if (themesModal && themesModal.classList.contains('active')) {
+            // Recargar el modal con los nuevos temas y volver a la lista
             if (typeof showSubjectThemesPanel === 'function') {
                 showSubjectThemesPanel(subjectId);
             }

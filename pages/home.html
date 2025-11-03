@@ -767,23 +767,6 @@
                     <!-- Detailed subject information will be loaded dynamically -->
                 </div>
 
-                <!-- Subject Themes Panel (similar to student detail panel) -->
-                <div class="subject-detail-panel" id="subjectThemesPanel" style="display: none;">
-                    <div class="panel-header">
-                        <h3 id="selectedSubjectName">Nombre de la Materia</h3>
-                        <button id="closeSubjectThemesPanel" class="btn-icon" onclick="closeSubjectThemesPanel()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="panel-content">
-                        <div style="padding: 15px 0;">
-                            <div style="font-size: 0.9em; color: #666; margin-bottom: 15px; font-weight: 600;">Temas de la Materia</div>
-                            <div id="subjectThemesList" style="max-height: 500px; overflow-y: auto;">
-                                <!-- Temas will be loaded here -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Subject Details View -->
                 <div id="subjectDetailsView" class="subject-details-view" style="display: none;">
@@ -1131,6 +1114,63 @@
                     <button type="submit" class="btn-primary" data-translate="save_content">Guardar Contenido</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Subject Themes Modal (unified with create form) -->
+    <div id="subjectThemesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="selectedSubjectName">Nombre de la Materia</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            
+            <!-- Themes List View -->
+            <div id="themesListView" class="modal-form" style="padding: 1.5rem 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div style="font-size: 0.9em; color: var(--text-secondary, #666); font-weight: 600;">Temas de la Materia</div>
+                    <button id="showCreateThemeFormBtn" class="btn-primary" style="padding: 8px 16px; font-size: 0.9em;">
+                        <i class="fas fa-plus"></i> Crear Tema
+                    </button>
+                </div>
+                <div id="subjectThemesList" style="max-height: 500px; overflow-y: auto;">
+                    <!-- Temas will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Create Theme Form View -->
+            <div id="createThemeFormView" class="modal-form" style="padding: 1.5rem 2rem; display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h4 style="margin: 0; color: var(--text-primary, #333);">Crear Nuevo Tema</h4>
+                    <button id="backToThemesListBtn" class="btn-secondary" style="padding: 8px 16px; font-size: 0.9em;">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </button>
+                </div>
+                <form id="unifiedContentForm">
+                    <input type="hidden" id="unifiedContentSubjectId" value="">
+                    <div class="form-group">
+                        <label for="unifiedContentTopic" data-translate="topic">Tema</label>
+                        <input type="text" id="unifiedContentTopic" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="unifiedContentDescription" data-translate="description">Descripción</label>
+                        <textarea id="unifiedContentDescription" rows="3" placeholder="Descripción del tema..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="unifiedContentStatus" data-translate="status">Estado</label>
+                        <select id="unifiedContentStatus">
+                            <option value="PENDIENTE" data-translate="pending">Pendiente</option>
+                            <option value="EN_PROGRESO" data-translate="in_progress">En Progreso</option>
+                            <option value="COMPLETADO" data-translate="completed">Completado</option>
+                            <option value="CANCELADO" data-translate="cancelled">Cancelado</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="cancelCreateThemeBtn" class="btn-secondary" data-translate="cancel">Cancelar</button>
+                        <button type="submit" class="btn-primary" data-translate="save_content">Guardar Tema</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 

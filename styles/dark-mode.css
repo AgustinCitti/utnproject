@@ -764,3 +764,41 @@
     color: var(--text-primary);
 }
 
+/* Dark mode styles for clickable rows in tables */
+[data-theme="dark"] .clickable-row:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* Dark mode styles for table rows hover */
+[data-theme="dark"] .data-table tbody tr:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .notes-table tr:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .attendance-table tr:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .notifications-table tr:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* Dark mode styles for theme items */
+[data-theme="dark"] .theme-item {
+    border-color: var(--border-color) !important;
+    background: var(--card-bg) !important;
+}
+
+[data-theme="dark"] .theme-item:hover {
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    border-color: #667eea;
+}
+
