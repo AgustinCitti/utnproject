@@ -89,8 +89,13 @@ try {
     $email = sanitize_input($input['email'] ?? '');
     $phone = sanitize_input($input['phone'] ?? '');
     $message = sanitize_input($input['message'] ?? '');
-    // el front no envía subject field visible, usamos 'general' por defecto
-    $subject = sanitize_input($input['subject'] ?? 'general');
+    // Validar y normalizar el subject para que coincida con los valores ENUM permitidos
+    $subject = strtolower(sanitize_input($input['subject'] ?? 'general'));
+    // Asegurarse de que el subject sea uno de los valores permitidos
+    $allowed_subjects = ['general', 'technical', 'billing', 'feature', 'other'];
+    if (!in_array($subject, $allowed_subjects)) {
+        $subject = 'general'; // Valor por defecto si no es válido
+    }
     $newsletter = isset($input['newsletter']) ? (int)$input['newsletter'] : 0;
 
     // validaciones básicas (siguiendo el patrón detectado)

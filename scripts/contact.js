@@ -91,6 +91,13 @@ async function handleFormSubmission() {
     // Hide any existing messages
     hideFormMessages();
     
+    // Get the phone number with country code
+    const countryCode = contactForm.querySelector('.country-code').value;
+    const phoneInput = contactForm.querySelector('#phone');
+    if (phoneInput.value) {
+        phoneInput.value = countryCode + ' ' + phoneInput.value.replace(/^\+\d+\s*/, '');
+    }
+    
     try {
         // Get form data
         const formData = new FormData(contactForm);
