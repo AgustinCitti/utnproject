@@ -263,3 +263,211 @@
     background-color: var(--bg-secondary);
 }
 
+/* Dark mode styles for hero buttons */
+[data-theme="dark"] .hero-btn-primary {
+    background: #667eea;
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+[data-theme="dark"] .hero-btn-primary:hover {
+    background: #5568d3;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+[data-theme="dark"] .hero-btn-secondary {
+    background: rgba(102, 126, 234, 0.2);
+    color: var(--text-primary);
+    border: 2px solid rgba(102, 126, 234, 0.4);
+    backdrop-filter: blur(10px);
+}
+
+[data-theme="dark"] .hero-btn-secondary:hover {
+    background: rgba(102, 126, 234, 0.3);
+    border-color: rgba(102, 126, 234, 0.6);
+    transform: translateY(-2px);
+}
+
+/* Dark mode styles for KPI cards */
+[data-theme="dark"] .kpi-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .kpi-card:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .kpi-value {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .kpi-label {
+    color: var(--text-secondary);
+}
+
+/* Dark mode styles for quick action buttons */
+[data-theme="dark"] .quick-action-btn {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+}
+
+[data-theme="dark"] .quick-action-btn span {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .quick-action-btn:hover {
+    background: var(--card-bg);
+    border-color: #667eea;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Dark mode styles for card titles */
+[data-theme="dark"] .card-title {
+    color: white;
+}
+
+/* Dark mode styles for notification/class cards */
+[data-theme="dark"] .class-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid #667eea;
+}
+
+[data-theme="dark"] .class-item:hover {
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.3);
+    border-color: #667eea;
+}
+
+[data-theme="dark"] .class-item.has-evaluations {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.1) 0%, var(--card-bg) 100%);
+    border-left-color: #e74c3c;
+}
+
+[data-theme="dark"] .class-item.has-evaluations:hover {
+    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+}
+
+[data-theme="dark"] .class-header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .class-details {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .class-details h4 {
+    color: white;
+}
+
+[data-theme="dark"] .class-info {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .classroom {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .notification-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .notification-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    border-color: #667eea;
+}
+
+[data-theme="dark"] .notification-card.unread {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, var(--card-bg) 100%);
+    border-left: 4px solid #667eea;
+}
+
+[data-theme="dark"] .notification-card.read {
+    opacity: 0.7;
+}
+
+[data-theme="dark"] .notification-title {
+    color: white;
+}
+
+[data-theme="dark"] .notification-date {
+    color: var(--text-secondary);
+}
+
+/* Dark mode styles for calendar widget */
+[data-theme="dark"] .calendar-widget {
+    background: var(--card-bg);
+}
+
+[data-theme="dark"] .widget-title {
+    color: white;
+}
+
+[data-theme="dark"] .calendar-widget-month {
+    background: var(--bg-secondary);
+    color: white;
+}
+
+[data-theme="dark"] .calendar-widget-grid .calendar-day-header {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .calendar-widget-grid .calendar-day {
+    background: transparent;
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .calendar-widget-grid .calendar-day:hover {
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .calendar-widget-grid .calendar-day.today {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+[data-theme="dark"] .calendar-widget-grid .calendar-day.other-month {
+    opacity: 0.4;
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .calendar-widget-grid .calendar-day .day-number {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .calendar-widget-grid .calendar-day.today .day-number {
+    color: white;
+}
+
+[data-theme="dark"] .widget-nav-btn {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .widget-nav-btn:hover {
+    background: var(--card-bg);
+    color: #667eea;
+}
+
+[data-theme="dark"] .calendar-widget-footer {
+    border-top: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .calendar-view-full-btn {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .calendar-view-full-btn:hover {
+    background: #667eea;
+    border-color: #667eea;
+    color: white;
+}
+
