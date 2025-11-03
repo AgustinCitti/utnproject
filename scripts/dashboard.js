@@ -256,14 +256,66 @@ function setupQuickActions() {
     quickActionButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const action = btn.getAttribute('data-action');
+            const modalId = btn.getAttribute('data-modal');
+            
+            // If button has data-modal attribute, open the modal instead of navigating
+            if (modalId) {
+                if (typeof showModal === 'function') {
+                    showModal(modalId);
+                    
+                    // Additional setup for specific modals
+                    if (modalId === 'studentModal') {
+                        // Clear form and populate subjects when opening student modal
+                        if (typeof clearStudentForm === 'function') {
+                            clearStudentForm();
+                        } else {
+                            const form = document.getElementById('studentForm');
+                            if (form) form.reset();
+                        }
+                        // Populate subjects and topics will be handled by the showModal function
+                    } else if (modalId === 'subjectModal') {
+                        // Setup modal handlers first
+                        if (typeof setupModalHandlers === 'function') {
+                            setupModalHandlers(modalId);
+                        }
+                        
+                        // Clear form when opening subject modal
+                        if (typeof clearSubjectForm === 'function') {
+                            clearSubjectForm();
+                        } else {
+                            const form = document.getElementById('subjectForm');
+                            if (form) {
+                                form.reset();
+                                // Reset schedule fields
+                                const selectedDaysContainer = document.getElementById('selectedDaysContainer');
+                                if (selectedDaysContainer) {
+                                    selectedDaysContainer.innerHTML = '';
+                                }
+                            }
+                        }
+                        
+                        // Reset modal title to "Add Subject"
+                        const modalTitle = document.querySelector('#subjectModal .modal-header h3');
+                        if (modalTitle) {
+                            modalTitle.setAttribute('data-translate', 'add_subject');
+                            // Translation will be handled by the translation system
+                        }
+                    }
+                } else {
+                    // Fallback: try to show modal directly
+                    const modal = document.getElementById(modalId);
+                    if (modal) {
+                        modal.classList.add('active');
+                    }
+                }
+                return;
+            }
+            
+            // For buttons without modal, navigate to sections (attendance, grades)
             if (typeof showSection !== 'function') {
                 return;
             }
             switch(action) {
-                case 'students':
-                    // Navigate to student management with students subsection
-                    showSection('student-management', 'students');
-                    break;
                 case 'attendance':
                     // Navigate to attendance section and show attendance view
                     showSection('attendance');
@@ -286,10 +338,6 @@ function setupQuickActions() {
                             }
                         }
                     }, 100);
-                    break;
-                case 'subjects':
-                    // Navigate to subjects management
-                    showSection('subjects-management');
                     break;
             }
         });

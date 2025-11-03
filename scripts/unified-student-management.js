@@ -111,11 +111,7 @@ function initializeUnifiedStudentManagement() {
         });
     }
 
-    if (unifiedMatrixViewBtn) {
-        unifiedMatrixViewBtn.addEventListener('click', () => {
-            switchToMatrixView();
-        });
-    }
+    // Matrix view button removed - functionality not working properly
 
     // Close student detail panel
     if (closeStudentDetail) {
@@ -776,10 +772,8 @@ function switchToGridView() {
     
     const gridBtn = document.getElementById('unifiedGridViewBtn');
     const listBtn = document.getElementById('unifiedListViewBtn');
-    const matrixBtn = document.getElementById('unifiedMatrixViewBtn');
     if (gridBtn) gridBtn.classList.add('active');
     if (listBtn) listBtn.classList.remove('active');
-    if (matrixBtn) matrixBtn.classList.remove('active');
 }
 
 function switchToListView() {
@@ -803,10 +797,8 @@ function switchToListView() {
     
     const gridBtn = document.getElementById('unifiedGridViewBtn');
     const listBtn = document.getElementById('unifiedListViewBtn');
-    const matrixBtn = document.getElementById('unifiedMatrixViewBtn');
     if (gridBtn) gridBtn.classList.remove('active');
     if (listBtn) listBtn.classList.add('active');
-    if (matrixBtn) matrixBtn.classList.remove('active');
 }
 
 function switchToMatrixView() {

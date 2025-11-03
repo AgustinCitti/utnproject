@@ -265,7 +265,7 @@
                         <div class="dashboard-card quick-actions-card">
                             <h2 class="card-title" data-translate="quick_actions">Acciones Rápidas</h2>
                             <div class="quick-actions-grid">
-                                <button class="quick-action-btn" data-action="students">
+                                <button class="quick-action-btn" data-action="students" data-modal="studentModal">
                                     <i class="fas fa-user-plus"></i>
                                     <span data-translate="add_student">Agregar Estudiante</span>
                                 </button>
@@ -277,9 +277,9 @@
                                     <i class="fas fa-graduation-cap"></i>
                                     <span data-translate="grade_students">Calificar</span>
                                 </button>
-                                <button class="quick-action-btn" data-action="subjects">
+                                <button class="quick-action-btn" data-action="subjects" data-modal="subjectModal">
                                     <i class="fas fa-book"></i>
-                                    <span data-translate="manage_subjects">Gestionar Materias</span>
+                                    <span data-translate="add_subject">Agregar Materia</span>
                                 </button>
                             </div>
                         </div>
@@ -369,9 +369,6 @@
                             </button>
                             <button id="unifiedListViewBtn" class="view-btn active" data-view="list" title="Vista de Lista">
                                 <i class="fas fa-list"></i>
-                            </button>
-                            <button id="unifiedMatrixViewBtn" class="view-btn" data-view="matrix" title="Vista de Matriz: Alumnos por Materias">
-                                <i class="fas fa-table"></i>
                             </button>
                         </div>
                         <div class="action-buttons" id="globalActionButtons">
