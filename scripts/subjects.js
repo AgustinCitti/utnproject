@@ -884,36 +884,106 @@ window.showSubjectThemesPanel = function(subjectId) {
     if (themesListView) themesListView.style.display = 'block';
     if (createThemeFormView) createThemeFormView.style.display = 'none';
     
+    // Ensure tema_estudiante array exists
+    if (!appData.tema_estudiante || !Array.isArray(appData.tema_estudiante)) {
+        appData.tema_estudiante = [];
+    }
+    
+    // Ensure estudiante array exists
+    if (!appData.estudiante || !Array.isArray(appData.estudiante)) {
+        appData.estudiante = [];
+    }
+    
     // Mostrar lista de temas
     const themesList = document.getElementById('subjectThemesList');
     if (themesList) {
         if (themes.length > 0) {
             themesList.innerHTML = themes.map(theme => {
+                // Get students assigned to this tema (contenido)
+                const temaEstudianteRecords = appData.tema_estudiante.filter(
+                    te => parseInt(te.Contenido_ID_contenido) === parseInt(theme.ID_contenido)
+                );
+                
+                // Get student details for each tema_estudiante record
+                const assignedStudents = temaEstudianteRecords.map(te => {
+                    const student = appData.estudiante.find(
+                        e => parseInt(e.ID_Estudiante) === parseInt(te.Estudiante_ID_Estudiante)
+                    );
+                    return student ? { ...te, student } : null;
+                }).filter(Boolean);
+                
+                const uniqueId = `theme-${theme.ID_contenido}`;
+                const studentsCount = assignedStudents.length;
+                
                 return `
-                    <div class="theme-item" style="padding: 12px; margin-bottom: 10px; border: 1px solid var(--border-color, #e0e0e0); border-radius: 6px; background: var(--card-bg, #f9f9f9);">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                            <div style="flex: 1;">
-                                <strong style="display: block; margin-bottom: 5px; color: var(--text-primary, #333);">${theme.Tema || 'Sin título'}</strong>
-                                ${theme.Descripcion ? `<div style="font-size: 0.9em; color: var(--text-secondary, #666); margin-bottom: 8px;">${theme.Descripcion}</div>` : ''}
-                                <div style="display: flex; gap: 15px; align-items: center;">
-                                    <span class="status-badge status-${(theme.Estado || 'PENDIENTE').toLowerCase()}" style="font-size: 0.85em; padding: 4px 10px; border-radius: 12px;">
-                                        ${getStatusText(theme.Estado || 'PENDIENTE')}
-                                    </span>
-                                    ${theme.Fecha_creacion ? `<small style="color: var(--text-secondary, #999); font-size: 0.85em;">Creado: ${new Date(theme.Fecha_creacion).toLocaleDateString('es-ES')}</small>` : ''}
+                    <div class="theme-card-collapsible" style="margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); overflow: hidden; transition: all 0.3s ease;">
+                        <div class="theme-card-header" onclick="toggleThemeCard('${uniqueId}')" style="padding: 14px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary); transition: background 0.2s ease;">
+                            <div style="flex: 1; display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-chevron-down theme-chevron" id="chevron-${uniqueId}" style="font-size: 0.85em; color: var(--text-secondary); transition: transform 0.3s ease; transform: rotate(-90deg);"></i>
+                                <div style="flex: 1;">
+                                    <strong style="display: block; margin-bottom: 4px; color: var(--text-primary); font-size: 1em;">${theme.Tema || 'Sin título'}</strong>
+                                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                                        <span class="status-badge status-${(theme.Estado || 'PENDIENTE').toLowerCase()}" style="font-size: 0.8em; padding: 3px 8px; border-radius: 10px;">
+                                            ${getStatusText(theme.Estado || 'PENDIENTE')}
+                                        </span>
+                                        <span style="font-size: 0.85em; color: var(--text-secondary);">
+                                            <i class="fas fa-users" style="margin-right: 4px;"></i>${studentsCount} estudiante${studentsCount !== 1 ? 's' : ''}
+                                        </span>
+                                        ${theme.Fecha_creacion ? `<small style="color: var(--text-secondary); font-size: 0.8em;">Creado: ${new Date(theme.Fecha_creacion).toLocaleDateString('es-ES')}</small>` : ''}
+                                    </div>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 5px;">
-                                <button class="btn-icon btn-edit" onclick="event.stopPropagation(); editContent(${theme.ID_contenido})" title="Editar Tema" style="padding: 6px 8px;">
+                            <div style="display: flex; gap: 5px;" onclick="event.stopPropagation();">
+                                <button class="btn-icon btn-edit" onclick="editContent(${theme.ID_contenido})" title="Editar Tema" style="padding: 6px 8px;">
                                     <i class="fas fa-edit" style="font-size: 0.9em;"></i>
                                 </button>
-                                <button class="btn-icon btn-delete" onclick="event.stopPropagation(); deleteContent(${theme.ID_contenido})" title="Eliminar Tema" style="padding: 6px 8px;">
+                                <button class="btn-icon btn-delete" onclick="deleteContent(${theme.ID_contenido})" title="Eliminar Tema" style="padding: 6px 8px;">
                                     <i class="fas fa-trash" style="font-size: 0.9em;"></i>
                                 </button>
+                            </div>
+                        </div>
+                        <div class="theme-card-content" id="${uniqueId}" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
+                            <div style="padding: 16px; border-top: 1px solid var(--border-color); background: var(--card-bg);">
+                                ${theme.Descripcion ? `<div style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">${theme.Descripcion}</div>` : ''}
+                                <div style="margin-top: ${theme.Descripcion ? '0' : '0'}">
+                                    <div style="font-size: 0.9em; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fas fa-user-graduate" style="color: #667eea;"></i>
+                                        Estudiantes Asignados (${studentsCount})
+                                    </div>
+                                    ${assignedStudents.length > 0 ? `
+                                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                                            ${assignedStudents.map(te => `
+                                                <div class="student-assignment-card" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg-secondary); border-radius: 6px; border-left: 3px solid #667eea;">
+                                                    <div style="flex: 1;">
+                                                        <div style="font-weight: 500; color: var(--text-primary); margin-bottom: 4px;">
+                                                            ${te.student.Nombre} ${te.student.Apellido}
+                                                        </div>
+                                                        <div style="display: flex; gap: 10px; align-items: center;">
+                                                            <span class="status-badge status-${(te.Estado || 'PENDIENTE').toLowerCase()}" style="font-size: 0.75em; padding: 2px 8px; border-radius: 8px;">
+                                                                ${getStatusText(te.Estado || 'PENDIENTE')}
+                                                            </span>
+                                                            ${te.Fecha_actualizacion ? `<small style="color: var(--text-secondary); font-size: 0.75em;">Actualizado: ${new Date(te.Fecha_actualizacion).toLocaleDateString('es-ES')}</small>` : ''}
+                                                        </div>
+                                                        ${te.Observaciones ? `<div style="font-size: 0.8em; color: var(--text-secondary); margin-top: 4px; font-style: italic;">${te.Observaciones}</div>` : ''}
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : `
+                                        <div style="text-align: center; padding: 20px; color: var(--text-secondary); font-size: 0.9em;">
+                                            <i class="fas fa-user-slash" style="font-size: 1.5em; margin-bottom: 8px; opacity: 0.5;"></i>
+                                            <p style="margin: 0;">No hay estudiantes asignados a este tema</p>
+                                        </div>
+                                    `}
+                                </div>
                             </div>
                         </div>
                     </div>
                 `;
             }).join('');
+            
+            // After rendering, setup click handlers for collapsible cards
+            setupCollapsibleThemeCards();
         } else {
             themesList.innerHTML = `
                 <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary, #999);">
@@ -941,6 +1011,59 @@ window.showSubjectThemesPanel = function(subjectId) {
     // Setup event handlers for the modal buttons
     setupUnifiedThemesModalHandlers();
 };
+
+// Function to toggle collapsible theme cards
+window.toggleThemeCard = function(uniqueId) {
+    const content = document.getElementById(uniqueId);
+    const chevron = document.getElementById(`chevron-${uniqueId}`);
+    
+    if (!content) return;
+    
+    // Check if currently expanded
+    const isExpanded = content.classList.contains('expanded');
+    
+    if (isExpanded) {
+        // Collapse
+        content.style.maxHeight = '0px';
+        content.classList.remove('expanded');
+        if (chevron) {
+            chevron.style.transform = 'rotate(-90deg)';
+        }
+    } else {
+        // Expand - temporarily set to auto to measure, then animate
+        const currentMaxHeight = content.style.maxHeight;
+        content.style.maxHeight = 'none';
+        const scrollHeight = content.scrollHeight;
+        content.style.maxHeight = currentMaxHeight;
+        
+        // Force reflow
+        content.offsetHeight;
+        
+        // Now animate to full height
+        content.style.maxHeight = scrollHeight + 'px';
+        content.classList.add('expanded');
+        if (chevron) {
+            chevron.style.transform = 'rotate(0deg)';
+        }
+        
+        // After animation completes, set to none for dynamic content
+        setTimeout(() => {
+            if (content.classList.contains('expanded')) {
+                content.style.maxHeight = 'none';
+            }
+        }, 300);
+    }
+};
+
+// Function to setup collapsible theme cards (initialize state)
+function setupCollapsibleThemeCards() {
+    // All cards start collapsed by default
+    const themeCards = document.querySelectorAll('.theme-card-content');
+    themeCards.forEach(card => {
+        card.style.maxHeight = '0px';
+        card.classList.remove('expanded');
+    });
+}
 
 // Función para cerrar el modal de temas (disponible globalmente)
 window.closeSubjectThemesPanel = function() {

@@ -904,6 +904,36 @@
     border-color: #667eea;
 }
 
+/* Dark mode styles for collapsible theme cards */
+[data-theme="dark"] .theme-card-collapsible {
+    border-color: var(--border-color) !important;
+    background: var(--card-bg) !important;
+}
+
+[data-theme="dark"] .theme-card-header {
+    background: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] .theme-card-header:hover {
+    background: var(--card-bg) !important;
+}
+
+[data-theme="dark"] .theme-card-content {
+    background: var(--card-bg) !important;
+    border-top-color: var(--border-color) !important;
+}
+
+/* Dark mode styles for student assignment cards */
+[data-theme="dark"] .student-assignment-card {
+    background: var(--bg-secondary) !important;
+    border-left-color: #667eea !important;
+}
+
+[data-theme="dark"] .student-assignment-card:hover {
+    background: var(--card-bg) !important;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+}
+
 /* Dark mode styles for student list */
 [data-theme="dark"] .unified-table th {
     background-color: var(--bg-secondary);
