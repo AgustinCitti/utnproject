@@ -90,6 +90,16 @@
                                 <textarea id="message" name="message" rows="4" placeholder="" data-translate="message" required></textarea>
                             </div>
 
+                            <!-- Campo oculto para el subject -->
+                            <input type="hidden" name="subject" value="general">
+
+                            <div class="form-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" name="newsletter" value="1">
+                                    <span data-translate="newsletter_signup">Subscribe to our newsletter</span>
+                                </label>
+                            </div>
+
                             <button type="submit" class="btn-primary contact-submit" data-translate="send_message">
                                 Send message
                             </button>
