@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="../styles/responsive.css">
     <link rel="stylesheet" href="../styles/scrollbar-fix.css">
     <link rel="stylesheet" href="../styles/dark-mode.css">
+    <link rel="stylesheet" href="../styles/components/notifications.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" href="../styles/assets/icon.ico" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -658,11 +659,25 @@
     </div>
     
     <div class="notifications-content">
-        <div class="notifications-grid" id="notificationsContainer">
+        <div class="notifications-grid" id="notificationsContainer" style="display: grid; gap: 1rem; padding: 1rem;">
             <!-- Notifications will be loaded dynamically -->
         </div>
         <div class="notifications-table" id="notificationsList" style="display: none;">
-            <!-- Notifications list view will be loaded dynamically -->
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Title</th>
+                        <th>Message</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Notifications list view will be loaded dynamically -->
+                </tbody>
+            </table>
         </div>
     </div>
 </section>
