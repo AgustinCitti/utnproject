@@ -203,7 +203,10 @@ function initializeUnifiedStudentManagement() {
     
     if (backToStudentsBtn) {
         backToStudentsBtn.addEventListener('click', () => {
-            showSection('student-management');
+            // Hide grade marking view first
+            hideGradeMarkingView();
+            // Then navigate to student-management section
+            showSection('student-management', 'students');
         });
     }
 
@@ -1453,11 +1456,30 @@ function deleteExam(id) {
 // Removed duplicate exam toggle functions - now using unified toggle functions
 
 // Grade Marking Functions
+// Guard to prevent recursive calls
+let isShowingGradeMarkingView = false;
+// Make guard globally accessible for navigation checks
+window.isShowingGradeMarkingView = false;
+
 async function showGradeMarkingView() {
+    // Prevent recursive calls
+    if (isShowingGradeMarkingView) {
+        console.log('=== showGradeMarkingView: Already showing, skipping recursive call ===');
+        return;
+    }
+    
+    isShowingGradeMarkingView = true;
+    window.isShowingGradeMarkingView = true;
     console.log('=== showGradeMarkingView START ===');
     
-    // Navigate to grade marking section and show the grade marking view
-    showSection('grade-marking');
+    // Check if we're already in the grade-marking section to avoid recursion
+    const currentSectionValue = typeof currentSection !== 'undefined' ? currentSection : 
+                                 (typeof window.currentSection !== 'undefined' ? window.currentSection : null);
+    
+    // Only call showSection if we're not already in grade-marking section
+    if (currentSectionValue !== 'grade-marking') {
+        showSection('grade-marking');
+    }
     
     const gradeMarkingView = document.getElementById('gradeMarkingView');
     const gradeMarkingList = document.getElementById('gradeMarkingList');
@@ -1498,6 +1520,10 @@ async function showGradeMarkingView() {
     } else {
         console.error('showGradeMarkingView: gradeMarkingView element not found');
     }
+    
+    // Reset guard after completion (always reset, even on error)
+    isShowingGradeMarkingView = false;
+    window.isShowingGradeMarkingView = false;
 }
 
 /**
@@ -2104,6 +2130,9 @@ function hideGradeMarkingView() {
         }
     }
 }
+
+// Make function globally available
+window.hideGradeMarkingView = hideGradeMarkingView;
 
 // Override the original load functions to use unified data
 function loadStudents() {

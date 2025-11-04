@@ -625,35 +625,14 @@ window.gradeExam = function(examId) {
         return;
     }
     
-    // Obtener estudiantes inscritos en esta materia
-    const estudiantesInscritos = appData.alumnos_x_materia
-        .filter(axm => {
-            const axmMateriaId = parseInt(axm.Materia_ID_materia);
-            return axmMateriaId === materiaId;
-        })
-        .map(axm => {
-            const studentId = parseInt(axm.Estudiante_ID_Estudiante);
-            const estudiante = appData.estudiante.find(e => {
-                const eId = parseInt(e.ID_Estudiante);
-                return eId === studentId;
-            });
-            return estudiante;
-        })
-        .filter(e => e !== undefined);
-    
-    if (estudiantesInscritos.length === 0) {
-        alert('No hay estudiantes inscritos en esta materia.');
-        return;
+    // Open the grade marking view directly (calificar estudiantes)
+    if (typeof openGradeMarkingForExam === 'function') {
+        openGradeMarkingForExam(normalizedId);
+    } else if (typeof window.openGradeMarkingForExam === 'function') {
+        window.openGradeMarkingForExam(normalizedId);
+    } else {
+        alert('Error: No se pudo abrir la vista de calificación. Por favor, recargue la página.');
     }
-    
-    // Obtener notas existentes para esta evaluación
-    const notasExistentes = appData.notas.filter(n => {
-        const noteEvalId = parseInt(n.Evaluacion_ID_evaluacion);
-        return noteEvalId === normalizedId;
-    });
-    
-    // Crear modal de calificación
-    showGradeModal(exam, materia, estudiantesInscritos, notasExistentes);
 };
 
 function showGradeModal(exam, materia, estudiantes, notasExistentes) {
@@ -1071,6 +1050,20 @@ function loadExamNotesView(examId) {
     // Setup export button
     setupExportButton(examId, examNotes.length);
     
+    // Ensure back button event listener is set up (in case it wasn't initialized)
+    const backToExamsBtn = document.getElementById('backToExamsBtn');
+    if (backToExamsBtn) {
+        // Remove any existing listeners by cloning and replacing
+        const newBtn = backToExamsBtn.cloneNode(true);
+        backToExamsBtn.parentNode.replaceChild(newBtn, backToExamsBtn);
+        
+        // Add event listener
+        newBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            backToExams();
+        });
+    }
+    
     console.log('loadExamNotesView: Successfully loaded notes view', {
         examId: normalizedId,
         examTitle: exam.Titulo,
@@ -1083,26 +1076,29 @@ function loadExamInfoSummary(exam, subject, notesCount) {
     if (!examInfoSummary) return;
     
     examInfoSummary.innerHTML = `
-        <div class="exam-summary">
-            <div class="summary-item">
-                <span class="summary-label">Subject:</span>
-                <span class="summary-value">${subject ? subject.Nombre : 'Unknown Subject'}</span>
-            </div>
-            <div class="summary-item">
-                <span class="summary-label">Date:</span>
-                <span class="summary-value">${exam.Fecha}</span>
-            </div>
-            <div class="summary-item">
-                <span class="summary-label">Type:</span>
-                <span class="summary-value">${exam.Tipo}</span>
-            </div>
-            <div class="summary-item">
-                <span class="summary-label">Status:</span>
-                <span class="summary-value status-${exam.Estado.toLowerCase()}">${exam.Estado}</span>
-            </div>
-            <div class="summary-item">
-                <span class="summary-label">Total Notes:</span>
-                <span class="summary-value">${notesCount}</span>
+        <div class="exam-summary" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+            <h3 style="margin-top: 0; margin-bottom: 15px; color: #333; font-size: 1.5rem;">${exam.Titulo || 'Evaluación'}</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div class="summary-item">
+                    <span class="summary-label" style="display: block; font-weight: 600; color: #666; margin-bottom: 5px; font-size: 0.9rem;">Materia:</span>
+                    <span class="summary-value" style="font-size: 1.1rem; color: #333;">${subject ? subject.Nombre : 'Materia desconocida'}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label" style="display: block; font-weight: 600; color: #666; margin-bottom: 5px; font-size: 0.9rem;">Fecha:</span>
+                    <span class="summary-value" style="font-size: 1.1rem; color: #333;">${exam.Fecha || 'N/A'}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label" style="display: block; font-weight: 600; color: #666; margin-bottom: 5px; font-size: 0.9rem;">Tipo:</span>
+                    <span class="summary-value" style="font-size: 1.1rem; color: #333;">${exam.Tipo || 'N/A'}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label" style="display: block; font-weight: 600; color: #666; margin-bottom: 5px; font-size: 0.9rem;">Estado:</span>
+                    <span class="summary-value status-${exam.Estado ? exam.Estado.toLowerCase() : 'programada'}" style="font-size: 1.1rem;">${exam.Estado || 'PROGRAMADA'}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label" style="display: block; font-weight: 600; color: #666; margin-bottom: 5px; font-size: 0.9rem;">Total de Calificaciones:</span>
+                    <span class="summary-value" style="font-size: 1.1rem; color: #333; font-weight: 600;">${notesCount}</span>
+                </div>
             </div>
         </div>
     `;
@@ -1115,27 +1111,40 @@ function loadNotesList(examNotes) {
     if (examNotes.length > 0) {
         // Load notes table using the same pattern as exams list
         notesList.innerHTML = `
+            <div style="margin-bottom: 20px;">
+                <button class="btn-primary" onclick="window.openGradeMarkingForExam(window.currentExamId)" style="padding: 10px 20px;">
+                    <i class="fas fa-plus"></i>
+                    Agregar/Editar Calificaciones
+                </button>
+            </div>
             <div class="table-responsive">
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Student</th>
-                            <th>Grade</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Observations</th>
+                            <th>Estudiante</th>
+                            <th>Calificación</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Observaciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${examNotes.map(note => {
-                            const student = appData.estudiante.find(s => s.ID_Estudiante === note.Estudiante_ID_Estudiante);
+                            const studentId = parseInt(note.Estudiante_ID_Estudiante);
+                            const student = appData.estudiante.find(s => {
+                                const sId = parseInt(s.ID_Estudiante);
+                                return sId === studentId;
+                            });
+                            const gradeValue = note.Calificacion;
+                            const isAbsent = gradeValue == 0 || gradeValue === 'AUSENTE';
+                            const gradeDisplay = isAbsent ? 'Ausente' : gradeValue;
                             return `
                                 <tr>
-                                    <td><strong>${student ? `${student.Nombre} ${student.Apellido}` : 'Unknown Student'}</strong></td>
-                                    <td class="grade-cell ${getGradeClass(note.Calificacion)}">${note.Calificacion}</td>
-                                    <td>${note.Fecha_calificacion}</td>
-                                    <td><span class="status-badge status-${note.Estado.toLowerCase()}">${note.Estado}</span></td>
-                                    <td>${note.Observacion || 'No observations'}</td>
+                                    <td><strong>${student ? `${student.Apellido}, ${student.Nombre}` : 'Estudiante desconocido'}</strong></td>
+                                    <td class="grade-cell ${getGradeClass(note.Calificacion)}">${gradeDisplay}</td>
+                                    <td>${note.Fecha_calificacion || 'N/A'}</td>
+                                    <td><span class="status-badge status-${note.Estado ? note.Estado.toLowerCase() : 'definitiva'}">${note.Estado || 'DEFINITIVA'}</span></td>
+                                    <td>${note.Observacion || 'Sin observaciones'}</td>
                                 </tr>
                             `;
                         }).join('')}
@@ -1144,15 +1153,12 @@ function loadNotesList(examNotes) {
             </div>
         `;
     } else {
-        // Show empty state
+        // Show only the button to open grade marking modal (replacing empty state message)
         notesList.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-clipboard-list"></i>
-                <h3>No Notes Recorded</h3>
-                <p>No notes have been recorded for this exam yet.</p>
-                <button class="btn-primary" onclick="goToGradeStudents()">
-                    <i class="fas fa-graduation-cap"></i>
-                    Start Grading Students
+            <div style="text-align: center; padding: 40px;">
+                <button class="btn-primary" onclick="window.openGradeMarkingForExam(window.currentExamId)" style="padding: 12px 24px; font-size: 1rem;">
+                    <i class="fas fa-clipboard-check"></i>
+                    Calificar Estudiantes
                 </button>
             </div>
         `;
@@ -1171,26 +1177,123 @@ function setupExportButton(examId, notesCount) {
     }
 }
 
-function goToGradeStudents() {
-    // This would navigate to the grade students section
-    // For now, just show an alert
-    alert('Grade students functionality would be implemented here.');
-}
+// Function to open grade marking view with a specific evaluation pre-selected
+window.openGradeMarkingForExam = async function(examId) {
+    console.log('openGradeMarkingForExam called with ID:', examId);
+    
+    if (!examId) {
+        examId = window.currentExamId;
+    }
+    
+    if (!examId) {
+        alert('Error: No se pudo identificar la evaluación.');
+        return;
+    }
+    
+    // First, go back to exams view to show the grade marking section
+    const examsTabContent = document.getElementById('examsTabContent');
+    const examNotesTabContent = document.getElementById('examNotesTabContent');
+    
+    if (examNotesTabContent) {
+        examNotesTabContent.style.display = 'none';
+    }
+    if (examsTabContent) {
+        examsTabContent.style.display = 'block';
+    }
+    
+    // Show exam controls
+    showExamControls();
+    
+    // Navigate to grade marking section
+    if (typeof showSection === 'function') {
+        showSection('grade-marking');
+    }
+    
+    // Wait a bit for the section to be visible, then show the grade marking view
+    setTimeout(async () => {
+        // Show grade marking view
+        if (typeof showGradeMarkingView === 'function') {
+            await showGradeMarkingView();
+        }
+        
+        // Pre-select the evaluation in the dropdown
+        const evaluationSelect = document.getElementById('gradeEvaluation');
+        if (evaluationSelect) {
+            const normalizedExamId = parseInt(examId);
+            // Wait for dropdown to be populated
+            let attempts = 0;
+            const checkDropdown = setInterval(() => {
+                attempts++;
+                if (evaluationSelect.options.length > 1 || attempts > 10) {
+                    clearInterval(checkDropdown);
+                    // Find the option with matching value
+                    for (let option of evaluationSelect.options) {
+                        const optionValue = parseInt(option.value);
+                        if (optionValue === normalizedExamId) {
+                            evaluationSelect.value = option.value;
+                            // Trigger change event to load students
+                            evaluationSelect.dispatchEvent(new Event('change'));
+                            console.log('openGradeMarkingForExam: Selected evaluation', normalizedExamId);
+                            break;
+                        }
+                    }
+                }
+            }, 100);
+        }
+    }, 300);
+};
 
 function backToExams() {
+    console.log('backToExams called');
+    
     // Hide exam notes tab content and show exams tab content
     const examsTabContent = document.getElementById('examsTabContent');
     const examNotesTabContent = document.getElementById('examNotesTabContent');
     
-    if (examNotesTabContent) examNotesTabContent.style.display = 'none';
-    if (examsTabContent) examsTabContent.style.display = 'block';
+    if (examNotesTabContent) {
+        examNotesTabContent.style.display = 'none';
+    }
+    if (examsTabContent) {
+        examsTabContent.style.display = 'block';
+    }
     
     // Show exam control buttons again
-    showExamControls();
+    if (typeof showExamControls === 'function') {
+        showExamControls();
+    }
+    
+    // Ensure we're in the student-management section with exams tab active
+    if (typeof showSection === 'function') {
+        showSection('student-management', 'exams');
+    } else {
+        // Fallback: manually show the section
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        const studentSection = document.getElementById('student-management');
+        if (studentSection) {
+            studentSection.classList.add('active');
+        }
+        
+        // Manually show exams tab
+        const examsTab = document.getElementById('examsTab');
+        const studentsTab = document.getElementById('studentsTab');
+        if (examsTab) examsTab.classList.add('active');
+        if (studentsTab) studentsTab.classList.remove('active');
+        
+        const studentsTabContent = document.getElementById('studentsTabContent');
+        if (studentsTabContent) studentsTabContent.classList.remove('active');
+        if (examsTabContent) examsTabContent.classList.add('active');
+    }
     
     // Clear the current exam ID
     window.currentExamId = null;
+    
+    console.log('backToExams completed');
 }
+
+// Make function globally available
+window.backToExams = backToExams;
 
 function getGradeClass(grade) {
     if (grade >= 8) return 'excellent';

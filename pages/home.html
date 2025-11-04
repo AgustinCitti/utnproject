@@ -508,7 +508,7 @@
                                 <i class="fas fa-download"></i>
                                 <span data-translate="export_notes">Export Notes</span>
                             </button>
-                            <button id="backToExamsBtn" class="btn-secondary">
+                            <button id="backToExamsBtn" class="btn-secondary" onclick="if(typeof backToExams === 'function') { backToExams(); } else if(typeof window.backToExams === 'function') { window.backToExams(); }">
                                 <i class="fas fa-arrow-left"></i>
                                 <span data-translate="back_to_exams">Back to Exams</span>
                             </button>

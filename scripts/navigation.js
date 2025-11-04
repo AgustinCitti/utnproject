@@ -165,6 +165,34 @@ function initializeNavigation() {
 }
 
 function showSection(sectionName, subsection = null) {
+    // Hide grade marking view if navigating away from grade-marking section
+    const currentSectionValue = typeof currentSection !== 'undefined' ? currentSection : 
+                                 (typeof window.currentSection !== 'undefined' ? window.currentSection : null);
+    
+    if (currentSectionValue === 'grade-marking' && sectionName !== 'grade-marking') {
+        if (typeof hideGradeMarkingView === 'function') {
+            hideGradeMarkingView();
+        } else {
+            const gradeMarkingView = document.getElementById('gradeMarkingView');
+            if (gradeMarkingView) {
+                gradeMarkingView.style.display = 'none';
+            }
+        }
+    }
+    
+    // Also hide grade marking view if we're navigating to a different section
+    // (as a safety measure, even if currentSection tracking fails)
+    if (sectionName !== 'grade-marking') {
+        const gradeMarkingView = document.getElementById('gradeMarkingView');
+        if (gradeMarkingView && gradeMarkingView.style.display !== 'none') {
+            if (typeof hideGradeMarkingView === 'function') {
+                hideGradeMarkingView();
+            } else {
+                gradeMarkingView.style.display = 'none';
+            }
+        }
+    }
+    
     // Hide all sections
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
@@ -232,10 +260,20 @@ function showSection(sectionName, subsection = null) {
         case 'grade-marking':
             // Show grade marking view when navigating to grade-marking section
             setTimeout(() => {
-                if (typeof showGradeMarkingView === 'function') {
+                // Check if view is already visible to prevent redundant calls
+                const gradeMarkingView = document.getElementById('gradeMarkingView');
+                const isAlreadyVisible = gradeMarkingView && 
+                    (gradeMarkingView.style.display === 'block' || 
+                     getComputedStyle(gradeMarkingView).display !== 'none');
+                
+                // Also check the guard variable if available
+                const isGuardActive = typeof window.isShowingGradeMarkingView !== 'undefined' && 
+                                     window.isShowingGradeMarkingView;
+                
+                if (!isAlreadyVisible && !isGuardActive && typeof showGradeMarkingView === 'function') {
                     showGradeMarkingView();
-                } else {
-                    const gradeMarkingView = document.getElementById('gradeMarkingView');
+                } else if (!isAlreadyVisible && !isGuardActive) {
+                    // Fallback: manually show the view if function doesn't exist
                     const gradeMarkingList = document.getElementById('gradeMarkingList');
                     if (gradeMarkingView) {
                         gradeMarkingView.style.display = 'block';
