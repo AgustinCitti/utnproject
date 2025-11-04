@@ -244,7 +244,7 @@
     <!-- Back to Home Link -->
     <a href="../index.html" class="back-to-home">
         <i class="fas fa-arrow-left"></i>
-        <span>Back to Home</span>
+        <span data-translate="back_to_home">Back to Home</span>
     </a>
 
     <!-- Payment Page Content -->
@@ -264,7 +264,7 @@
                         <!-- Payment Information -->
                         <div class="form-section">
                             <h3 class="form-section-title">
-                                <i class="fas fa-credit-card"></i> Payment Information
+                                <i class="fas fa-credit-card"></i> <span data-translate="payment_information">Payment Information</span>
                             </h3>
 
                             <div class="form-group">
@@ -307,7 +307,7 @@
                         <!-- Billing Address -->
                         <div class="form-section">
                             <h3 class="form-section-title">
-                                <i class="fas fa-map-marker-alt"></i> Billing Address
+                                <i class="fas fa-map-marker-alt"></i> <span data-translate="billing_address">Billing Address</span>
                             </h3>
 
                             <div class="form-group">
@@ -347,7 +347,7 @@
                                 <div class="input-wrapper">
                                     <i class="fas fa-globe input-icon"></i>
                                     <select id="country" name="country" required>
-                                        <option value="">Select Country</option>
+                                        <option value="" data-translate="select_country">Select Country</option>
                                         <option value="AR">Argentina</option>
                                         <option value="US">United States</option>
                                         <option value="UK">United Kingdom</option>
@@ -366,9 +366,9 @@
                             <span data-translate="security_note">Your payment information is encrypted and secure. We never store your card details.</span>
                         </div>
 
-                        <button type="submit" class="btn-primary register-btn" style="width: 100%; margin-top: 20px;" data-translate="complete_payment">
+                        <button type="submit" class="btn-primary register-btn" style="width: 100%; margin-top: 20px;">
                             <i class="fas fa-lock"></i>
-                            <span>Complete Payment</span>
+                            <span data-translate="complete_payment">Complete Payment</span>
                         </button>
                     </form>
                 </div>
@@ -414,59 +414,70 @@
         // Plan configurations
         const plans = {
             standard: {
-                name: 'Standard Plan',
+                nameKey: 'standard_plan',
                 price: 0,
                 icon: 'fa-star',
                 features: [
-                    'Core features access',
-                    'Student management',
-                    'Grade tracking',
-                    'Attendance monitoring',
-                    'Basic reports'
+                    'core_features_access',
+                    'student_management_feature',
+                    'grade_tracking_feature',
+                    'attendance_monitoring',
+                    'basic_reports'
                 ]
             },
             premium: {
-                name: 'Premium Plan',
+                nameKey: 'premium_plan',
                 price: 29.99,
                 icon: 'fa-crown',
                 features: [
-                    'All Standard features',
-                    'Priority support',
-                    'Advanced analytics',
-                    'Unlimited storage',
-                    'Custom integrations',
-                    'Dedicated account manager'
+                    'all_standard_features',
+                    'priority_support',
+                    'advanced_analytics',
+                    'unlimited_storage',
+                    'custom_integrations',
+                    'dedicated_account_manager'
                 ]
             }
         };
+
+        // Get current language
+        function getCurrentLanguage() {
+            return localStorage.getItem('language') || 'es';
+        }
+
+        // Get translation
+        function getTranslation(key) {
+            const lang = getCurrentLanguage();
+            return translations[lang] && translations[lang][key] ? translations[lang][key] : key;
+        }
 
         // Update page based on selected plan
         function updatePlanDisplay() {
             const plan = plans[planType];
             if (!plan) return;
 
-            // Update plan summary
-            document.getElementById('planName').textContent = plan.name;
-            document.getElementById('planIcon').className = `fas ${plan.icon}`;
-            document.getElementById('planPrice').innerHTML = plan.price === 0 
-                ? 'Free<span style="font-size: 1rem;">/month</span>' 
-                : `$${plan.price.toFixed(2)}<span style="font-size: 1rem;">/month</span>`;
+            // Update summary with translated plan name
+            const planNameElement = document.getElementById('summaryPlan');
+            if (planNameElement) {
+                planNameElement.textContent = getTranslation(plan.nameKey);
+            }
 
-            // Update features list
-            const featuresList = document.getElementById('planFeatures');
-            featuresList.innerHTML = plan.features.map(feature => 
-                `<li><i class="fas fa-check"></i> ${feature}</li>`
-            ).join('');
-
-            // Update summary
-            document.getElementById('summaryPlan').textContent = plan.name;
             const subtotal = plan.price;
             const tax = subtotal * 0.21; // 21% tax
             const total = subtotal + tax;
 
-            document.getElementById('summarySubtotal').textContent = `$${subtotal.toFixed(2)}`;
-            document.getElementById('summaryTax').textContent = `$${tax.toFixed(2)}`;
-            document.getElementById('summaryTotal').textContent = `$${total.toFixed(2)}`;
+            const subtotalElement = document.getElementById('summarySubtotal');
+            const taxElement = document.getElementById('summaryTax');
+            const totalElement = document.getElementById('summaryTotal');
+            
+            if (subtotalElement) subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
+            if (taxElement) taxElement.textContent = `$${tax.toFixed(2)}`;
+            if (totalElement) totalElement.textContent = `$${total.toFixed(2)}`;
+        }
+
+        // Update plan display when language changes
+        function updatePlanDisplayOnLanguageChange() {
+            updatePlanDisplay();
         }
 
         // Card number formatting
@@ -546,8 +557,33 @@
             });
         });
 
-        // Initialize page
-        updatePlanDisplay();
+        // Initialize page after translations are loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(updatePlanDisplay, 100);
+            });
+        } else {
+            setTimeout(updatePlanDisplay, 100);
+        }
+
+        // Listen for language changes
+        if (typeof translatePage === 'function') {
+            const originalTranslatePage = translatePage;
+            window.translatePage = function(language) {
+                originalTranslatePage(language);
+                setTimeout(updatePlanDisplayOnLanguageChange, 100);
+            };
+        }
+
+        // Also update when language selector changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const languageSelect = document.getElementById('languageSelect');
+            if (languageSelect) {
+                languageSelect.addEventListener('change', function() {
+                    setTimeout(updatePlanDisplayOnLanguageChange, 100);
+                });
+            }
+        });
     </script>
 </body>
 </html>
