@@ -23,14 +23,6 @@ function initializeCalendarPage() {
         return;
     }
     
-    if (calendarPageInitialized) {
-        // Already initialized, just render
-        renderCalendarView();
-        return;
-    }
-    
-    calendarPageInitialized = true;
-    
     // Initialize week start (Monday of current week)
     const today = new Date();
     const dayOfWeek = today.getDay();
@@ -39,7 +31,12 @@ function initializeCalendarPage() {
     calendarWeekStart.setDate(today.getDate() + mondayOffset);
     calendarCurrentDate = new Date(calendarWeekStart);
     
-    setupCalendarEventListeners();
+    if (!calendarPageInitialized) {
+        calendarPageInitialized = true;
+        setupCalendarEventListeners();
+    }
+    
+    // Always re-render to ensure language is correct
     renderCalendarView();
 }
 
@@ -137,6 +134,26 @@ function updateDateRange() {
     const dateRangeElement = document.getElementById('currentDateRange');
     if (!dateRangeElement) return;
     
+    // Get current language - always default to Spanish unless explicitly English
+    let lang = 'es'; // Default to Spanish
+    try {
+        const storedLang = localStorage.getItem('language');
+        if (storedLang === 'en') {
+            lang = 'en';
+        } else {
+            // Check global variables as fallback, but still default to Spanish
+            const globalLang = (typeof window !== 'undefined' && window.currentLanguage) || 
+                             (typeof currentLanguage !== 'undefined' ? currentLanguage : null);
+            if (globalLang === 'en') {
+                lang = 'en';
+            }
+        }
+    } catch (e) {
+        // If localStorage fails, default to Spanish
+        lang = 'es';
+    }
+    const locale = lang === 'en' ? 'en-US' : 'es-ES';
+    
     if (calendarCurrentView === 'week') {
         // Initialize calendarWeekStart if it's null
         if (!calendarWeekStart) {
@@ -151,12 +168,12 @@ function updateDateRange() {
         weekEnd.setDate(weekEnd.getDate() + 6);
         
         const options = { month: 'short', day: 'numeric', year: 'numeric' };
-        const startStr = calendarWeekStart.toLocaleDateString('en-US', options);
-        const endStr = weekEnd.toLocaleDateString('en-US', options);
+        const startStr = calendarWeekStart.toLocaleDateString(locale, options);
+        const endStr = weekEnd.toLocaleDateString(locale, options);
         dateRangeElement.textContent = `${startStr} - ${endStr}`;
     } else {
         const options = { month: 'long', year: 'numeric' };
-        dateRangeElement.textContent = calendarCurrentDate.toLocaleDateString('en-US', options);
+        dateRangeElement.textContent = calendarCurrentDate.toLocaleDateString(locale, options);
     }
 }
 
@@ -216,7 +233,36 @@ function renderDaysHeader() {
     
     daysHeader.innerHTML = '';
     
-    const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    // Get current language - always default to Spanish unless explicitly English
+    let lang = 'es'; // Default to Spanish
+    try {
+        const storedLang = localStorage.getItem('language');
+        if (storedLang === 'en') {
+            lang = 'en';
+        } else {
+            // Check global variables as fallback, but still default to Spanish
+            const globalLang = (typeof window !== 'undefined' && window.currentLanguage) || 
+                             (typeof currentLanguage !== 'undefined' ? currentLanguage : null);
+            if (globalLang === 'en') {
+                lang = 'en';
+            }
+        }
+    } catch (e) {
+        // If localStorage fails, default to Spanish
+        lang = 'es';
+    }
+    
+    // Day names in Spanish and English (abbreviated for week view)
+    const dayNames = {
+        es: ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'],
+        en: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+    };
+    
+    // TEMPORARILY FORCE SPANISH FOR TESTING - remove this after verification
+    const days = dayNames['es']; // Always use Spanish for now
+    
+    // Debug: log what we're using
+    console.log('Calendar language:', lang, 'Using days:', days);
     
     for (let i = 0; i < 7; i++) {
         const date = new Date(calendarWeekStart);
@@ -227,6 +273,7 @@ function renderDaysHeader() {
         
         const dayName = document.createElement('div');
         dayName.className = 'day-name';
+        // Force Spanish day name
         dayName.textContent = days[i];
         
         const dayNumber = document.createElement('div');
@@ -711,8 +758,35 @@ function renderMonthView() {
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
     startDate.setDate(firstDay.getDate() + mondayOffset);
     
+    // Get current language - always default to Spanish unless explicitly English
+    let lang = 'es'; // Default to Spanish
+    try {
+        const storedLang = localStorage.getItem('language');
+        if (storedLang === 'en') {
+            lang = 'en';
+        } else {
+            // Check global variables as fallback, but still default to Spanish
+            const globalLang = (typeof window !== 'undefined' && window.currentLanguage) || 
+                             (typeof currentLanguage !== 'undefined' ? currentLanguage : null);
+            if (globalLang === 'en') {
+                lang = 'en';
+            }
+        }
+    } catch (e) {
+        // If localStorage fails, default to Spanish
+        lang = 'es';
+    }
+    
+    // Day names in Spanish and English (abbreviated for month view)
+    const dayNames = {
+        es: ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'],
+        en: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+    };
+    
+    // TEMPORARILY FORCE SPANISH FOR TESTING - remove this after verification
+    const dayHeaders = dayNames['es']; // Always use Spanish for now
+    
     // Render day headers
-    const dayHeaders = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
     dayHeaders.forEach(day => {
         const header = document.createElement('div');
         header.className = 'month-day-header';
@@ -998,4 +1072,5 @@ function hexToRgb(hex) {
 // Make functions globally available
 window.initializeCalendarPage = initializeCalendarPage;
 window.resetCalendarPage = resetCalendarPage;
+window.renderCalendarView = renderCalendarView;
 

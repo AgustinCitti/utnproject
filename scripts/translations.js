@@ -163,6 +163,8 @@ const translations = {
         select_export_format: "Seleccione el formato de exportación:",
         select_export_format_exams: "Seleccione el formato de exportación para los exámenes:",
         select_export_format_subjects: "Seleccione el formato de exportación para las materias:",
+        export_notes: "Exportar Notas",
+        back_to_exams: "Volver a Exámenes",
         
         // Forms
         add_edit_student: "Agregar/Editar Estudiante",
@@ -497,6 +499,8 @@ const translations = {
         select_export_format: "Select export format:",
         select_export_format_exams: "Select export format for exams:",
         select_export_format_subjects: "Select export format for subjects:",
+        export_notes: "Export Notes",
+        back_to_exams: "Back to Exams",
         
         // Forms
         add_edit_student: "Add/Edit Student",
@@ -667,6 +671,9 @@ const translations = {
 // Translation functions
 function translatePage(language) {
     currentLanguage = language;
+    if (typeof window !== 'undefined') {
+        window.currentLanguage = language;
+    }
     document.documentElement.lang = language;
     
     // Update all elements with data-translate attribute
@@ -693,7 +700,14 @@ function updateCalendarMonths(language) {
              'July', 'August', 'September', 'October', 'November', 'December']
     };
     
-    // Update calendar if it exists
+    // Update calendar page if it exists and is initialized
+    if (typeof calendarPageInitialized !== 'undefined' && calendarPageInitialized) {
+        if (typeof renderCalendarView === 'function') {
+            renderCalendarView();
+        }
+    }
+    
+    // Update dashboard calendar if it exists
     if (window.calendarInitialized) {
         // This will be handled in the calendar initialization
     }
@@ -704,6 +718,9 @@ function initializeLanguage() {
     // Get saved language or default to Spanish
     const savedLanguage = localStorage.getItem('language') || 'es';
     currentLanguage = savedLanguage;
+    if (typeof window !== 'undefined') {
+        window.currentLanguage = savedLanguage;
+    }
     
     // Set up language selector
     const languageSelect = document.getElementById('languageSelect');

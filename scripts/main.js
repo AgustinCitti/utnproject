@@ -2,6 +2,7 @@
 let appData = {};
 let currentSection = 'dashboard';
 let currentLanguage = 'es'; // Default to Spanish
+window.currentLanguage = currentLanguage; // Make it globally accessible
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
