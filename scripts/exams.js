@@ -4,8 +4,8 @@ function initializeExams() {
     const backToExamsBtn = document.getElementById('backToExamsBtn');
     
     if (createExamBtn) {
-        createExamBtn.addEventListener('click', () => {
-            showExamModal(); // Sin ID = crear nueva
+        createExamBtn.addEventListener('click', async () => {
+            await showExamModal(); // Sin ID = crear nueva
         });
     }
     
@@ -29,25 +29,59 @@ function getFilteredExams() {
     const currentUserId = localStorage.getItem('userId');
     const teacherId = currentUserId ? parseInt(currentUserId) : null;
     
+    // Ensure appData.evaluacion exists and is an array
+    if (!appData || !appData.evaluacion || !Array.isArray(appData.evaluacion)) {
+        console.warn('appData.evaluacion is not available or not an array');
+        return [];
+    }
+    
     let filteredExams = appData.evaluacion || [];
     
     // Filter by current teacher's subjects first
+    // Note: The API already filters evaluations by teacher ID, so this is an additional filter
+    // to ensure consistency and handle edge cases
     if (teacherId) {
-        let teacherSubjects = appData.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
-        
-        // Filter by course/division if selected
-        if (selectedCourse) {
-            teacherSubjects = teacherSubjects.filter(subject => subject.Curso_division === selectedCourse);
+        // Ensure appData.materia exists and is an array
+        if (!appData.materia || !Array.isArray(appData.materia)) {
+            console.warn('appData.materia is not available or not an array');
+            // Since API already filtered, still show available evaluations
+            // Don't return empty array here
+        } else {
+            // Use loose equality to handle type mismatches (string vs number)
+            let teacherSubjects = appData.materia.filter(subject => {
+                const subjectTeacherId = subject.Usuarios_docente_ID_docente;
+                // Convert both to numbers for comparison
+                return subjectTeacherId && parseInt(subjectTeacherId) === teacherId;
+            });
+            
+            // Filter by course/division if selected
+            if (selectedCourse) {
+                teacherSubjects = teacherSubjects.filter(subject => subject.Curso_division === selectedCourse);
+            }
+            
+            // Convert subject IDs to numbers for comparison
+            const teacherSubjectIds = teacherSubjects.map(subject => parseInt(subject.ID_materia));
+            
+            // Only filter if we found subjects - otherwise trust API filtering
+            if (teacherSubjectIds.length > 0) {
+                // Filter exams by teacher's subject IDs, using loose comparison
+                filteredExams = filteredExams.filter(exam => {
+                    const examMateriaId = exam.Materia_ID_materia;
+                    // Convert to number and check if it's in the teacher's subjects
+                    return examMateriaId && teacherSubjectIds.includes(parseInt(examMateriaId));
+                });
+            }
+            // If no subjects found but teacherId exists, trust the API filtering and show all
         }
-        
-        const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
-        filteredExams = filteredExams.filter(exam => teacherSubjectIds.includes(exam.Materia_ID_materia));
     }
     
     // Filter by subject
     if (selectedSubject) {
         const subjectId = parseInt(selectedSubject);
-        filteredExams = filteredExams.filter(exam => exam.Materia_ID_materia === subjectId);
+        filteredExams = filteredExams.filter(exam => {
+            const examMateriaId = exam.Materia_ID_materia;
+            return examMateriaId && parseInt(examMateriaId) === subjectId;
+        });
     }
     
     // Filter by date
@@ -56,6 +90,8 @@ function getFilteredExams() {
         const todayStr = today.toISOString().split('T')[0];
         
         filteredExams = filteredExams.filter(exam => {
+            if (!exam.Fecha) return false;
+            
             const examDate = new Date(exam.Fecha + 'T00:00:00'); // Ensure consistent timezone
             const todayDate = new Date(todayStr + 'T00:00:00');
             
@@ -177,7 +213,26 @@ function loadExams() {
     `;
 }
 
-function showExamModal(examId = null) {
+async function showExamModal(examId = null) {
+    // Ensure appData is loaded
+    if (!appData || !appData.materia || !Array.isArray(appData.materia)) {
+        console.log('appData not loaded, loading data...');
+        if (typeof loadData === 'function') {
+            await loadData();
+        }
+    }
+    
+    // Get current user ID
+    const currentUserId = localStorage.getItem('userId');
+    
+    // Debug logging
+    console.log('showExamModal - Debug info:', {
+        hasAppData: !!appData,
+        materiaCount: appData?.materia?.length || 0,
+        currentUserId: currentUserId,
+        materiaSample: appData?.materia?.slice(0, 2)
+    });
+    
     const modal = document.createElement('div');
     modal.className = 'modal active';
     modal.id = 'examModal';
@@ -186,16 +241,41 @@ function showExamModal(examId = null) {
     }
     
     // Obtener materias del docente actual
-    const currentUserId = localStorage.getItem('userId');
-    const teacherId = currentUserId ? parseInt(currentUserId) : null;
-    let teacherSubjects = appData.materia || [];
-    
-    if (teacherId) {
-        teacherSubjects = teacherSubjects.filter(s => s.Usuarios_docente_ID_docente === teacherId);
+    // Similar al patrón usado en populateAttendanceMateriaSelect()
+    let teacherSubjects = [];
+    if (appData && appData.materia && Array.isArray(appData.materia)) {
+        if (currentUserId) {
+            // Filter by teacher ID (as fallback, even though API should filter)
+            teacherSubjects = appData.materia.filter(subject => 
+                subject && 
+                subject.Usuarios_docente_ID_docente && 
+                parseInt(subject.Usuarios_docente_ID_docente) === parseInt(currentUserId) &&
+                (!subject.Estado || subject.Estado === 'ACTIVA')
+            );
+        } else {
+            // No user ID, show all active subjects (shouldn't happen in normal flow)
+            teacherSubjects = appData.materia.filter(m => 
+                !m.Estado || m.Estado === 'ACTIVA'
+            );
+        }
     }
+    
+    console.log('showExamModal - Filtered subjects:', teacherSubjects.length, teacherSubjects);
     
     const exam = examId ? appData.evaluacion.find(e => e.ID_evaluacion === examId) : null;
     const isEdit = !!exam;
+    
+    // Build subject options HTML
+    let subjectOptionsHTML = '<option value="">Seleccione una materia</option>';
+    if (teacherSubjects.length === 0) {
+        subjectOptionsHTML += '<option value="" disabled>No hay materias disponibles. Cree una materia primero.</option>';
+    } else {
+        teacherSubjects.forEach(s => {
+            const selected = exam && exam.Materia_ID_materia === s.ID_materia ? 'selected' : '';
+            const displayText = s.Curso_division ? `${s.Nombre} - ${s.Curso_division}` : s.Nombre;
+            subjectOptionsHTML += `<option value="${s.ID_materia}" ${selected}>${displayText}</option>`;
+        });
+    }
     
     modal.innerHTML = `
         <div class="modal-content">
@@ -211,10 +291,7 @@ function showExamModal(examId = null) {
                 <div class="form-group">
                     <label for="examSubject">Materia *</label>
                     <select id="examSubject" name="examSubject" required>
-                        <option value="">Seleccione una materia</option>
-                        ${teacherSubjects.map(s => 
-                            `<option value="${s.ID_materia}" ${exam && exam.Materia_ID_materia === s.ID_materia ? 'selected' : ''}>${s.Nombre}</option>`
-                        ).join('')}
+                        ${subjectOptionsHTML}
                     </select>
                 </div>
                 <div class="form-group">
@@ -447,14 +524,14 @@ async function saveExam(event) {
     }
 }
 
-function editExam(id) {
+async function editExam(id) {
     const exam = appData.evaluacion.find(e => e.ID_evaluacion === id);
     if (!exam) {
         alert('Evaluación no encontrada.');
         return;
     }
     
-    showExamModal(id);
+    await showExamModal(id);
 }
 
 async function deleteExam(id) {
