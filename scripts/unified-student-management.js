@@ -203,10 +203,53 @@ function initializeUnifiedStudentManagement() {
     
     if (backToStudentsBtn) {
         backToStudentsBtn.addEventListener('click', () => {
-            // Hide grade marking view first
-            hideGradeMarkingView();
-            // Then navigate to student-management section
-            showSection('student-management', 'students');
+            // Hide grade marking view
+            if (typeof hideGradeMarkingView === 'function') {
+                hideGradeMarkingView();
+            }
+            // Hide exam notes tab if visible
+            const examNotesTabContent = document.getElementById('examNotesTabContent');
+            if (examNotesTabContent) {
+                examNotesTabContent.style.display = 'none';
+            }
+            // Navigate to student-management section
+            showSection('student-management');
+            // Directly switch to exams tab (same as handleStudentManagementSubsection('exams'))
+            setTimeout(() => {
+                // Hide students tab content explicitly
+                const studentsTabContent = document.getElementById('studentsTabContent');
+                if (studentsTabContent) {
+                    studentsTabContent.classList.remove('active');
+                    studentsTabContent.style.display = 'none';
+                }
+                // Hide all tab content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                // Remove active class from all tab buttons
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                // Deactivate students tab button
+                const studentsTab = document.getElementById('studentsTab');
+                if (studentsTab) {
+                    studentsTab.classList.remove('active');
+                }
+                // Show exams tab content
+                const examsContent = document.getElementById('examsTabContent');
+                if (examsContent) {
+                    examsContent.classList.add('active');
+                    examsContent.style.display = 'block';
+                }
+                // Activate exams tab button
+                const examsTab = document.getElementById('examsTab');
+                if (examsTab) {
+                    examsTab.classList.add('active');
+                }
+                // Show/hide appropriate action buttons
+                document.querySelectorAll('.students-only').forEach(btn => btn.style.display = 'none');
+                document.querySelectorAll('.exams-only').forEach(btn => btn.style.display = 'flex');
+            }, 50);
         });
     }
 

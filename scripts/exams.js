@@ -1244,23 +1244,13 @@ window.openGradeMarkingForExam = async function(examId) {
 function backToExams() {
     console.log('backToExams called');
     
-    // Hide exam notes tab content and show exams tab content
-    const examsTabContent = document.getElementById('examsTabContent');
+    // Hide exam notes tab content
     const examNotesTabContent = document.getElementById('examNotesTabContent');
-    
     if (examNotesTabContent) {
         examNotesTabContent.style.display = 'none';
     }
-    if (examsTabContent) {
-        examsTabContent.style.display = 'block';
-    }
     
-    // Show exam control buttons again
-    if (typeof showExamControls === 'function') {
-        showExamControls();
-    }
-    
-    // Ensure we're in the student-management section with exams tab active
+    // Navigate to student-management section
     if (typeof showSection === 'function') {
         showSection('student-management', 'exams');
     } else {
@@ -1272,16 +1262,44 @@ function backToExams() {
         if (studentSection) {
             studentSection.classList.add('active');
         }
-        
-        // Manually show exams tab
-        const examsTab = document.getElementById('examsTab');
-        const studentsTab = document.getElementById('studentsTab');
-        if (examsTab) examsTab.classList.add('active');
-        if (studentsTab) studentsTab.classList.remove('active');
-        
+    }
+    
+    // Explicitly hide students tab and show exams tab
+    setTimeout(() => {
+        // Hide students tab content explicitly
         const studentsTabContent = document.getElementById('studentsTabContent');
-        if (studentsTabContent) studentsTabContent.classList.remove('active');
-        if (examsTabContent) examsTabContent.classList.add('active');
+        if (studentsTabContent) {
+            studentsTabContent.classList.remove('active');
+            studentsTabContent.style.display = 'none';
+        }
+        
+        // Deactivate students tab button
+        const studentsTab = document.getElementById('studentsTab');
+        if (studentsTab) {
+            studentsTab.classList.remove('active');
+        }
+        
+        // Show exams tab content
+        const examsTabContent = document.getElementById('examsTabContent');
+        if (examsTabContent) {
+            examsTabContent.classList.add('active');
+            examsTabContent.style.display = 'block';
+        }
+        
+        // Activate exams tab button
+        const examsTab = document.getElementById('examsTab');
+        if (examsTab) {
+            examsTab.classList.add('active');
+        }
+        
+        // Show/hide appropriate action buttons
+        document.querySelectorAll('.students-only').forEach(btn => btn.style.display = 'none');
+        document.querySelectorAll('.exams-only').forEach(btn => btn.style.display = 'flex');
+    }, 50);
+    
+    // Show exam control buttons again
+    if (typeof showExamControls === 'function') {
+        showExamControls();
     }
     
     // Clear the current exam ID
