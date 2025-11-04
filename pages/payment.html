@@ -12,12 +12,46 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" href="../styles/assets/icon.ico" type="image/x-icon">
     <style>
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #f8f9fa !important;
+        }
+
+        .payment-page {
+            min-height: 100vh !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
         .payment-container {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: calc(100vh - 80px);
+            min-height: 100vh;
             padding: 40px 20px;
+        }
+
+        .back-to-home {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 600;
+            transition: color 0.3s ease;
+            z-index: 100;
+        }
+
+        .back-to-home:hover {
+            color: #764ba2;
+        }
+
+        .back-to-home i {
+            font-size: 1.2rem;
         }
 
         .payment-wrapper {
@@ -33,6 +67,7 @@
             border-radius: 15px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             padding: 40px;
+            width: 100%;
         }
 
         .payment-header {
@@ -178,49 +213,39 @@
         }
 
         @media (max-width: 768px) {
+            .payment-container {
+                padding: 20px 15px;
+                min-height: 100vh;
+            }
+
             .payment-wrapper {
                 grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .payment-card {
+                padding: 25px;
             }
 
             .payment-summary-card {
                 position: relative;
                 top: 0;
             }
+
+            .back-to-home {
+                top: 15px;
+                left: 15px;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Payment Page Header -->
-    <header class="login-header">
-        <nav class="login-nav">
-            <div class="nav-brand">
-                <a href="../index.html">
-                    <img src="../styles/assets/icon.ico" alt="EduSync" style="width:50px;height:50px;">
-                    <span>EduSync</span>
-                </a>
-            </div>
-            <div class="nav-menu" id="navMenu">
-                <a href="../index.html#features" class="nav-link" data-translate="features">Features</a>
-                <a href="../index.html#about" class="nav-link" data-translate="about">About</a>
-                <a href="contact.html" class="nav-link" data-translate="contact">Contact</a>
-                <a href="login.html" class="nav-btn nav-login">
-                    <i class="fas fa-sign-in-alt"></i>
-                    <span data-translate="login">Login</span>
-                </a>
-                <div class="language-selector">
-                    <select id="languageSelect" class="language-dropdown">
-                        <option value="es" data-translate="español">Español</option>
-                        <option value="en" data-translate="english">English</option>
-                    </select>
-                </div>
-            </div>
-            <div class="nav-toggle" id="navToggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </nav>
-    </header>
+    <!-- Back to Home Link -->
+    <a href="../index.html" class="back-to-home">
+        <i class="fas fa-arrow-left"></i>
+        <span>Back to Home</span>
+    </a>
 
     <!-- Payment Page Content -->
     <main class="payment-page">
@@ -233,19 +258,7 @@
                         <p data-translate="payment_subtitle">Secure payment gateway powered by EduSync</p>
                     </div>
 
-                    <!-- Plan Summary -->
-                    <div class="plan-summary" id="planSummary">
-                        <h3>
-                            <i class="fas fa-star" id="planIcon"></i>
-                            <span id="planName">Standard Plan</span>
-                        </h3>
-                        <div class="plan-price" id="planPrice">$0<span style="font-size: 1rem;">/month</span></div>
-                        <ul class="plan-features" id="planFeatures">
-                            <li><i class="fas fa-check"></i> Core features access</li>
-                            <li><i class="fas fa-check"></i> Student management</li>
-                            <li><i class="fas fa-check"></i> Grade tracking</li>
-                        </ul>
-                    </div>
+                   
 
                     <form id="paymentForm" class="payment-form">
                         <!-- Payment Information -->
@@ -387,26 +400,6 @@
             </div>
         </div>
     </main>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <img src="../styles/assets/icon.ico" alt="EduSync" style="width:20px;height:20px;">
-                    <span>EduSync</span>
-                </div>
-                <div class="footer-links">
-                    <a href="../index.html#features" data-translate="features">Features</a>
-                    <a href="../index.html#about" data-translate="about">About</a>
-                    <a href="contact.html" data-translate="contact">Contact</a>
-                </div>
-                <div class="footer-copyright">
-                    <p>&copy; 2024 EduSync. All rights reserved.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
 
     <!-- Script Modules -->
     <script src="../scripts/translations.js"></script>
