@@ -2,6 +2,12 @@
 const NOTIFICATION_SYNC_INTERVAL = 30000; // 30 seconds
 let lastSyncTimestamp = 0;
 
+// Helper function to get the correct API base URL
+function getApiBaseUrl() {
+    const isInPages = window.location.pathname.includes('/pages/');
+    return isInPages ? '../api' : 'api';
+}
+
 // Sync notifications from server
 async function syncNotifications() {
     try {
@@ -12,8 +18,9 @@ async function syncNotifications() {
         }
         lastSyncTimestamp = now;
 
-        const baseUrl = window.location.pathname.includes('/pages/') ? '../api' : 'api';
-        const response = await fetch(`${baseUrl}/notifications.php`);
+        const response = await fetch(`${getApiBaseUrl()}/notifications.php`, {
+            credentials: 'include'
+        });
         const data = await response.json();
         
         if (data && data.success && data.notifications) {
@@ -31,7 +38,7 @@ async function syncNotifications() {
             }
         }
     } catch (err) {
-        console.error('Error syncing notifications:', err);
+        // Error syncing notifications - silently handled
     }
 }
 
@@ -54,8 +61,8 @@ async function initializeNotifications() {
     // Initial sync of notifications from server
     await syncNotifications();
     
-    // Load recordatorios for docente
-    loadRecordatorios();
+    // Load recordatorios for docente from API
+    await loadRecordatorios();
     
     // Update notification counts
     updateNotificationCount();
@@ -72,6 +79,20 @@ async function loadNotifications() {
         return;
     }
 
+    // If notifications are not present locally or it's been a while since last sync, sync from server
+    const now = Date.now();
+    if (!appData.notifications || (now - lastSyncTimestamp >= NOTIFICATION_SYNC_INTERVAL)) {
+        // Trigger a sync and wait for it
+        await syncNotifications();
+        // If still no notifications after sync, return
+        if (!appData.notifications) {
+            return;
+        }
+    }
+    
+    // Reload recordatorios from API to ensure we have the latest data
+    await loadRecordatorios();
+
     // Get current docente user
     const currentUser = getCurrentUser();
     if (!currentUser) {
@@ -86,26 +107,17 @@ async function loadNotifications() {
         appData.notifications = [];
     }
     
-    // Format notifications properly
-    const formattedNotifications = (appData.notifications || []).map(n => ({
-        id: n.ID_notificacion,
-        title: n.Titulo,
-        message: n.Mensaje,
-        date: new Date(n.Fecha_creacion).toLocaleDateString(),
-        read: n.Estado === 'LEIDA',
-        type: 'notification',
-        notification: n
-    }));
-    
     // Combine regular notifications with recordatorios
     const allNotifications = [
-        ...formattedNotifications,
+        ...(appData.notifications || []).map(n => ({ ...n, type: 'notification' })),
         ...recordatorios.map(r => ({
             id: `recordatorio_${r.ID_recordatorio}`,
             title: getRecordatorioTitle(r),
             message: r.Descripcion,
             date: formatRecordatorioDate(r.Fecha),
-            read: false,
+            fecha: r.Fecha,
+            fecha_creacion: r.Fecha_creacion,
+            read: r.Estado === 'COMPLETADO',
             type: 'recordatorio',
             recordatorio: r
         }))
@@ -113,14 +125,16 @@ async function loadNotifications() {
 
     // Grid view - Modern design
     if (allNotifications.length === 0) {
+        const lang = currentLanguage || 'es';
         notificationsContainer.innerHTML = `
             <div class="notifications-empty">
                 <i class="fas fa-bell-slash"></i>
-                <h3>No hay notificaciones</h3>
-                <p>¡Estás al día! No hay notificaciones nuevas.</p>
+                <h3>${translations[lang].no_notifications}</h3>
+                <p>${translations[lang].all_caught_up}</p>
             </div>
         `;
     } else {
+        const lang = currentLanguage || 'es';
         notificationsContainer.innerHTML = allNotifications.map(notification => `
             <div class="notification-card ${notification.read ? 'read' : 'unread'} ${notification.type}">
                 <div class="notification-header">
@@ -130,41 +144,44 @@ async function loadNotifications() {
                     </h3>
                     <div class="notification-meta">
                         <span class="notification-date">${notification.date}</span>
-                        ${notification.type === 'recordatorio' && notification.recordatorio ? 
-                            `<span class="priority-badge ${notification.recordatorio.Prioridad.toLowerCase()}">${notification.recordatorio.Prioridad}</span>` : ''}
+                        ${notification.type === 'recordatorio' ? `<span class="priority-badge ${notification.recordatorio.Prioridad.toLowerCase()}">${notification.recordatorio.Prioridad}</span>` : ''}
                     </div>
                 </div>
                 <div class="notification-content">
                     <p class="notification-message">${notification.message}</p>
-                    ${notification.type === 'recordatorio' && notification.recordatorio ? `
+                    ${notification.type === 'recordatorio' ? `
                         <div class="recordatorio-details">
-                            <span class="recordatorio-type">${getRecordatorioTypeLabel(notification.recordatorio.Tipo)}</span>
-                            <span class="recordatorio-subject">${getSubjectName(notification.recordatorio.Materia_ID_materia)}</span>
+                            <div class="recordatorio-meta">
+                                <span class="recordatorio-type"><i class="fas fa-tag"></i> ${getRecordatorioTypeLabel(notification.recordatorio.Tipo)}</span>
+                                <span class="recordatorio-subject"><i class="fas fa-book"></i> ${getSubjectName(notification.recordatorio.Materia_ID_materia)}</span>
+                            </div>
+                            ${notification.fecha_creacion ? `<div class="recordatorio-created"><i class="fas fa-calendar-plus"></i> Creado: ${new Date(notification.fecha_creacion).toLocaleDateString()}</div>` : ''}
                         </div>
                     ` : ''}
                 </div>
                 <div class="notification-actions">
-                    ${!notification.read ? `<button class="btn btn-sm btn-success" onclick="markNotificationRead('${notification.id}')" title="Marcar como leído">
-                        <i class="fas fa-check"></i> Marcar como leído
+                    ${!notification.read ? `<button class="btn btn-sm btn-success" onclick="markNotificationRead('${notification.id}')" title="${translations[lang].mark_as_read}">
+                        <i class="fas fa-check"></i> ${translations[lang].mark_as_read}
                     </button>` : ''}
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteNotification('${notification.id}')" title="Eliminar">
-                        <i class="fas fa-trash"></i> Eliminar
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteNotification('${notification.id}')" title="${translations[lang].delete}">
+                        <i class="fas fa-trash"></i> ${translations[lang].delete}
                     </button>
-                    ${notification.type === 'recordatorio' && notification.recordatorio ? `<button class="btn btn-sm btn-outline-primary" onclick="viewRecordatorio('${notification.recordatorio.ID_recordatorio}')" title="Ver detalles">
-                        <i class="fas fa-eye"></i> Ver detalles
+                    ${notification.type === 'recordatorio' ? `<button class="btn btn-sm btn-outline-primary" onclick="viewRecordatorio('${notification.recordatorio.ID_recordatorio}')" title="${translations[lang].view_details}">
+                        <i class="fas fa-eye"></i> ${translations[lang].view_details}
                     </button>` : ''}
                 </div>
             </div>
         `).join('');
     }
 
-    // List view - Modern table format
+    // List view - Modern table format with all recordatorio fields
+    const lang = currentLanguage || 'es';
     if (allNotifications.length === 0) {
         notificationsList.innerHTML = `
             <div class="notifications-empty">
                 <i class="fas fa-bell-slash"></i>
-                <h3>No hay notificaciones</h3>
-                <p>¡Estás al día! No hay notificaciones nuevas.</p>
+                <h3>${translations[lang].no_notifications}</h3>
+                <p>${translations[lang].all_caught_up}</p>
             </div>
         `;
     } else {
@@ -172,38 +189,48 @@ async function loadNotifications() {
             <table>
                 <thead>
                     <tr>
-                        <th>Tipo</th>
-                        <th>Título</th>
-                        <th>Mensaje</th>
-                        <th>Fecha</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
+                        <th>${translations[lang].notification_type || 'Tipo'}</th>
+                        <th>${translations[lang].notification_title || 'Título'}</th>
+                        <th>${translations[lang].notification_message || 'Descripción'}</th>
+                        <th>${translations[lang].notification_date || 'Fecha'}</th>
+                        <th>Prioridad</th>
+                        <th>${translations[lang].notification_status || 'Estado'}</th>
+                        <th>Fecha Creación</th>
+                        <th>${translations[lang].notification_actions || 'Acciones'}</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${allNotifications.map(notification => {
-                        const shortMessage = notification.message.length > 30 ? notification.message.substring(0, 30) + '...' : notification.message;
+                        const shortDate = notification.fecha ? new Date(notification.fecha).toLocaleDateString() : notification.date;
+                        const shortMessage = notification.message && notification.message.length > 50 ? notification.message.substring(0, 50) + '...' : (notification.message || '');
+                        const prioridad = notification.recordatorio ? notification.recordatorio.Prioridad : '';
+                        const fechaCreacion = notification.fecha_creacion ? new Date(notification.fecha_creacion).toLocaleDateString() : '';
+                        const tipo = notification.recordatorio ? notification.recordatorio.Tipo : '';
+                        const estado = notification.recordatorio ? notification.recordatorio.Estado : (notification.read ? 'COMPLETADO' : 'PENDIENTE');
+                        
                         return `
                             <tr class="${notification.read ? 'read' : 'unread'} ${notification.type}">
                                 <td>
                                     ${notification.type === 'recordatorio' ? 
-                                        `<span class="type-badge recordatorio"><i class="fas fa-bell"></i> Recordatorio</span>` : 
-                                        `<span class="type-badge notification"><i class="fas fa-info-circle"></i> Notificación</span>`
+                                        `<span class="type-badge recordatorio"><i class="fas fa-bell"></i> ${tipo || 'Recordatorio'}</span>` : 
+                                        `<span class="type-badge notification"><i class="fas fa-info-circle"></i> ${translations[lang].notification_type_label || 'Notificación'}</span>`
                                     }
                                 </td>
                                 <td><strong>${notification.title}</strong></td>
-                                <td title="${notification.message}">${shortMessage}</td>
-                                <td>${notification.date}</td>
-                                <td><span class="table-status ${notification.read ? 'read' : 'unread'}">${notification.read ? 'Leído' : 'No leído'}</span></td>
+                                <td title="${notification.message || ''}">${shortMessage}</td>
+                                <td>${shortDate}</td>
+                                <td>${prioridad ? `<span class="priority-badge ${prioridad.toLowerCase()}">${prioridad}</span>` : '-'}</td>
+                                <td><span class="table-status ${estado === 'COMPLETADO' || notification.read ? 'read' : 'unread'}">${estado || (notification.read ? translations[lang].read_status : translations[lang].unread_status)}</span></td>
+                                <td>${fechaCreacion || '-'}</td>
                                 <td>
                                     <div class="table-actions">
-                                        ${!notification.read ? `<button class="btn btn-sm btn-success" onclick="markNotificationRead('${notification.id}')" title="Marcar como leído">
+                                        ${!notification.read && estado !== 'COMPLETADO' ? `<button class="btn btn-sm btn-success" onclick="markNotificationRead('${notification.id}')" title="${translations[lang].mark_as_read || 'Marcar como leído'}">
                                             <i class="fas fa-check"></i>
                                         </button>` : ''}
-                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteNotification('${notification.id}')" title="Eliminar">
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteNotification('${notification.id}')" title="${translations[lang].delete || 'Eliminar'}">
                                             <i class="fas fa-trash"></i>
                                         </button>
-                                        ${notification.type === 'recordatorio' && notification.recordatorio ? `<button class="btn btn-sm btn-outline-primary" onclick="viewRecordatorio('${notification.recordatorio.ID_recordatorio}')" title="Ver detalles">
+                                        ${notification.type === 'recordatorio' ? `<button class="btn btn-sm btn-outline-primary" onclick="viewRecordatorio('${notification.recordatorio.ID_recordatorio}')" title="${translations[lang].view_details || 'Ver detalles'}">
                                             <i class="fas fa-eye"></i>
                                         </button>` : ''}
                                     </div>
@@ -236,7 +263,7 @@ function updateNotificationCount() {
     }
     
     // Count unread notifications and recordatorios
-    const notificationCount = (appData.notifications || []).filter(n => n.Estado !== 'LEIDA').length;
+    const notificationCount = (appData.notifications || []).filter(n => !n.read).length;
     const recordatorioCount = recordatorios.filter(r => r.Estado === 'PENDIENTE').length;
     const totalCount = notificationCount + recordatorioCount;
     
@@ -268,75 +295,82 @@ function markNotificationRead(id) {
     }
     
     if (id.startsWith('recordatorio_')) {
-        // Handle recordatorio - mark as completed
+        // Handle recordatorio - mark as completed via API
         const recordatorioId = parseInt(id.replace('recordatorio_', ''));
-        const recordatorio = appData.recordatorio.find(r => r.ID_recordatorio === recordatorioId);
-        if (recordatorio) {
-            recordatorio.Estado = 'COMPLETADO';
-            saveData();
-            loadNotifications();
-            updateNotificationCount();
-        }
-    } else {
-        // Handle regular notification
-        const idNotificacion = parseInt(id) || id;
-        const baseUrl = window.location.pathname.includes('/pages/') ? '../api' : 'api';
-        
-        // call API to mark as read
-        fetch(`${baseUrl}/notifications.php`, {
-            method: 'PATCH',
+        fetch(`${getApiBaseUrl()}/recordatorio.php?id=${recordatorioId}`, {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: idNotificacion, action: 'mark_read' })
+            credentials: 'include',
+            body: JSON.stringify({ Estado: 'COMPLETADO' })
         })
         .then(r => r.json())
         .then(resp => {
             if (resp && resp.success) {
-                const notification = appData.notifications.find(n => n.ID_notificacion === idNotificacion);
-                if (notification) {
-                    notification.Estado = 'LEIDA';
-                    notification.Fecha_leida = new Date().toISOString();
+                // Update local data
+                if (!appData.recordatorio || !Array.isArray(appData.recordatorio)) {
+                    appData.recordatorio = [];
+                }
+                const recordatorio = appData.recordatorio.find(r => r.ID_recordatorio === recordatorioId);
+                if (recordatorio) {
+                    recordatorio.Estado = 'COMPLETADO';
                 }
                 saveData();
                 loadNotifications();
                 updateNotificationCount();
             } else {
-                console.error('Failed to mark notification read:', resp);
-                alert('No se pudo marcar la notificación como leída. Por favor, intente nuevamente.');
+                console.error('Failed to mark recordatorio as completed', resp);
             }
         })
-        .catch(err => {
-            console.error('Error marking notification read:', err);
-            alert('Error al marcar la notificación como leída. Por favor, intente nuevamente.');
-        });
+        .catch(err => console.error('Error marking recordatorio as completed', err));
+    } else {
+        // Handle regular notification
+        if (!appData.notifications) {
+            appData.notifications = [];
+        }
+        // call API to mark as read
+        fetch(`${getApiBaseUrl()}/notifications.php`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ id: id, action: 'mark_read' })
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp && resp.success) {
+                const notification = appData.notifications.find(n => n.id === id);
+                if (notification) notification.read = true;
+                saveData();
+                loadNotifications();
+                updateNotificationCount();
+            } else {
+                console.error('Failed to mark notification read', resp);
+            }
+        })
+        .catch(err => console.error('Error marking notification read', err));
     }
 }
 
 function markAllNotificationsRead() {
-    if (!appData || !appData.notifications) {
+    if (!appData) {
         return;
     }
     
-    const baseUrl = window.location.pathname.includes('/pages/') ? '../api' : 'api';
-    
+    if (!appData.notifications) {
+        appData.notifications = [];
+    }
     // mark each notification via API and update local state
-    const promises = appData.notifications
-        .filter(n => n.Estado !== 'LEIDA')
-        .map(n => {
-            return fetch(`${baseUrl}/notifications.php`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: n.ID_notificacion, action: 'mark_read' })
-            })
-            .then(r => r.json())
-            .catch(() => null);
-        });
+    const promises = appData.notifications.map(n => {
+        if (n.read) return Promise.resolve();
+        return fetch(`${getApiBaseUrl()}/notifications.php`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ id: n.id, action: 'mark_read' })
+        }).then(r => r.json()).catch(() => null);
+    });
 
     Promise.all(promises).then(() => {
-        // Update all notifications to read state
-        appData.notifications.forEach(n => {
-            n.Estado = 'LEIDA';
-            n.Fecha_leida = new Date().toISOString();
-        });
+        appData.notifications.forEach(n => n.read = true);
         saveData();
         loadNotifications();
         updateNotificationCount();
@@ -348,46 +382,71 @@ function deleteNotification(id) {
         return;
     }
     
-    if (confirm('¿Está seguro de que desea eliminar esta notificación?')) {
+    const lang = currentLanguage || 'es';
+    if (confirm(translations[lang].delete_notification_confirm || '¿Está seguro de que desea eliminar esta notificación?')) {
         if (id.startsWith('recordatorio_')) {
-            // Handle recordatorio deletion
+            // Handle recordatorio deletion via API
             const recordatorioId = parseInt(id.replace('recordatorio_', ''));
-            appData.recordatorio = appData.recordatorio.filter(r => r.ID_recordatorio !== recordatorioId);
-            saveData();
-            loadNotifications();
-            updateNotificationCount();
-        } else {
-            // Handle regular notification deletion via API
-            const idNotificacion = parseInt(id) || id;
-            const baseUrl = window.location.pathname.includes('/pages/') ? '../api' : 'api';
-            
-            fetch(`${baseUrl}/notifications.php`, {
+            fetch(`${getApiBaseUrl()}/recordatorio.php?id=${recordatorioId}`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: idNotificacion })
+                credentials: 'include'
             })
             .then(r => r.json())
             .then(resp => {
                 if (resp && resp.success) {
-                    appData.notifications = appData.notifications.filter(n => n.ID_notificacion !== idNotificacion);
+                    // Update local data
+                    if (!appData.recordatorio || !Array.isArray(appData.recordatorio)) {
+                        appData.recordatorio = [];
+                    }
+                    appData.recordatorio = appData.recordatorio.filter(r => r.ID_recordatorio !== recordatorioId);
                     saveData();
                     loadNotifications();
                     updateNotificationCount();
                 } else {
-                    console.error('Failed to delete notification:', resp);
-                    alert('No se pudo eliminar la notificación. Por favor, intente nuevamente.');
+                    console.error('Failed to delete recordatorio', resp);
+                    alert('Error al eliminar el recordatorio');
                 }
             })
             .catch(err => {
-                console.error('Error deleting notification:', err);
-                alert('Error al eliminar la notificación. Por favor, intente nuevamente.');
+                console.error('Error deleting recordatorio', err);
+                alert('Error al eliminar el recordatorio');
             });
+            return; // Exit early for recordatorio deletion
+        } else {
+            // Handle regular notification deletion via API
+            fetch(`${getApiBaseUrl()}/notifications.php`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ id: id })
+            }).then(r => r.json()).then(resp => {
+                if (resp && resp.success) {
+                    if (!appData.notifications) appData.notifications = [];
+                    appData.notifications = appData.notifications.filter(n => n.id !== id);
+                    saveData();
+                    loadNotifications();
+                    updateNotificationCount();
+                } else {
+                    console.error('Failed to delete notification', resp);
+                }
+            }).catch(err => console.error('Error deleting notification', err));
         }
     }
 }
 
 // Helper functions for recordatorios
 function getCurrentUser() {
+    // Check if appData is loaded
+    if (!appData) {
+        return null;
+    }
+    
+    // Check if usuarios_docente array exists
+    if (!appData.usuarios_docente || !Array.isArray(appData.usuarios_docente)) {
+        return null;
+    }
+    
     // Get current user from localStorage and match with docente data
     const username = localStorage.getItem('username');
     if (!username) return null;
@@ -413,9 +472,24 @@ function getCurrentUser() {
     return docente || null;
 }
 
-function loadRecordatorios() {
-    // This function is called during initialization
-    // The actual loading is done in loadNotifications()
+async function loadRecordatorios() {
+    // Fetch recordatorios from API
+    try {
+        const response = await fetch(`${getApiBaseUrl()}/recordatorio.php`, {
+            credentials: 'include'
+        });
+        const data = await response.json();
+        
+        if (Array.isArray(data)) {
+            // Update appData with fresh recordatorios
+            if (!appData) appData = {};
+            appData.recordatorio = data;
+            saveData();
+        }
+    } catch (err) {
+        console.error('Error loading recordatorios:', err);
+        // Fallback to local data if API fails
+    }
 }
 
 function getRecordatoriosForDocente(docenteId) {
@@ -437,8 +511,18 @@ function getRecordatoriosForDocente(docenteId) {
     const docenteSubjects = appData.materia.filter(m => m.Usuarios_docente_ID_docente === docenteId);
     const subjectIds = docenteSubjects.map(s => s.ID_materia);
     
-    // Get recordatorios for these subjects
-    const recordatorios = appData.recordatorio.filter(r => subjectIds.includes(r.Materia_ID_materia));
+    // Get recordatorios for these subjects (filter by PENDIENTE status)
+    const recordatorios = appData.recordatorio.filter(r => 
+        subjectIds.includes(r.Materia_ID_materia) && 
+        (r.Estado === 'PENDIENTE' || !r.Estado)
+    );
+    
+    // Sort by date (upcoming first)
+    recordatorios.sort((a, b) => {
+        const dateA = new Date(a.Fecha);
+        const dateB = new Date(b.Fecha);
+        return dateA - dateB;
+    });
     
     return recordatorios;
 }
@@ -510,12 +594,42 @@ function getRecordatorioTypeLabel(type) {
 }
 
 function getSubjectName(subjectId) {
+    if (!appData || !appData.materia || !Array.isArray(appData.materia)) {
+        return 'Materia no encontrada';
+    }
     const subject = appData.materia.find(m => m.ID_materia === subjectId);
     return subject ? subject.Nombre : 'Materia no encontrada';
 }
 
+// Debug function to test recordatorios
+function debugRecordatorios() {
+    // Check current user
+    const currentUser = getCurrentUser();
+    
+    if (!currentUser) {
+        return;
+    }
+    
+    // Check subjects for this docente
+    const subjects = appData.materia.filter(m => m.Usuarios_docente_ID_docente === currentUser.ID_docente);
+    
+    // Check recordatorios
+    const recordatorios = getRecordatoriosForDocente(currentUser.ID_docente);
+    
+    return {
+        currentUser,
+        subjects,
+        recordatorios
+    };
+}
+
 // Function to view recordatorio details
 function viewRecordatorio(recordatorioId) {
+    // Check if appData is loaded
+    if (!appData || !appData.recordatorio || !Array.isArray(appData.recordatorio)) {
+        return;
+    }
+    
     // Find the recordatorio in the data
     const recordatorio = appData.recordatorio.find(r => r.ID_recordatorio == recordatorioId);
     if (!recordatorio) {
@@ -523,45 +637,48 @@ function viewRecordatorio(recordatorioId) {
     }
     
     // Get subject name
-    const subject = appData.materia.find(m => m.ID_materia == recordatorio.Materia_ID_materia);
-    const subjectName = subject ? subject.Nombre : 'Materia desconocida';
+    const subject = appData.materia && Array.isArray(appData.materia) 
+        ? appData.materia.find(m => m.ID_materia == recordatorio.Materia_ID_materia)
+        : null;
+    const subjectName = subject ? subject.Nombre : 'Unknown Subject';
     
     // Create modal content
+    const lang = currentLanguage || 'es';
     const modalContent = `
         <div class="modal-header">
-            <h3><i class="fas fa-bell"></i> Detalles del Recordatorio</h3>
+            <h3><i class="fas fa-bell"></i> ${translations[lang].recordatorio_details}</h3>
             <button class="close-modal" onclick="closeModal()">&times;</button>
         </div>
         <div class="modal-body">
             <div class="recordatorio-detail">
                 <div class="detail-row">
-                    <label>Título:</label>
-                    <span>${recordatorio.Titulo || getRecordatorioTitle(recordatorio)}</span>
+                    <label>${translations[lang].recordatorio_title_label}</label>
+                    <span>${recordatorio.Titulo}</span>
                 </div>
                 <div class="detail-row">
-                    <label>Descripción:</label>
+                    <label>${translations[lang].recordatorio_description_label}</label>
                     <span>${recordatorio.Descripcion}</span>
                 </div>
                 <div class="detail-row">
-                    <label>Materia:</label>
+                    <label>${translations[lang].recordatorio_subject_label}</label>
                     <span>${subjectName}</span>
                 </div>
                 <div class="detail-row">
-                    <label>Tipo:</label>
+                    <label>${translations[lang].recordatorio_type_label}</label>
                     <span class="type-badge ${recordatorio.Tipo.toLowerCase()}">${getRecordatorioTypeLabel(recordatorio.Tipo)}</span>
                 </div>
                 <div class="detail-row">
-                    <label>Prioridad:</label>
+                    <label>${translations[lang].recordatorio_priority_label}</label>
                     <span class="priority-badge ${recordatorio.Prioridad.toLowerCase()}">${recordatorio.Prioridad}</span>
                 </div>
                 <div class="detail-row">
-                    <label>Fecha de Vencimiento:</label>
-                    <span>${formatRecordatorioDate(recordatorio.Fecha)}</span>
+                    <label>${translations[lang].recordatorio_due_date_label}</label>
+                    <span>${recordatorio.Fecha_vencimiento}</span>
                 </div>
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+            <button class="btn btn-secondary" onclick="closeModal()">${translations[lang].close}</button>
         </div>
     `;
     
