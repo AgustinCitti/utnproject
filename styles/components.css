@@ -773,9 +773,22 @@
 .exam-info-summary {
     background: #f8f9fa;
     border-radius: 8px;
-    padding: 15px 20px;
+    padding: 20px;
     margin-bottom: 20px;
     border-left: 4px solid #667eea;
+}
+
+.exam-summary-title {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.exam-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
 }
 
 .exam-summary {
@@ -787,19 +800,26 @@
 
 .summary-item {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 5px;
 }
 
 .summary-label {
+    display: block;
     font-weight: 600;
-    color: #495057;
+    color: #666;
+    margin-bottom: 5px;
     font-size: 0.9rem;
 }
 
 .summary-value {
+    font-size: 1.1rem;
     color: #333;
     font-weight: 500;
+}
+
+.summary-value-bold {
+    font-weight: 600;
 }
 
 .summary-value.status-programada {
@@ -2590,7 +2610,78 @@
 
 .status-badge.pending {
     background: #ffc107;
-    color: #212529;
+    color: #333;
+}
+
+/* Grade Modal Styles */
+.grade-modal-content {
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.grade-modal-info {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.grade-modal-info p {
+    margin: 5px 0;
+    color: #333;
+}
+
+.grade-modal-info strong {
+    color: #495057;
+}
+
+.grade-modal-table {
+    width: 100%;
+}
+
+.grade-modal-table .col-number {
+    width: 50px;
+}
+
+.grade-modal-table .col-grade {
+    width: 150px;
+}
+
+.grade-modal-table .col-status {
+    width: 120px;
+}
+
+.grade-modal-table .col-observations {
+    width: 200px;
+}
+
+.grade-input-wrapper {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.ausente-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.ausente-checkbox {
+    cursor: pointer;
+}
+
+.observacion-input {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 0.9rem;
 }
 
 .grade-summary-card {

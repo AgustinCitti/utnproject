@@ -647,13 +647,13 @@ function showGradeModal(exam, materia, estudiantes, notasExistentes) {
     });
     
     modal.innerHTML = `
-        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-content grade-modal-content">
             <div class="modal-header">
                 <h3>Calificar Estudiantes - ${exam.Titulo}</h3>
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <div style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                <div class="grade-modal-info">
                     <p><strong>Materia:</strong> ${materia.Nombre}</p>
                     <p><strong>Fecha:</strong> ${exam.Fecha}</p>
                     <p><strong>Tipo:</strong> ${exam.Tipo}</p>
@@ -661,14 +661,14 @@ function showGradeModal(exam, materia, estudiantes, notasExistentes) {
                 
                 <form id="gradeForm" onsubmit="saveGrades(event, ${exam.ID_evaluacion})">
                     <div class="table-responsive">
-                        <table class="data-table" style="width: 100%;">
+                        <table class="data-table grade-modal-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 50px;">#</th>
+                                    <th class="col-number">#</th>
                                     <th>Estudiante</th>
-                                    <th style="width: 150px;">Calificación</th>
-                                    <th style="width: 120px;">Estado</th>
-                                    <th style="width: 200px;">Observaciones</th>
+                                    <th class="col-grade">Calificación</th>
+                                    <th class="col-status">Estado</th>
+                                    <th class="col-observations">Observaciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -687,7 +687,7 @@ function showGradeModal(exam, materia, estudiantes, notasExistentes) {
                                             <td>${index + 1}</td>
                                             <td><strong>${estudiante.Apellido}, ${estudiante.Nombre}</strong></td>
                                             <td>
-                                                <div style="display: flex; gap: 5px; align-items: center;">
+                                                <div class="grade-input-wrapper">
                                                     <input type="number" 
                                                            id="grade_${estudiante.ID_Estudiante}"
                                                            name="grade_${estudiante.ID_Estudiante}"
@@ -697,9 +697,8 @@ function showGradeModal(exam, materia, estudiantes, notasExistentes) {
                                                            step="0.01" 
                                                            value="${calificacion && calificacion > 0 ? calificacion : ''}"
                                                            placeholder="1-10"
-                                                           style="width: 80px; padding: 5px;"
                                                            ${esAusente ? 'disabled' : ''}>
-                                                    <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; white-space: nowrap;">
+                                                    <label class="ausente-label">
                                                         <input type="checkbox" 
                                                                id="ausente_${estudiante.ID_Estudiante}"
                                                                name="ausente_${estudiante.ID_Estudiante}"
@@ -721,8 +720,7 @@ function showGradeModal(exam, materia, estudiantes, notasExistentes) {
                                                        name="observacion_${estudiante.ID_Estudiante}"
                                                        class="observacion-input"
                                                        value="${observacion}"
-                                                       placeholder="Observaciones..."
-                                                       style="width: 100%; padding: 5px;">
+                                                       placeholder="Observaciones...">
                                             </td>
                                         </tr>
                                     `;
@@ -730,7 +728,7 @@ function showGradeModal(exam, materia, estudiantes, notasExistentes) {
                             </tbody>
                         </table>
                     </div>
-                    <div class="form-actions" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+                    <div class="form-actions">
                         <button type="button" class="btn-secondary close-modal">Cancelar</button>
                         <button type="submit" class="btn-primary">
                             <i class="fas fa-save"></i> Guardar Calificaciones
@@ -1076,28 +1074,28 @@ function loadExamInfoSummary(exam, subject, notesCount) {
     if (!examInfoSummary) return;
     
     examInfoSummary.innerHTML = `
-        <div class="exam-summary" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
-            <h3 style="margin-top: 0; margin-bottom: 15px; color: #333; font-size: 1.5rem;">${exam.Titulo || 'Evaluación'}</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+        <div class="exam-info-summary">
+            <h3 class="exam-summary-title">${exam.Titulo || 'Evaluación'}</h3>
+            <div class="exam-summary-grid">
                 <div class="summary-item">
-                    <span class="summary-label" style="display: block; font-weight: 600; color: #666; margin-bottom: 5px; font-size: 0.9rem;">Materia:</span>
-                    <span class="summary-value" style="font-size: 1.1rem; color: #333;">${subject ? subject.Nombre : 'Materia desconocida'}</span>
+                    <span class="summary-label">Materia:</span>
+                    <span class="summary-value">${subject ? subject.Nombre : 'Materia desconocida'}</span>
                 </div>
                 <div class="summary-item">
-                    <span class="summary-label" style="display: block; font-weight: 600; color: #666; margin-bottom: 5px; font-size: 0.9rem;">Fecha:</span>
-                    <span class="summary-value" style="font-size: 1.1rem; color: #333;">${exam.Fecha || 'N/A'}</span>
+                    <span class="summary-label">Fecha:</span>
+                    <span class="summary-value">${exam.Fecha || 'N/A'}</span>
                 </div>
                 <div class="summary-item">
-                    <span class="summary-label" style="display: block; font-weight: 600; color: #666; margin-bottom: 5px; font-size: 0.9rem;">Tipo:</span>
-                    <span class="summary-value" style="font-size: 1.1rem; color: #333;">${exam.Tipo || 'N/A'}</span>
+                    <span class="summary-label">Tipo:</span>
+                    <span class="summary-value">${exam.Tipo || 'N/A'}</span>
                 </div>
                 <div class="summary-item">
-                    <span class="summary-label" style="display: block; font-weight: 600; color: #666; margin-bottom: 5px; font-size: 0.9rem;">Estado:</span>
-                    <span class="summary-value status-${exam.Estado ? exam.Estado.toLowerCase() : 'programada'}" style="font-size: 1.1rem;">${exam.Estado || 'PROGRAMADA'}</span>
+                    <span class="summary-label">Estado:</span>
+                    <span class="summary-value status-${exam.Estado ? exam.Estado.toLowerCase() : 'programada'}">${exam.Estado || 'PROGRAMADA'}</span>
                 </div>
                 <div class="summary-item">
-                    <span class="summary-label" style="display: block; font-weight: 600; color: #666; margin-bottom: 5px; font-size: 0.9rem;">Total de Calificaciones:</span>
-                    <span class="summary-value" style="font-size: 1.1rem; color: #333; font-weight: 600;">${notesCount}</span>
+                    <span class="summary-label">Total de Calificaciones:</span>
+                    <span class="summary-value summary-value-bold">${notesCount}</span>
                 </div>
             </div>
         </div>

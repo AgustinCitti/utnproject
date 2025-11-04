@@ -1507,3 +1507,196 @@
     color: var(--text-secondary);
 }
 
+/* Dark mode styles for exam summary */
+[data-theme="dark"] .exam-info-summary {
+    background-color: var(--card-bg);
+    border-left-color: #667eea;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+[data-theme="dark"] .exam-summary-title {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .exam-summary-grid {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .summary-item {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .summary-label {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .summary-value {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .summary-value-bold {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+[data-theme="dark"] .summary-value.status-programada {
+    color: #4dd0e1;
+}
+
+[data-theme="dark"] .summary-value.status-realizada {
+    color: #4ade80;
+}
+
+[data-theme="dark"] .summary-value.status-cancelada {
+    color: #f87171;
+}
+
+/* Dark mode styles for grade modal */
+[data-theme="dark"] .grade-modal-content {
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .grade-modal-info {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .grade-modal-info p {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .grade-modal-info strong {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .grade-modal-table {
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .grade-modal-table th {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .grade-modal-table td {
+    color: var(--text-primary);
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .grade-modal-table tbody tr:hover {
+    background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .grade-input {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .grade-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+[data-theme="dark"] .grade-input:disabled {
+    background-color: var(--bg-primary);
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+[data-theme="dark"] .grade-input.excellent {
+    background-color: rgba(74, 222, 128, 0.2);
+    border-color: #4ade80;
+    color: #4ade80;
+}
+
+[data-theme="dark"] .grade-input.good {
+    background-color: rgba(251, 191, 36, 0.2);
+    border-color: #fbbf24;
+    color: #fbbf24;
+}
+
+[data-theme="dark"] .grade-input.poor {
+    background-color: rgba(248, 113, 113, 0.2);
+    border-color: #f87171;
+    color: #f87171;
+}
+
+[data-theme="dark"] .ausente-label {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .ausente-checkbox {
+    accent-color: #667eea;
+}
+
+[data-theme="dark"] .observacion-input {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .observacion-input:focus {
+    border-color: #667eea;
+    outline: none;
+}
+
+[data-theme="dark"] .observacion-input::placeholder {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .status-badge.graded {
+    background-color: #4ade80;
+    color: white;
+}
+
+[data-theme="dark"] .status-badge.pending {
+    background-color: #fbbf24;
+    color: #1a1a1a;
+}
+
+/* Dark mode styles for grade marking form */
+[data-theme="dark"] .grade-form {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .grade-table-container {
+    background-color: transparent;
+}
+
+[data-theme="dark"] .grade-table {
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+[data-theme="dark"] .grade-table th {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .grade-table td {
+    color: var(--text-primary);
+    border-bottom-color: var(--border-color);
+    background-color: var(--card-bg);
+}
+
+[data-theme="dark"] .grade-table tbody tr:hover {
+    background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .grade-table .text-center {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .grade-actions {
+    background-color: transparent;
+}
+
