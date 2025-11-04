@@ -145,6 +145,162 @@
     color: var(--text-primary);
 }
 
+/* ==========================================================================
+   NAVIGATION SEARCH BAR DARK MODE
+   ========================================================================== */
+
+/* Mobile search container - Dark mode */
+[data-theme="dark"] .mobile-search-container {
+    border-bottom-color: var(--border-color);
+}
+
+/* Search bar wrapper - Dark background and border */
+[data-theme="dark"] .search-bar-wrapper {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .search-bar-wrapper:focus-within {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* Search input - Text color and placeholder */
+[data-theme="dark"] .nav-search-input {
+    color: var(--text-primary);
+    background: transparent;
+}
+
+[data-theme="dark"] .nav-search-input::placeholder {
+    color: var(--text-secondary);
+}
+
+/* Search icon - Icon color */
+[data-theme="dark"] .search-icon {
+    color: var(--text-secondary);
+}
+
+/* Search filters button - Button colors */
+[data-theme="dark"] .search-filters-btn {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .search-filters-btn:hover {
+    background: var(--bg-primary);
+    color: #667eea;
+}
+
+[data-theme="dark"] .search-filters-btn.active {
+    background: #667eea;
+    color: white;
+}
+
+/* ==========================================================================
+   NAVIGATION LANGUAGE BUTTON DARK MODE
+   ========================================================================== */
+
+/* Language toggle button - Button colors */
+[data-theme="dark"] .desktop-nav .language-toggle {
+    color: var(--text-primary);
+    background: transparent;
+}
+
+[data-theme="dark"] .desktop-nav .language-toggle:hover {
+    background: var(--bg-primary);
+    color: #667eea;
+}
+
+[data-theme="dark"] .desktop-nav .language-toggle:focus {
+    background: var(--bg-primary);
+}
+
+/* Language toggle icon - Icon color */
+[data-theme="dark"] .desktop-nav .language-toggle i {
+    color: #667eea;
+}
+
+[data-theme="dark"] .desktop-nav .language-toggle:hover i {
+    color: #667eea;
+}
+
+/* Language toggle text - Text color */
+[data-theme="dark"] .desktop-nav .language-toggle span {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .desktop-nav .language-toggle:hover span {
+    color: #667eea;
+}
+
+/* Language dropdown menu - Dropdown background and border */
+[data-theme="dark"] .desktop-nav .language-dropdown-menu {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    box-shadow: 0 4px 20px var(--shadow);
+}
+
+/* Language option - Option colors */
+[data-theme="dark"] .desktop-nav .language-option {
+    color: var(--text-primary);
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .desktop-nav .language-option:hover {
+    background: var(--bg-secondary);
+    color: #667eea;
+}
+
+[data-theme="dark"] .desktop-nav .language-option.active {
+    background: rgba(102, 126, 234, 0.2);
+    color: #667eea;
+}
+
+/* Language dropdown select - Alternative dropdown */
+[data-theme="dark"] .desktop-nav .language-dropdown {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23b0b0b0' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+}
+
+[data-theme="dark"] .desktop-nav .language-dropdown:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+[data-theme="dark"] .desktop-nav .language-dropdown:hover {
+    border-color: #667eea;
+}
+
+/* Mobile language selector - Dark mode */
+[data-theme="dark"] .nav-language-selector {
+    border-top-color: var(--border-color);
+}
+
+[data-theme="dark"] .nav-language-label {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .nav-language-label i {
+    color: #667eea;
+}
+
+[data-theme="dark"] .nav-language-dropdown {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23b0b0b0' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+}
+
+[data-theme="dark"] .nav-language-dropdown:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+[data-theme="dark"] .nav-language-dropdown:hover {
+    border-color: #667eea;
+}
+
 [data-theme="dark"] .btn-primary {
     background-color: #667eea;
     color: white;
