@@ -86,16 +86,18 @@ async function loadNotifications() {
         appData.notifications = [];
     }
     
-    // Format notifications properly
-    const formattedNotifications = (appData.notifications || []).map(n => ({
-        id: n.ID_notificacion,
-        title: n.Titulo,
-        message: n.Mensaje,
-        date: new Date(n.Fecha_creacion).toLocaleDateString(),
-        read: n.Estado === 'LEIDA',
-        type: 'notification',
-        notification: n
-    }));
+    // Format notifications properly and filter for system notifications only
+    const formattedNotifications = (appData.notifications || [])
+        .filter(n => n.Tipo === 'SISTEMA') // Solo mostrar notificaciones del sistema
+        .map(n => ({
+            id: n.ID_notificacion,
+            title: n.Titulo,
+            message: n.Mensaje,
+            date: new Date(n.Fecha_creacion).toLocaleDateString(),
+            read: n.Estado === 'LEIDA',
+            type: 'notification',
+            notification: n
+        }));
     
     // Combine regular notifications with recordatorios
     const allNotifications = [
@@ -116,8 +118,8 @@ async function loadNotifications() {
         notificationsContainer.innerHTML = `
             <div class="notifications-empty">
                 <i class="fas fa-bell-slash"></i>
-                <h3>No hay notificaciones</h3>
-                <p>¡Estás al día! No hay notificaciones nuevas.</p>
+                <h3>No hay notificaciones del sistema</h3>
+                <p>No hay actualizaciones o mensajes del sistema en este momento.</p>
             </div>
         `;
     } else {
@@ -235,8 +237,9 @@ function updateNotificationCount() {
         appData.notifications = [];
     }
     
-    // Count unread notifications and recordatorios
-    const notificationCount = (appData.notifications || []).filter(n => n.Estado !== 'LEIDA').length;
+    // Count unread notifications (system only) and recordatorios
+    const notificationCount = (appData.notifications || [])
+        .filter(n => n.Tipo === 'SISTEMA' && n.Estado !== 'LEIDA').length;
     const recordatorioCount = recordatorios.filter(r => r.Estado === 'PENDIENTE').length;
     const totalCount = notificationCount + recordatorioCount;
     
