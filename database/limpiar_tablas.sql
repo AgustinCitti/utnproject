@@ -31,3 +31,4 @@ SET FOREIGN_KEY_CHECKS = 1;
 SELECT 'Todas las tablas han sido eliminadas correctamente' AS Mensaje;
 
 
+

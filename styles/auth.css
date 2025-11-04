@@ -654,6 +654,8 @@
     text-align: center;
     margin: 1.5rem 0;
     position: relative;
+    display: block;
+    width: 100%;
 }
 
 .divider::before {
@@ -678,6 +680,7 @@
     flex-direction: column;
     gap: 0.6rem;
     margin-bottom: 1.5rem;
+    width: 100%;
 }
 
 .social-btn {
@@ -694,6 +697,8 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
+    width: 100%;
+    text-decoration: none;
 }
 
 .google-btn:hover {
@@ -869,7 +874,7 @@
     transform: translateY(-2px);
 }
 
-.login-page, .register-page {
+.login-page {
     min-height: 100vh;
     max-height: 100vh;
     height: 100vh;
@@ -882,7 +887,44 @@
     position: relative;
 }
 
-.login-container, .register-container {
+.register-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding-top: 64px;
+    padding-bottom: 1.6rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+}
+
+.register-page .login-header {
+    box-shadow: 0 1.6px 8px rgba(0, 0, 0, 0.1);
+}
+
+.register-page .login-nav {
+    padding: 0.8rem 1.6rem;
+}
+
+.register-page .nav-brand a {
+    font-size: 1.2rem;
+    gap: 0.4rem;
+}
+
+.register-page .nav-actions {
+    gap: 0.8rem;
+}
+
+.register-page .nav-actions .nav-link {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    border-radius: 4.8px;
+    gap: 0.4rem;
+}
+
+.login-container {
     display: grid;
     grid-template-columns: 1.2fr 0.8fr;
     gap: 2rem;
@@ -891,26 +933,234 @@
     padding: 1.5rem;
     align-items: center;
     max-height: calc(100vh - 80px);
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: visible;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.register-container {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 1.6rem;
+    max-width: 1000px;
+    width: 100%;
+    padding: 1.2rem;
+    align-items: start;
+    min-height: auto;
+    height: auto;
+    overflow: visible;
     position: relative;
     box-sizing: border-box;
 }
 
 .login-card, .register-card {
     background: white;
-    border-radius: 20px;
+    border-radius: 16px;
     padding: 2rem;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
     max-width: 450px;
     width: 100%;
-    max-height: calc(100vh - 120px);
-    overflow: hidden;
     position: relative;
+}
+
+.login-card {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    overflow-x: visible;
+}
+
+.register-card {
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+    padding: 1.6rem;
+    padding-bottom: 1.6rem !important;
+    display: block;
+    max-height: none;
+    box-sizing: border-box;
+}
+
+.register-card .register-header-content {
+    margin-bottom: 0.4rem !important;
+}
+
+.register-card .register-header-content h1 {
+    font-size: 1rem !important;
+    margin-bottom: 0.16rem !important;
+    line-height: 1.2 !important;
+}
+
+.register-card .register-header-content p {
+    font-size: 0.6rem !important;
+    margin: 0 !important;
+}
+
+.register-card .form-group {
+    margin-bottom: 0.4rem !important;
+}
+
+.register-card .form-row {
+    gap: 0.4rem !important;
+    margin-bottom: 0 !important;
+}
+
+.register-card .input-wrapper {
+    min-height: 28.8px !important;
+}
+
+.register-card .input-wrapper input,
+.register-card .input-wrapper label {
+    font-size: 0.64rem !important;
+    padding: 0.4rem 0.4rem 0.4rem 1.6rem !important;
+}
+
+.register-card .input-icon {
+    font-size: 0.64rem !important;
+    left: 0.48rem !important;
+}
+
+.register-card .input-wrapper label {
+    font-size: 0.6rem !important;
+}
+
+.register-card .form-options {
+    margin-bottom: 0.4rem !important;
+}
+
+.register-card .register-btn {
+    padding: 0.64rem !important;
+    font-size: 0.72rem !important;
+    margin-bottom: 0.8rem !important;
+}
+
+.register-card .divider {
+    margin: 1.2rem 0 !important;
+    font-size: 0.72rem !important;
+}
+
+.register-card .divider span {
+    font-size: 0.68rem !important;
+    padding: 0 0.64rem !important;
+}
+
+.register-card .social-login {
+    margin-bottom: 1.2rem !important;
+    margin-top: 0 !important;
+}
+
+.register-card .register-footer {
+    margin-top: 1.2rem !important;
+    padding-top: 1.2rem !important;
+}
+
+.register-card .register-footer p {
+    font-size: 0.6rem !important;
+    margin: 0 !important;
+}
+
+.register-card .checkbox-wrapper {
+    font-size: 0.56rem !important;
+    line-height: 1.3 !important;
+}
+
+.register-card .checkbox-wrapper .checkmark {
+    width: 0.68rem !important;
+    height: 0.68rem !important;
+    margin-right: 0.24rem !important;
+}
+
+.register-card .social-btn,
+.register-card a.social-btn,
+.register-card .google-btn {
+    padding: 0.6rem 0.8rem !important;
+    font-size: 0.68rem !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    height: auto !important;
+    min-height: 35.2px !important;
+    background: white !important;
+    border: 2px solid #e9ecef !important;
+    color: #333 !important;
+    z-index: 10 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.48rem !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.register-card .social-btn:hover,
+.register-card a.social-btn:hover,
+.register-card .google-btn:hover {
+    border-color: #db4437 !important;
+    color: #db4437 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 3.2px 9.6px rgba(219, 68, 55, 0.2) !important;
+}
+
+.register-card .social-btn svg,
+.register-card a.social-btn svg,
+.register-card .google-btn svg {
+    width: 16px !important;
+    height: 16px !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    flex-shrink: 0 !important;
+}
+
+.register-card .social-btn span,
+.register-card a.social-btn span,
+.register-card .google-btn span {
+    font-size: 0.68rem !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.register-card .social-login {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    width: 100% !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.2rem !important;
+}
+
+.register-card .divider {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    width: 100% !important;
+    margin-top: 1.2rem !important;
+    margin-bottom: 1.2rem !important;
+    padding: 0 !important;
+}
+
+.register-card .divider span {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: white !important;
+    padding: 0 0.64rem !important;
+    color: #666 !important;
+    font-size: 0.68rem !important;
+    position: relative !important;
+    z-index: 1 !important;
 }
 
 .login-header-content, .register-header-content {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.2rem;
 }
 
 .login-icon, .register-icon {
@@ -927,20 +1177,26 @@
 }
 
 .login-header-content h1, .register-header-content h1 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+    font-size: 1.6rem;
+    margin-bottom: 0.4rem;
     color: #333;
     font-weight: 600;
 }
 
 .login-header-content p, .register-header-content p {
     color: #666;
-    font-size: 1rem;
+    font-size: 0.8rem;
     margin: 0;
 }
 
 .login-form, .register-form {
     margin-bottom: 2rem;
+}
+
+.register-card .register-form {
+    margin-bottom: 1.2rem !important;
+    height: auto !important;
+    overflow: visible !important;
 }
 
 .form-row {
@@ -951,19 +1207,19 @@
 
 .login-btn, .register-btn {
     width: 100%;
-    padding: 1rem;
+    padding: 0.8rem;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    border-radius: 12px;
-    font-size: 1rem;
+    border-radius: 9.6px;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     pointer-events: auto;
     position: relative;
     z-index: 10;
@@ -976,7 +1232,7 @@
 
 .divider {
     text-align: center;
-    margin: 2rem 0;
+    margin: 1.6rem 0;
     position: relative;
 }
 
@@ -992,22 +1248,22 @@
 
 .divider span {
     background: white;
-    padding: 0 1rem;
+    padding: 0 0.8rem;
     color: #666;
-    font-size: 0.9rem;
+    font-size: 0.72rem;
 }
 
 .login-footer, .register-footer {
     text-align: center;
-    margin-top: 2rem;
-    padding-top: 2rem;
+    margin-top: 1.6rem;
+    padding-top: 1.6rem;
     border-top: 1px solid #e9ecef;
 }
 
 .login-footer p, .register-footer p {
-    margin: 0.5rem 0;
+    margin: 0.4rem 0;
     color: #666;
-    font-size: 0.9rem;
+    font-size: 0.72rem;
 }
 
 .login-illustration, .register-illustration {
@@ -1021,25 +1277,25 @@
 
 .illustration-content {
     text-align: center;
-    max-width: 300px;
-    padding: 1rem;
+    max-width: 240px;
+    padding: 0.8rem;
 }
 
 .illustration-content i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
+    font-size: 2.4rem;
+    margin-bottom: 0.8rem;
     opacity: 0.9;
 }
 
 .illustration-content h2 {
-    font-size: 1.8rem;
-    margin-bottom: 0.8rem;
+    font-size: 1.44rem;
+    margin-bottom: 0.64rem;
     font-weight: 600;
 }
 
 .illustration-content p {
-    font-size: 0.9rem;
-    margin-bottom: 1.2rem;
+    font-size: 0.72rem;
+    margin-bottom: 0.96rem;
     opacity: 0.9;
     line-height: 1.4;
 }
@@ -1051,28 +1307,28 @@
 .feature-item, .benefit-item {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 0.6rem;
-    padding: 0.6rem;
+    gap: 0.48rem;
+    margin-bottom: 0.48rem;
+    padding: 0.48rem;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    border-radius: 6.4px;
     backdrop-filter: blur(10px);
-    font-size: 0.85rem;
+    font-size: 0.68rem;
 }
 
 .feature-item i, .benefit-item i {
-    font-size: 0.9rem;
+    font-size: 0.72rem;
     color: #4ade80;
 }
 
 .benefit-content h3 {
-    font-size: 1.1rem;
-    margin-bottom: 0.25rem;
+    font-size: 0.88rem;
+    margin-bottom: 0.2rem;
     font-weight: 600;
 }
 
 .benefit-content p {
-    font-size: 0.9rem;
+    font-size: 0.72rem;
     opacity: 0.8;
     margin: 0;
 }
