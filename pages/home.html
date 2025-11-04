@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- ===================================================================
+         HEAD SECTION - Meta Tags, Stylesheets, and External Resources
+         =================================================================== -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EduSync - Sistema de Gestión Académica</title>
@@ -44,6 +47,10 @@
     </style>
 </head>
 <body>
+    <!-- ===================================================================
+         NAVIGATION SECTION - Mobile and Desktop Navigation
+         =================================================================== -->
+    
     <!-- Mobile Navigation Overlay -->
     <div id="navOverlay" class="nav-overlay">
         <div class="nav-content">
@@ -52,7 +59,7 @@
                 <button id="closeNav" class="close-nav">&times;</button>
             </div>
             <nav class="mobile-nav">
-                <!-- Mobile Search Bar -->
+                <!-- Mobile Search Bar - Search Functionality in Mobile Nav -->
                 <div class="mobile-search-container">
                     <div class="search-bar-wrapper">
                         <i class="fas fa-search search-icon"></i>
@@ -84,7 +91,7 @@
                     <span data-translate="reports">Reportes</span>
                 </a>
                 
-                <!-- Language Selector in Navigation -->
+                <!-- Language Selector in Navigation - Mobile Language Switcher -->
                 <div class="nav-language-selector">
                     <div class="nav-language-label">
                         <i class="fas fa-globe"></i>
@@ -107,7 +114,7 @@
                 <span>EduSync</span>
             </div>
             
-            <!-- Dark Mode Toggle Switch -->
+            <!-- Dark Mode Toggle Switch - Theme Switcher -->
             <div class="dark-mode-toggle-container">
                 <label class="dark-mode-toggle" for="darkModeToggle">
                     <input type="checkbox" id="darkModeToggle" aria-label="Toggle dark mode">
@@ -117,7 +124,7 @@
             </div>
             
             <div class="nav-menu" id="desktopNavMenu">
-                <!-- Search Bar -->
+                <!-- Search Bar - Desktop Search Functionality -->
                 <div class="nav-search-container">
                     <div class="search-bar-wrapper">
                         <i class="fas fa-search search-icon"></i>
@@ -130,6 +137,7 @@
                 <a href="#dashboard" class="nav-link" data-section="dashboard">
                     <span data-translate="dashboard">Panel de Control</span>
                 </a>
+                <!-- Student Management Dropdown - Nested Navigation -->
                 <div class="nav-dropdown">
                     <a href="#student-management" class="nav-link dropdown-toggle" data-section="student-management">
                         <span data-translate="student_management">Gestión de Estudiantes</span>
@@ -146,10 +154,11 @@
                         </a>
                     </div>
                 </div>
-                    <a href="#subjects-management" class="nav-link" data-section="subjects-management">
-                     
-                        <span data-translate="subjects_management">Gestión de Materias</span>
-                    </a>
+                <!-- Subjects Management Link -->
+                <a href="#subjects-management" class="nav-link" data-section="subjects-management">
+                    <span data-translate="subjects_management">Gestión de Materias</span>
+                </a>
+                <!-- Reports Link -->
                 <a href="#reports" class="nav-link" data-section="reports">
                     <span data-translate="reports">Reportes</span>
                 </a>
@@ -157,6 +166,7 @@
                     <i class="fas fa-bell"></i>
                     <span class="notification-badge" id="desktopNotificationCount">0</span>
                 </a>
+                <!-- Desktop Language Selector - Language Switcher -->
                 <div class="language-selector">
                     <button id="desktopLanguageToggle" class="language-toggle">
                         <i class="fas fa-globe"></i>
@@ -192,6 +202,9 @@
         </nav>
     </header>
 
+    <!-- ===================================================================
+         MAIN APPLICATION CONTAINER
+         =================================================================== -->
     <div class="app-container">
         <!-- Mobile Header -->
         <header class="app-header mobile-header">
@@ -211,11 +224,17 @@
             </div>
         </header>
 
-        <!-- Main Content -->
+        <!-- ===================================================================
+             MAIN CONTENT AREA - All Application Sections
+             =================================================================== -->
         <main class="app-main">
+            
+            <!-- ===============================================================
+                 DASHBOARD SECTION - Overview and Quick Actions
+                 =============================================================== -->
             <!-- Dashboard Section -->
             <section id="dashboard" class="content-section active">
-                <!-- Hero Section -->
+                <!-- Hero Section - Welcome Banner -->
                 <div class="dashboard-hero">
                     <div class="hero-content">
                         <h1 class="hero-title" data-translate="welcome_dashboard">Panel de Control</h1>
@@ -237,7 +256,7 @@
                     </div>
                 </div>
 
-                <!-- KPI Cards Section -->
+                <!-- KPI Cards Section - Key Performance Indicators -->
                 <div class="dashboard-kpis">
                     <div class="kpi-card kpi-students">
                         <div class="kpi-icon">
@@ -277,11 +296,11 @@
                     </div>
                 </div>
 
-                <!-- Main Content Grid -->
+                <!-- Main Content Grid - Dashboard Layout -->
                 <div class="dashboard-content-grid">
                     <!-- Left Column: Main Content -->
                     <div class="dashboard-main-column">
-                        <!-- Quick Actions Section -->
+                        <!-- Quick Actions Section - Common Action Buttons -->
                         <div class="dashboard-card quick-actions-card">
                             <h2 class="card-title" data-translate="quick_actions">Acciones Rápidas</h2>
                             <div class="quick-actions-grid">
@@ -304,7 +323,7 @@
                             </div>
                         </div>
 
-                        <!-- Unified Notifications and Classes Section -->
+                        <!-- Unified Notifications and Classes Section - Combined View -->
                         <div class="dashboard-card next-classes-card">
                             <div class="card-header">
                                 <h2 class="card-title" data-translate="notifications_and_classes">Notificaciones y Próximas Clases</h2>
@@ -315,7 +334,7 @@
                         </div>
                     </div>
 
-                    <!-- Right Column: Calendar Widget -->
+                    <!-- Right Column: Calendar Widget - Mini Calendar View -->
                     <div class="dashboard-sidebar">
                         <div class="dashboard-card calendar-widget">
                             <div class="calendar-widget-header">
@@ -344,6 +363,9 @@
                 </div>
             </section>
 
+            <!-- ===============================================================
+                 STUDENT MANAGEMENT SECTION - Students and Exams Management
+                 =============================================================== -->
             <!-- Unified Student Management Section -->
             <section id="student-management" class="content-section">
                 <div class="section-header">
@@ -420,24 +442,24 @@
                     </button>
                 </div>
 
-                <!-- Students Tab Content -->
+                <!-- Students Tab Content - Main Student Management Interface -->
                 <div id="studentsTabContent" class="tab-content active">
-                    <!-- Student Overview Cards -->
+                    <!-- Student Overview Cards - Grid View of Students -->
                     <div class="unified-student-cards" id="unifiedStudentCards" style="display: none;">
                         <!-- Student cards with integrated grades and attendance will be loaded dynamically -->
                     </div>
 
-                    <!-- Detailed List View -->
+                    <!-- Detailed List View - Tabular Student Data -->
                     <div class="unified-student-list" id="unifiedStudentList">
                         <!-- Detailed student information with grades and attendance will be loaded dynamically -->
                     </div>
 
-                    <!-- Matrix View: Students by Subjects -->
+                    <!-- Matrix View: Students by Subjects - Cross-Reference Table -->
                     <div class="unified-student-matrix" id="unifiedStudentMatrix" style="display: none;">
                         <!-- Cross-table: Students (rows) x Subjects (columns) will be loaded dynamically -->
                     </div>
 
-                    <!-- Quick Stats for Selected Student -->
+                    <!-- Quick Stats for Selected Student - Detail Panel -->
                     <div class="student-detail-panel" id="studentDetailPanel" style="display: none;">
                         <div class="panel-header">
                             <h3 id="selectedStudentName">Student Name</h3>
@@ -463,7 +485,7 @@
                     </div>
                 </div>
 
-                <!-- Exams Tab Content -->
+                <!-- Exams Tab Content - Exam Management Interface -->
                 <div id="examsTabContent" class="tab-content">
                     <div class="exams-container" id="examsContainer" style="display: none;">
                         <!-- Exams will be loaded dynamically -->
@@ -473,7 +495,7 @@
                     </div>
                 </div>
 
-                <!-- Exam Notes Tab Content -->
+                <!-- Exam Notes Tab Content - View and Manage Exam Grades -->
                 <div id="examNotesTabContent" class="tab-content">
                     <div class="section-header">
                         
@@ -489,18 +511,21 @@
                         </div>
                     </div>
                     
-                    <!-- Exam Info Summary -->
+                    <!-- Exam Info Summary - Exam Details Display -->
                     <div class="exam-info-summary" id="examInfoSummary">
                         <!-- Exam information will be loaded here -->
                     </div>
                     
-                    <!-- Notes List -->
+                    <!-- Notes List - Student Grades Table -->
                     <div class="notes-list" id="notesList">
                         <!-- Notes table or empty state will be loaded here -->
                     </div>
                 </div>
             </section>
 
+            <!-- ===============================================================
+                 ATTENDANCE SECTION - Mark and View Student Attendance
+                 =============================================================== -->
             <!-- Attendance Section -->
             <section id="attendance" class="content-section">
                 <div class="section-header">
@@ -513,8 +538,9 @@
                     </div>
                 </div>
 
-                <!-- Attendance View (for marking attendance) -->
+                <!-- Attendance View - Form for Marking Attendance -->
                 <div id="attendanceView" style="display: none;">
+                    <!-- Attendance Form - Date, Subject, and Notes Selection -->
                     <div class="attendance-form">
                         <div class="form-row">
                             <div class="form-group">
@@ -535,7 +561,7 @@
                         </div>
                     </div>
 
-                    <!-- Students Table for Attendance -->
+                    <!-- Students Table for Attendance - Attendance Entry Table -->
                     <div class="attendance-table-container">
                         <table class="data-table attendance-table">
                             <thead>
@@ -566,14 +592,17 @@
                             <span data-translate="cancel">Cancelar</span>
                         </button>
                     </div>
-                </div>
+                    </div>
 
-                <!-- Attendance List (for viewing attendance records) -->
+                    <!-- Attendance List - Historical Attendance Records -->
                 <div id="attendanceList">
                     <!-- Attendance records will be loaded here -->
                 </div>
             </section>
 
+            <!-- ===============================================================
+                 GRADE MARKING SECTION - Mark and View Student Grades
+                 =============================================================== -->
             <!-- Grade Marking Section -->
             <section id="grade-marking" class="content-section">
                 <div class="section-header">
@@ -586,8 +615,9 @@
                     </div>
                 </div>
 
-                <!-- Grade Marking Form -->
+                <!-- Grade Marking Form - Form for Entering Grades -->
                 <div id="gradeMarkingView" style="display: none;">
+                    <!-- Grade Form - Evaluation, Date, and Notes Selection -->
                     <div class="grade-form">
                         <div class="form-row">
                             <div class="form-group">
@@ -608,7 +638,7 @@
                         </div>
                     </div>
 
-                    <!-- Students Table for Grade Marking -->
+                    <!-- Students Table for Grade Marking - Grade Entry Table -->
                     <div class="grade-table-container">
                         <table class="data-table grade-table">
                             <thead>
@@ -638,13 +668,17 @@
                             <span data-translate="cancel">Cancelar</span>
                         </button>
                     </div>
-                </div>
+                    </div>
 
-                <!-- Grade List (for viewing grade records) -->
+                <!-- Grade List - Historical Grade Records -->
                 <div id="gradeMarkingList">
                     <!-- Grade records will be loaded here -->
                 </div>
             </section>
+            
+            <!-- ===============================================================
+                 REPORTS SECTION - Generate and View Academic Reports
+                 =============================================================== -->
             <!-- Reports Section -->
             <section id="reports" class="content-section">
                
@@ -652,7 +686,11 @@
                     <!-- Reports will be loaded dynamically -->
                 </div>
             </section>
-<!-- Notifications Section -->
+            
+            <!-- ===============================================================
+                 NOTIFICATIONS SECTION - View and Manage Notifications
+                 =============================================================== -->
+            <!-- Notifications Section -->
 <section id="notifications" class="content-section">
     <div class="notifications-header">
         <div class="notifications-title">
@@ -698,6 +736,10 @@
         </div>
     </div>
 </section>
+            
+            <!-- ===============================================================
+                 CALENDAR SECTION - View Academic Calendar and Events
+                 =============================================================== -->
             <!-- Calendar Section -->
             <section id="calendar" class="content-section">
                 <div class="calendar-header">
@@ -733,7 +775,7 @@
                     </div>
                 </div>
                 
-                <!-- Week View -->
+                <!-- Week View - Weekly Calendar Display -->
                 <div id="calendarWeekView" class="calendar-week-view">
                     <div class="calendar-time-column">
                         <div class="time-header"></div>
@@ -745,12 +787,15 @@
                     </div>
                 </div>
                 
-                <!-- Month View -->
+                <!-- Month View - Monthly Calendar Display -->
                 <div id="calendarMonthView" class="calendar-month-view" style="display: none;">
                     <div class="calendar-month-grid" id="calendarMonthGrid"></div>
                 </div>
             </section>
 
+            <!-- ===============================================================
+                 SUBJECTS MANAGEMENT SECTION - Manage Academic Subjects
+                 =============================================================== -->
             <!-- Subjects Management Section -->
             <section id="subjects-management" class="content-section">
                 <div class="section-header">
@@ -789,7 +834,7 @@
                     </div>
                 </div>
 
-                <!-- Subjects Content -->
+                <!-- Subjects Content - Grid and List Views -->
                 <div class="subjects-container" id="subjectsContainer" style="display: none;">
                     <!-- Subject cards will be loaded dynamically -->
                 </div>
@@ -799,8 +844,7 @@
                     <!-- Detailed subject information will be loaded dynamically -->
                 </div>
 
-
-                <!-- Subject Details View -->
+                <!-- Subject Details View - Detailed Subject Information -->
                 <div id="subjectDetailsView" class="subject-details-view" style="display: none;">
                     <div class="section-header">
                         <h2 id="subjectDetailsTitle">Detalles de la Materia</h2>
@@ -816,7 +860,7 @@
                         </div>
                     </div>
                     
-                    <!-- Subject Details Tab Navigation -->
+                    <!-- Subject Details Tab Navigation - Details and Content Tabs -->
                     <div class="subject-details-tabs">
                         <button id="subjectDetailsTab" class="tab-btn active" data-tab="details">
                             <i class="fas fa-info-circle"></i>
@@ -828,21 +872,22 @@
                         </button>
                     </div>
                     
-                    <!-- Subject Details Tab Content -->
+                    <!-- Subject Details Tab Content - Subject Information Display -->
                     <div id="subjectDetailsTabContent" class="tab-content active">
-                        <!-- Subject Info Summary -->
+                        <!-- Subject Info Summary - Basic Subject Information -->
                         <div class="subject-info-summary" id="subjectInfoSummary">
                             <!-- Subject information will be loaded here -->
                         </div>
                         
-                        <!-- Subject Details Content -->
+                        <!-- Subject Details Content - Statistics and Related Data -->
                         <div class="subject-details-content" id="subjectDetailsContent">
                             <!-- Subject statistics, students, evaluations, etc. will be loaded here -->
                         </div>
                     </div>
                     
-                    <!-- Subject Content Tab Content -->
+                    <!-- Subject Content Tab Content - Subject Topics Management -->
                     <div id="subjectContentTabContent" class="tab-content">
+                        <!-- Content Management - Subject Topics/Content Management -->
                         <div class="content-management">
                             <div class="content-header">
                                 <h3 data-translate="subject_content">Contenido de la Materia</h3>
@@ -851,6 +896,7 @@
                                     <span data-translate="add_content">Agregar Contenido</span>
                                 </button>
                             </div>
+                            <!-- Content List Container - List of Subject Topics -->
                             <div class="content-list-container" id="subjectContentList">
                                 <!-- Content list will be loaded here -->
                             </div>
@@ -867,6 +913,9 @@
         </main>
     </div>
 
+    <!-- ===================================================================
+         FOOTER SECTION - Desktop Footer with Links and Copyright
+         =================================================================== -->
     <!-- Footer (Desktop Only) -->
     <footer class="footer desktop-only">
         <div class="container">
@@ -887,7 +936,11 @@
         </div>
     </footer>
 
-    <!-- Modals -->
+    <!-- ===================================================================
+         MODALS SECTION - All Application Modal Dialogs
+         =================================================================== -->
+    
+    <!-- Student Modal - Add/Edit Student -->
     <div id="studentModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -927,7 +980,7 @@
                     </select>
                     <small style="display: block; margin-top: 5px; color: #666;">Los estudiantes en Intensifica aparecerán destacados y verán temas de recuperación.</small>
                 </div>
-                <!-- Selector de temas para intensificadores -->
+                <!-- Selector de temas para intensificadores - Intensification Theme Selector -->
                 <div id="intensificacionThemesContainer" class="form-group" style="display: none;">
                     <label data-translate="themes_to_intensify">Temas a Intensificar</label>
                     <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background: #f9f9f9;">
@@ -937,7 +990,7 @@
                     </div>
                     <small style="display: block; margin-top: 5px; color: #666;">Los temas mostrados corresponden a las materias seleccionadas arriba. Si una materia no tiene temas, puedes crearlos directamente desde aquí.</small>
                 </div>
-                <!-- Selector de temas para asignar al estudiante -->
+                <!-- Selector de temas para asignar al estudiante - Assign Topics to Student -->
                 <div class="form-group">
                     <label for="studentTopics" data-translate="assign_topics">Asignar Temas</label>
                     <select id="studentTopics">
@@ -957,7 +1010,7 @@
         </div>
     </div>
 
-    <!-- Subject Modal -->
+    <!-- Subject Modal - Add/Edit Subject -->
     <div id="subjectModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1000,9 +1053,11 @@
                     <label for="subjectDescription" data-translate="description">Descripción</label>
                     <textarea id="subjectDescription" rows="3" placeholder="Descripción de la materia..."></textarea>
                 </div>
+                <!-- Schedule Selector - Subject Schedule Configuration -->
                 <div class="form-group">
                     <label data-translate="schedule">Horario</label>
                     <div class="schedule-selector">
+                        <!-- Day Selector - Select Days of Week -->
                         <div class="day-selector-group">
                             <label class="schedule-sub-label">Días:</label>
                             <div class="day-selector-wrapper">
@@ -1024,6 +1079,7 @@
                                 <!-- Selected days will be displayed here -->
                             </div>
                         </div>
+                        <!-- Time Selector - Select Start and End Times -->
                         <div class="time-selector-group">
                             <label class="schedule-sub-label">Hora:</label>
                             <select id="subjectScheduleHour" class="time-select">
@@ -1121,7 +1177,7 @@
         </div>
     </div>
 
-    <!-- Content Modal (para crear tema desde acciones de materias) -->
+    <!-- Content Modal - Create/Edit Content/Topic -->
     <div id="contentModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1161,7 +1217,7 @@
         </div>
     </div>
 
-    <!-- Subject Themes Modal (unified with create form) -->
+    <!-- Subject Themes Modal - View and Manage Subject Themes -->
     <div id="subjectThemesModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1169,7 +1225,7 @@
                 <button class="close-modal">&times;</button>
             </div>
             
-            <!-- Themes List View -->
+            <!-- Themes List View - Display All Subject Themes -->
             <div id="themesListView" class="modal-form" style="padding: 1.5rem 2rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <div style="font-size: 0.9em; color: var(--text-secondary, #666); font-weight: 600;">Temas de la Materia</div>
@@ -1182,7 +1238,7 @@
                 </div>
             </div>
             
-            <!-- Create Theme Form View -->
+            <!-- Create Theme Form View - Form to Create New Theme -->
             <div id="createThemeFormView" class="modal-form" style="padding: 1.5rem 2rem; display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h4 style="margin: 0; color: var(--text-primary, #333);">Crear Nuevo Tema</h4>
@@ -1218,7 +1274,7 @@
         </div>
     </div>
 
-    <!-- Content Edit Modal -->
+    <!-- Content Edit Modal - Edit Existing Content -->
     <div id="contentEditModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1251,7 +1307,7 @@
         </div>
     </div>
 
-    <!-- No Subjects Warning Modal -->
+    <!-- No Subjects Warning Modal - Warn User When No Subjects Exist -->
     <div id="noSubjectsModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1281,7 +1337,7 @@
         </div>
     </div>
 
-    <!-- Search Filters Dialog -->
+    <!-- Search Filters Modal - Configure Search Filters -->
     <div id="searchFiltersModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1326,7 +1382,7 @@
         </div>
     </div>
 
-    <!-- Event Details Modal -->
+    <!-- Event Details Modal - View Calendar Event Details -->
     <div id="eventDetailsModal" class="modal">
         <div class="modal-content modern-modal">
             <div class="modal-header modern-header" id="eventModalHeader">
@@ -1349,7 +1405,7 @@
         </div>
     </div>
 
-    <!-- Student Details Modal -->
+    <!-- Student Details Modal - View Detailed Student Information -->
     <div id="studentDetailsModal" class="modal">
         <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
             <div class="modal-header">
@@ -1357,7 +1413,7 @@
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-form" style="padding: 1.5rem 2rem;">
-                <!-- Student Basic Information -->
+                <!-- Student Basic Information - Personal Details -->
                 <div class="student-details-section" style="margin-bottom: 2rem;">
                     <h4 style="margin-bottom: 1rem; color: #667eea; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fas fa-user"></i>
@@ -1368,7 +1424,7 @@
                     </div>
                 </div>
 
-                <!-- Tema Estudiante Section -->
+                <!-- Tema Estudiante Section - Student Topic Progress -->
                 <div class="student-details-section">
                     <h4 style="margin-bottom: 1rem; color: #667eea; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fas fa-book"></i>
@@ -1388,6 +1444,9 @@
         </div>
     </div>
 
+    <!-- ===================================================================
+         SCRIPTS SECTION - JavaScript Modules and Dependencies
+         =================================================================== -->
     <!-- Script Modules -->
     <script src="../scripts/translations.js"></script>
     <script src="../scripts/utils.js"></script>
@@ -1402,7 +1461,8 @@
     <script src="../scripts/unified-student-management.js"></script>
     <script src="../scripts/exams.js"></script>
     <script src="../scripts/notifications.js"></script>
-    <!-- Load report components in order -->
+    
+    <!-- Report System Components (Load in order) -->
     <script src="../scripts/reports/data-processor.js"></script>
     <script src="../scripts/reports/chart-manager.js"></script>
     <script src="../scripts/reports/report-generator.js"></script>
