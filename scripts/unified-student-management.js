@@ -181,9 +181,12 @@ function initializeUnifiedStudentManagement() {
     const backToStudentsBtn = document.getElementById('backToStudentsBtn');
     
     if (gradeEvaluationSelect) {
-        gradeEvaluationSelect.addEventListener('change', () => {
-            loadStudentsForGradeMarking();
+        gradeEvaluationSelect.addEventListener('change', async () => {
+            console.log('gradeEvaluationSelect change event triggered');
+            await loadStudentsForGradeMarking();
         });
+    } else {
+        console.warn('initializeUnifiedStudentManagement: gradeEvaluationSelect not found');
     }
     
     if (saveGradesBtn) {
@@ -1281,10 +1284,13 @@ function loadExams() {
     examsContainer.innerHTML = filteredExams.map(exam => {
         const subject = appData.materia.find(s => s.ID_materia === exam.Materia_ID_materia);
         return `
-            <div class="card">
+            <div class="card" onclick="viewExamNotes(${exam.ID_evaluacion})" style="cursor: pointer;">
                 <div class="card-header">
                     <h3 class="card-title">${exam.Titulo}</h3>
-                    <div class="card-actions">
+                    <div class="card-actions" onclick="event.stopPropagation();">
+                        <button class="btn-icon btn-grade" onclick="gradeExam(${exam.ID_evaluacion})" title="Calificar Estudiantes">
+                            <i class="fas fa-clipboard-check"></i>
+                        </button>
                         <button class="btn-icon btn-edit" onclick="editExam(${exam.ID_evaluacion})">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -1323,7 +1329,7 @@ function loadExams() {
                         const subject = appData.materia.find(s => s.ID_materia === exam.Materia_ID_materia);
                         const shortDate = exam.Fecha.split('-').slice(1).join('/');
                         return `
-                            <tr>
+                            <tr onclick="viewExamNotes(${exam.ID_evaluacion})" class="clickable-row" style="cursor: pointer;">
                                 <td><strong>${exam.Titulo}</strong></td>
                                 <td>${subject ? subject.Nombre : 'Unknown'}</td>
                                 <td>${exam.Tipo}</td>
@@ -1331,10 +1337,13 @@ function loadExams() {
                                 <td>${exam.Estado}</td>
                                 <td>
                                     <div class="table-actions">
-                                        <button class="btn-icon btn-edit" onclick="editExam(${exam.ID_evaluacion})" title="Edit">
+                                        <button class="btn-icon btn-grade" onclick="event.stopPropagation(); gradeExam(${exam.ID_evaluacion})" title="Calificar Estudiantes">
+                                            <i class="fas fa-clipboard-check"></i>
+                                        </button>
+                                        <button class="btn-icon btn-edit" onclick="event.stopPropagation(); editExam(${exam.ID_evaluacion})" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn-icon btn-delete" onclick="deleteExam(${exam.ID_evaluacion})" title="Delete">
+                                        <button class="btn-icon btn-delete" onclick="event.stopPropagation(); deleteExam(${exam.ID_evaluacion})" title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -1444,7 +1453,9 @@ function deleteExam(id) {
 // Removed duplicate exam toggle functions - now using unified toggle functions
 
 // Grade Marking Functions
-function showGradeMarkingView() {
+async function showGradeMarkingView() {
+    console.log('=== showGradeMarkingView START ===');
+    
     // Navigate to grade marking section and show the grade marking view
     showSection('grade-marking');
     
@@ -1480,68 +1491,333 @@ function showGradeMarkingView() {
             tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Seleccione una evaluación para ver los estudiantes</td></tr>';
         }
         
-        // Populate evaluation dropdown
-        populateEvaluationDropdown();
+        // Populate evaluation dropdown - wait for it to complete
+        await populateEvaluationDropdown();
+        
+        console.log('=== showGradeMarkingView END ===');
+    } else {
+        console.error('showGradeMarkingView: gradeMarkingView element not found');
     }
 }
 
-function populateEvaluationDropdown() {
-    const evaluationSelect = document.getElementById('gradeEvaluation');
-    if (!evaluationSelect) return;
-    
-    evaluationSelect.innerHTML = '<option value="" data-translate="select_evaluation">- Seleccionar Evaluación -</option>';
-    
-    appData.evaluacion.forEach(evaluation => {
-        const subject = appData.materia.find(s => s.ID_materia === evaluation.Materia_ID_materia);
-        const option = document.createElement('option');
-        option.value = evaluation.ID_evaluacion;
-        option.textContent = `${evaluation.Titulo} - ${subject ? subject.Nombre : 'Unknown Subject'}`;
-        evaluationSelect.appendChild(option);
-    });
+/**
+ * Helper function to normalize ID for comparison (handles string/number)
+ */
+function normalizeId(id) {
+    if (id === null || id === undefined) return null;
+    const num = parseInt(id);
+    return isNaN(num) ? null : num;
 }
 
-function loadStudentsForGradeMarking() {
+/**
+ * Find evaluation by ID - robust comparison with extensive debugging
+ */
+function findEvaluationById(evaluationId) {
+    console.log('=== findEvaluationById START ===');
+    console.log('Input evaluationId:', evaluationId, 'Type:', typeof evaluationId);
+    
+    // Check appData availability
+    if (!appData) {
+        console.error('findEvaluationById: appData is not available');
+        console.log('Available globals:', {
+            hasWindowAppData: !!window.appData,
+            hasWindowData: !!window.data
+        });
+        // Try to get from window
+        if (window.appData) {
+            appData = window.appData;
+        } else if (window.data) {
+            appData = window.data;
+        } else {
+            return null;
+        }
+    }
+    
+    if (!appData.evaluacion) {
+        console.error('findEvaluationById: appData.evaluacion is not available');
+        console.log('appData keys:', Object.keys(appData));
+        return null;
+    }
+    
+    if (!Array.isArray(appData.evaluacion)) {
+        console.error('findEvaluationById: appData.evaluacion is not an array', typeof appData.evaluacion);
+        return null;
+    }
+    
+    console.log('appData.evaluacion length:', appData.evaluacion.length);
+    console.log('Sample evaluations:', appData.evaluacion.slice(0, 3).map(e => ({
+        ID_evaluacion: e.ID_evaluacion,
+        ID_type: typeof e.ID_evaluacion,
+        Titulo: e.Titulo
+    })));
+    
+    const targetId = normalizeId(evaluationId);
+    console.log('Normalized targetId:', targetId);
+    
+    if (targetId === null) {
+        console.error('findEvaluationById: Invalid evaluation ID after normalization', evaluationId);
+        return null;
+    }
+    
+    // Find evaluation - try multiple approaches
+    let evaluation = null;
+    
+    // Method 1: Normalized comparison
+    evaluation = appData.evaluacion.find(e => {
+        if (!e || !e.ID_evaluacion) return false;
+        const evalId = normalizeId(e.ID_evaluacion);
+        return evalId !== null && evalId === targetId;
+    });
+    
+    // Method 2: Direct comparison (if method 1 failed)
+    if (!evaluation) {
+        evaluation = appData.evaluacion.find(e => {
+            if (!e || !e.ID_evaluacion) return false;
+            return e.ID_evaluacion == targetId || 
+                   String(e.ID_evaluacion) === String(targetId) ||
+                   parseInt(e.ID_evaluacion) === targetId;
+        });
+    }
+    
+    // Method 3: Loose comparison
+    if (!evaluation) {
+        evaluation = appData.evaluacion.find(e => {
+            if (!e || !e.ID_evaluacion) return false;
+            return e.ID_evaluacion == evaluationId || 
+                   String(e.ID_evaluacion) === String(evaluationId);
+        });
+    }
+    
+    if (evaluation) {
+        console.log('findEvaluationById: FOUND evaluation', {
+            ID: evaluation.ID_evaluacion,
+            Titulo: evaluation.Titulo
+        });
+    } else {
+        console.error('findEvaluationById: NOT FOUND', {
+            searchedId: evaluationId,
+            normalizedSearchedId: targetId,
+            availableIds: appData.evaluacion.map(e => ({
+                raw: e.ID_evaluacion,
+                normalized: normalizeId(e.ID_evaluacion),
+                type: typeof e.ID_evaluacion
+            }))
+        });
+    }
+    
+    console.log('=== findEvaluationById END ===');
+    return evaluation || null;
+}
+
+async function populateEvaluationDropdown() {
+    console.log('=== populateEvaluationDropdown START ===');
+    
+    const evaluationSelect = document.getElementById('gradeEvaluation');
+    if (!evaluationSelect) {
+        console.error('populateEvaluationDropdown: evaluationSelect element not found');
+        return;
+    }
+    
+    // Clear existing options
+    evaluationSelect.innerHTML = '<option value="" data-translate="select_evaluation">- Seleccionar Evaluación -</option>';
+    
+    // Ensure appData is loaded
+    if (!appData || !appData.evaluacion) {
+        console.log('populateEvaluationDropdown: appData not loaded, attempting to load...');
+        if (typeof loadData === 'function') {
+            await loadData();
+        }
+        
+        // Try window globals
+        if (!appData && window.appData) {
+            appData = window.appData;
+        } else if (!appData && window.data) {
+            appData = window.data;
+        }
+        
+        if (!appData || !appData.evaluacion) {
+            console.error('populateEvaluationDropdown: appData still not available after reload attempt');
+            evaluationSelect.innerHTML = '<option value="">Error: No se pudieron cargar las evaluaciones</option>';
+            return;
+        }
+    }
+    
+    if (!Array.isArray(appData.evaluacion)) {
+        console.error('populateEvaluationDropdown: appData.evaluacion is not an array', typeof appData.evaluacion);
+        evaluationSelect.innerHTML = '<option value="">Error: Datos de evaluaciones inválidos</option>';
+        return;
+    }
+    
+    if (appData.evaluacion.length === 0) {
+        console.warn('populateEvaluationDropdown: No evaluations available');
+        evaluationSelect.innerHTML = '<option value="">No hay evaluaciones disponibles</option>';
+        return;
+    }
+    
+    console.log('populateEvaluationDropdown: Found', appData.evaluacion.length, 'evaluations');
+    
+    // Populate dropdown with evaluations
+    let populatedCount = 0;
+    appData.evaluacion.forEach(evaluation => {
+        if (!evaluation || !evaluation.ID_evaluacion) {
+            console.warn('populateEvaluationDropdown: Skipping invalid evaluation', evaluation);
+            return;
+        }
+        
+        const evaluationId = normalizeId(evaluation.ID_evaluacion);
+        if (evaluationId === null) {
+            console.warn('populateEvaluationDropdown: Skipping evaluation with invalid ID', evaluation);
+            return;
+        }
+        
+        // Find subject
+        const subject = appData.materia && Array.isArray(appData.materia) 
+            ? appData.materia.find(s => normalizeId(s.ID_materia) === normalizeId(evaluation.Materia_ID_materia))
+            : null;
+        
+        const option = document.createElement('option');
+        option.value = String(evaluationId); // Store as string for HTML
+        option.textContent = `${evaluation.Titulo || 'Sin título'} - ${subject ? subject.Nombre : 'Materia desconocida'}`;
+        option.dataset.evalId = String(evaluationId); // Also store in dataset for reference
+        evaluationSelect.appendChild(option);
+        populatedCount++;
+    });
+    
+    console.log('populateEvaluationDropdown: Populated', populatedCount, 'evaluations');
+    console.log('=== populateEvaluationDropdown END ===');
+}
+
+async function loadStudentsForGradeMarking() {
+    console.log('=== loadStudentsForGradeMarking START ===');
+    
     const evaluationSelect = document.getElementById('gradeEvaluation');
     const tableBody = document.getElementById('gradeTableBody');
     
-    if (!evaluationSelect || !tableBody) return;
+    if (!evaluationSelect) {
+        console.error('loadStudentsForGradeMarking: evaluationSelect not found');
+        return;
+    }
     
-    const selectedEvaluationId = parseInt(evaluationSelect.value);
+    if (!tableBody) {
+        console.error('loadStudentsForGradeMarking: tableBody not found');
+        return;
+    }
     
-    if (!selectedEvaluationId) {
+    // Get selected value
+    const selectedValue = evaluationSelect.value;
+    console.log('Selected value from dropdown:', selectedValue);
+    
+    if (!selectedValue || selectedValue === '') {
         tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Seleccione una evaluación para ver los estudiantes</td></tr>';
         return;
     }
     
-    const evaluation = appData.evaluacion.find(e => e.ID_evaluacion === selectedEvaluationId);
+    // Ensure appData is loaded
+    if (!appData || !appData.evaluacion) {
+        console.log('appData not loaded, attempting to load...');
+        if (typeof loadData === 'function') {
+            await loadData();
+        }
+        
+        // Try window globals
+        if (!appData && window.appData) {
+            appData = window.appData;
+        } else if (!appData && window.data) {
+            appData = window.data;
+        }
+        
+        if (!appData || !appData.evaluacion) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Error: No se pudieron cargar los datos. Por favor, recargue la página.</td></tr>';
+            console.error('loadStudentsForGradeMarking: appData still not available after reload attempt');
+            return;
+        }
+    }
+    
+    // Find evaluation using our robust function
+    const evaluation = findEvaluationById(selectedValue);
+    
     if (!evaluation) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Evaluación no encontrada</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Evaluación no encontrada. Verifique la consola para más detalles.</td></tr>';
+        console.error('loadStudentsForGradeMarking: Evaluation not found', {
+            selectedValue: selectedValue,
+            normalizedId: normalizeId(selectedValue),
+            availableEvaluations: appData && appData.evaluacion ? appData.evaluacion.map(e => ({
+                ID: e.ID_evaluacion,
+                ID_type: typeof e.ID_evaluacion,
+                normalized: normalizeId(e.ID_evaluacion),
+                Titulo: e.Titulo
+            })) : 'appData.evaluacion not available'
+        });
         return;
     }
     
-    // Get students enrolled in this subject
-    const enrolledStudentIds = appData.alumnos_x_materia
-        .filter(enrollment => enrollment.Materia_ID_materia === evaluation.Materia_ID_materia)
-        .map(enrollment => enrollment.Estudiante_ID_Estudiante);
+    console.log('loadStudentsForGradeMarking: Found evaluation', {
+        ID: evaluation.ID_evaluacion,
+        Titulo: evaluation.Titulo
+    });
     
-    const enrolledStudents = appData.estudiante.filter(student => 
-        enrolledStudentIds.includes(student.ID_Estudiante)
-    );
+    // Get students enrolled in this subject - use normalized IDs
+    const normalizedMateriaId = normalizeId(evaluation.Materia_ID_materia);
+    
+    if (!appData.alumnos_x_materia || !Array.isArray(appData.alumnos_x_materia)) {
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Error: No hay datos de inscripciones disponibles</td></tr>';
+        return;
+    }
+    
+    const enrolledStudentIds = appData.alumnos_x_materia
+        .filter(enrollment => {
+            const enrollmentMateriaId = normalizeId(enrollment.Materia_ID_materia);
+            return enrollmentMateriaId !== null && enrollmentMateriaId === normalizedMateriaId;
+        })
+        .map(enrollment => normalizeId(enrollment.Estudiante_ID_Estudiante))
+        .filter(id => id !== null);
+    
+    if (!appData.estudiante || !Array.isArray(appData.estudiante)) {
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Error: No hay datos de estudiantes disponibles</td></tr>';
+        return;
+    }
+    
+    const enrolledStudents = appData.estudiante.filter(student => {
+        const studentId = normalizeId(student.ID_Estudiante);
+        return studentId !== null && enrolledStudentIds.includes(studentId);
+    });
     
     if (enrolledStudents.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No hay estudiantes inscritos en esta materia</td></tr>';
         return;
     }
     
+    // Get normalized evaluation ID for comparison
+    const normalizedEvalId = normalizeId(evaluation.ID_evaluacion);
+    
     tableBody.innerHTML = enrolledStudents.map(student => {
-        // Get existing grade for this student and evaluation
-        const existingGrade = appData.notas.find(grade => 
-            grade.Estudiante_ID_Estudiante === student.ID_Estudiante && 
-            grade.Evaluacion_ID_evaluacion === selectedEvaluationId
-        );
+        // Get existing grade for this student and evaluation - use normalized IDs
+        const normalizedStudentId = normalizeId(student.ID_Estudiante);
+        const existingGrade = appData.notas && Array.isArray(appData.notas) 
+            ? appData.notas.find(grade => {
+                const gradeStudentId = normalizeId(grade.Estudiante_ID_Estudiante);
+                const gradeEvalId = normalizeId(grade.Evaluacion_ID_evaluacion);
+                return gradeStudentId === normalizedStudentId && gradeEvalId === normalizedEvalId;
+            })
+            : null;
         
-        const currentGrade = existingGrade ? existingGrade.Calificacion : '';
-        const gradeClass = currentGrade >= 80 ? 'excellent' : currentGrade >= 60 ? 'good' : currentGrade > 0 ? 'poor' : '';
+        // Check if student was absent (grade 0 with AUSENTE observation)
+        const isAbsent = existingGrade && 
+                        (existingGrade.Calificacion == 0 || existingGrade.Calificacion === 'AUSENTE') &&
+                        (existingGrade.Observacion === 'AUSENTE' || !existingGrade.Observacion || existingGrade.Observacion.trim() === '');
+        
+        const currentGrade = existingGrade && !isAbsent ? existingGrade.Calificacion : '';
+        const currentObservation = existingGrade ? (existingGrade.Observacion || '') : '';
+        
+        // Grade class based on 1-10 scale
+        let gradeClass = '';
+        if (currentGrade) {
+            const gradeNum = parseFloat(currentGrade);
+            if (gradeNum >= 8) gradeClass = 'excellent';
+            else if (gradeNum >= 6) gradeClass = 'good';
+            else if (gradeNum >= 1) gradeClass = 'poor';
+        }
+        
         const status = existingGrade ? 'graded' : 'pending';
         
         return `
@@ -1549,21 +1825,38 @@ function loadStudentsForGradeMarking() {
                 <td class="student-id">${student.ID_Estudiante}</td>
                 <td class="student-name">${student.Apellido}, ${student.Nombre}</td>
                 <td class="grade-cell">
-                    <input type="number" 
-                           class="grade-input ${gradeClass}" 
-                           min="0" 
-                           max="100" 
-                           value="${currentGrade}"
-                           data-student-id="${student.ID_Estudiante}"
-                           placeholder="0-100">
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <input type="number" 
+                               id="grade_${student.ID_Estudiante}"
+                               class="grade-input ${gradeClass}" 
+                               min="1" 
+                               max="10" 
+                               step="0.01"
+                               value="${currentGrade}"
+                               data-student-id="${student.ID_Estudiante}"
+                               placeholder="1-10"
+                               style="width: 80px;"
+                               ${isAbsent ? 'disabled' : ''}>
+                        <label style="display: flex; align-items: center; gap: 5px; font-size: 0.9em; white-space: nowrap;">
+                            <input type="checkbox" 
+                                   id="ausente_${student.ID_Estudiante}"
+                                   class="ausente-checkbox"
+                                   ${isAbsent ? 'checked' : ''}
+                                   onchange="toggleAusenteGrade(${student.ID_Estudiante}, this.checked)">
+                            Ausente
+                        </label>
+                    </div>
+                </td>
+                <td class="observation-cell">
+                    <input type="text" 
+                           id="observacion_${student.ID_Estudiante}"
+                           class="observation-input"
+                           value="${currentObservation}"
+                           placeholder="Observaciones..."
+                           style="width: 100%; padding: 5px; font-size: 0.9em;">
                 </td>
                 <td class="status-cell">
                     <span class="grade-status ${status}">${status === 'graded' ? 'Calificado' : 'Pendiente'}</span>
-                </td>
-                <td class="actions-cell">
-                    <button class="btn-icon btn-edit" onclick="editStudentGrade(${student.ID_Estudiante})" title="Editar">
-                        <i class="fas fa-edit"></i>
-                    </button>
                 </td>
             </tr>
         `;
@@ -1578,75 +1871,225 @@ function setupGradeInputListeners() {
     
     gradeInputs.forEach(input => {
         input.addEventListener('input', function() {
-            const grade = parseInt(this.value);
+            const grade = parseFloat(this.value);
             this.classList.remove('excellent', 'good', 'poor');
             
-            if (grade >= 80) {
+            // Grade scale is 1-10, not 0-100
+            if (grade >= 8) {
                 this.classList.add('excellent');
-            } else if (grade >= 60) {
+            } else if (grade >= 6) {
                 this.classList.add('good');
-            } else if (grade > 0) {
+            } else if (grade >= 1) {
                 this.classList.add('poor');
             }
         });
     });
 }
 
-function saveGradesBulk() {
+// Make function globally available for onclick handlers
+window.toggleAusenteGrade = function(studentId, isAusente) {
+    const gradeInput = document.getElementById(`grade_${studentId}`);
+    if (gradeInput) {
+        gradeInput.disabled = isAusente;
+        if (isAusente) {
+            gradeInput.value = '';
+            gradeInput.classList.remove('excellent', 'good', 'poor');
+        }
+    }
+};
+
+async function saveGradesBulk() {
     const evaluationSelect = document.getElementById('gradeEvaluation');
     const dateInput = document.getElementById('gradeDate');
     const notesInput = document.getElementById('gradeNotes');
     
-    const selectedEvaluationId = parseInt(evaluationSelect.value);
-    const gradeDate = dateInput.value;
-    const notes = notesInput.value;
-    
-    // Validation
-    if (!selectedEvaluationId || !gradeDate) {
-        alert('Por favor complete todos los campos requeridos.');
+    if (!evaluationSelect) {
+        alert('Error: No se encontró el selector de evaluación.');
         return;
     }
     
+    const selectedValue = evaluationSelect.value;
+    
+    if (!selectedValue || selectedValue === '') {
+        alert('Por favor seleccione una evaluación.');
+        return;
+    }
+    
+    if (!dateInput || !dateInput.value) {
+        alert('Por favor complete la fecha.');
+        return;
+    }
+    
+    // Find evaluation using our robust function
+    const evaluation = findEvaluationById(selectedValue);
+    
+    if (!evaluation) {
+        alert('Error: La evaluación seleccionada no se encontró. Por favor, recargue la página e intente nuevamente.');
+        console.error('saveGradesBulk: Evaluation not found', {
+            selectedValue: selectedValue,
+            normalizedId: normalizeId(selectedValue),
+            availableEvaluations: appData && appData.evaluacion ? appData.evaluacion.map(e => ({
+                ID: e.ID_evaluacion,
+                ID_type: typeof e.ID_evaluacion,
+                normalized: normalizeId(e.ID_evaluacion),
+                Titulo: e.Titulo
+            })) : 'appData.evaluacion not available'
+        });
+        return;
+    }
+    
+    // Get normalized evaluation ID for saving
+    const selectedEvaluationId = normalizeId(selectedValue);
+    const gradeDate = dateInput.value;
+    const notes = notesInput ? notesInput.value : '';
+    
+    console.log('saveGradesBulk: Using evaluation', {
+        ID: selectedEvaluationId,
+        Titulo: evaluation.Titulo,
+        Fecha: gradeDate
+    });
+    
     const tableRows = document.querySelectorAll('#gradeTableBody tr[data-student-id]');
-    let gradesSaved = 0;
+    const notas = [];
+    const errors = [];
+    
+    if (tableRows.length === 0) {
+        alert('No hay estudiantes para calificar. Asegúrese de haber seleccionado una evaluación.');
+        return;
+    }
     
     tableRows.forEach(row => {
         const studentId = parseInt(row.dataset.studentId);
-        const gradeInput = row.querySelector('.grade-input');
-        const grade = parseInt(gradeInput.value);
+        if (isNaN(studentId) || studentId <= 0) {
+            console.warn('Invalid student ID in row:', row);
+            return;
+        }
         
-        if (grade >= 0 && grade <= 100) {
-            // Check if grade already exists
-            const existingIndex = appData.notas.findIndex(grade => 
-                grade.Estudiante_ID_Estudiante === studentId && 
-                grade.Evaluacion_ID_evaluacion === selectedEvaluationId
-            );
-            
-            const gradeRecord = {
-                ID_Nota: existingIndex >= 0 ? appData.notas[existingIndex].ID_Nota : Date.now(),
-                Estudiante_ID_Estudiante: studentId,
+        const gradeInput = document.getElementById(`grade_${studentId}`);
+        const ausenteCheckbox = document.getElementById(`ausente_${studentId}`);
+        const observacionInput = document.getElementById(`observacion_${studentId}`);
+        
+        const esAusente = ausenteCheckbox ? ausenteCheckbox.checked : false;
+        const gradeValue = gradeInput ? gradeInput.value.trim() : '';
+        const observacion = observacionInput ? observacionInput.value.trim() : '';
+        
+        // Combine general notes with individual observation
+        const finalObservacion = notes ? (notes + (observacion ? ' | ' + observacion : '')) : observacion;
+        
+        // Skip if no grade entered and not marked as absent
+        if (!gradeValue && !esAusente) {
+            return; // Skip rows without grade input and not absent
+        }
+        
+        // Validate and prepare nota data
+        if (esAusente) {
+            // Student is absent
+            const notaData = {
                 Evaluacion_ID_evaluacion: selectedEvaluationId,
-                Calificacion: grade,
+                Estudiante_ID_Estudiante: studentId,
+                Calificacion: 'AUSENTE', // API will convert this to 0
                 Fecha_calificacion: gradeDate,
-                Observacion: notes || ''
+                Observacion: finalObservacion || 'AUSENTE',
+                Estado: 'DEFINITIVA'
             };
+            notas.push(notaData);
+        } else if (gradeValue) {
+            // Student has a grade
+            const grade = parseFloat(gradeValue);
             
-            if (existingIndex >= 0) {
-                appData.notas[existingIndex] = gradeRecord;
-            } else {
-                appData.notas.push(gradeRecord);
+            // Validate grade range (1-10)
+            if (isNaN(grade) || grade < 1 || grade > 10) {
+                errors.push(`Estudiante ${studentId}: Calificación inválida (debe ser entre 1 y 10)`);
+                return;
             }
             
-            gradesSaved++;
+            const notaData = {
+                Evaluacion_ID_evaluacion: selectedEvaluationId,
+                Estudiante_ID_Estudiante: studentId,
+                Calificacion: grade,
+                Fecha_calificacion: gradeDate,
+                Observacion: finalObservacion || null,
+                Estado: 'DEFINITIVA'
+            };
+            
+            notas.push(notaData);
         }
     });
     
-    if (gradesSaved > 0) {
-        saveData();
-        showNotification(`${gradesSaved} calificaciones guardadas exitosamente`, 'success');
-        loadStudentsForGradeMarking(); // Refresh the table
-    } else {
-        alert('No se guardaron calificaciones. Verifique que las calificaciones estén entre 0 y 100.');
+    if (notas.length === 0 && errors.length === 0) {
+        alert('No se guardaron calificaciones. Verifique que haya ingresado al menos una calificación válida (entre 1 y 10).');
+        return;
+    }
+    
+    if (errors.length > 0) {
+        alert('Errores encontrados:\n\n' + errors.join('\n'));
+        return;
+    }
+    
+    // Save grades to API (like saveGrades in exams.js)
+    const isInPages = window.location.pathname.includes('/pages/');
+    const baseUrl = isInPages ? '../api' : 'api';
+    
+    try {
+        let saved = 0;
+        let failed = 0;
+        
+        for (const nota of notas) {
+            try {
+                const response = await fetch(`${baseUrl}/notas.php`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(nota)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success !== false) {
+                    saved++;
+                } else {
+                    failed++;
+                    console.error(`Error guardando nota para estudiante ${nota.Estudiante_ID_Estudiante}:`, result);
+                }
+            } catch (error) {
+                failed++;
+                console.error(`Error guardando nota para estudiante ${nota.Estudiante_ID_Estudiante}:`, error);
+            }
+        }
+        
+        if (saved > 0) {
+            // Reload data from server
+            if (typeof loadData === 'function') {
+                await loadData();
+            }
+            
+            // Refresh the table
+            loadStudentsForGradeMarking();
+            
+            // Reload student data to show updated grades
+            if (typeof loadUnifiedStudentData === 'function') {
+                loadUnifiedStudentData();
+            }
+            
+            // Show success message
+            const message = failed > 0 
+                ? `Se guardaron ${saved} calificación(es). ${failed} fallaron.` 
+                : `Se guardaron ${saved} calificación(es) exitosamente.`;
+            
+            if (typeof showNotification === 'function') {
+                showNotification(message, saved === notas.length ? 'success' : 'warning');
+            } else {
+                alert(message);
+            }
+        } else {
+            alert('No se pudo guardar ninguna calificación. Por favor, intente nuevamente.');
+        }
+    } catch (error) {
+        console.error('Error al guardar calificaciones:', error);
+        alert('Error al guardar las calificaciones. Por favor, intente nuevamente.');
     }
 }
 

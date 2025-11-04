@@ -134,15 +134,12 @@ function loadExams() {
     examsContainer.innerHTML = filteredExams.map(exam => {
         const subject = appData.materia.find(s => s.ID_materia === exam.Materia_ID_materia);
         return `
-            <div class="card">
+            <div class="card" onclick="viewExamNotes(${exam.ID_evaluacion})" style="cursor: pointer;">
                 <div class="card-header">
                     <h3 class="card-title">${exam.Titulo}</h3>
-                    <div class="card-actions">
+                    <div class="card-actions" onclick="event.stopPropagation();">
                         <button class="btn-icon btn-grade" onclick="gradeExam(${exam.ID_evaluacion})" title="Calificar Estudiantes">
                             <i class="fas fa-clipboard-check"></i>
-                        </button>
-                        <button class="btn-icon btn-view" onclick="viewExamNotes(${exam.ID_evaluacion})" title="Ver Notas">
-                            <i class="fas fa-eye"></i>
                         </button>
                         <button class="btn-icon btn-edit" onclick="editExam(${exam.ID_evaluacion})">
                             <i class="fas fa-edit"></i>
@@ -182,7 +179,7 @@ function loadExams() {
                         const subject = appData.materia.find(s => s.ID_materia === exam.Materia_ID_materia);
                         const shortDate = exam.Fecha.split('-').slice(1).join('/');
                         return `
-                            <tr>
+                            <tr onclick="viewExamNotes(${exam.ID_evaluacion})" class="clickable-row" style="cursor: pointer;">
                                 <td><strong>${exam.Titulo}</strong></td>
                                 <td>${subject ? subject.Nombre : 'Unknown'}</td>
                                 <td>${exam.Tipo}</td>
@@ -190,16 +187,13 @@ function loadExams() {
                                 <td>${exam.Estado}</td>
                                 <td>
                                     <div class="table-actions">
-                                        <button class="btn-icon btn-grade" onclick="gradeExam(${exam.ID_evaluacion})" title="Calificar Estudiantes">
+                                        <button class="btn-icon btn-grade" onclick="event.stopPropagation(); gradeExam(${exam.ID_evaluacion})" title="Calificar Estudiantes">
                                             <i class="fas fa-clipboard-check"></i>
                                         </button>
-                                        <button class="btn-icon btn-view" onclick="viewExamNotes(${exam.ID_evaluacion})" title="Ver Notas">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="btn-icon btn-edit" onclick="editExam(${exam.ID_evaluacion})" title="Edit">
+                                        <button class="btn-icon btn-edit" onclick="event.stopPropagation(); editExam(${exam.ID_evaluacion})" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn-icon btn-delete" onclick="deleteExam(${exam.ID_evaluacion})" title="Delete">
+                                        <button class="btn-icon btn-delete" onclick="event.stopPropagation(); deleteExam(${exam.ID_evaluacion})" title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -577,15 +571,55 @@ async function deleteExam(id) {
     }
 }
 
-function gradeExam(examId) {
-    const exam = appData.evaluacion.find(e => e.ID_evaluacion === examId);
+// Make gradeExam globally available
+window.gradeExam = function(examId) {
+    console.log('gradeExam called with ID:', examId);
+    
+    // Ensure appData is available
+    if (!appData) {
+        if (window.appData) {
+            appData = window.appData;
+        } else if (window.data) {
+            appData = window.data;
+        } else {
+            alert('Error: Los datos no están cargados. Por favor, recargue la página.');
+            return;
+        }
+    }
+    
+    // Normalize ID for lookup
+    const normalizedId = parseInt(examId);
+    if (isNaN(normalizedId)) {
+        alert('Error: ID de evaluación inválido.');
+        return;
+    }
+    
+    // Find evaluation using normalized ID
+    const exam = appData.evaluacion.find(e => {
+        const evalId = parseInt(e.ID_evaluacion);
+        return evalId === normalizedId;
+    });
+    
     if (!exam) {
         alert('Evaluación no encontrada.');
+        console.error('gradeExam: Evaluation not found', {
+            searchedId: examId,
+            normalizedId: normalizedId,
+            availableEvaluations: appData.evaluacion.map(e => ({
+                ID: e.ID_evaluacion,
+                Titulo: e.Titulo
+            }))
+        });
         return;
     }
     
     // Obtener la materia
-    const materia = appData.materia.find(m => m.ID_materia === exam.Materia_ID_materia);
+    const materiaId = parseInt(exam.Materia_ID_materia);
+    const materia = appData.materia.find(m => {
+        const mId = parseInt(m.ID_materia);
+        return mId === materiaId;
+    });
+    
     if (!materia) {
         alert('Materia no encontrada.');
         return;
@@ -593,9 +627,16 @@ function gradeExam(examId) {
     
     // Obtener estudiantes inscritos en esta materia
     const estudiantesInscritos = appData.alumnos_x_materia
-        .filter(axm => axm.Materia_ID_materia === exam.Materia_ID_materia)
+        .filter(axm => {
+            const axmMateriaId = parseInt(axm.Materia_ID_materia);
+            return axmMateriaId === materiaId;
+        })
         .map(axm => {
-            const estudiante = appData.estudiante.find(e => e.ID_Estudiante === axm.Estudiante_ID_Estudiante);
+            const studentId = parseInt(axm.Estudiante_ID_Estudiante);
+            const estudiante = appData.estudiante.find(e => {
+                const eId = parseInt(e.ID_Estudiante);
+                return eId === studentId;
+            });
             return estudiante;
         })
         .filter(e => e !== undefined);
@@ -606,11 +647,14 @@ function gradeExam(examId) {
     }
     
     // Obtener notas existentes para esta evaluación
-    const notasExistentes = appData.notas.filter(n => n.Evaluacion_ID_evaluacion === examId);
+    const notasExistentes = appData.notas.filter(n => {
+        const noteEvalId = parseInt(n.Evaluacion_ID_evaluacion);
+        return noteEvalId === normalizedId;
+    });
     
     // Crear modal de calificación
     showGradeModal(exam, materia, estudiantesInscritos, notasExistentes);
-}
+};
 
 function showGradeModal(exam, materia, estudiantes, notasExistentes) {
     const modal = document.createElement('div');
@@ -868,23 +912,46 @@ async function saveGrades(event, examId) {
     }
 }
 
-function viewExamNotes(examId) {
-    // Store the current exam ID for the notes view
-    window.currentExamId = examId;
+// Make viewExamNotes globally available
+window.viewExamNotes = function(examId) {
+    console.log('viewExamNotes called with ID:', examId);
     
-    // Hide exams tab content and show exam notes tab content
-    const examsTabContent = document.getElementById('examsTabContent');
-    const examNotesTabContent = document.getElementById('examNotesTabContent');
-    
-    if (examsTabContent) examsTabContent.style.display = 'none';
-    if (examNotesTabContent) examNotesTabContent.style.display = 'block';
-    
-    // Hide exam control buttons
-    hideExamControls();
-    
-    // Load the exam notes view
-    loadExamNotesView(examId);
-}
+    try {
+        // Store the current exam ID for the notes view
+        window.currentExamId = examId;
+        
+        // Hide exams tab content and show exam notes tab content
+        const examsTabContent = document.getElementById('examsTabContent');
+        const examNotesTabContent = document.getElementById('examNotesTabContent');
+        
+        if (!examsTabContent || !examNotesTabContent) {
+            console.error('viewExamNotes: Required elements not found', {
+                examsTabContent: !!examsTabContent,
+                examNotesTabContent: !!examNotesTabContent
+            });
+            alert('Error: No se encontraron los elementos necesarios. Por favor, recargue la página.');
+            return;
+        }
+        
+        examsTabContent.style.display = 'none';
+        examNotesTabContent.style.display = 'block';
+        
+        // Hide exam control buttons
+        hideExamControls();
+        
+        // Load the exam notes view
+        loadExamNotesView(examId);
+    } catch (error) {
+        console.error('viewExamNotes error:', error);
+        alert('Error al cargar las notas del examen: ' + error.message);
+        // Try to restore UI
+        const examsTabContent = document.getElementById('examsTabContent');
+        if (examsTabContent) {
+            examsTabContent.style.display = 'block';
+        }
+        showExamControls();
+    }
+};
 
 function hideExamControls() {
     // Hide the exam view controls (grid/list toggle)
@@ -939,28 +1006,63 @@ function showExamControls() {
 }
 
 function loadExamNotesView(examId) {
-    const exam = appData.evaluacion.find(e => e.ID_evaluacion === examId);
-    if (!exam) return;
+    console.log('loadExamNotesView called with ID:', examId);
+    
+    // Ensure appData is available
+    if (!appData) {
+        if (window.appData) {
+            appData = window.appData;
+        } else if (window.data) {
+            appData = window.data;
+        } else {
+            console.error('loadExamNotesView: appData not available');
+            const notesList = document.getElementById('notesList');
+            if (notesList) {
+                notesList.innerHTML = '<div class="empty-state"><p>Error: No se pudieron cargar los datos.</p></div>';
+            }
+            return;
+        }
+    }
+    
+    // Normalize ID for lookup
+    const normalizedId = parseInt(examId);
+    if (isNaN(normalizedId)) {
+        console.error('loadExamNotesView: Invalid exam ID', examId);
+        return;
+    }
+    
+    // Find evaluation using normalized ID
+    const exam = appData.evaluacion.find(e => {
+        const evalId = parseInt(e.ID_evaluacion);
+        return evalId === normalizedId;
+    });
+    
+    if (!exam) {
+        console.error('loadExamNotesView: Evaluation not found', {
+            searchedId: examId,
+            normalizedId: normalizedId
+        });
+        const notesList = document.getElementById('notesList');
+        if (notesList) {
+            notesList.innerHTML = '<div class="empty-state"><p>Evaluación no encontrada.</p></div>';
+        }
+        return;
+    }
 
-    // Get all notes for this exam
-    const examNotes = appData.notas.filter(note => note.Evaluacion_ID_evaluacion === examId);
+    // Get all notes for this exam using normalized ID
+    const examNotes = appData.notas.filter(note => {
+        const noteEvalId = parseInt(note.Evaluacion_ID_evaluacion);
+        return noteEvalId === normalizedId;
+    });
     
     // Get subject information
-    const subject = appData.materia.find(s => s.ID_materia === exam.Materia_ID_materia);
+    const materiaId = parseInt(exam.Materia_ID_materia);
+    const subject = appData.materia.find(s => {
+        const sId = parseInt(s.ID_materia);
+        return sId === materiaId;
+    });
     
-    // Update the exam notes title and subtitle
-    const examNotesTitle = document.getElementById('examNotesTitle');
-    const examNotesSubtitle = document.getElementById('examNotesSubtitle');
-    
-    if (examNotesTitle) {
-        examNotesTitle.textContent = `Exam Notes - ${exam.Titulo}`;
-    }
-    
-    if (examNotesSubtitle) {
-        examNotesSubtitle.textContent = `${subject ? subject.Nombre : 'Unknown Subject'} • ${exam.Fecha} • ${exam.Tipo}`;
-    }
-    
-    // Load exam info summary
+    // Load exam info summary first (this will show the exam details)
     loadExamInfoSummary(exam, subject, examNotes.length);
     
     // Load notes list
@@ -968,6 +1070,12 @@ function loadExamNotesView(examId) {
     
     // Setup export button
     setupExportButton(examId, examNotes.length);
+    
+    console.log('loadExamNotesView: Successfully loaded notes view', {
+        examId: normalizedId,
+        examTitle: exam.Titulo,
+        notesCount: examNotes.length
+    });
 }
 
 function loadExamInfoSummary(exam, subject, notesCount) {
