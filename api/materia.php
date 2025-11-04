@@ -34,6 +34,94 @@ function readJson() {
 	return is_array($decoded) ? $decoded : [];
 }
 
+function parseHorario($horario) {
+	// Parse schedule string like "Lunes 09:00-11:00, Miércoles 14:00-16:00"
+	if (!$horario) return null;
+	
+	$daysMap = [
+		'lunes' => 1, 'martes' => 2, 'miércoles' => 3, 'miercoles' => 3,
+		'jueves' => 4, 'viernes' => 5, 'sábado' => 6, 'sabado' => 6, 'domingo' => 0
+	];
+	
+	$schedule = [];
+	$parts = explode(',', $horario);
+	
+	foreach ($parts as $part) {
+		$part = trim($part);
+		if (preg_match('/(\w+)\s+(\d{2}:\d{2})-(\d{2}:\d{2})/i', $part, $matches)) {
+			$dayName = strtolower($matches[1]);
+			$startTime = $matches[2];
+			$endTime = $matches[3];
+			
+			if (isset($daysMap[$dayName])) {
+				$schedule[] = [
+					'day' => $daysMap[$dayName],
+					'start' => $startTime,
+					'end' => $endTime
+				];
+			}
+		}
+	}
+	
+	return count($schedule) > 0 ? $schedule : null;
+}
+
+function createRecordatoriosForClasses($db, $materiaId, $materiaNombre, $horario) {
+	try {
+		$schedule = parseHorario($horario);
+		if (!$schedule) {
+			return; // No valid schedule
+		}
+		
+		$hoy = new DateTime();
+		$hoy->setTime(0, 0, 0);
+		
+		// Create recordatorios for the next 4 weeks (up to 28 days ahead)
+		for ($daysAhead = 0; $daysAhead < 28; $daysAhead++) {
+			$checkDate = clone $hoy;
+			$checkDate->modify("+{$daysAhead} days");
+			$dayOfWeek = (int)$checkDate->format('w'); // 0 = Sunday, 1 = Monday, etc.
+			
+			// Check if this day matches any scheduled class
+			foreach ($schedule as $classTime) {
+				if ($classTime['day'] === $dayOfWeek) {
+					// Create a recordatorio for this class, 1 day before
+					$reminderDate = clone $checkDate;
+					$reminderDate->modify('-1 day');
+					
+					// Only create if reminder date is today or in the future
+					if ($reminderDate >= $hoy) {
+						$reminderDateStr = $reminderDate->format('Y-m-d');
+						$classDateStr = $checkDate->format('Y-m-d');
+						
+						$descripcion = "Recordatorio: Clase de {$materiaNombre} mañana ({$classDateStr})";
+						
+						// Check if recordatorio already exists
+						$stmt = $db->prepare("
+							SELECT ID_recordatorio FROM Recordatorio 
+							WHERE Descripcion = ? AND Fecha = ? AND Materia_ID_materia = ? AND Tipo = 'CLASE'
+						");
+						$stmt->execute([$descripcion, $reminderDateStr, $materiaId]);
+						
+						if (!$stmt->fetch()) {
+							// Insert new recordatorio
+							$stmt = $db->prepare("
+								INSERT INTO Recordatorio (Descripcion, Fecha, Tipo, Prioridad, Materia_ID_materia, Estado) 
+								VALUES (?, ?, 'CLASE', 'MEDIA', ?, 'PENDIENTE')
+							");
+							$stmt->execute([$descripcion, $reminderDateStr, $materiaId]);
+							error_log("Recordatorio de clase creado automáticamente para materia ID: {$materiaId}, Fecha: {$reminderDateStr}");
+						}
+					}
+				}
+			}
+		}
+	} catch (Exception $e) {
+		error_log("Error creando recordatorios automáticos para clases: " . $e->getMessage());
+		// Don't fail materia creation if recordatorio creation fails
+	}
+}
+
 try {
 	$db = pdo();
 	$method = $_SERVER['REQUEST_METHOD'];
@@ -82,11 +170,23 @@ try {
 			$stmt = $db->prepare("INSERT INTO Materia (Nombre, Curso_division, Usuarios_docente_ID_docente, Estado, Horario, Aula, Descripcion) VALUES (?, ?, ?, ?, ?, ?, ?)");
 			$stmt->execute([$Nombre, $Curso_division, $DocenteId, $Estado, $Horario, $Aula, $Descripcion]);
 			$newId = (int)$db->lastInsertId();
+			
+			// Create automatic recordatorios for classes if horario is provided
+			if ($Horario && $Estado === 'ACTIVA') {
+				createRecordatoriosForClasses($db, $newId, $Nombre, $Horario);
+			}
+			
 			respond(201, ['success'=>true,'id'=>$newId]);
 
 		case 'PUT':
 			if (!$id) respond(400, ['success'=>false,'message'=>'Falta id']);
 			$body = readJson();
+			
+			// Get current materia data
+			$stmt = $db->prepare("SELECT Nombre, Horario, Estado FROM Materia WHERE ID_materia = ?");
+			$stmt->execute([$id]);
+			$currentMateria = $stmt->fetch();
+			
 			// Campos actualizables
 			$fields = ['Nombre','Curso_division','Usuarios_docente_ID_docente','Estado','Horario','Aula','Descripcion'];
 			$sets = [];
@@ -102,6 +202,26 @@ try {
 			$sql = "UPDATE Materia SET ".implode(', ', $sets)." WHERE ID_materia = ?";
 			$stmt = $db->prepare($sql);
 			$stmt->execute($params);
+			
+			// If Horario or Estado changed, update recordatorios
+			$newHorario = isset($body['Horario']) ? $body['Horario'] : $currentMateria['Horario'];
+			$newEstado = isset($body['Estado']) ? $body['Estado'] : $currentMateria['Estado'];
+			$newNombre = isset($body['Nombre']) ? $body['Nombre'] : $currentMateria['Nombre'];
+			
+			// Delete old class recordatorios if schedule changed
+			if (isset($body['Horario']) && $body['Horario'] !== $currentMateria['Horario']) {
+				$stmt = $db->prepare("
+					DELETE FROM Recordatorio 
+					WHERE Materia_ID_materia = ? AND Tipo = 'CLASE' AND Descripcion LIKE ?
+				");
+				$stmt->execute([$id, "%{$currentMateria['Nombre']}%"]);
+			}
+			
+			// Create new recordatorios if horario is provided and materia is active
+			if ($newHorario && $newEstado === 'ACTIVA') {
+				createRecordatoriosForClasses($db, $id, $newNombre, $newHorario);
+			}
+			
 			respond(200, ['success'=>true,'id'=>$id]);
 
 		case 'DELETE':

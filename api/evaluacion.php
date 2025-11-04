@@ -50,6 +50,66 @@ function validarMateriaDelDocente($db, $materiaId, $docenteId) {
 	}
 }
 
+function createRecordatoriosForEvaluacion($db, $evaluacionId, $titulo, $fechaEvaluacion, $materiaId, $tipoEvaluacion) {
+	try {
+		// Convert evaluacion date to DateTime
+		$fechaEval = new DateTime($fechaEvaluacion);
+		$hoy = new DateTime();
+		
+		// Only create recordatorios if evaluacion is in the future
+		if ($fechaEval <= $hoy) {
+			return;
+		}
+		
+		// Create recordatorios 1 day and 3 days before the evaluacion
+		$diasAntes = [1, 3];
+		
+		foreach ($diasAntes as $dias) {
+			$fechaRecordatorio = clone $fechaEval;
+			$fechaRecordatorio->modify("-{$dias} days");
+			
+			// Only create if the reminder date is in the future
+			if ($fechaRecordatorio <= $hoy) {
+				continue;
+			}
+			
+			$fechaRecordatorioStr = $fechaRecordatorio->format('Y-m-d');
+			
+			// Determine priority based on days before
+			$prioridad = $dias == 1 ? 'ALTA' : 'MEDIA';
+			
+			// Determine recordatorio type based on evaluacion type
+			$tipoRecordatorio = 'EXAMEN';
+			if (in_array($tipoEvaluacion, ['TRABAJO_PRACTICO', 'PROYECTO'])) {
+				$tipoRecordatorio = 'ENTREGA';
+			}
+			
+			// Create description
+			$descripcion = "Recordatorio: {$titulo} en {$dias} día" . ($dias > 1 ? 's' : '');
+			
+			// Check if recordatorio already exists
+			$stmt = $db->prepare("
+				SELECT ID_recordatorio FROM Recordatorio 
+				WHERE Descripcion = ? AND Fecha = ? AND Materia_ID_materia = ? AND Tipo = ?
+			");
+			$stmt->execute([$descripcion, $fechaRecordatorioStr, $materiaId, $tipoRecordatorio]);
+			
+			if (!$stmt->fetch()) {
+				// Insert new recordatorio
+				$stmt = $db->prepare("
+					INSERT INTO Recordatorio (Descripcion, Fecha, Tipo, Prioridad, Materia_ID_materia, Estado) 
+					VALUES (?, ?, ?, ?, ?, 'PENDIENTE')
+				");
+				$stmt->execute([$descripcion, $fechaRecordatorioStr, $tipoRecordatorio, $prioridad, $materiaId]);
+				error_log("Recordatorio creado automáticamente para evaluación ID: {$evaluacionId}, Fecha: {$fechaRecordatorioStr}");
+			}
+		}
+	} catch (Exception $e) {
+		error_log("Error creando recordatorios automáticos para evaluación: " . $e->getMessage());
+		// Don't fail the evaluacion creation if recordatorio creation fails
+	}
+}
+
 try {
 	$db = pdo();
 	$method = $_SERVER['REQUEST_METHOD'];
@@ -219,6 +279,10 @@ try {
 				
 				if ($newId > 0) {
 					error_log("Evaluación creada exitosamente - ID: $newId, Materia: $Materia_ID_materia");
+					
+					// Create automatic recordatorios for this evaluacion
+					createRecordatoriosForEvaluacion($db, $newId, $Titulo, $Fecha, $Materia_ID_materia, $Tipo);
+					
 					respond(201, ['success'=>true,'id'=>$newId,'message'=>'Evaluación creada exitosamente']);
 				} else {
 					error_log("Error: lastInsertId() retornó 0 o false");
@@ -297,11 +361,34 @@ try {
 			
 			if (!$sets) respond(400, ['success'=>false,'message'=>'Nada para actualizar']);
 			
+			// Get current evaluacion data to check if fecha changed
+			$stmt = $db->prepare("SELECT Titulo, Fecha, Tipo, Materia_ID_materia FROM Evaluacion WHERE ID_evaluacion = ?");
+			$stmt->execute([$id]);
+			$currentEval = $stmt->fetch();
+			
 			$params[] = $id;
 			$sql = "UPDATE Evaluacion SET ".implode(', ', $sets)." WHERE ID_evaluacion = ?";
 			$stmt = $db->prepare($sql);
 			$stmt->execute($params);
-			respond(200, ['success'=>true,'id'=>$id]);
+			
+			// If fecha or titulo changed, update/create recordatorios
+			if (isset($body['Fecha']) || isset($body['Titulo'])) {
+				$newFecha = isset($body['Fecha']) ? $body['Fecha'] : $currentEval['Fecha'];
+				$newTitulo = isset($body['Titulo']) ? trim($body['Titulo']) : $currentEval['Titulo'];
+				$newTipo = isset($body['Tipo']) ? $body['Tipo'] : $currentEval['Tipo'];
+				
+				// Delete old recordatorios for this evaluacion and create new ones
+				$stmt = $db->prepare("
+					DELETE FROM Recordatorio 
+					WHERE Materia_ID_materia = ? AND Descripcion LIKE ? AND Tipo IN ('EXAMEN', 'ENTREGA')
+				");
+				$stmt->execute([$currentEval['Materia_ID_materia'], "%{$currentEval['Titulo']}%"]);
+				
+				// Create new recordatorios
+				createRecordatoriosForEvaluacion($db, $id, $newTitulo, $newFecha, $currentEval['Materia_ID_materia'], $newTipo);
+			}
+			
+			respond(200, ['success'=>true,'id'=>$id,'message'=>'Evaluación actualizada exitosamente']);
 
 		case 'DELETE':
 			if (!$id) respond(400, ['success'=>false,'message'=>'Falta id']);
