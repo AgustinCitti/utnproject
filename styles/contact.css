@@ -68,6 +68,11 @@
     flex-direction: column;
 }
 
+.form-group .phone-input-wrapper {
+    display: flex !important;
+    flex-direction: row !important;
+}
+
 .form-group input,
 .form-group textarea {
     padding: 12px 16px;
@@ -98,30 +103,80 @@
 }
 
 /* Phone Input */
-.phone-input {
-    display: flex;
-    gap: 8px;
+.phone-input-wrapper {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch;
+    width: 100%;
+    gap: 0;
 }
 
-.country-code {
-    padding: 12px 16px;
+.phone-input-wrapper .country-code {
+    padding: 12px 8px;
     border: 2px solid #e1e5e9;
-    border-radius: 8px;
-    font-size: 1rem;
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    font-size: 0.875rem;
     background: #ffffff;
     color: #333;
-    min-width: 80px;
+    width: 75px !important;
+    min-width: 75px !important;
+    max-width: 75px !important;
+    flex-shrink: 0;
+    flex-grow: 0;
     transition: all 0.3s ease;
+    box-sizing: border-box;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    padding-right: 24px;
+    height: auto;
 }
 
-.country-code:focus {
+.phone-input-wrapper .country-code:focus {
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.phone-input input {
+.phone-input-wrapper input[type="tel"] {
     flex: 1;
+    flex-grow: 1;
+    padding: 12px 16px;
+    border: 2px solid #e1e5e9;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #ffffff;
+    color: #333;
+    box-sizing: border-box;
+    min-width: 0;
+    width: auto;
+}
+
+.phone-input-wrapper input[type="tel"]:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.phone-input-wrapper input[type="tel"]::placeholder {
+    color: #9ca3af;
+}
+
+.phone-input-wrapper:focus-within .country-code {
+    border-color: #667eea;
+    border-right: none;
+}
+
+.phone-input-wrapper:focus-within input[type="tel"] {
+    border-color: #667eea;
+    border-left: none;
 }
 
 /* Submit Button - EduSync Style */

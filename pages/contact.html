@@ -77,13 +77,13 @@
                             </div>
 
                             <div class="form-group">
-                                <div class="phone-input">
-                                    <select class="country-code">
-                                        <option value="+54">AR</option>
-                                        <option value="+1">US</option>
-                                        <option value="+44">UK</option>
+                                <div class="phone-input-wrapper" style="display: flex; flex-direction: row; gap: 0; width: 100%; align-items: stretch;">
+                                    <select class="country-code" id="countryCode" name="countryCode" style="width: 75px; min-width: 75px; max-width: 75px; flex-shrink: 0; padding: 12px 8px; border: 2px solid #e1e5e9; border-right: none; border-radius: 8px 0 0 8px; font-size: 0.875rem;">
+                                        <option value="+54">+54</option>
+                                        <option value="+1">+1</option>
+                                        <option value="+44">+44</option>
                                     </select>
-                                    <input type="tel" id="phone" name="phone" placeholder="+54 (11) 1234-5678" data-translate="phone">
+                                    <input type="tel" id="phone" name="phone" placeholder="(11) 1234-5678" data-translate="phone" style="flex: 1; padding: 12px 16px; border: 2px solid #e1e5e9; border-left: none; border-radius: 0 8px 8px 0;">
                                 </div>
                             </div>
 
