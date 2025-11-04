@@ -52,6 +52,16 @@
                 <button id="closeNav" class="close-nav">&times;</button>
             </div>
             <nav class="mobile-nav">
+                <!-- Mobile Search Bar -->
+                <div class="mobile-search-container">
+                    <div class="search-bar-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="mobileSearchInput" class="nav-search-input" placeholder="Buscar..." data-translate="search_placeholder">
+                        <button id="mobileFiltersBtn" class="search-filters-btn" title="Filtros">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                    </div>
+                </div>
                 <a href="#dashboard" class="nav-item active" data-section="dashboard">
                     <i class="fas fa-home"></i>
                     <span data-translate="dashboard">Panel de Control</span>
@@ -107,6 +117,16 @@
             </div>
             
             <div class="nav-menu" id="desktopNavMenu">
+                <!-- Search Bar -->
+                <div class="nav-search-container">
+                    <div class="search-bar-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="desktopSearchInput" class="nav-search-input" placeholder="Buscar..." data-translate="search_placeholder">
+                        <button id="desktopFiltersBtn" class="search-filters-btn" title="Filtros">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                    </div>
+                </div>
                 <a href="#dashboard" class="nav-link" data-section="dashboard">
                     <span data-translate="dashboard">Panel de Control</span>
                 </a>
@@ -1261,6 +1281,51 @@
         </div>
     </div>
 
+    <!-- Search Filters Dialog -->
+    <div id="searchFiltersModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-translate="search_filters">Filtros de Búsqueda</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-form">
+                <div class="filter-options">
+                    <div class="filter-option-group">
+                        <h4 data-translate="search_in">Buscar en:</h4>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="students" checked>
+                            <span class="toggle-label" data-translate="students">Estudiantes</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="subjects" checked>
+                            <span class="toggle-label" data-translate="subjects">Materias</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="exams" checked>
+                            <span class="toggle-label" data-translate="exams">Exámenes</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="notifications" checked>
+                            <span class="toggle-label" data-translate="notifications">Notificaciones</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="reports" checked>
+                            <span class="toggle-label" data-translate="reports">Reportes</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="calendar" checked>
+                            <span class="toggle-label" data-translate="calendar">Calendario</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="resetFiltersBtn" data-translate="reset_filters">Restablecer</button>
+                    <button type="button" class="btn-primary close-modal" data-translate="apply_filters">Aplicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Event Details Modal -->
     <div id="eventDetailsModal" class="modal">
         <div class="modal-content modern-modal">
@@ -1327,6 +1392,7 @@
     <script src="../scripts/translations.js"></script>
     <script src="../scripts/utils.js"></script>
     <script src="../scripts/navigation.js"></script>
+    <script src="../scripts/search.js"></script>
     <script src="../scripts/auth.js"></script>
     <script src="../scripts/dashboard.js"></script>
     <script src="../scripts/students.js"></script>

@@ -46,6 +46,14 @@ async function initializeApp() {
             window.initializeNavigation();
         }
     }
+    
+    // Initialize search functionality
+    if (typeof initializeSearch === 'function') {
+        initializeSearch();
+    } else if (typeof window.initializeSearch === 'function') {
+        window.initializeSearch();
+    }
+    
     initializeLogin();
     
     // Solo inicializar componentes si están disponibles (están en home.html, no en index.html)
@@ -110,8 +118,9 @@ async function loadData() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         appData = await response.json();
-        // También hacer data disponible globalmente para reports
+        // También hacer data disponible globalmente para reports y search
         window.data = appData;
+        window.appData = appData;
     } catch (error) {
         // Initialize with empty data structure matching database schema
         appData = {
@@ -130,6 +139,7 @@ async function loadData() {
         };
         // Also make empty data available globally
         window.data = appData;
+        window.appData = appData;
     }
 }
 

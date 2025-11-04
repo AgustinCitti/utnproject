@@ -1467,3 +1467,43 @@
     color: var(--text-secondary);
 }
 
+/* Search Suggestions Dark Mode */
+[data-theme="dark"] .search-suggestions-container {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    box-shadow: 0 4px 20px var(--shadow);
+}
+
+[data-theme="dark"] .suggestions-category-header {
+    background-color: var(--bg-secondary);
+    border-bottom-color: var(--border-color);
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .search-suggestion-item {
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .search-suggestion-item:hover,
+[data-theme="dark"] .search-suggestion-item.highlighted {
+    background-color: rgba(102, 126, 234, 0.1);
+    border-left-color: #667eea;
+}
+
+[data-theme="dark"] .search-suggestion-item i {
+    color: #667eea;
+}
+
+[data-theme="dark"] .suggestion-text {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .search-suggestion-item.highlighted .suggestion-text {
+    color: #667eea;
+}
+
+[data-theme="dark"] .suggestion-type {
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+}
+
