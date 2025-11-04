@@ -1074,29 +1074,27 @@ function loadExamInfoSummary(exam, subject, notesCount) {
     if (!examInfoSummary) return;
     
     examInfoSummary.innerHTML = `
-        <div class="exam-info-summary">
-            <h3 class="exam-summary-title">${exam.Titulo || 'Evaluación'}</h3>
-            <div class="exam-summary-grid">
-                <div class="summary-item">
-                    <span class="summary-label">Materia:</span>
-                    <span class="summary-value">${subject ? subject.Nombre : 'Materia desconocida'}</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Fecha:</span>
-                    <span class="summary-value">${exam.Fecha || 'N/A'}</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Tipo:</span>
-                    <span class="summary-value">${exam.Tipo || 'N/A'}</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Estado:</span>
-                    <span class="summary-value status-${exam.Estado ? exam.Estado.toLowerCase() : 'programada'}">${exam.Estado || 'PROGRAMADA'}</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Total de Calificaciones:</span>
-                    <span class="summary-value summary-value-bold">${notesCount}</span>
-                </div>
+        <h3 class="exam-summary-title">${exam.Titulo || 'Evaluación'}</h3>
+        <div class="exam-summary-grid">
+            <div class="summary-item">
+                <span class="summary-label">Materia:</span>
+                <span class="summary-value">${subject ? subject.Nombre : 'Materia desconocida'}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Fecha:</span>
+                <span class="summary-value">${exam.Fecha || 'N/A'}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Tipo:</span>
+                <span class="summary-value">${exam.Tipo || 'N/A'}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Estado:</span>
+                <span class="summary-value status-${exam.Estado ? exam.Estado.toLowerCase() : 'programada'}">${exam.Estado || 'PROGRAMADA'}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Total de Calificaciones:</span>
+                <span class="summary-value summary-value-bold">${notesCount}</span>
             </div>
         </div>
     `;
@@ -1320,6 +1318,12 @@ function getGradeClass(grade) {
 
 function exportExamNotes(examId) {
     const exam = appData.evaluacion.find(e => e.ID_evaluacion === examId);
+    
+    if (!exam) {
+        alert('Exam not found.');
+        return;
+    }
+    
     const examNotes = appData.notas.filter(note => note.Evaluacion_ID_evaluacion === examId);
     const subject = appData.materia.find(s => s.ID_materia === exam.Materia_ID_materia);
     

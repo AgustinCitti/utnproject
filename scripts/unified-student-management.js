@@ -1753,6 +1753,17 @@ async function populateEvaluationDropdown() {
     });
     
     console.log('populateEvaluationDropdown: Populated', populatedCount, 'evaluations');
+    
+    // Automatically select the first evaluation if available
+    if (populatedCount > 0 && evaluationSelect.options.length > 1) {
+        // Select the first evaluation (skip the empty placeholder option)
+        evaluationSelect.value = evaluationSelect.options[1].value;
+        console.log('populateEvaluationDropdown: Auto-selected first evaluation:', evaluationSelect.value);
+        
+        // Trigger change event to load students automatically
+        evaluationSelect.dispatchEvent(new Event('change'));
+    }
+    
     console.log('=== populateEvaluationDropdown END ===');
 }
 
