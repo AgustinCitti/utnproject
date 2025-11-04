@@ -1,10 +1,10 @@
 // Report Generation Component
-function generateDetailedReports() {
-    generateTopStudentsReport();
-    generateAttendanceReport();
+function generateDetailedReports(subjectId = 'all') {
+    generateTopStudentsReport(subjectId);
+    generateAttendanceReport(subjectId);
 }
 
-function generateTopStudentsReport() {
+function generateTopStudentsReport(subjectId = 'all') {
     const container = document.getElementById('topStudentsReport');
     if (!container) return;
 
@@ -14,8 +14,29 @@ function generateTopStudentsReport() {
     }
 
     // Use current user's students and grades data
-    const teacherStudents = getCurrentUserStudents();
-    const filteredGrades = getCurrentUserGrades();
+    let teacherStudents = getCurrentUserStudents();
+    let filteredGrades = getCurrentUserGrades();
+    
+    // Filter by subject if specified
+    if (subjectId !== 'all') {
+        const targetSubjectId = parseInt(subjectId, 10);
+        // Filter students enrolled in this subject
+        const subjectStudents = window.data.alumnos_x_materia
+            .filter(enrollment => parseInt(enrollment.Materia_ID_materia, 10) === targetSubjectId)
+            .map(enrollment => parseInt(enrollment.Estudiante_ID_Estudiante, 10));
+        teacherStudents = teacherStudents.filter(student => 
+            subjectStudents.includes(parseInt(student.ID_Estudiante, 10))
+        );
+        
+        // Filter grades for this subject
+        const subjectEvaluations = window.data.evaluacion.filter(eval => 
+            parseInt(eval.Materia_ID_materia, 10) === targetSubjectId
+        );
+        const subjectEvaluationIds = subjectEvaluations.map(eval => parseInt(eval.ID_evaluacion, 10));
+        filteredGrades = filteredGrades.filter(nota => 
+            subjectEvaluationIds.includes(parseInt(nota.Evaluacion_ID_evaluacion, 10))
+        );
+    }
 
     const studentAverages = teacherStudents.map(student => {
         const studentGrades = filteredGrades.filter(nota => 
@@ -49,7 +70,7 @@ function generateTopStudentsReport() {
     `;
 }
 
-function generateAttendanceReport() {
+function generateAttendanceReport(subjectId = 'all') {
     const container = document.getElementById('attendanceReport');
     if (!container) return;
 
@@ -59,8 +80,25 @@ function generateAttendanceReport() {
     }
 
     // Use current user's students and attendance data
-    const teacherStudents = getCurrentUserStudents();
-    const filteredAttendance = getCurrentUserAttendance();
+    let teacherStudents = getCurrentUserStudents();
+    let filteredAttendance = getCurrentUserAttendance();
+    
+    // Filter by subject if specified
+    if (subjectId !== 'all') {
+        const targetSubjectId = parseInt(subjectId, 10);
+        // Filter students enrolled in this subject
+        const subjectStudents = window.data.alumnos_x_materia
+            .filter(enrollment => parseInt(enrollment.Materia_ID_materia, 10) === targetSubjectId)
+            .map(enrollment => parseInt(enrollment.Estudiante_ID_Estudiante, 10));
+        teacherStudents = teacherStudents.filter(student => 
+            subjectStudents.includes(parseInt(student.ID_Estudiante, 10))
+        );
+        
+        // Filter attendance for this subject
+        filteredAttendance = filteredAttendance.filter(record => 
+            parseInt(record.Materia_ID_materia, 10) === targetSubjectId
+        );
+    }
 
     const attendanceStats = teacherStudents.map(student => {
         const studentAttendance = filteredAttendance.filter(record => 
@@ -98,52 +136,27 @@ function generateAttendanceReport() {
 }
 
 function populateFilters() {
-    // Populate subject filters with current user's subjects
-    const gradesFilter = document.getElementById('gradesSubjectFilter');
-    const attendanceFilter = document.getElementById('attendanceSubjectFilter');
+    // Populate global subject filter with current user's subjects
+    const globalFilter = document.getElementById('globalSubjectFilter');
     
     // Get current user's subjects
     const userSubjects = getCurrentUserSubjects();
     
-    if (userSubjects.length > 0) {
+    if (globalFilter && userSubjects.length > 0) {
         userSubjects.forEach(materia => {
-            const option = document.createElement('option');
-            option.value = materia.ID_materia;
-            option.textContent = materia.Nombre;
-            
-            if (gradesFilter) {
-                // Check if option already exists to avoid duplicates
-                const existingOption = Array.from(gradesFilter.options).find(
-                    opt => opt.value === String(materia.ID_materia)
-                );
-                if (!existingOption) {
-                    gradesFilter.appendChild(option.cloneNode(true));
-                }
-            }
-            if (attendanceFilter) {
-                // Check if option already exists to avoid duplicates
-                const existingOption = Array.from(attendanceFilter.options).find(
-                    opt => opt.value === String(materia.ID_materia)
-                );
-                if (!existingOption) {
-                    attendanceFilter.appendChild(option.cloneNode(true));
-                }
+            // Check if option already exists to avoid duplicates
+            const existingOption = Array.from(globalFilter.options).find(
+                opt => opt.value === String(materia.ID_materia)
+            );
+            if (!existingOption) {
+                const option = document.createElement('option');
+                option.value = materia.ID_materia;
+                option.textContent = materia.Nombre;
+                globalFilter.appendChild(option);
             }
         });
-    } else {
+    } else if (userSubjects.length === 0) {
         console.warn('populateFilters: No subjects found for current user');
-    }
-
-    // Populate student filter with current user's students
-    const studentFilter = document.getElementById('performanceStudentFilter');
-    const userStudents = getCurrentUserStudents();
-    if (userStudents.length > 0 && studentFilter) {
-        userStudents.forEach(student => {
-            const option = document.createElement('option');
-            option.value = student.ID_Estudiante;
-            option.textContent = `${student.Nombre} ${student.Apellido}`;
-            studentFilter.appendChild(option);
-        });
     }
 }
 

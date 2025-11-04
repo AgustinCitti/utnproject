@@ -5,11 +5,27 @@ function initializeCharts() {
     // Destroy existing charts first to prevent canvas reuse errors
     destroyAllCharts();
     
-    // Initialize all charts with default 'all' filter
-    createGradesChart('all');
-    createAttendanceChart('all');
-    createPerformanceChart('all');
+    // CRITICAL: Remove any filters that might exist in chart headers
+    document.querySelectorAll('.chart-header select, .chart-card select, .chart-header .filter-select').forEach(select => {
+        select.remove();
+    });
+    
+    // Get subject filter value from global filter (default to 'all')
+    const globalFilter = document.getElementById('globalSubjectFilter');
+    const subjectId = globalFilter ? globalFilter.value : 'all';
+    
+    // Initialize all charts with the selected subject filter from global filter
+    createGradesChart(subjectId);
+    createAttendanceChart(subjectId);
+    createPerformanceChart(subjectId);
     createSubjectChart();
+    
+    // Double-check: Remove any filters that might have been added during chart creation
+    setTimeout(() => {
+        document.querySelectorAll('.chart-header select, .chart-card select, .chart-header .filter-select').forEach(select => {
+            select.remove();
+        });
+    }, 100);
 }
 
 function destroyAllCharts() {
@@ -183,7 +199,7 @@ function createAttendanceChart(subjectId = 'all') {
     });
 }
 
-function createPerformanceChart(studentId = 'all') {
+function createPerformanceChart(subjectId = 'all') {
     const ctx = document.getElementById('performanceChart');
     if (!ctx) return;
 
@@ -193,7 +209,9 @@ function createPerformanceChart(studentId = 'all') {
         reportsCharts.performance = null;
     }
 
-    const performanceData = getStudentPerformance(studentId);
+    // Get performance data filtered by subject (if subjectId is provided and not 'all')
+    // For 'all', we show all students across all subjects
+    const performanceData = getStudentPerformance('all', subjectId);
     
     // Handle empty data - show message but keep canvas structure
     if (!performanceData || !performanceData.labels || performanceData.labels.length === 0 || 
@@ -306,10 +324,12 @@ function createSubjectChart() {
 }
 
 // Chart update functions
-function updateGradesChart() {
-    const filter = document.getElementById('gradesSubjectFilter');
-    const subjectId = filter ? filter.value : 'all';
-    
+function updateGradesChart(subjectId = null) {
+    // If subjectId is not provided, get it from the global filter
+    if (subjectId === null) {
+        const filter = document.getElementById('globalSubjectFilter');
+        subjectId = filter ? filter.value : 'all';
+    }
     
     // Destroy and recreate chart to ensure proper updates
     if (reportsCharts.grades) {
@@ -319,10 +339,12 @@ function updateGradesChart() {
     createGradesChart(subjectId);
 }
 
-function updateAttendanceChart() {
-    const filter = document.getElementById('attendanceSubjectFilter');
-    const subjectId = filter ? filter.value : 'all';
-    
+function updateAttendanceChart(subjectId = null) {
+    // If subjectId is not provided, get it from the global filter
+    if (subjectId === null) {
+        const filter = document.getElementById('globalSubjectFilter');
+        subjectId = filter ? filter.value : 'all';
+    }
     
     // Destroy and recreate chart to ensure proper updates
     if (reportsCharts.attendance) {
@@ -332,17 +354,39 @@ function updateAttendanceChart() {
     createAttendanceChart(subjectId);
 }
 
-function updatePerformanceChart() {
-    const filter = document.getElementById('performanceStudentFilter');
-    const studentId = filter ? filter.value : 'all';
-    
+function updatePerformanceChart(subjectId = null) {
+    // If subjectId is not provided, get it from the global filter
+    if (subjectId === null) {
+        const filter = document.getElementById('globalSubjectFilter');
+        subjectId = filter ? filter.value : 'all';
+    }
     
     // Destroy and recreate chart to ensure proper updates
     if (reportsCharts.performance) {
         reportsCharts.performance.destroy();
         reportsCharts.performance = null;
     }
-    createPerformanceChart(studentId);
+    createPerformanceChart(subjectId);
+}
+
+// Update all charts with the selected subject from global filter
+function updateAllCharts() {
+    const filter = document.getElementById('globalSubjectFilter');
+    const subjectId = filter ? filter.value : 'all';
+    
+    // Update all charts with the selected subject filter
+    updateGradesChart(subjectId);
+    updateAttendanceChart(subjectId);
+    updatePerformanceChart(subjectId);
+    
+    // Subject comparison chart shows all subjects (comparison view)
+    createSubjectChart();
+    
+    // Update KPIs and detailed reports with the selected subject filter
+    updateReportsKPIs(subjectId);
+    if (typeof generateDetailedReports === 'function') {
+        generateDetailedReports(subjectId);
+    }
 }
 
 // Export chart manager functions
@@ -356,3 +400,4 @@ window.createSubjectChart = createSubjectChart;
 window.updateGradesChart = updateGradesChart;
 window.updateAttendanceChart = updateAttendanceChart;
 window.updatePerformanceChart = updatePerformanceChart;
+window.updateAllCharts = updateAllCharts;

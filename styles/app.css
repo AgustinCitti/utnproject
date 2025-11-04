@@ -1441,6 +1441,66 @@
     font-weight: 600;
 }
 
+/* Section title with filter - Container for h2 and global filter */
+.section-title-with-filter {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/* UNIFIED GLOBAL FILTER - Single filter for all charts, next to export buttons */
+.global-filter-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-right: 15px;
+}
+
+.global-filter-label {
+    font-weight: 500;
+    color: #333;
+    white-space: nowrap;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.global-filter-label i {
+    font-size: 1rem;
+    color: #667eea;
+}
+
+.global-filter-select {
+    min-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: white;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: #333;
+    transition: all 0.2s ease;
+}
+
+.global-filter-select:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
+}
+
+.global-filter-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* OLD filter classes - kept for compatibility but hidden */
+.global-subject-filter {
+    display: none !important;
+}
+
 /* Section action controls - Buttons and filters container */
 .section-actions {
     display: flex;
@@ -2993,6 +3053,20 @@
     align-items: center;
 }
 
+/* CRITICAL: Hide ALL filters in chart headers - only global filter should exist */
+.chart-header select,
+.chart-header .filter-select,
+.chart-header .chart-controls,
+.chart-card select,
+.chart-card .filter-select {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+}
+
 /* Chart header title - Chart name */
 .chart-header h3 {
     margin: 0;
@@ -3000,20 +3074,15 @@
     font-size: 1.1rem;
 }
 
-/* Chart controls select - Chart filter dropdown */
-.chart-controls select {
-    padding: 0.5rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
-    background: white;
-    font-size: 0.9rem;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.5rem center;
-    background-repeat: no-repeat;
-    background-size: 0.8rem;
-    padding-right: 2rem;
-    cursor: pointer;
+/* Chart controls - HIDDEN: We now use a single global filter in section header */
+.chart-controls {
+    display: none !important;
+}
+
+/* Chart controls select - HIDDEN: Removed, use globalSubjectFilter instead */
+.chart-controls select,
+.chart-header select {
+    display: none !important;
 }
 
 /* Chart container - Chart display area */

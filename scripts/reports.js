@@ -26,16 +26,23 @@ function loadReports() {
             <div class="section-header">
                 <h2 data-translate="reports">Reportes</h2>
                 <div class="section-actions">
+                    <!-- UNIFIED FILTER - This is the ONLY filter that affects ALL charts -->
+                   
                     <div class="report-actions">
-                        <button class="btn-primary" onclick="exportReport('pdf')" title="Download comprehensive PDF report">
+                          
+                        <select id="globalSubjectFilter" onchange="updateAllCharts()" class="filter-select" title="Este filtro afecta TODOS los gráficos y reportes simultáneamente">
+                            <option value="all">Todas las Materias</option>
+                        </select>
+                   
+                        <button class="btn btn-primary" onclick="exportReport('pdf')" title="Download comprehensive PDF report">
                             <i class="fas fa-file-pdf"></i> 
                             <span data-translate="export_pdf">Exportar PDF</span>
                         </button>
-                        <button class="btn-secondary" onclick="exportReport('excel')" title="Download CSV files for data analysis">
+                        <button class="btn btn-secondary" onclick="exportReport('excel')" title="Download CSV files for data analysis">
                             <i class="fas fa-file-csv"></i> 
                             <span data-translate="export_csv">Exportar CSV</span>
                         </button>
-                        <button class="btn-secondary" onclick="printReport()" title="Print the current report">
+                        <button class="btn btn-secondary" onclick="printReport()" title="Print the current report">
                             <i class="fas fa-print"></i> 
                             <span data-translate="print_report">Imprimir</span>
                         </button>
@@ -83,17 +90,12 @@ function loadReports() {
                 </div>
             </div>
 
-            <!-- Charts Section -->
+            <!-- Charts Section - NO INDIVIDUAL FILTERS HERE -->
             <div class="charts-grid">
                 <!-- Grades Distribution Chart -->
                 <div class="chart-card">
                     <div class="chart-header">
                         <h3>Distribución de Calificaciones</h3>
-                        <div class="chart-controls">
-                            <select id="gradesSubjectFilter" onchange="updateGradesChart()">
-                                <option value="all">Todas las Materias</option>
-                            </select>
-                        </div>
                     </div>
                     <div class="chart-container">
                         <canvas id="gradesChart"></canvas>
@@ -104,11 +106,6 @@ function loadReports() {
                 <div class="chart-card">
                     <div class="chart-header">
                         <h3>Tendencias de Asistencia</h3>
-                        <div class="chart-controls">
-                            <select id="attendanceSubjectFilter" onchange="updateAttendanceChart()">
-                                <option value="all">Todas las Materias</option>
-                            </select>
-                        </div>
                     </div>
                     <div class="chart-container">
                         <canvas id="attendanceChart"></canvas>
@@ -119,11 +116,6 @@ function loadReports() {
                 <div class="chart-card">
                     <div class="chart-header">
                         <h3>Rendimiento de Estudiantes</h3>
-                        <div class="chart-controls">
-                            <select id="performanceStudentFilter" onchange="updatePerformanceChart()">
-                                <option value="all">Todos los Estudiantes</option>
-                            </select>
-                        </div>
                     </div>
                     <div class="chart-container">
                         <canvas id="performanceChart"></canvas>
@@ -150,7 +142,7 @@ function loadReports() {
                     <div class="report-content" id="topStudentsReport">
                         <!-- Will be populated by JavaScript -->
                     </div>
-            </div>
+                </div>
 
                 <div class="report-card">
                     <div class="report-header">
@@ -159,8 +151,8 @@ function loadReports() {
                     <div class="report-content" id="attendanceReport">
                         <!-- Will be populated by JavaScript -->
                     </div>
-                    </div>
                 </div>
+            </div>
 
         </div>
     `;
@@ -201,18 +193,34 @@ function loadReports() {
 
         // Data is ready, initialize components
         try {
+            // Ensure filter is visible and remove any individual chart filters
+            const globalFilter = document.getElementById('globalSubjectFilter');
+            if (!globalFilter) {
+                console.error('Reports: globalSubjectFilter not found in DOM');
+            } else {
+                console.log('Reports: globalSubjectFilter found and ready');
+            }
+            
+            // CRITICAL: Remove any filters that might have been added to chart headers
+            document.querySelectorAll('.chart-header select, .chart-card select').forEach(select => {
+                select.remove();
+            });
+            
             if (typeof initializeCharts === 'function') {
                 initializeCharts();
             }
             if (typeof populateFilters === 'function') {
                 populateFilters();
             }
+            // Get current filter value
+            const subjectId = globalFilter ? globalFilter.value : 'all';
+            
             if (typeof generateDetailedReports === 'function') {
-                generateDetailedReports();
+                generateDetailedReports(subjectId);
             }
             
-            // Update KPI values with fresh data
-            updateReportsKPIs();
+            // Update KPI values with fresh data using current filter
+            updateReportsKPIs(subjectId);
         } catch (error) {
             console.error('Error initializing reports:', error);
         }
@@ -222,8 +230,8 @@ function loadReports() {
     setTimeout(initializeReportsContent, 200);
 }
 
-// Update KPI values with current data
-function updateReportsKPIs() {
+// Update KPI values with current data, optionally filtered by subject
+function updateReportsKPIs(subjectId = 'all') {
     const totalStudentsEl = document.getElementById('reportsTotalStudents');
     const averageGradeEl = document.getElementById('reportsAverageGrade');
     const attendanceRateEl = document.getElementById('reportsAttendanceRate');
@@ -231,21 +239,33 @@ function updateReportsKPIs() {
 
     if (totalStudentsEl) {
         const students = getCurrentUserStudents();
-        totalStudentsEl.textContent = students.length;
+        // Filter students by subject if needed
+        let filteredStudents = students;
+        if (subjectId !== 'all') {
+            const targetSubjectId = parseInt(subjectId, 10);
+            const userSubjects = getCurrentUserSubjects();
+            const subjectStudents = window.data.alumnos_x_materia
+                .filter(enrollment => parseInt(enrollment.Materia_ID_materia, 10) === targetSubjectId)
+                .map(enrollment => parseInt(enrollment.Estudiante_ID_Estudiante, 10));
+            filteredStudents = students.filter(student => 
+                subjectStudents.includes(parseInt(student.ID_Estudiante, 10))
+            );
+        }
+        totalStudentsEl.textContent = filteredStudents.length;
     }
 
     if (averageGradeEl) {
-        const avg = calculateAverageGrade();
+        const avg = calculateAverageGrade(subjectId);
         averageGradeEl.textContent = avg.toFixed(1);
     }
 
     if (attendanceRateEl) {
-        const rate = calculateAttendanceRate();
+        const rate = calculateAttendanceRate(subjectId);
         attendanceRateEl.textContent = rate + '%';
     }
 
     if (passingRateEl) {
-        const rate = getPassingStudents();
+        const rate = getPassingStudents(subjectId);
         passingRateEl.textContent = rate + '%';
     }
 }
@@ -257,7 +277,6 @@ function refreshReports() {
         initializeCharts();
         populateFilters();
         generateDetailedReports();
-    } else {
     }
 }
 

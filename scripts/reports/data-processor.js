@@ -210,14 +210,22 @@ function getAttendanceTrends(subjectId = 'all') {
     return { labels: formattedLabels, data };
 }
 
-function getStudentPerformance(studentId = 'all') {
+function getStudentPerformance(studentId = 'all', subjectId = 'all') {
     if (!window.data || !window.data.estudiante || !window.data.notas) {
         return { labels: [], datasets: [] };
     }
 
     // Use current user's subjects and students data
-    const teacherSubjects = getCurrentUserSubjects();
+    let teacherSubjects = getCurrentUserSubjects();
     let teacherStudents = getCurrentUserStudents();
+    
+    // Filter by specific subject if specified
+    if (subjectId !== 'all') {
+        const targetSubjectId = parseInt(subjectId, 10);
+        teacherSubjects = teacherSubjects.filter(materia => 
+            parseInt(materia.ID_materia, 10) === targetSubjectId
+        );
+    }
     
     // Filter by specific student if specified
     if (studentId !== 'all') {
@@ -291,13 +299,26 @@ function getSubjectComparison() {
     };
 }
 
-function calculateAverageGrade() {
+function calculateAverageGrade(subjectId = 'all') {
     if (!window.data || !window.data.notas || window.data.notas.length === 0) {
         return 0;
     }
     
     // Use current user's grades data
-    const filteredGrades = getCurrentUserGrades();
+    let filteredGrades = getCurrentUserGrades();
+    
+    // Filter by subject if specified
+    if (subjectId !== 'all') {
+        const targetSubjectId = parseInt(subjectId, 10);
+        const subjectEvaluations = window.data.evaluacion.filter(eval => 
+            parseInt(eval.Materia_ID_materia, 10) === targetSubjectId
+        );
+        const subjectEvaluationIds = subjectEvaluations.map(eval => parseInt(eval.ID_evaluacion, 10));
+        
+        filteredGrades = filteredGrades.filter(nota => 
+            subjectEvaluationIds.includes(parseInt(nota.Evaluacion_ID_evaluacion, 10))
+        );
+    }
     
     if (filteredGrades.length === 0) {
         return 0;
@@ -308,13 +329,21 @@ function calculateAverageGrade() {
     return Math.round(average * 10) / 10;
 }
 
-function calculateAttendanceRate() {
+function calculateAttendanceRate(subjectId = 'all') {
     if (!window.data || !window.data.asistencia || window.data.asistencia.length === 0) {
         return 0;
     }
     
     // Use current user's attendance data
-    const filteredAttendance = getCurrentUserAttendance();
+    let filteredAttendance = getCurrentUserAttendance();
+    
+    // Filter by subject if specified
+    if (subjectId !== 'all') {
+        const targetSubjectId = parseInt(subjectId, 10);
+        filteredAttendance = filteredAttendance.filter(record => 
+            parseInt(record.Materia_ID_materia, 10) === targetSubjectId
+        );
+    }
     
     if (filteredAttendance.length === 0) {
         return 0;
@@ -327,14 +356,35 @@ function calculateAttendanceRate() {
     return Math.round(attendanceRate);
 }
 
-function getPassingStudents() {
+function getPassingStudents(subjectId = 'all') {
     if (!window.data || !window.data.estudiante || !window.data.notas) {
         return 0;
     }
     
     // Use current user's students and grades data
-    const teacherStudents = getCurrentUserStudents();
-    const filteredGrades = getCurrentUserGrades();
+    let teacherStudents = getCurrentUserStudents();
+    let filteredGrades = getCurrentUserGrades();
+    
+    // Filter by subject if specified
+    if (subjectId !== 'all') {
+        const targetSubjectId = parseInt(subjectId, 10);
+        // Filter students enrolled in this subject
+        const subjectStudents = window.data.alumnos_x_materia
+            .filter(enrollment => parseInt(enrollment.Materia_ID_materia, 10) === targetSubjectId)
+            .map(enrollment => parseInt(enrollment.Estudiante_ID_Estudiante, 10));
+        teacherStudents = teacherStudents.filter(student => 
+            subjectStudents.includes(parseInt(student.ID_Estudiante, 10))
+        );
+        
+        // Filter grades for this subject
+        const subjectEvaluations = window.data.evaluacion.filter(eval => 
+            parseInt(eval.Materia_ID_materia, 10) === targetSubjectId
+        );
+        const subjectEvaluationIds = subjectEvaluations.map(eval => parseInt(eval.ID_evaluacion, 10));
+        filteredGrades = filteredGrades.filter(nota => 
+            subjectEvaluationIds.includes(parseInt(nota.Evaluacion_ID_evaluacion, 10))
+        );
+    }
     
     const passingStudents = teacherStudents.filter(student => {
         const studentGrades = filteredGrades.filter(nota => 
