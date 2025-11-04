@@ -11,10 +11,16 @@ body {
     min-height: 100vh;
     color: #1a202c;
     overflow-x: hidden;
+    overflow-y: auto;
     font-weight: 400;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* Animations */
