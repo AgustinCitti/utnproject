@@ -135,6 +135,12 @@ const translations = {
         upload_file: "Subir Archivo",
         mark_all_read: "Marcar Todo como Leído",
         export_subjects: "Exportar Materias",
+        export_list: "Exportar Lista",
+        export_csv: "Exportar como CSV",
+        export_doc: "Exportar como DOC",
+        select_export_format: "Seleccione el formato de exportación:",
+        select_export_format_exams: "Seleccione el formato de exportación para los exámenes:",
+        select_export_format_subjects: "Seleccione el formato de exportación para las materias:",
         
         // Forms
         add_edit_student: "Agregar/Editar Estudiante",
@@ -415,6 +421,12 @@ const translations = {
         upload_file: "Upload File",
         mark_all_read: "Mark All Read",
         export_subjects: "Export Subjects",
+        export_list: "Export List",
+        export_csv: "Export as CSV",
+        export_doc: "Export as DOC",
+        select_export_format: "Select export format:",
+        select_export_format_exams: "Select export format for exams:",
+        select_export_format_subjects: "Select export format for subjects:",
         
         // Forms
         add_edit_student: "Add/Edit Student",

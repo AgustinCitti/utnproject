@@ -426,6 +426,10 @@
                                 <i class="fas fa-plus"></i>
                                 <span data-translate="create_exam">Crear Examen</span>
                             </button>
+                            <button id="exportListBtn" class="btn-secondary">
+                                <i class="fas fa-download"></i>
+                                <span data-translate="export_list">Exportar Lista</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1400,6 +1404,37 @@
                 <button type="button" class="btn-primary close-modal" style="width: 100%;">
                     <i class="fas fa-check"></i>
                     <span>Cerrar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Dialog Modal - Export Students or Exams List -->
+    <div id="exportDialogModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 data-translate="export_list">Exportar Lista</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-form" style="padding: 2rem;">
+                <p style="margin-bottom: 1.5rem; color: #666;" id="exportDialogText">
+                    <span data-translate="select_export_format">Seleccione el formato de exportación:</span>
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <button id="exportCSVBtn" class="btn-primary" style="width: 100%; justify-content: center;">
+                        <i class="fas fa-file-csv"></i>
+                        <span data-translate="export_csv">Exportar como CSV</span>
+                    </button>
+                    <button id="exportDOCBtn" class="btn-primary" style="width: 100%; justify-content: center;">
+                        <i class="fas fa-file-word"></i>
+                        <span data-translate="export_doc">Exportar como DOC</span>
+                    </button>
+                </div>
+            </div>
+            <div class="form-actions" style="padding: 1rem 2rem; border-top: 1px solid #e0e0e0;">
+                <button type="button" class="btn-secondary close-modal" style="width: 100%;">
+                    <i class="fas fa-times"></i>
+                    <span data-translate="cancel">Cancelar</span>
                 </button>
             </div>
         </div>

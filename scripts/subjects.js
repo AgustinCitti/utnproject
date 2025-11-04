@@ -2275,33 +2275,178 @@ function formatDate(dateString) {
     return date.toLocaleDateString('es-ES');
 }
 
-// Export functionality
-function exportSubjects() {
-    const subjects = getFilteredSubjects();
-    const csvContent = [
-        ['Nombre', 'Curso', 'Profesor', 'Horario', 'Aula', 'Estado', 'Estudiantes'],
-        ...subjects.map(subject => {
-            const teacher = getTeacherById(subject.Usuarios_docente_ID_docente);
-            const studentCount = getStudentCountBySubject(subject.ID_materia);
-            return [
-                subject.Nombre,
-                subject.Curso_division,
-                teacher ? `${teacher.Nombre_docente} ${teacher.Apellido_docente}` : 'N/A',
-                subject.Horario || 'No especificado',
-                subject.Aula || 'No especificada',
-                getStatusText(subject.Estado),
-                studentCount
-            ];
-        })
-    ].map(row => row.join(',')).join('\n');
+// Export functionality for subjects
+function openSubjectsExportDialog() {
+    const exportDialogModal = document.getElementById('exportDialogModal');
+    const exportDialogText = document.getElementById('exportDialogText');
+    
+    if (!exportDialogModal) return;
+    
+    // Update dialog text for subjects
+    exportDialogText.innerHTML = '<span data-translate="select_export_format_subjects">Seleccione el formato de exportación para las materias:</span>';
+    
+    // Set context to subjects
+    exportDialogModal.setAttribute('data-export-context', 'subjects');
+    
+    // Show modal
+    if (typeof showModal === 'function') {
+        showModal('exportDialogModal');
+    } else {
+        exportDialogModal.classList.add('active');
+    }
+}
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'materias.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
+function exportSubjectsAsCSV() {
+    const subjects = getFilteredSubjects();
+    
+    if (!subjects || subjects.length === 0) {
+        alert('No hay materias para exportar.');
+        return;
+    }
+    
+    // Prepare CSV data
+    const headers = ['ID', 'Nombre', 'Curso', 'Profesor', 'Horario', 'Aula', 'Estado', 'Estudiantes'];
+    const rows = subjects.map(subject => {
+        const teacher = getTeacherById(subject.Usuarios_docente_ID_docente);
+        const studentCount = getStudentCountBySubject(subject.ID_materia);
+        
+        return [
+            subject.ID_materia || '',
+            subject.Nombre || '',
+            subject.Curso_division || '',
+            teacher ? `${teacher.Nombre_docente} ${teacher.Apellido_docente}` : 'N/A',
+            subject.Horario || 'No especificado',
+            subject.Aula || 'No especificada',
+            getStatusText(subject.Estado),
+            studentCount
+        ];
+    });
+    
+    // Create CSV content
+    const csvContent = [
+        headers.map(h => `"${h}"`).join(','),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+    
+    // Download CSV
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `materias_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Close modal and show notification
+    if (typeof showExportNotification === 'function') {
+        showExportNotification('Lista de materias exportada como CSV exitosamente!', 'success');
+    } else {
+        alert('Lista de materias exportada como CSV exitosamente!');
+    }
+    
+    const exportDialogModal = document.getElementById('exportDialogModal');
+    if (exportDialogModal) {
+        exportDialogModal.classList.remove('active');
+    }
+}
+
+function exportSubjectsAsDOC() {
+    const subjects = getFilteredSubjects();
+    
+    if (!subjects || subjects.length === 0) {
+        alert('No hay materias para exportar.');
+        return;
+    }
+    
+    // Create HTML content for Word document
+    let htmlContent = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+            <meta charset='utf-8'>
+            <title>Lista de Materias</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1 { color: #667eea; text-align: center; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th { background-color: #667eea; color: white; padding: 12px; text-align: left; border: 1px solid #ddd; }
+                td { padding: 10px; border: 1px solid #ddd; }
+                tr:nth-child(even) { background-color: #f9f9f9; }
+                .header { margin-bottom: 20px; }
+                .date { color: #666; font-size: 14px; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Lista de Materias</h1>
+                <p class="date">Fecha de exportación: ${new Date().toLocaleDateString()}</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Curso</th>
+                        <th>Profesor</th>
+                        <th>Horario</th>
+                        <th>Aula</th>
+                        <th>Estado</th>
+                        <th>Estudiantes</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    subjects.forEach(subject => {
+        const teacher = getTeacherById(subject.Usuarios_docente_ID_docente);
+        const studentCount = getStudentCountBySubject(subject.ID_materia);
+        
+        htmlContent += `
+            <tr>
+                <td>${subject.ID_materia || ''}</td>
+                <td>${subject.Nombre || ''}</td>
+                <td>${subject.Curso_division || ''}</td>
+                <td>${teacher ? `${teacher.Nombre_docente} ${teacher.Apellido_docente}` : 'N/A'}</td>
+                <td>${subject.Horario || 'No especificado'}</td>
+                <td>${subject.Aula || 'No especificada'}</td>
+                <td>${getStatusText(subject.Estado)}</td>
+                <td>${studentCount}</td>
+            </tr>
+        `;
+    });
+    
+    htmlContent += `
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `;
+    
+    // Create blob and download
+    const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `materias_${new Date().toISOString().split('T')[0]}.doc`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Close modal and show notification
+    if (typeof showExportNotification === 'function') {
+        showExportNotification('Lista de materias exportada como DOC exitosamente!', 'success');
+    } else {
+        alert('Lista de materias exportada como DOC exitosamente!');
+    }
+    
+    const exportDialogModal = document.getElementById('exportDialogModal');
+    if (exportDialogModal) {
+        exportDialogModal.classList.remove('active');
+    }
 }
 
 // Functions for assigning students to contenido (recuperatorios)
@@ -2513,6 +2658,6 @@ async function removeStudentFromContent(temaEstudianteId, contenidoId) {
 document.addEventListener('DOMContentLoaded', function() {
     const exportBtn = document.getElementById('exportSubjectsBtn');
     if (exportBtn) {
-        exportBtn.addEventListener('click', exportSubjects);
+        exportBtn.addEventListener('click', openSubjectsExportDialog);
     }
 });

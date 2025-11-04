@@ -172,6 +172,7 @@ function initializeUnifiedStudentManagement() {
     // Modal handlers
     setupModalHandlers('studentModal');
     setupModalHandlers('studentDetailsModal');
+    setupModalHandlers('exportDialogModal');
     
     // Grade marking functionality
     const gradeEvaluationSelect = document.getElementById('gradeEvaluation');
@@ -217,6 +218,9 @@ function initializeUnifiedStudentManagement() {
     
     // Set list view as default
     switchToListView();
+    
+    // Initialize export functionality
+    initializeExportFunctionality();
 }
 
 function loadUnifiedStudentData() {
@@ -1806,5 +1810,462 @@ function deleteExam(id) {
             if (typeof hydrateAppData === 'function') await hydrateAppData();
             loadExams();
         }).catch(err => alert(err.message || 'No se pudo eliminar la evaluación.'));
+    }
+}
+
+// Export functionality for students and exams
+function getCurrentTab() {
+    const studentsTab = document.getElementById('studentsTab');
+    const examsTab = document.getElementById('examsTab');
+    
+    if (studentsTab && studentsTab.classList.contains('active')) {
+        return 'students';
+    } else if (examsTab && examsTab.classList.contains('active')) {
+        return 'exams';
+    }
+    
+    // Fallback: check which tab content is visible
+    const studentsTabContent = document.getElementById('studentsTabContent');
+    const examsTabContent = document.getElementById('examsTabContent');
+    
+    if (studentsTabContent && studentsTabContent.classList.contains('active')) {
+        return 'students';
+    } else if (examsTabContent && examsTabContent.classList.contains('active')) {
+        return 'exams';
+    }
+    
+    return 'students'; // Default to students
+}
+
+function openExportDialog() {
+    const currentTab = getCurrentTab();
+    const exportDialogModal = document.getElementById('exportDialogModal');
+    const exportDialogText = document.getElementById('exportDialogText');
+    
+    if (!exportDialogModal) return;
+    
+    // Clear context attribute (for students/exams)
+    exportDialogModal.removeAttribute('data-export-context');
+    
+    // Update dialog text based on current tab
+    if (currentTab === 'exams') {
+        exportDialogText.innerHTML = '<span data-translate="select_export_format_exams">Seleccione el formato de exportación para los exámenes:</span>';
+    } else {
+        exportDialogText.innerHTML = '<span data-translate="select_export_format">Seleccione el formato de exportación:</span>';
+    }
+    
+    // Show modal
+    if (typeof showModal === 'function') {
+        showModal('exportDialogModal');
+    } else {
+        exportDialogModal.classList.add('active');
+    }
+}
+
+function exportStudentsAsCSV() {
+    const students = getFilteredUnifiedStudents();
+    
+    if (!students || students.length === 0) {
+        alert('No hay estudiantes para exportar.');
+        return;
+    }
+    
+    // Get additional data for export
+    const appData = window.appData || {};
+    const materia = appData.materia || [];
+    const alumnos_x_materia = appData.alumnos_x_materia || [];
+    const notas = appData.notas || [];
+    const asistencia = appData.asistencia || [];
+    
+    // Prepare CSV data
+    const headers = ['ID', 'Nombre', 'Apellido', 'Materias', 'Promedio', 'Asistencia (%)'];
+    const rows = students.map(student => {
+        // Get student's subjects
+        const studentSubjects = alumnos_x_materia
+            .filter(axm => axm.Estudiante_ID_Estudiante === student.ID_Estudiante)
+            .map(axm => {
+                const subject = materia.find(m => m.ID_materia === axm.Materia_ID_materia);
+                return subject ? subject.Nombre : '';
+            })
+            .filter(s => s)
+            .join('; ');
+        
+        // Calculate average grade
+        const studentGrades = notas.filter(n => n.Estudiante_ID_Estudiante === student.ID_Estudiante);
+        const average = studentGrades.length > 0
+            ? (studentGrades.reduce((sum, n) => sum + parseFloat(n.Calificacion || 0), 0) / studentGrades.length).toFixed(2)
+            : '0.00';
+        
+        // Calculate attendance percentage
+        const studentAttendance = asistencia.filter(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante);
+        const presentCount = studentAttendance.filter(a => a.Presente === 'P' || a.Presente === 'Y').length;
+        const attendanceRate = studentAttendance.length > 0
+            ? ((presentCount / studentAttendance.length) * 100).toFixed(2)
+            : '0.00';
+        
+        return [
+            student.ID_Estudiante || '',
+            student.Nombre || '',
+            student.Apellido || '',
+            studentSubjects || 'Sin materias',
+            average,
+            attendanceRate
+        ];
+    });
+    
+    // Create CSV content
+    const csvContent = [
+        headers.map(h => `"${h}"`).join(','),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+    
+    // Download CSV
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `estudiantes_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Close modal and show notification
+    if (typeof showExportNotification === 'function') {
+        showExportNotification('Lista de estudiantes exportada como CSV exitosamente!', 'success');
+    } else {
+        alert('Lista de estudiantes exportada como CSV exitosamente!');
+    }
+    
+    const exportDialogModal = document.getElementById('exportDialogModal');
+    if (exportDialogModal) {
+        exportDialogModal.classList.remove('active');
+    }
+}
+
+function exportStudentsAsDOC() {
+    const students = getFilteredUnifiedStudents();
+    
+    if (!students || students.length === 0) {
+        alert('No hay estudiantes para exportar.');
+        return;
+    }
+    
+    // Get additional data for export
+    const appData = window.appData || {};
+    const materia = appData.materia || [];
+    const alumnos_x_materia = appData.alumnos_x_materia || [];
+    const notas = appData.notas || [];
+    const asistencia = appData.asistencia || [];
+    
+    // Create HTML content for Word document
+    let htmlContent = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+            <meta charset='utf-8'>
+            <title>Lista de Estudiantes</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1 { color: #667eea; text-align: center; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th { background-color: #667eea; color: white; padding: 12px; text-align: left; border: 1px solid #ddd; }
+                td { padding: 10px; border: 1px solid #ddd; }
+                tr:nth-child(even) { background-color: #f9f9f9; }
+                .header { margin-bottom: 20px; }
+                .date { color: #666; font-size: 14px; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Lista de Estudiantes</h1>
+                <p class="date">Fecha de exportación: ${new Date().toLocaleDateString()}</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Materias</th>
+                        <th>Promedio</th>
+                        <th>Asistencia (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    students.forEach(student => {
+        // Get student's subjects
+        const studentSubjects = alumnos_x_materia
+            .filter(axm => axm.Estudiante_ID_Estudiante === student.ID_Estudiante)
+            .map(axm => {
+                const subject = materia.find(m => m.ID_materia === axm.Materia_ID_materia);
+                return subject ? subject.Nombre : '';
+            })
+            .filter(s => s)
+            .join(', ');
+        
+        // Calculate average grade
+        const studentGrades = notas.filter(n => n.Estudiante_ID_Estudiante === student.ID_Estudiante);
+        const average = studentGrades.length > 0
+            ? (studentGrades.reduce((sum, n) => sum + parseFloat(n.Calificacion || 0), 0) / studentGrades.length).toFixed(2)
+            : '0.00';
+        
+        // Calculate attendance percentage
+        const studentAttendance = asistencia.filter(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante);
+        const presentCount = studentAttendance.filter(a => a.Presente === 'P' || a.Presente === 'Y').length;
+        const attendanceRate = studentAttendance.length > 0
+            ? ((presentCount / studentAttendance.length) * 100).toFixed(2)
+            : '0.00';
+        
+        htmlContent += `
+            <tr>
+                <td>${student.ID_Estudiante || ''}</td>
+                <td>${student.Nombre || ''}</td>
+                <td>${student.Apellido || ''}</td>
+                <td>${studentSubjects || 'Sin materias'}</td>
+                <td>${average}</td>
+                <td>${attendanceRate}%</td>
+            </tr>
+        `;
+    });
+    
+    htmlContent += `
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `;
+    
+    // Create blob and download
+    const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `estudiantes_${new Date().toISOString().split('T')[0]}.doc`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Close modal and show notification
+    if (typeof showExportNotification === 'function') {
+        showExportNotification('Lista de estudiantes exportada como DOC exitosamente!', 'success');
+    } else {
+        alert('Lista de estudiantes exportada como DOC exitosamente!');
+    }
+    
+    const exportDialogModal = document.getElementById('exportDialogModal');
+    if (exportDialogModal) {
+        exportDialogModal.classList.remove('active');
+    }
+}
+
+function exportExamsAsCSV() {
+    const exams = getFilteredExams();
+    
+    if (!exams || exams.length === 0) {
+        alert('No hay exámenes para exportar.');
+        return;
+    }
+    
+    // Get additional data
+    const appData = window.appData || {};
+    const materia = appData.materia || [];
+    
+    // Prepare CSV data
+    const headers = ['ID', 'Título', 'Materia', 'Fecha', 'Tipo', 'Descripción'];
+    const rows = exams.map(exam => {
+        const subject = materia.find(m => m.ID_materia === exam.Materia_ID_materia);
+        
+        return [
+            exam.ID_evaluacion || '',
+            exam.Titulo || '',
+            subject ? subject.Nombre : 'Desconocida',
+            exam.Fecha || '',
+            exam.Tipo || '',
+            (exam.Descripcion || '').replace(/\n/g, ' ')
+        ];
+    });
+    
+    // Create CSV content
+    const csvContent = [
+        headers.map(h => `"${h}"`).join(','),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+    
+    // Download CSV
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `examenes_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Close modal and show notification
+    if (typeof showExportNotification === 'function') {
+        showExportNotification('Lista de exámenes exportada como CSV exitosamente!', 'success');
+    } else {
+        alert('Lista de exámenes exportada como CSV exitosamente!');
+    }
+    
+    const exportDialogModal = document.getElementById('exportDialogModal');
+    if (exportDialogModal) {
+        exportDialogModal.classList.remove('active');
+    }
+}
+
+function exportExamsAsDOC() {
+    const exams = getFilteredExams();
+    
+    if (!exams || exams.length === 0) {
+        alert('No hay exámenes para exportar.');
+        return;
+    }
+    
+    // Get additional data
+    const appData = window.appData || {};
+    const materia = appData.materia || [];
+    
+    // Create HTML content for Word document
+    let htmlContent = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+            <meta charset='utf-8'>
+            <title>Lista de Exámenes</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1 { color: #667eea; text-align: center; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th { background-color: #667eea; color: white; padding: 12px; text-align: left; border: 1px solid #ddd; }
+                td { padding: 10px; border: 1px solid #ddd; }
+                tr:nth-child(even) { background-color: #f9f9f9; }
+                .header { margin-bottom: 20px; }
+                .date { color: #666; font-size: 14px; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Lista de Exámenes</h1>
+                <p class="date">Fecha de exportación: ${new Date().toLocaleDateString()}</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Título</th>
+                        <th>Materia</th>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    exams.forEach(exam => {
+        const subject = materia.find(m => m.ID_materia === exam.Materia_ID_materia);
+        
+        htmlContent += `
+            <tr>
+                <td>${exam.ID_evaluacion || ''}</td>
+                <td>${exam.Titulo || ''}</td>
+                <td>${subject ? subject.Nombre : 'Desconocida'}</td>
+                <td>${exam.Fecha || ''}</td>
+                <td>${exam.Tipo || ''}</td>
+                <td>${(exam.Descripcion || '').replace(/\n/g, '<br>')}</td>
+            </tr>
+        `;
+    });
+    
+    htmlContent += `
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `;
+    
+    // Create blob and download
+    const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `examenes_${new Date().toISOString().split('T')[0]}.doc`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Close modal and show notification
+    if (typeof showExportNotification === 'function') {
+        showExportNotification('Lista de exámenes exportada como DOC exitosamente!', 'success');
+    } else {
+        alert('Lista de exámenes exportada como DOC exitosamente!');
+    }
+    
+    const exportDialogModal = document.getElementById('exportDialogModal');
+    if (exportDialogModal) {
+        exportDialogModal.classList.remove('active');
+    }
+}
+
+// Initialize export functionality
+function initializeExportFunctionality() {
+    const exportListBtn = document.getElementById('exportListBtn');
+    const exportCSVBtn = document.getElementById('exportCSVBtn');
+    const exportDOCBtn = document.getElementById('exportDOCBtn');
+    
+    // Export button click handler
+    if (exportListBtn) {
+        exportListBtn.addEventListener('click', openExportDialog);
+    }
+    
+    // CSV export button handler
+    if (exportCSVBtn) {
+        exportCSVBtn.addEventListener('click', () => {
+            const exportDialogModal = document.getElementById('exportDialogModal');
+            const context = exportDialogModal ? exportDialogModal.getAttribute('data-export-context') : null;
+            
+            if (context === 'subjects') {
+                if (typeof exportSubjectsAsCSV === 'function') {
+                    exportSubjectsAsCSV();
+                }
+            } else {
+                const currentTab = getCurrentTab();
+                if (currentTab === 'exams') {
+                    exportExamsAsCSV();
+                } else {
+                    exportStudentsAsCSV();
+                }
+            }
+        });
+    }
+    
+    // DOC export button handler
+    if (exportDOCBtn) {
+        exportDOCBtn.addEventListener('click', () => {
+            const exportDialogModal = document.getElementById('exportDialogModal');
+            const context = exportDialogModal ? exportDialogModal.getAttribute('data-export-context') : null;
+            
+            if (context === 'subjects') {
+                if (typeof exportSubjectsAsDOC === 'function') {
+                    exportSubjectsAsDOC();
+                }
+            } else {
+                const currentTab = getCurrentTab();
+                if (currentTab === 'exams') {
+                    exportExamsAsDOC();
+                } else {
+                    exportStudentsAsDOC();
+                }
+            }
+        });
     }
 }
