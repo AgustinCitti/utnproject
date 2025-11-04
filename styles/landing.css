@@ -418,6 +418,8 @@ body {
 .registration-options {
     display: flex;
     justify-content: center;
+    gap: 6rem;
+    flex-wrap: wrap;
     margin-top: 3rem;
 }
 
@@ -431,7 +433,16 @@ body {
     position: relative;
     overflow: hidden;
     max-width: 500px;
-    width: 100%;
+    flex: 0 1 auto;
+    min-width: 300px;
+}
+
+.registration-card:first-child {
+    margin-right: 3rem;
+}
+
+.registration-card:last-child {
+    margin-left: 3rem;
 }
 
 .registration-card::before {
@@ -442,6 +453,7 @@ body {
     right: 0;
     height: 4px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    
 }
 
 .registration-card:hover {
@@ -621,6 +633,20 @@ body {
 }
 
 /* Responsive Design for Registration Section */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .registration-options {
+        gap: 3rem;
+    }
+    
+    .registration-card:first-child {
+        margin-right: 1.5rem;
+    }
+    
+    .registration-card:last-child {
+        margin-left: 1.5rem;
+    }
+}
+
 @media (max-width: 768px) {
     .registration {
         padding: 4rem 1rem;
@@ -635,9 +661,26 @@ body {
         margin-bottom: 2rem;
     }
     
+    .registration-options {
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+    }
+    
     .registration-card {
         padding: 2rem 1.5rem;
-        margin: 0 1rem;
+        margin: 0;
+        max-width: 100%;
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .registration-card:first-child {
+        margin-right: 0;
+    }
+    
+    .registration-card:last-child {
+        margin-left: 0;
     }
     
     .card-header i {
@@ -666,13 +709,27 @@ body {
 }
 
 @media (max-width: 480px) {
+    .registration {
+        padding: 3rem 1rem;
+    }
+    
     .registration-content h2 {
         font-size: 1.8rem;
+    }
+    
+    .registration-content p {
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .registration-options {
+        gap: 1.5rem;
     }
     
     .registration-card {
         padding: 1.5rem 1rem;
         border-radius: 16px;
+        margin: 0;
     }
     
     .card-header i {
@@ -681,5 +738,10 @@ body {
     
     .card-header h3 {
         font-size: 1.3rem;
+    }
+    
+    .card-content p {
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
     }
 }

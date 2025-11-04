@@ -308,7 +308,15 @@
     }
 
     .registration-options {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+        align-items: center;
+        gap: 4rem;
+    }
+    
+    .registration-card {
+        width: 100%;
+        max-width: 100%;
+        min-width: auto;
     }
 }
 

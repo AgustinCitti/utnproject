@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - EduSync</title>
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/landing.css">
+    <link rel="stylesheet" href="../styles/auth.css">
+    <link rel="stylesheet" href="../styles/components.css">
+    <link rel="stylesheet" href="../styles/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="../styles/assets/icon.ico" type="image/x-icon">
+    <style>
+        .payment-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 80px);
+            padding: 40px 20px;
+        }
+
+        .payment-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .payment-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+
+        .payment-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .payment-header h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .payment-header p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .plan-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .plan-summary h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .plan-summary .plan-price {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .plan-summary .plan-features {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0 0 0;
+        }
+
+        .plan-summary .plan-features li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .plan-summary .plan-features li i {
+            color: #4ade80;
+        }
+
+        .payment-form {
+            margin-top: 20px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .card-number-group {
+            position: relative;
+        }
+
+        .card-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #999;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .security-note {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .security-note i {
+            color: #667eea;
+            font-size: 1.2rem;
+        }
+
+        .payment-summary-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #667eea;
+            margin-top: 10px;
+        }
+
+        .summary-label {
+            color: #666;
+        }
+
+        .summary-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .payment-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-summary-card {
+                position: relative;
+                top: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Payment Page Header -->
+    <header class="login-header">
+        <nav class="login-nav">
+            <div class="nav-brand">
+                <a href="../index.html">
+                    <img src="../styles/assets/icon.ico" alt="EduSync" style="width:50px;height:50px;">
+                    <span>EduSync</span>
+                </a>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="../index.html#features" class="nav-link" data-translate="features">Features</a>
+                <a href="../index.html#about" class="nav-link" data-translate="about">About</a>
+                <a href="contact.html" class="nav-link" data-translate="contact">Contact</a>
+                <a href="login.html" class="nav-btn nav-login">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span data-translate="login">Login</span>
+                </a>
+                <div class="language-selector">
+                    <select id="languageSelect" class="language-dropdown">
+                        <option value="es" data-translate="español">Español</option>
+                        <option value="en" data-translate="english">English</option>
+                    </select>
+                </div>
+            </div>
+            <div class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Payment Page Content -->
+    <main class="payment-page">
+        <div class="payment-container">
+            <div class="payment-wrapper">
+                <!-- Payment Form -->
+                <div class="payment-card">
+                    <div class="payment-header">
+                        <h1 data-translate="payment_title">Complete Your Payment</h1>
+                        <p data-translate="payment_subtitle">Secure payment gateway powered by EduSync</p>
+                    </div>
+
+                    <!-- Plan Summary -->
+                    <div class="plan-summary" id="planSummary">
+                        <h3>
+                            <i class="fas fa-star" id="planIcon"></i>
+                            <span id="planName">Standard Plan</span>
+                        </h3>
+                        <div class="plan-price" id="planPrice">$0<span style="font-size: 1rem;">/month</span></div>
+                        <ul class="plan-features" id="planFeatures">
+                            <li><i class="fas fa-check"></i> Core features access</li>
+                            <li><i class="fas fa-check"></i> Student management</li>
+                            <li><i class="fas fa-check"></i> Grade tracking</li>
+                        </ul>
+                    </div>
+
+                    <form id="paymentForm" class="payment-form">
+                        <!-- Payment Information -->
+                        <div class="form-section">
+                            <h3 class="form-section-title">
+                                <i class="fas fa-credit-card"></i> Payment Information
+                            </h3>
+
+                            <div class="form-group">
+                                <div class="input-wrapper">
+                                    <i class="fas fa-credit-card input-icon"></i>
+                                    <input type="text" id="cardNumber" name="cardNumber" placeholder=" " maxlength="19" required>
+                                    <label for="cardNumber" data-translate="card_number">Card Number</label>
+                                </div>
+                                <div class="card-icon" id="cardTypeIcon">
+                                    <i class="far fa-credit-card"></i>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="input-wrapper">
+                                    <i class="fas fa-user input-icon"></i>
+                                    <input type="text" id="cardholderName" name="cardholderName" placeholder=" " required>
+                                    <label for="cardholderName" data-translate="cardholder_name">Cardholder Name</label>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-calendar input-icon"></i>
+                                        <input type="text" id="expiryDate" name="expiryDate" placeholder=" " maxlength="5" required>
+                                        <label for="expiryDate" data-translate="expiry_date">MM/YY</label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-lock input-icon"></i>
+                                        <input type="text" id="cvv" name="cvv" placeholder=" " maxlength="4" required>
+                                        <label for="cvv" data-translate="cvv">CVV</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Billing Address -->
+                        <div class="form-section">
+                            <h3 class="form-section-title">
+                                <i class="fas fa-map-marker-alt"></i> Billing Address
+                            </h3>
+
+                            <div class="form-group">
+                                <div class="input-wrapper">
+                                    <i class="fas fa-building input-icon"></i>
+                                    <input type="text" id="addressLine1" name="addressLine1" placeholder=" " required>
+                                    <label for="addressLine1" data-translate="address_line1">Address Line 1</label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="input-wrapper">
+                                    <i class="fas fa-building input-icon"></i>
+                                    <input type="text" id="addressLine2" name="addressLine2" placeholder=" ">
+                                    <label for="addressLine2" data-translate="address_line2">Address Line 2 (Optional)</label>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-city input-icon"></i>
+                                        <input type="text" id="city" name="city" placeholder=" " required>
+                                        <label for="city" data-translate="city">City</label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-map-pin input-icon"></i>
+                                        <input type="text" id="postalCode" name="postalCode" placeholder=" " required>
+                                        <label for="postalCode" data-translate="postal_code">Postal Code</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="input-wrapper">
+                                    <i class="fas fa-globe input-icon"></i>
+                                    <select id="country" name="country" required>
+                                        <option value="">Select Country</option>
+                                        <option value="AR">Argentina</option>
+                                        <option value="US">United States</option>
+                                        <option value="UK">United Kingdom</option>
+                                        <option value="CA">Canada</option>
+                                        <option value="MX">Mexico</option>
+                                        <option value="BR">Brazil</option>
+                                        <option value="ES">Spain</option>
+                                    </select>
+                                    <label for="country" data-translate="country">Country</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="security-note">
+                            <i class="fas fa-shield-alt"></i>
+                            <span data-translate="security_note">Your payment information is encrypted and secure. We never store your card details.</span>
+                        </div>
+
+                        <button type="submit" class="btn-primary register-btn" style="width: 100%; margin-top: 20px;" data-translate="complete_payment">
+                            <i class="fas fa-lock"></i>
+                            <span>Complete Payment</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Payment Summary -->
+                <div class="payment-summary-card">
+                    <h3 style="margin-bottom: 20px; color: #333;" data-translate="order_summary">Order Summary</h3>
+                    <div class="summary-item">
+                        <span class="summary-label" data-translate="plan">Plan:</span>
+                        <span class="summary-value" id="summaryPlan">Standard Plan</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label" data-translate="billing_cycle">Billing Cycle:</span>
+                        <span class="summary-value" data-translate="monthly">Monthly</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label" data-translate="subtotal">Subtotal:</span>
+                        <span class="summary-value" id="summarySubtotal">$0.00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label" data-translate="tax">Tax:</span>
+                        <span class="summary-value" id="summaryTax">$0.00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label" data-translate="total">Total:</span>
+                        <span class="summary-value" id="summaryTotal">$0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="../styles/assets/icon.ico" alt="EduSync" style="width:20px;height:20px;">
+                    <span>EduSync</span>
+                </div>
+                <div class="footer-links">
+                    <a href="../index.html#features" data-translate="features">Features</a>
+                    <a href="../index.html#about" data-translate="about">About</a>
+                    <a href="contact.html" data-translate="contact">Contact</a>
+                </div>
+                <div class="footer-copyright">
+                    <p>&copy; 2024 EduSync. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Script Modules -->
+    <script src="../scripts/translations.js"></script>
+    <script src="../scripts/utils.js"></script>
+    <script src="../scripts/auth.js"></script>
+    <script src="../scripts/main.js"></script>
+    <script>
+        // Get plan from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const planType = urlParams.get('plan') || 'standard';
+
+        // Plan configurations
+        const plans = {
+            standard: {
+                name: 'Standard Plan',
+                price: 0,
+                icon: 'fa-star',
+                features: [
+                    'Core features access',
+                    'Student management',
+                    'Grade tracking',
+                    'Attendance monitoring',
+                    'Basic reports'
+                ]
+            },
+            premium: {
+                name: 'Premium Plan',
+                price: 29.99,
+                icon: 'fa-crown',
+                features: [
+                    'All Standard features',
+                    'Priority support',
+                    'Advanced analytics',
+                    'Unlimited storage',
+                    'Custom integrations',
+                    'Dedicated account manager'
+                ]
+            }
+        };
+
+        // Update page based on selected plan
+        function updatePlanDisplay() {
+            const plan = plans[planType];
+            if (!plan) return;
+
+            // Update plan summary
+            document.getElementById('planName').textContent = plan.name;
+            document.getElementById('planIcon').className = `fas ${plan.icon}`;
+            document.getElementById('planPrice').innerHTML = plan.price === 0 
+                ? 'Free<span style="font-size: 1rem;">/month</span>' 
+                : `$${plan.price.toFixed(2)}<span style="font-size: 1rem;">/month</span>`;
+
+            // Update features list
+            const featuresList = document.getElementById('planFeatures');
+            featuresList.innerHTML = plan.features.map(feature => 
+                `<li><i class="fas fa-check"></i> ${feature}</li>`
+            ).join('');
+
+            // Update summary
+            document.getElementById('summaryPlan').textContent = plan.name;
+            const subtotal = plan.price;
+            const tax = subtotal * 0.21; // 21% tax
+            const total = subtotal + tax;
+
+            document.getElementById('summarySubtotal').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('summaryTax').textContent = `$${tax.toFixed(2)}`;
+            document.getElementById('summaryTotal').textContent = `$${total.toFixed(2)}`;
+        }
+
+        // Card number formatting
+        document.getElementById('cardNumber').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            e.target.value = formattedValue;
+
+            // Detect card type
+            const cardTypeIcon = document.getElementById('cardTypeIcon');
+            if (value.startsWith('4')) {
+                cardTypeIcon.innerHTML = '<i class="fab fa-cc-visa"></i>';
+            } else if (value.startsWith('5')) {
+                cardTypeIcon.innerHTML = '<i class="fab fa-cc-mastercard"></i>';
+            } else if (value.startsWith('3')) {
+                cardTypeIcon.innerHTML = '<i class="fab fa-cc-amex"></i>';
+            } else {
+                cardTypeIcon.innerHTML = '<i class="far fa-credit-card"></i>';
+            }
+        });
+
+        // Expiry date formatting
+        document.getElementById('expiryDate').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            e.target.value = value;
+        });
+
+        // CVV validation (numbers only)
+        document.getElementById('cvv').addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+
+        // Form submission
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Basic validation
+            const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
+            if (cardNumber.length < 13 || cardNumber.length > 19) {
+                alert('Please enter a valid card number');
+                return;
+            }
+
+            const expiryDate = document.getElementById('expiryDate').value;
+            if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+                alert('Please enter a valid expiry date (MM/YY)');
+                return;
+            }
+
+            const cvv = document.getElementById('cvv').value;
+            if (cvv.length < 3 || cvv.length > 4) {
+                alert('Please enter a valid CVV');
+                return;
+            }
+
+            // Simulate payment processing
+            alert('Payment processing... This is a demo. In production, this would connect to a payment gateway.');
+            
+            // In production, you would send this data to your backend
+            // which would then process the payment through a payment gateway
+            console.log('Payment form data:', {
+                plan: planType,
+                cardNumber: cardNumber,
+                cardholderName: document.getElementById('cardholderName').value,
+                expiryDate: expiryDate,
+                cvv: cvv,
+                address: {
+                    line1: document.getElementById('addressLine1').value,
+                    line2: document.getElementById('addressLine2').value,
+                    city: document.getElementById('city').value,
+                    postalCode: document.getElementById('postalCode').value,
+                    country: document.getElementById('country').value
+                }
+            });
+        });
+
+        // Initialize page
+        updatePlanDisplay();
+    </script>
+</body>
+</html>
+
