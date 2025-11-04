@@ -31,7 +31,6 @@ function getFilteredExams() {
     
     // Ensure appData.evaluacion exists and is an array
     if (!appData || !appData.evaluacion || !Array.isArray(appData.evaluacion)) {
-        console.warn('appData.evaluacion is not available or not an array');
         return [];
     }
     
@@ -43,7 +42,6 @@ function getFilteredExams() {
     if (teacherId) {
         // Ensure appData.materia exists and is an array
         if (!appData.materia || !Array.isArray(appData.materia)) {
-            console.warn('appData.materia is not available or not an array');
             // Since API already filtered, still show available evaluations
             // Don't return empty array here
         } else {
@@ -210,7 +208,6 @@ function loadExams() {
 async function showExamModal(examId = null) {
     // Ensure appData is loaded
     if (!appData || !appData.materia || !Array.isArray(appData.materia)) {
-        console.log('appData not loaded, loading data...');
         if (typeof loadData === 'function') {
             await loadData();
         }
@@ -218,14 +215,6 @@ async function showExamModal(examId = null) {
     
     // Get current user ID
     const currentUserId = localStorage.getItem('userId');
-    
-    // Debug logging
-    console.log('showExamModal - Debug info:', {
-        hasAppData: !!appData,
-        materiaCount: appData?.materia?.length || 0,
-        currentUserId: currentUserId,
-        materiaSample: appData?.materia?.slice(0, 2)
-    });
     
     const modal = document.createElement('div');
     modal.className = 'modal active';
@@ -253,8 +242,6 @@ async function showExamModal(examId = null) {
             );
         }
     }
-    
-    console.log('showExamModal - Filtered subjects:', teacherSubjects.length, teacherSubjects);
     
     const exam = examId ? appData.evaluacion.find(e => e.ID_evaluacion === examId) : null;
     const isEdit = !!exam;
@@ -355,7 +342,6 @@ async function saveExam(event) {
     // Obtener el formulario desde el evento
     const form = event.target;
     if (!form || form.tagName !== 'FORM') {
-        console.error('El evento no viene de un formulario:', event.target);
         alert('Error: No se pudo encontrar el formulario.');
         return;
     }
@@ -372,38 +358,6 @@ async function saveExam(event) {
     const descripcion = (form.querySelector('#examDescription')?.value || '').trim() || null;
     const peso = parseFloat(form.querySelector('#examPeso')?.value || '1.00') || 1.00;
     const estado = form.querySelector('#examEstado')?.value || 'PROGRAMADA';
-    
-    // Debug: Mostrar valores capturados
-    console.log('=== DEBUG VALIDACIÓN FORMULARIO ===');
-    console.log('Form encontrado:', !!form);
-    console.log('Valores capturados:', {
-        titulo: titulo,
-        materiaValue: materiaValue,
-        materiaId: materiaId,
-        fecha: fecha,
-        tipo: tipo,
-        descripcion: descripcion,
-        peso: peso,
-        estado: estado
-    });
-    
-    // Verificar elementos directamente
-    const titleEl = form.querySelector('#examTitle');
-    const subjectEl = form.querySelector('#examSubject');
-    const dateEl = form.querySelector('#examDate');
-    const typeEl = form.querySelector('#examType');
-    
-    console.log('Elementos encontrados en form:', {
-        titleEl: !!titleEl,
-        'titleEl.value': titleEl?.value,
-        subjectEl: !!subjectEl,
-        'subjectEl.value': subjectEl?.value,
-        dateEl: !!dateEl,
-        'dateEl.value': dateEl?.value,
-        typeEl: !!typeEl,
-        'typeEl.value': typeEl?.value
-    });
-    console.log('===================================');
     
     // Validar campos requeridos
     const missingFields = [];
@@ -439,17 +393,8 @@ async function saveExam(event) {
     
     if (missingFields.length > 0) {
         const message = 'Por favor, complete todos los campos requeridos:\n\n' + 
-                       missingFields.map((field, idx) => `• ${field}: ${errors[idx] || 'Campo requerido'}`).join('\n') +
-                       '\n\nNOTA: Si completó los campos, puede ser un problema técnico. Verifique la consola para más detalles.';
+                       missingFields.map((field, idx) => `• ${field}: ${errors[idx] || 'Campo requerido'}`).join('\n');
         alert(message);
-        console.error('Campos faltantes:', missingFields);
-        console.error('Valores actuales:', {
-            titulo: titulo,
-            materia: materiaValue,
-            fecha: fecha,
-            tipo: tipo
-        });
-        console.error('FormData entries:', Array.from(formData.entries()));
         return;
     }
     
@@ -463,8 +408,6 @@ async function saveExam(event) {
         Peso: peso,
         Estado: estado
     };
-    
-    console.log('Datos finales a enviar:', examData);
     
     // Determinar si es crear o actualizar
     const existingExamId = document.getElementById('examModal').dataset.examId;
@@ -484,10 +427,6 @@ async function saveExam(event) {
         });
         
         const result = await response.json();
-        
-        // Log para debug
-        console.log('Response status:', response.status);
-        console.log('Response result:', result);
         
         if (response.ok && (result.success !== false && result.id)) {
             // Recargar datos desde el servidor
@@ -509,12 +448,10 @@ async function saveExam(event) {
             }
         } else {
             const errorMsg = result.message || result.error || 'Error al guardar la evaluación';
-            console.error('Error del servidor:', result);
             throw new Error(errorMsg);
         }
     } catch (error) {
-        console.error('Error al guardar evaluación:', error);
-        alert('Error: ' + error.message + '\n\nPor favor, verifique la consola para más detalles.');
+        alert('Error: ' + error.message);
     }
 }
 
@@ -566,15 +503,12 @@ async function deleteExam(id) {
             throw new Error(result.message || 'Error al eliminar la evaluación');
         }
     } catch (error) {
-        console.error('Error al eliminar evaluación:', error);
         alert(error.message || 'Error al eliminar la evaluación. Por favor, intente nuevamente.');
     }
 }
 
 // Make gradeExam globally available
 window.gradeExam = function(examId) {
-    console.log('gradeExam called with ID:', examId);
-    
     // Ensure appData is available
     if (!appData) {
         if (window.appData) {
@@ -602,14 +536,6 @@ window.gradeExam = function(examId) {
     
     if (!exam) {
         alert('Evaluación no encontrada.');
-        console.error('gradeExam: Evaluation not found', {
-            searchedId: examId,
-            normalizedId: normalizedId,
-            availableEvaluations: appData.evaluacion.map(e => ({
-                ID: e.ID_evaluacion,
-                Titulo: e.Titulo
-            }))
-        });
         return;
     }
     
@@ -844,11 +770,9 @@ async function saveGrades(event, examId) {
                     saved++;
                 } else {
                     failed++;
-                    console.error(`Error guardando nota para estudiante ${nota.Estudiante_ID_Estudiante}:`, result);
                 }
             } catch (error) {
                 failed++;
-                console.error(`Error guardando nota para estudiante ${nota.Estudiante_ID_Estudiante}:`, error);
             }
         }
         
@@ -884,15 +808,12 @@ async function saveGrades(event, examId) {
             alert('No se pudo guardar ninguna calificación. Por favor, intente nuevamente.');
         }
     } catch (error) {
-        console.error('Error al guardar calificaciones:', error);
         alert('Error al guardar las calificaciones. Por favor, intente nuevamente.');
     }
 }
 
 // Make viewExamNotes globally available
 window.viewExamNotes = function(examId) {
-    console.log('viewExamNotes called with ID:', examId);
-    
     try {
         // Store the current exam ID for the notes view
         window.currentExamId = examId;
@@ -902,10 +823,6 @@ window.viewExamNotes = function(examId) {
         const examNotesTabContent = document.getElementById('examNotesTabContent');
         
         if (!examsTabContent || !examNotesTabContent) {
-            console.error('viewExamNotes: Required elements not found', {
-                examsTabContent: !!examsTabContent,
-                examNotesTabContent: !!examNotesTabContent
-            });
             alert('Error: No se encontraron los elementos necesarios. Por favor, recargue la página.');
             return;
         }
@@ -919,7 +836,6 @@ window.viewExamNotes = function(examId) {
         // Load the exam notes view
         loadExamNotesView(examId);
     } catch (error) {
-        console.error('viewExamNotes error:', error);
         alert('Error al cargar las notas del examen: ' + error.message);
         // Try to restore UI
         const examsTabContent = document.getElementById('examsTabContent');
@@ -983,8 +899,6 @@ function showExamControls() {
 }
 
 function loadExamNotesView(examId) {
-    console.log('loadExamNotesView called with ID:', examId);
-    
     // Ensure appData is available
     if (!appData) {
         if (window.appData) {
@@ -992,7 +906,6 @@ function loadExamNotesView(examId) {
         } else if (window.data) {
             appData = window.data;
         } else {
-            console.error('loadExamNotesView: appData not available');
             const notesList = document.getElementById('notesList');
             if (notesList) {
                 notesList.innerHTML = '<div class="empty-state"><p>Error: No se pudieron cargar los datos.</p></div>';
@@ -1004,7 +917,6 @@ function loadExamNotesView(examId) {
     // Normalize ID for lookup
     const normalizedId = parseInt(examId);
     if (isNaN(normalizedId)) {
-        console.error('loadExamNotesView: Invalid exam ID', examId);
         return;
     }
     
@@ -1015,10 +927,6 @@ function loadExamNotesView(examId) {
     });
     
     if (!exam) {
-        console.error('loadExamNotesView: Evaluation not found', {
-            searchedId: examId,
-            normalizedId: normalizedId
-        });
         const notesList = document.getElementById('notesList');
         if (notesList) {
             notesList.innerHTML = '<div class="empty-state"><p>Evaluación no encontrada.</p></div>';
@@ -1061,12 +969,6 @@ function loadExamNotesView(examId) {
             backToExams();
         });
     }
-    
-    console.log('loadExamNotesView: Successfully loaded notes view', {
-        examId: normalizedId,
-        examTitle: exam.Titulo,
-        notesCount: examNotes.length
-    });
 }
 
 function loadExamInfoSummary(exam, subject, notesCount) {
@@ -1175,8 +1077,6 @@ function setupExportButton(examId, notesCount) {
 
 // Function to open grade marking view with a specific evaluation pre-selected
 window.openGradeMarkingForExam = async function(examId) {
-    console.log('openGradeMarkingForExam called with ID:', examId);
-    
     if (!examId) {
         examId = window.currentExamId;
     }
@@ -1229,7 +1129,6 @@ window.openGradeMarkingForExam = async function(examId) {
                             evaluationSelect.value = option.value;
                             // Trigger change event to load students
                             evaluationSelect.dispatchEvent(new Event('change'));
-                            console.log('openGradeMarkingForExam: Selected evaluation', normalizedExamId);
                             break;
                         }
                     }
@@ -1240,8 +1139,6 @@ window.openGradeMarkingForExam = async function(examId) {
 };
 
 function backToExams() {
-    console.log('backToExams called');
-    
     // Hide exam notes tab content
     const examNotesTabContent = document.getElementById('examNotesTabContent');
     if (examNotesTabContent) {
@@ -1302,8 +1199,6 @@ function backToExams() {
     
     // Clear the current exam ID
     window.currentExamId = null;
-    
-    console.log('backToExams completed');
 }
 
 // Make function globally available

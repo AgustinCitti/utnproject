@@ -182,11 +182,8 @@ function initializeUnifiedStudentManagement() {
     
     if (gradeEvaluationSelect) {
         gradeEvaluationSelect.addEventListener('change', async () => {
-            console.log('gradeEvaluationSelect change event triggered');
             await loadStudentsForGradeMarking();
         });
-    } else {
-        console.warn('initializeUnifiedStudentManagement: gradeEvaluationSelect not found');
     }
     
     if (saveGradesBtn) {
@@ -1026,24 +1023,17 @@ window.updateIntensificacionThemeStatus = async function(temaEstudianteId, nuevo
 };
 
 function showStudentDetail(studentId) {
-    console.log('showStudentDetail called with studentId:', studentId);
-    
     // Ensure function is accessible globally
     if (typeof studentId === 'undefined' || studentId === null) {
-        console.error('showStudentDetail: studentId is required');
         return;
     }
 
     const studentIdNum = parseInt(studentId);
-    console.log('Parsed studentIdNum:', studentIdNum);
     
     // Ensure appData exists
     if (!appData || !appData.estudiante || !Array.isArray(appData.estudiante)) {
-        console.error('showStudentDetail: appData.estudiante is not available', appData);
         return;
     }
-
-    console.log('Total students in appData:', appData.estudiante.length);
 
     // Find student - handle both string and number comparisons
     const student = appData.estudiante.find(s => {
@@ -1052,12 +1042,8 @@ function showStudentDetail(studentId) {
     });
     
     if (!student) {
-        console.error('showStudentDetail: Student not found with ID:', studentIdNum);
-        console.log('Available student IDs:', appData.estudiante.map(s => s.ID_Estudiante));
         return;
     }
-    
-    console.log('Student found:', student);
     // Verificar si el estudiante es intensificador usando la columna INTENSIFICA
     const isIntensificador = isStudentIntensificador(student);
     
@@ -1148,25 +1134,19 @@ function showStudentDetail(studentId) {
     populateStudentTemaEstudiante(studentIdNum);
 
     // Show modal
-    console.log('Attempting to show modal...');
     const modal = document.getElementById('studentDetailsModal');
     if (!modal) {
-        console.error('Modal element not found: studentDetailsModal');
         return;
     }
     
     if (typeof showModal === 'function') {
-        console.log('Using showModal function');
         showModal('studentDetailsModal');
     } else {
-        console.log('Using direct modal.classList.add');
         modal.classList.add('active');
         if (typeof setupModalHandlers === 'function') {
             setupModalHandlers('studentDetailsModal');
         }
     }
-    
-    console.log('Modal should be visible now');
 }
 
 function populateStudentTemaEstudiante(studentId) {
@@ -1507,13 +1487,11 @@ window.isShowingGradeMarkingView = false;
 async function showGradeMarkingView() {
     // Prevent recursive calls
     if (isShowingGradeMarkingView) {
-        console.log('=== showGradeMarkingView: Already showing, skipping recursive call ===');
         return;
     }
     
     isShowingGradeMarkingView = true;
     window.isShowingGradeMarkingView = true;
-    console.log('=== showGradeMarkingView START ===');
     
     // Check if we're already in the grade-marking section to avoid recursion
     const currentSectionValue = typeof currentSection !== 'undefined' ? currentSection : 
@@ -1558,10 +1536,6 @@ async function showGradeMarkingView() {
         
         // Populate evaluation dropdown - wait for it to complete
         await populateEvaluationDropdown();
-        
-        console.log('=== showGradeMarkingView END ===');
-    } else {
-        console.error('showGradeMarkingView: gradeMarkingView element not found');
     }
     
     // Reset guard after completion (always reset, even on error)
@@ -1579,19 +1553,11 @@ function normalizeId(id) {
 }
 
 /**
- * Find evaluation by ID - robust comparison with extensive debugging
+ * Find evaluation by ID - robust comparison
  */
 function findEvaluationById(evaluationId) {
-    console.log('=== findEvaluationById START ===');
-    console.log('Input evaluationId:', evaluationId, 'Type:', typeof evaluationId);
-    
     // Check appData availability
     if (!appData) {
-        console.error('findEvaluationById: appData is not available');
-        console.log('Available globals:', {
-            hasWindowAppData: !!window.appData,
-            hasWindowData: !!window.data
-        });
         // Try to get from window
         if (window.appData) {
             appData = window.appData;
@@ -1603,28 +1569,16 @@ function findEvaluationById(evaluationId) {
     }
     
     if (!appData.evaluacion) {
-        console.error('findEvaluationById: appData.evaluacion is not available');
-        console.log('appData keys:', Object.keys(appData));
         return null;
     }
     
     if (!Array.isArray(appData.evaluacion)) {
-        console.error('findEvaluationById: appData.evaluacion is not an array', typeof appData.evaluacion);
         return null;
     }
     
-    console.log('appData.evaluacion length:', appData.evaluacion.length);
-    console.log('Sample evaluations:', appData.evaluacion.slice(0, 3).map(e => ({
-        ID_evaluacion: e.ID_evaluacion,
-        ID_type: typeof e.ID_evaluacion,
-        Titulo: e.Titulo
-    })));
-    
     const targetId = normalizeId(evaluationId);
-    console.log('Normalized targetId:', targetId);
     
     if (targetId === null) {
-        console.error('findEvaluationById: Invalid evaluation ID after normalization', evaluationId);
         return null;
     }
     
@@ -1657,33 +1611,12 @@ function findEvaluationById(evaluationId) {
         });
     }
     
-    if (evaluation) {
-        console.log('findEvaluationById: FOUND evaluation', {
-            ID: evaluation.ID_evaluacion,
-            Titulo: evaluation.Titulo
-        });
-    } else {
-        console.error('findEvaluationById: NOT FOUND', {
-            searchedId: evaluationId,
-            normalizedSearchedId: targetId,
-            availableIds: appData.evaluacion.map(e => ({
-                raw: e.ID_evaluacion,
-                normalized: normalizeId(e.ID_evaluacion),
-                type: typeof e.ID_evaluacion
-            }))
-        });
-    }
-    
-    console.log('=== findEvaluationById END ===');
     return evaluation || null;
 }
 
 async function populateEvaluationDropdown() {
-    console.log('=== populateEvaluationDropdown START ===');
-    
     const evaluationSelect = document.getElementById('gradeEvaluation');
     if (!evaluationSelect) {
-        console.error('populateEvaluationDropdown: evaluationSelect element not found');
         return;
     }
     
@@ -1692,7 +1625,6 @@ async function populateEvaluationDropdown() {
     
     // Ensure appData is loaded
     if (!appData || !appData.evaluacion) {
-        console.log('populateEvaluationDropdown: appData not loaded, attempting to load...');
         if (typeof loadData === 'function') {
             await loadData();
         }
@@ -1705,37 +1637,30 @@ async function populateEvaluationDropdown() {
         }
         
         if (!appData || !appData.evaluacion) {
-            console.error('populateEvaluationDropdown: appData still not available after reload attempt');
             evaluationSelect.innerHTML = '<option value="">Error: No se pudieron cargar las evaluaciones</option>';
             return;
         }
     }
     
     if (!Array.isArray(appData.evaluacion)) {
-        console.error('populateEvaluationDropdown: appData.evaluacion is not an array', typeof appData.evaluacion);
         evaluationSelect.innerHTML = '<option value="">Error: Datos de evaluaciones inválidos</option>';
         return;
     }
     
     if (appData.evaluacion.length === 0) {
-        console.warn('populateEvaluationDropdown: No evaluations available');
         evaluationSelect.innerHTML = '<option value="">No hay evaluaciones disponibles</option>';
         return;
     }
-    
-    console.log('populateEvaluationDropdown: Found', appData.evaluacion.length, 'evaluations');
     
     // Populate dropdown with evaluations
     let populatedCount = 0;
     appData.evaluacion.forEach(evaluation => {
         if (!evaluation || !evaluation.ID_evaluacion) {
-            console.warn('populateEvaluationDropdown: Skipping invalid evaluation', evaluation);
             return;
         }
         
         const evaluationId = normalizeId(evaluation.ID_evaluacion);
         if (evaluationId === null) {
-            console.warn('populateEvaluationDropdown: Skipping evaluation with invalid ID', evaluation);
             return;
         }
         
@@ -1752,40 +1677,30 @@ async function populateEvaluationDropdown() {
         populatedCount++;
     });
     
-    console.log('populateEvaluationDropdown: Populated', populatedCount, 'evaluations');
-    
     // Automatically select the first evaluation if available
     if (populatedCount > 0 && evaluationSelect.options.length > 1) {
         // Select the first evaluation (skip the empty placeholder option)
         evaluationSelect.value = evaluationSelect.options[1].value;
-        console.log('populateEvaluationDropdown: Auto-selected first evaluation:', evaluationSelect.value);
         
         // Trigger change event to load students automatically
         evaluationSelect.dispatchEvent(new Event('change'));
     }
-    
-    console.log('=== populateEvaluationDropdown END ===');
 }
 
 async function loadStudentsForGradeMarking() {
-    console.log('=== loadStudentsForGradeMarking START ===');
-    
     const evaluationSelect = document.getElementById('gradeEvaluation');
     const tableBody = document.getElementById('gradeTableBody');
     
     if (!evaluationSelect) {
-        console.error('loadStudentsForGradeMarking: evaluationSelect not found');
         return;
     }
     
     if (!tableBody) {
-        console.error('loadStudentsForGradeMarking: tableBody not found');
         return;
     }
     
     // Get selected value
     const selectedValue = evaluationSelect.value;
-    console.log('Selected value from dropdown:', selectedValue);
     
     if (!selectedValue || selectedValue === '') {
         tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Seleccione una evaluación para ver los estudiantes</td></tr>';
@@ -1794,7 +1709,6 @@ async function loadStudentsForGradeMarking() {
     
     // Ensure appData is loaded
     if (!appData || !appData.evaluacion) {
-        console.log('appData not loaded, attempting to load...');
         if (typeof loadData === 'function') {
             await loadData();
         }
@@ -1808,7 +1722,6 @@ async function loadStudentsForGradeMarking() {
         
         if (!appData || !appData.evaluacion) {
             tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Error: No se pudieron cargar los datos. Por favor, recargue la página.</td></tr>';
-            console.error('loadStudentsForGradeMarking: appData still not available after reload attempt');
             return;
         }
     }
@@ -1817,24 +1730,9 @@ async function loadStudentsForGradeMarking() {
     const evaluation = findEvaluationById(selectedValue);
     
     if (!evaluation) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Evaluación no encontrada. Verifique la consola para más detalles.</td></tr>';
-        console.error('loadStudentsForGradeMarking: Evaluation not found', {
-            selectedValue: selectedValue,
-            normalizedId: normalizeId(selectedValue),
-            availableEvaluations: appData && appData.evaluacion ? appData.evaluacion.map(e => ({
-                ID: e.ID_evaluacion,
-                ID_type: typeof e.ID_evaluacion,
-                normalized: normalizeId(e.ID_evaluacion),
-                Titulo: e.Titulo
-            })) : 'appData.evaluacion not available'
-        });
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Evaluación no encontrada</td></tr>';
         return;
     }
-    
-    console.log('loadStudentsForGradeMarking: Found evaluation', {
-        ID: evaluation.ID_evaluacion,
-        Titulo: evaluation.Titulo
-    });
     
     // Get students enrolled in this subject - use normalized IDs
     const normalizedMateriaId = normalizeId(evaluation.Materia_ID_materia);
@@ -2023,12 +1921,6 @@ async function saveGradesBulk() {
     const gradeDate = dateInput.value;
     const notes = notesInput ? notesInput.value : '';
     
-    console.log('saveGradesBulk: Using evaluation', {
-        ID: selectedEvaluationId,
-        Titulo: evaluation.Titulo,
-        Fecha: gradeDate
-    });
-    
     const tableRows = document.querySelectorAll('#gradeTableBody tr[data-student-id]');
     const notas = [];
     const errors = [];
@@ -2041,7 +1933,6 @@ async function saveGradesBulk() {
     tableRows.forEach(row => {
         const studentId = parseInt(row.dataset.studentId);
         if (isNaN(studentId) || studentId <= 0) {
-            console.warn('Invalid student ID in row:', row);
             return;
         }
         
@@ -2132,11 +2023,9 @@ async function saveGradesBulk() {
                     saved++;
                 } else {
                     failed++;
-                    console.error(`Error guardando nota para estudiante ${nota.Estudiante_ID_Estudiante}:`, result);
                 }
             } catch (error) {
                 failed++;
-                console.error(`Error guardando nota para estudiante ${nota.Estudiante_ID_Estudiante}:`, error);
             }
         }
         
@@ -2168,7 +2057,6 @@ async function saveGradesBulk() {
             alert('No se pudo guardar ninguna calificación. Por favor, intente nuevamente.');
         }
     } catch (error) {
-        console.error('Error al guardar calificaciones:', error);
         alert('Error al guardar las calificaciones. Por favor, intente nuevamente.');
     }
 }

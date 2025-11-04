@@ -5,7 +5,6 @@ let currentLanguage = 'es'; // Default to Spanish
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM Content Loaded');
     initializeApp();
 });
 
@@ -151,7 +150,6 @@ function saveData() {
 function initializeDarkMode() {
     const darkModeToggle = document.getElementById('darkModeToggle');
     if (!darkModeToggle) {
-        console.warn('Toggle de modo oscuro no encontrado');
         return;
     }
     
