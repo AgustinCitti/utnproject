@@ -851,6 +851,26 @@ window.showSubjectThemesPanel = function(subjectId) {
     // Store current subject ID
     currentThemesSubjectId = subjectId;
     
+    // Navigate to materia-details section instead of opening modal
+    if (typeof showSection === 'function') {
+        showSection('materia-details');
+    } else {
+        // Fallback: hide all sections and show materia-details
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        const materiaDetailsSection = document.getElementById('materia-details');
+        if (materiaDetailsSection) {
+            materiaDetailsSection.classList.add('active');
+        }
+    }
+    
+    // Update title
+    const titleElement = document.getElementById('materiaDetailsTitle');
+    if (titleElement) {
+        titleElement.textContent = subject.Nombre;
+    }
+    
     // Obtener los temas de esta materia
     if (!appData.contenido || !Array.isArray(appData.contenido)) {
         appData.contenido = [];
@@ -865,23 +885,8 @@ window.showSubjectThemesPanel = function(subjectId) {
             return dateB - dateA;
         });
     
-    // Actualizar el modal
-    const modal = document.getElementById('subjectThemesModal');
-    if (!modal) {
-        console.error('No se encontró el modal subjectThemesModal');
-        return;
-    }
-    
-    // Actualizar título
-    const modalTitle = document.getElementById('selectedSubjectName');
-    if (modalTitle) {
-        modalTitle.textContent = subject.Nombre;
-    }
-    
     // Show list view, hide form view
-    const themesListView = document.getElementById('themesListView');
     const createThemeFormView = document.getElementById('createThemeFormView');
-    if (themesListView) themesListView.style.display = 'block';
     if (createThemeFormView) createThemeFormView.style.display = 'none';
     
     // Ensure tema_estudiante array exists
@@ -997,20 +1002,353 @@ window.showSubjectThemesPanel = function(subjectId) {
         }
     }
     
-    // Mostrar el modal usando la función showModal
-    if (typeof showModal === 'function') {
-        showModal('subjectThemesModal');
+    // Ensure temas tab is active by default
+    switchToTemasTab();
+    
+    // Setup event handlers
+    setupUnifiedThemesModalHandlers();
+    setupMateriaDetailsHandlers();
+    
+    // Load evaluaciones (will be shown when evaluaciones tab is clicked)
+    // We don't load it immediately to improve performance
+};
+
+// Function to load evaluaciones for a subject
+async function loadSubjectEvaluaciones(subjectId) {
+    const evaluacionesList = document.getElementById('subjectEvaluacionesList');
+    if (!evaluacionesList) {
+        console.error('subjectEvaluacionesList element not found');
+        return;
+    }
+    
+    // Show loading state
+    evaluacionesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">Cargando evaluaciones...</div>';
+    
+    // Get evaluaciones from appData or fetch from API
+    let evaluaciones = [];
+    
+    // Ensure appData is available
+    if (!appData && window.appData) {
+        appData = window.appData;
+    } else if (!appData && window.data) {
+        appData = window.data;
+    }
+    
+    if (appData && appData.evaluacion && Array.isArray(appData.evaluacion)) {
+        evaluaciones = appData.evaluacion
+            .filter(e => {
+                const materiaId = parseInt(e.Materia_ID_materia);
+                const subjectIdNum = parseInt(subjectId);
+                return materiaId === subjectIdNum;
+            })
+            .sort((a, b) => {
+                const dateA = a.Fecha ? new Date(a.Fecha) : new Date(0);
+                const dateB = b.Fecha ? new Date(b.Fecha) : new Date(0);
+                return dateB - dateA;
+            });
+        
+        console.log(`Found ${evaluaciones.length} evaluaciones for subject ${subjectId} from appData`);
     } else {
-        // Fallback si showModal no está disponible
-        modal.classList.add('active');
-        if (typeof setupModalHandlers === 'function') {
-            setupModalHandlers('subjectThemesModal');
+        // Fetch from API if not in appData
+        try {
+            const isInPages = window.location.pathname.includes('/pages/');
+            const baseUrl = isInPages ? '../api' : 'api';
+            const response = await fetch(`${baseUrl}/evaluacion.php?materiaId=${subjectId}`);
+            if (response.ok) {
+                const data = await response.json();
+                evaluaciones = Array.isArray(data) ? data : [];
+                console.log(`Fetched ${evaluaciones.length} evaluaciones from API for subject ${subjectId}`);
+            } else {
+                console.error('Failed to fetch evaluaciones:', response.status, response.statusText);
+            }
+        } catch (error) {
+            console.error('Error loading evaluaciones:', error);
         }
     }
     
-    // Setup event handlers for the modal buttons
-    setupUnifiedThemesModalHandlers();
-};
+    // Display evaluaciones
+    if (evaluaciones.length > 0) {
+        evaluacionesList.innerHTML = evaluaciones.map(eval => {
+            const tipoLabels = {
+                'EXAMEN': 'Examen',
+                'PARCIAL': 'Parcial',
+                'TRABAJO_PRACTICO': 'Trabajo Práctico',
+                'PROYECTO': 'Proyecto',
+                'ORAL': 'Oral',
+                'PRACTICO': 'Práctico'
+            };
+            
+            const estadoLabels = {
+                'PROGRAMADA': 'Programada',
+                'EN_CURSO': 'En Curso',
+                'FINALIZADA': 'Finalizada',
+                'CANCELADA': 'Cancelada'
+            };
+            
+            const fecha = eval.Fecha ? new Date(eval.Fecha).toLocaleDateString('es-ES') : 'Sin fecha';
+            
+            return `
+                <div style="margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); padding: 14px 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <div style="flex: 1;">
+                            <strong style="display: block; margin-bottom: 6px; color: var(--text-primary); font-size: 1em;">${eval.Titulo || 'Sin título'}</strong>
+                            ${eval.Descripcion ? `<p style="font-size: 0.9em; color: var(--text-secondary); margin: 6px 0;">${eval.Descripcion}</p>` : ''}
+                            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 8px;">
+                                <span class="status-badge" style="font-size: 0.8em; padding: 3px 8px; border-radius: 10px; background: #667eea; color: white;">
+                                    ${tipoLabels[eval.Tipo] || eval.Tipo}
+                                </span>
+                                <span class="status-badge status-${(eval.Estado || 'PROGRAMADA').toLowerCase()}" style="font-size: 0.8em; padding: 3px 8px; border-radius: 10px;">
+                                    ${estadoLabels[eval.Estado] || eval.Estado}
+                                </span>
+                                <span style="font-size: 0.85em; color: var(--text-secondary);">
+                                    <i class="fas fa-calendar" style="margin-right: 4px;"></i>${fecha}
+                                </span>
+                                ${eval.Peso ? `<span style="font-size: 0.85em; color: var(--text-secondary);">
+                                    <i class="fas fa-weight" style="margin-right: 4px;"></i>Peso: ${eval.Peso}
+                                </span>` : ''}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 5px;" onclick="event.stopPropagation();">
+                            <button class="btn-icon btn-edit" onclick="editEvaluacion(${eval.ID_evaluacion})" title="Editar Evaluación" style="padding: 6px 8px;">
+                                <i class="fas fa-edit" style="font-size: 0.9em;"></i>
+                            </button>
+                            <button class="btn-icon btn-delete" onclick="deleteEvaluacion(${eval.ID_evaluacion})" title="Eliminar Evaluación" style="padding: 6px 8px;">
+                                <i class="fas fa-trash" style="font-size: 0.9em;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } else {
+        evaluacionesList.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary, #999);">
+                <i class="fas fa-clipboard-list" style="font-size: 2.5em; margin-bottom: 15px; opacity: 0.3;"></i>
+                <p>No hay evaluaciones registradas para esta materia</p>
+                <button class="btn-primary" onclick="showCreateEvaluacionForm(${subjectId})" style="margin-top: 15px;">
+                    <i class="fas fa-plus"></i> Crear Primera Evaluación
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Setup handlers for materia details view
+function setupMateriaDetailsHandlers() {
+    // Tab switching functionality
+    const temasTabBtn = document.getElementById('temasTabBtn');
+    const evaluacionesTabBtn = document.getElementById('evaluacionesTabBtn');
+    const temasTabContent = document.getElementById('temasTabContent');
+    const evaluacionesTabContent = document.getElementById('evaluacionesTabContent');
+    
+    // Temas tab button
+    if (temasTabBtn) {
+        temasTabBtn.onclick = function() {
+            switchToTemasTab();
+        };
+    }
+    
+    // Evaluaciones tab button
+    if (evaluacionesTabBtn) {
+        evaluacionesTabBtn.onclick = function() {
+            switchToEvaluacionesTab();
+        };
+    }
+    
+    // Back to subjects button
+    const backBtn = document.getElementById('backToSubjectsFromDetailsBtn');
+    if (backBtn) {
+        backBtn.onclick = function() {
+            if (typeof showSection === 'function') {
+                showSection('subjects-management');
+            }
+        };
+    }
+    
+    // Show create evaluacion form button
+    const showCreateEvaluacionBtn = document.getElementById('showCreateEvaluacionFormBtn');
+    if (showCreateEvaluacionBtn) {
+        showCreateEvaluacionBtn.onclick = function() {
+            if (currentThemesSubjectId) {
+                showCreateEvaluacionForm(currentThemesSubjectId);
+            }
+        };
+    }
+    
+    // Back to evaluaciones list button
+    const backToEvaluacionesBtn = document.getElementById('backToEvaluacionesListBtn');
+    if (backToEvaluacionesBtn) {
+        backToEvaluacionesBtn.onclick = function() {
+            if (currentThemesSubjectId) {
+                loadSubjectEvaluaciones(currentThemesSubjectId);
+                const formView = document.getElementById('createEvaluacionFormView');
+                if (formView) formView.style.display = 'none';
+            }
+        };
+    }
+    
+    // Cancel create evaluacion button
+    const cancelEvaluacionBtn = document.getElementById('cancelCreateEvaluacionBtn');
+    if (cancelEvaluacionBtn) {
+        cancelEvaluacionBtn.onclick = function() {
+            if (currentThemesSubjectId) {
+                loadSubjectEvaluaciones(currentThemesSubjectId);
+                const formView = document.getElementById('createEvaluacionFormView');
+                if (formView) formView.style.display = 'none';
+            }
+        };
+    }
+    
+    // Evaluacion form submit handler
+    const evaluacionForm = document.getElementById('evaluacionForm');
+    if (evaluacionForm) {
+        evaluacionForm.onsubmit = function(e) {
+            e.preventDefault();
+            saveEvaluacion();
+        };
+    }
+}
+
+// Switch to Temas tab
+function switchToTemasTab() {
+    const temasTabBtn = document.getElementById('temasTabBtn');
+    const evaluacionesTabBtn = document.getElementById('evaluacionesTabBtn');
+    const temasTabContent = document.getElementById('temasTabContent');
+    const evaluacionesTabContent = document.getElementById('evaluacionesTabContent');
+    
+    // Update tab buttons
+    if (temasTabBtn) temasTabBtn.classList.add('active');
+    if (evaluacionesTabBtn) evaluacionesTabBtn.classList.remove('active');
+    
+    // Update tab content
+    if (temasTabContent) {
+        temasTabContent.classList.add('active');
+        temasTabContent.style.display = 'block';
+    }
+    if (evaluacionesTabContent) {
+        evaluacionesTabContent.classList.remove('active');
+        evaluacionesTabContent.style.display = 'none';
+    }
+}
+
+// Switch to Evaluaciones tab
+function switchToEvaluacionesTab() {
+    const temasTabBtn = document.getElementById('temasTabBtn');
+    const evaluacionesTabBtn = document.getElementById('evaluacionesTabBtn');
+    const temasTabContent = document.getElementById('temasTabContent');
+    const evaluacionesTabContent = document.getElementById('evaluacionesTabContent');
+    
+    // Update tab buttons
+    if (temasTabBtn) temasTabBtn.classList.remove('active');
+    if (evaluacionesTabBtn) evaluacionesTabBtn.classList.add('active');
+    
+    // Update tab content
+    if (temasTabContent) {
+        temasTabContent.classList.remove('active');
+        temasTabContent.style.display = 'none';
+    }
+    if (evaluacionesTabContent) {
+        evaluacionesTabContent.classList.add('active');
+        evaluacionesTabContent.style.display = 'block';
+    }
+    
+    // Always load evaluaciones when switching to this tab
+    if (currentThemesSubjectId) {
+        loadSubjectEvaluaciones(currentThemesSubjectId);
+    }
+}
+
+// Show create evaluacion form
+window.showCreateEvaluacionForm = function(subjectId) {
+    if (!subjectId && currentThemesSubjectId) {
+        subjectId = currentThemesSubjectId;
+    }
+    
+    const formView = document.getElementById('createEvaluacionFormView');
+    const subjectIdInput = document.getElementById('evaluacionSubjectId');
+    
+    if (formView && subjectIdInput) {
+        subjectIdInput.value = subjectId;
+        formView.style.display = 'block';
+        
+        // Reset form
+        document.getElementById('evaluacionTitulo').value = '';
+        document.getElementById('evaluacionDescripcion').value = '';
+        document.getElementById('evaluacionFecha').value = '';
+        document.getElementById('evaluacionTipo').value = 'EXAMEN';
+        document.getElementById('evaluacionPeso').value = '1.00';
+        document.getElementById('evaluacionEstado').value = 'PROGRAMADA';
+    }
+}
+
+// Save evaluacion
+async function saveEvaluacion() {
+    const subjectId = document.getElementById('evaluacionSubjectId').value;
+    const titulo = document.getElementById('evaluacionTitulo').value;
+    const descripcion = document.getElementById('evaluacionDescripcion').value;
+    const fecha = document.getElementById('evaluacionFecha').value;
+    const tipo = document.getElementById('evaluacionTipo').value;
+    const peso = document.getElementById('evaluacionPeso').value;
+    const estado = document.getElementById('evaluacionEstado').value;
+    
+    if (!subjectId || !titulo || !fecha || !tipo) {
+        alert('Por favor complete todos los campos requeridos');
+        return;
+    }
+    
+    try {
+        const response = await fetch('api/evaluacion.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                Titulo: titulo,
+                Descripcion: descripcion,
+                Fecha: fecha,
+                Tipo: tipo,
+                Peso: parseFloat(peso),
+                Estado: estado,
+                Materia_ID_materia: parseInt(subjectId)
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            // Reload evaluaciones
+            if (typeof loadData === 'function') {
+                await loadData();
+            }
+            await loadSubjectEvaluaciones(subjectId);
+            
+            // Hide form
+            const formView = document.getElementById('createEvaluacionFormView');
+            if (formView) formView.style.display = 'none';
+            
+            if (typeof showNotification === 'function') {
+                showNotification('Evaluación creada correctamente', 'success');
+            } else {
+                alert('Evaluación creada correctamente');
+            }
+        } else {
+            const error = await response.json();
+            throw new Error(error.message || 'Error al crear la evaluación');
+        }
+    } catch (err) {
+        alert('Error: ' + (err.message || 'No se pudo crear la evaluación'));
+    }
+}
+
+// Edit evaluacion (placeholder)
+window.editEvaluacion = function(evaluacionId) {
+    alert('Función de edición de evaluaciones en desarrollo');
+}
+
+// Delete evaluacion (placeholder)
+window.deleteEvaluacion = function(evaluacionId) {
+    if (confirm('¿Está seguro de que desea eliminar esta evaluación?')) {
+        // TODO: Implement delete functionality
+        alert('Función de eliminación de evaluaciones en desarrollo');
+    }
+}
 
 // Function to toggle collapsible theme cards
 window.toggleThemeCard = function(uniqueId) {

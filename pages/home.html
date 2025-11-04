@@ -910,7 +910,154 @@
                 </div>
             </section>
 
-            
+            <!-- ===============================================================
+                 MATERIA DETAILS SECTION - View Subject Themes and Evaluaciones
+                 =============================================================== -->
+            <!-- Materia Details Section -->
+            <section id="materia-details" class="content-section">
+                <div class="section-header">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button id="backToSubjectsFromDetailsBtn" class="btn-secondary" style="padding: 8px 16px;">
+                            <i class="fas fa-arrow-left"></i>
+                            <span data-translate="back">Volver</span>
+                        </button>
+                        <h2 id="materiaDetailsTitle">Detalles de la Materia</h2>
+                    </div>
+                </div>
+
+                <div style="padding: 1.5rem 2rem;">
+                    <!-- Tab Navigation -->
+                    <div class="subject-details-tabs" style="margin-bottom: 1.5rem;">
+                        <button id="temasTabBtn" class="tab-btn active" data-tab="temas">
+                            <i class="fas fa-book-open"></i>
+                            <span data-translate="themes">Temas</span>
+                        </button>
+                        <button id="evaluacionesTabBtn" class="tab-btn" data-tab="evaluaciones">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span data-translate="evaluations">Evaluaciones</span>
+                        </button>
+                    </div>
+
+                    <!-- Temas Tab Content -->
+                    <div id="temasTabContent" class="tab-content active">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="margin: 0; color: var(--text-primary, #333); font-size: 1.2rem;">
+                                <i class="fas fa-book-open" style="margin-right: 8px;"></i>
+                                Temas de la Materia
+                            </h3>
+                            <button id="showCreateThemeFormBtn" class="btn-primary" style="padding: 8px 16px; font-size: 0.9em;">
+                                <i class="fas fa-plus"></i> Crear Tema
+                            </button>
+                        </div>
+                        <div id="subjectThemesList" style="max-height: 500px; overflow-y: auto; background: var(--card-bg, #fff); border-radius: 8px; padding: 1rem;">
+                            <!-- Temas will be loaded here -->
+                        </div>
+
+                        <!-- Create Theme Form View - Form to Create New Theme -->
+                        <div id="createThemeFormView" style="display: none; margin-top: 2rem; background: var(--card-bg, #fff); border-radius: 8px; padding: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h4 style="margin: 0; color: var(--text-primary, #333);">Crear Nuevo Tema</h4>
+                                <button id="backToThemesListBtn" class="btn-secondary" style="padding: 8px 16px; font-size: 0.9em;">
+                                    <i class="fas fa-arrow-left"></i> Volver
+                                </button>
+                            </div>
+                            <form id="unifiedContentForm">
+                                <input type="hidden" id="unifiedContentSubjectId" value="">
+                                <div class="form-group">
+                                    <label for="unifiedContentTopic" data-translate="topic">Tema</label>
+                                    <input type="text" id="unifiedContentTopic" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="unifiedContentDescription" data-translate="description">Descripción</label>
+                                    <textarea id="unifiedContentDescription" rows="3" placeholder="Descripción del tema..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="unifiedContentStatus" data-translate="status">Estado</label>
+                                    <select id="unifiedContentStatus">
+                                        <option value="PENDIENTE" data-translate="pending">Pendiente</option>
+                                        <option value="EN_PROGRESO" data-translate="in_progress">En Progreso</option>
+                                        <option value="COMPLETADO" data-translate="completed">Completado</option>
+                                        <option value="CANCELADO" data-translate="cancelled">Cancelado</option>
+                                    </select>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" id="cancelCreateThemeBtn" class="btn-secondary" data-translate="cancel">Cancelar</button>
+                                    <button type="submit" class="btn-primary" data-translate="save_content">Guardar Tema</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Evaluaciones Tab Content -->
+                    <div id="evaluacionesTabContent" class="tab-content" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="margin: 0; color: var(--text-primary, #333); font-size: 1.2rem;">
+                                <i class="fas fa-clipboard-list" style="margin-right: 8px;"></i>
+                                Evaluaciones
+                            </h3>
+                            <button id="showCreateEvaluacionFormBtn" class="btn-primary" style="padding: 8px 16px; font-size: 0.9em;">
+                                <i class="fas fa-plus"></i> Crear Evaluación
+                            </button>
+                        </div>
+                        <div id="subjectEvaluacionesList" style="max-height: 500px; overflow-y: auto; background: var(--card-bg, #fff); border-radius: 8px; padding: 1rem;">
+                            <!-- Evaluaciones will be loaded here -->
+                        </div>
+
+                        <!-- Create Evaluacion Form View -->
+                        <div id="createEvaluacionFormView" style="display: none; margin-top: 2rem; background: var(--card-bg, #fff); border-radius: 8px; padding: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h4 style="margin: 0; color: var(--text-primary, #333);">Crear Nueva Evaluación</h4>
+                                <button id="backToEvaluacionesListBtn" class="btn-secondary" style="padding: 8px 16px; font-size: 0.9em;">
+                                    <i class="fas fa-arrow-left"></i> Volver
+                                </button>
+                            </div>
+                            <form id="evaluacionForm">
+                                <input type="hidden" id="evaluacionSubjectId" value="">
+                                <div class="form-group">
+                                    <label for="evaluacionTitulo" data-translate="title">Título</label>
+                                    <input type="text" id="evaluacionTitulo" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="evaluacionDescripcion" data-translate="description">Descripción</label>
+                                    <textarea id="evaluacionDescripcion" rows="3" placeholder="Descripción de la evaluación..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="evaluacionFecha" data-translate="date">Fecha</label>
+                                    <input type="date" id="evaluacionFecha" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="evaluacionTipo" data-translate="type">Tipo</label>
+                                    <select id="evaluacionTipo" required>
+                                        <option value="EXAMEN" data-translate="exam">Examen</option>
+                                        <option value="PARCIAL" data-translate="partial">Parcial</option>
+                                        <option value="TRABAJO_PRACTICO" data-translate="practical_work">Trabajo Práctico</option>
+                                        <option value="PROYECTO" data-translate="project">Proyecto</option>
+                                        <option value="ORAL" data-translate="oral">Oral</option>
+                                        <option value="PRACTICO" data-translate="practical">Práctico</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="evaluacionPeso" data-translate="weight">Peso</label>
+                                    <input type="number" id="evaluacionPeso" min="0" max="9.99" step="0.01" value="1.00" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="evaluacionEstado" data-translate="status">Estado</label>
+                                    <select id="evaluacionEstado">
+                                        <option value="PROGRAMADA" data-translate="scheduled">Programada</option>
+                                        <option value="EN_CURSO" data-translate="in_progress">En Curso</option>
+                                        <option value="FINALIZADA" data-translate="finished">Finalizada</option>
+                                        <option value="CANCELADA" data-translate="cancelled">Cancelada</option>
+                                    </select>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" id="cancelCreateEvaluacionBtn" class="btn-secondary" data-translate="cancel">Cancelar</button>
+                                    <button type="submit" class="btn-primary" data-translate="save">Guardar Evaluación</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             
 

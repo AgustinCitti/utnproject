@@ -31,7 +31,7 @@
 }
 
 .tab-btn.active {
-    background: white;
+    background: var(--card-bg, white);
     color: #667eea;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -229,7 +229,7 @@
 /* Subject Details Tabs */
 .subject-details-tabs {
     display: flex;
-    background: #f8f9fa;
+    background: var(--bg-secondary, #f8f9fa);
     border-radius: 8px;
     padding: 4px;
     margin: 20px 0;
@@ -250,7 +250,7 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    color: #6c757d;
+    color: var(--text-secondary, #6c757d);
 }
 
 .subject-details-tabs .tab-btn:hover {
@@ -259,7 +259,7 @@
 }
 
 .subject-details-tabs .tab-btn.active {
-    background: white;
+    background: var(--card-bg, white);
     color: #667eea;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }

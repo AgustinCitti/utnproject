@@ -1856,3 +1856,39 @@
     background-color: transparent;
 }
 
+/* Dark mode styles for tab buttons */
+[data-theme="dark"] .tab-btn {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .tab-btn:hover {
+    background: rgba(102, 126, 234, 0.2);
+    color: #667eea;
+}
+
+[data-theme="dark"] .tab-btn.active {
+    background: var(--card-bg);
+    color: #667eea;
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+[data-theme="dark"] .subject-details-tabs {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .subject-details-tabs .tab-btn {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .subject-details-tabs .tab-btn:hover {
+    background: rgba(102, 126, 234, 0.2);
+    color: #667eea;
+}
+
+[data-theme="dark"] .subject-details-tabs .tab-btn.active {
+    background: var(--card-bg);
+    color: #667eea;
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
