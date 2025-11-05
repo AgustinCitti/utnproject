@@ -90,7 +90,7 @@ function initializeUnifiedStudentManagement() {
                 if (tbody) {
                     tbody.innerHTML = '';
                 }
-                // Asegurar que esté en modo textarea por defecto
+                // Asegurar que esté en modo CSV upload por defecto
                 const textareaMode = document.getElementById('bulkTextareaMode');
                 const tableMode = document.getElementById('bulkTableMode');
                 const toggleBtn = document.getElementById('toggleInputModeBtn');
@@ -98,16 +98,25 @@ function initializeUnifiedStudentManagement() {
                     textareaMode.style.display = 'block';
                     tableMode.style.display = 'none';
                     toggleBtn.innerHTML = '<i class="fas fa-table"></i> Modo Tabla Manual';
-                    const textarea = document.getElementById('bulkStudentsList');
-                    if (textarea) textarea.required = true;
+                
+                    // Inicializar handlers de drag-and-drop y file upload
+                    setupBulkCsvUploadHandlers();
                 }
                 // Poblar el dropdown de cursos (async)
                 populateBulkCourseDivisionDropdown().catch(err => console.error('Error al poblar dropdown:', err));
                 // Limpiar el formulario
                 const form = document.getElementById('loadCourseDivisionForm');
                 if (form) form.reset();
-                const textarea = document.getElementById('bulkStudentsList');
-                if (textarea) textarea.value = '';
+                // Limpiar archivo CSV si existe
+                const fileInput = document.getElementById('bulkStudentsFileInput');
+                if (fileInput) {
+                    fileInput.value = '';
+                    fileInput._parsedData = null;
+                }
+                const fileInfo = document.getElementById('bulkCsvFileInfo');
+                const previewDiv = document.getElementById('bulkCsvPreview');
+                if (fileInfo) fileInfo.style.display = 'none';
+                if (previewDiv) previewDiv.style.display = 'none';
             } catch (e) {
                 alert('Error al abrir el formulario de carga masiva');
             }
@@ -2828,7 +2837,105 @@ async function populateBulkCourseDivisionDropdown() {
     };
 }
 
-// Función para parsear nombres de alumnos desde el textarea
+// Función para parsear archivo CSV
+function parseBulkStudentsCSV(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        const lines = text.split('\n').filter(line => line.trim());
+        
+        if (lines.length === 0) {
+            callback([]);
+            return;
+        }
+        
+        // Detectar delimitador (coma o punto y coma)
+        const delimiter = text.includes(';') ? ';' : ',';
+        
+        // Parsear headers
+        const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
+        
+        // Buscar columnas de Nombre y Apellido (case-insensitive)
+        const nombreIndex = headers.findIndex(h => 
+            h.toLowerCase() === 'nombre' || h.toLowerCase() === 'name'
+        );
+        const apellidoIndex = headers.findIndex(h => 
+            h.toLowerCase() === 'apellido' || h.toLowerCase() === 'lastname' || 
+            h.toLowerCase() === 'last_name' || h.toLowerCase() === 'surname'
+        );
+        
+        // Si no encontramos las columnas, intentar con el orden
+        let nombreCol = nombreIndex >= 0 ? nombreIndex : 0;
+        let apellidoCol = apellidoIndex >= 0 ? apellidoIndex : 1;
+        
+        // Si hay solo una columna, asumimos que es "Apellido, Nombre" o "Nombre Apellido"
+        if (headers.length === 1 && nombreIndex < 0 && apellidoIndex < 0) {
+            nombreCol = 0;
+            apellidoCol = 0;
+        }
+        
+        const students = [];
+        
+        // Parsear filas (saltar header)
+        for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(delimiter).map(v => v.trim().replace(/^"|"$/g, ''));
+            
+            if (values.length === 0 || !values.some(v => v)) {
+                continue;
+            }
+            
+            let nombre = '';
+            let apellido = '';
+            
+            if (nombreCol === apellidoCol && headers.length === 1) {
+                // Caso especial: una sola columna con "Apellido, Nombre" o "Nombre Apellido"
+                const value = values[0] || '';
+                if (value.includes(',')) {
+                    const parts = value.split(',').map(p => p.trim());
+                    apellido = parts[0] || '';
+                    nombre = parts.slice(1).join(' ') || '';
+                } else {
+                    const parts = value.split(/\s+/).filter(p => p);
+                    if (parts.length >= 2) {
+                        apellido = parts[0];
+                        nombre = parts.slice(1).join(' ');
+                    } else {
+                        apellido = value;
+                    }
+                }
+            } else {
+                // Columnas separadas
+                nombre = (values[nombreCol] || '').trim();
+                apellido = (values[apellidoCol] || '').trim();
+                
+                // Si el orden está al revés (Apellido, Nombre), intercambiar
+                if (!nombre && !apellido && values.length >= 2) {
+                    // Intentar ambos órdenes
+                    nombre = values[0] || '';
+                    apellido = values[1] || '';
+                }
+            }
+            
+            if (nombre || apellido) {
+                students.push({
+                    Nombre: nombre || '',
+                    Apellido: apellido || nombre || '',
+                    isValid: !!(nombre && apellido) || apellido.length > 0
+                });
+            }
+        }
+        
+        callback(students);
+    };
+    
+    reader.onerror = function() {
+        callback([]);
+    };
+    
+    reader.readAsText(file);
+}
+
+// Función para parsear nombres de alumnos desde el textarea (mantener para compatibilidad)
 function parseStudentNames(text) {
     if (!text || !text.trim()) {
         return [];
@@ -2896,10 +3003,10 @@ function parseStudentNames(text) {
 // Función para procesar la carga masiva de alumnos
 async function processBulkStudents() {
     const courseDivisionSelect = document.getElementById('bulkCourseDivision');
-    const studentsListTextarea = document.getElementById('bulkStudentsList');
+    const studentsFileInput = document.getElementById('bulkStudentsFileInput');
     const statusSelect = document.getElementById('bulkStudentStatus');
     
-    if (!courseDivisionSelect || !studentsListTextarea || !statusSelect) {
+    if (!courseDivisionSelect || !studentsFileInput || !statusSelect) {
         alert('Error: No se encontraron los campos del formulario');
         return;
     }
@@ -2914,7 +3021,6 @@ async function processBulkStudents() {
         }
         courseDivision = `${n}º Curso - División ${d}`;
     }
-    const studentsText = studentsListTextarea.value.trim();
     const defaultStatus = statusSelect.value;
     
     // Validaciones
@@ -2936,12 +3042,20 @@ async function processBulkStudents() {
             return;
         }
     } else {
-        // Parsear del textarea
-        if (!studentsText) {
-            alert('Por favor ingresa la lista de alumnos');
+        // Parsear del archivo CSV
+        const file = studentsFileInput.files[0];
+        if (!file) {
+            alert('Por favor selecciona un archivo CSV');
             return;
         }
-        students = parseStudentNames(studentsText);
+        
+        // Usar los datos ya parseados si están disponibles
+        if (studentsFileInput._parsedData) {
+            students = studentsFileInput._parsedData;
+        } else {
+            alert('Error: No se pudo leer el archivo. Por favor, vuelve a seleccionarlo.');
+            return;
+        }
     }
     
     if (students.length === 0) {
@@ -3124,7 +3238,124 @@ window.processBulkStudents = processBulkStudents;
 
 let manualStudentRowCounter = 0;
 
-// Función para alternar entre modo textarea y tabla manual
+// Función para configurar handlers de drag-and-drop y file upload para CSV
+function setupBulkCsvUploadHandlers() {
+    const uploadArea = document.getElementById('bulkCsvUploadArea');
+    const fileInput = document.getElementById('bulkStudentsFileInput');
+    const fileInfo = document.getElementById('bulkCsvFileInfo');
+    const fileName = document.getElementById('bulkCsvFileName');
+    const fileSize = document.getElementById('bulkCsvFileSize');
+    const removeFileBtn = document.getElementById('bulkCsvRemoveFile');
+    const previewDiv = document.getElementById('bulkCsvPreview');
+    const previewContent = document.getElementById('bulkCsvPreviewContent');
+    const previewTotal = document.getElementById('bulkCsvPreviewTotal');
+    
+    if (!uploadArea || !fileInput) return;
+    
+    // Función para procesar archivo seleccionado
+    const processFile = (file) => {
+        if (!file) return;
+        
+        // Validar tipo de archivo
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        if (fileExtension === '.xlsx') {
+            alert('Por favor exporta tu archivo Excel como CSV primero. En Excel: Archivo > Guardar como > Formato CSV (delimitado por comas).');
+            return;
+        }
+        if (fileExtension !== '.csv') {
+            alert('Por favor selecciona un archivo CSV (.csv)');
+            return;
+        }
+        
+        // Mostrar información del archivo
+        fileName.textContent = file.name;
+        fileSize.textContent = (file.size / 1024).toFixed(2) + ' KB';
+        fileInfo.style.display = 'block';
+        
+        // Parsear CSV
+        parseBulkStudentsCSV(file, function(students) {
+            if (students.length === 0) {
+                alert('El archivo CSV está vacío o no tiene el formato correcto');
+                fileInput.value = '';
+                fileInfo.style.display = 'none';
+                previewDiv.style.display = 'none';
+                return;
+            }
+            
+            // Guardar datos parseados
+            fileInput._parsedData = students;
+            
+            // Mostrar preview
+            previewDiv.style.display = 'block';
+            const previewRows = students.slice(0, 5);
+            previewContent.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                    <thead>
+                        <tr style="background: #f0f0f0;">
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Nombre</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Apellido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${previewRows.map(row => `
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Nombre || ''}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Apellido || ''}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ${students.length > 5 ? `<p style="margin-top: 8px; color: #666;">... y ${students.length - 5} más</p>` : ''}
+            `;
+            previewTotal.textContent = `Total: ${students.length} estudiante(s)`;
+        });
+    };
+    
+    // Handler para selección de archivo
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        processFile(file);
+    });
+    
+    // Handlers para drag-and-drop
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.add('drag-over');
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.remove('drag-over');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            processFile(files[0]);
+        }
+    });
+    
+    // Handler para remover archivo
+    if (removeFileBtn) {
+        removeFileBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileInput.value = '';
+            fileInput._parsedData = null;
+            fileInfo.style.display = 'none';
+            previewDiv.style.display = 'none';
+        });
+    }
+}
+
+// Función para alternar entre modo CSV upload y tabla manual
 window.toggleBulkInputMode = function() {
     const textareaMode = document.getElementById('bulkTextareaMode');
     const tableMode = document.getElementById('bulkTableMode');
@@ -3135,21 +3366,17 @@ window.toggleBulkInputMode = function() {
     const isTableMode = tableMode.style.display !== 'none';
     
     if (isTableMode) {
-        // Cambiar a modo textarea
+        // Cambiar a modo CSV upload
         textareaMode.style.display = 'block';
         tableMode.style.display = 'none';
         toggleBtn.innerHTML = '<i class="fas fa-table"></i> Modo Tabla Manual';
-        // Hacer el textarea requerido cuando está visible
-        const textarea = document.getElementById('bulkStudentsList');
-        if (textarea) textarea.required = true;
+        // Configurar handlers si no están configurados
+        setupBulkCsvUploadHandlers();
     } else {
         // Cambiar a modo tabla
         textareaMode.style.display = 'none';
         tableMode.style.display = 'block';
-        toggleBtn.innerHTML = '<i class="fas fa-align-left"></i> Modo Texto';
-        // Quitar required del textarea cuando está oculto
-        const textarea = document.getElementById('bulkStudentsList');
-        if (textarea) textarea.required = false;
+        toggleBtn.innerHTML = '<i class="fas fa-file-csv"></i> Modo CSV';
         
         // Inicializar la tabla si está vacía
         const tbody = document.getElementById('bulkManualStudentsTableBody');

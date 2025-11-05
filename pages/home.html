@@ -43,6 +43,50 @@
         .nav-dropdown .dropdown-menu {
             background-color: white !important;
         }
+        
+        /* CSV Upload Area Styles */
+        #bulkCsvUploadArea {
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #bulkCsvUploadArea:hover {
+            opacity: 0.8;
+        }
+        
+        #bulkCsvUploadArea.drag-over {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+        
+        #bulkCsvFileInfo {
+            width: 100%;
+        }
+        
+        #bulkCsvPreview table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        #bulkCsvPreview table th {
+            background: #f0f0f0;
+            font-weight: 600;
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        
+        #bulkCsvPreview table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        #bulkCsvPreview table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
     </style>
 </head>
 <body>
@@ -1267,9 +1311,42 @@
                         </button>
                     </div>
                     <div id="bulkTextareaMode">
-                        <textarea id="bulkStudentsList" rows="15" placeholder="Ingresa los alumnos, uno por línea. Acepta múltiples formatos:&#10;&#10;Con coma: García, Juan&#10;Con tabulación: Pérez	María&#10;Sin coma: López Juan (primer palabra = apellido, resto = nombre)&#10;&#10;Ejemplos:&#10;García, Juan&#10;Pérez, María&#10;López Juan&#10;Martínez Carlos Alberto"></textarea>
-                        <small style="display: block; margin-top: 5px; color: #666;">
-                            Puedes pegar listas completas. El sistema detectará automáticamente el formato.
+                        <div id="bulkCsvUploadArea" style="border: none; border-radius: 8px; padding: 40px; text-align: center; background: transparent; transition: all 0.3s ease; cursor: pointer; position: relative;">
+                            <input type="file" id="bulkStudentsFileInput" accept=".csv" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; z-index: 1;">
+                            <div id="bulkCsvUploadContent">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #667eea; margin-bottom: 16px;"></i>
+                                <p style="margin: 0; font-size: 16px; color: #333; font-weight: 500;">
+                                    Arrastra y suelta tu archivo CSV aquí
+                                </p>
+                                <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">
+                                    o haz clic para seleccionar
+                                </p>
+                                <small style="display: block; margin-top: 12px; color: #999;">
+                                    Formato: .csv (exporta desde Excel como CSV)
+                                </small>
+                            </div>
+                            <div id="bulkCsvFileInfo" style="display: none; padding: 16px; background: transparent; border-radius: 6px; margin-top: 16px; text-align: left;">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <i class="fas fa-file-csv" style="font-size: 24px; color: #667eea;"></i>
+                                        <div>
+                                            <p style="margin: 0; font-weight: 500; color: #333;" id="bulkCsvFileName">archivo.csv</p>
+                                            <small style="color: #666;" id="bulkCsvFileSize">0 KB</small>
+                                        </div>
+                                    </div>
+                                    <button type="button" id="bulkCsvRemoveFile" class="btn-icon btn-secondary" style="padding: 6px;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="bulkCsvPreview" style="display: none; margin-top: 16px; padding: 16px; background: transparent; border-radius: 6px; border: none;">
+                            <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #333;">Vista Previa:</h4>
+                            <div id="bulkCsvPreviewContent" style="max-height: 200px; overflow-y: auto;"></div>
+                            <p style="margin: 12px 0 0 0; color: #666; font-weight: 600; font-size: 14px;" id="bulkCsvPreviewTotal">Total: 0 estudiante(s)</p>
+                        </div>
+                        <small style="display: block; margin-top: 8px; color: #666;">
+                            Formato esperado: Nombre, Apellido (o Apellido, Nombre). El archivo debe tener encabezados en la primera fila.
                         </small>
                     </div>
                     <div id="bulkTableMode" style="display:none;">
@@ -1411,7 +1488,7 @@
                     </small>
                 </div>
                 <!-- Sección para crear nuevo curso (oculta por defecto) -->
-                <div id="createNewCourseSection" style="display: none; background: #f5f5f5; padding: 15px; border-radius: 6px; margin-top: 10px;">
+                <div id="createNewCourseSection" style="display: none; padding: 15px; border-radius: 6px; margin-top: 10px;border:none;">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="subjectCourse" data-translate="course">Curso</label>
