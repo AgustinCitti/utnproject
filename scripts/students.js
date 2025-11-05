@@ -217,6 +217,44 @@ function renderSelectedSubjects() {
     `).join('');
 }
 
+// Function to pre-select a materia when creating a student from materia details
+function preSelectMateriaForNewStudent(materiaId) {
+    if (!materiaId || !appData || !appData.materia) return;
+    
+    const materia = appData.materia.find(m => parseInt(m.ID_materia) === parseInt(materiaId));
+    if (!materia) return;
+    
+    // Clear existing selections first
+    selectedSubjectsList = [];
+    
+    // Add the materia to selectedSubjectsList
+    selectedSubjectsList.push({
+        id: parseInt(materia.ID_materia),
+        name: materia.Nombre,
+        curso: materia.Curso_division || ''
+    });
+    
+    // Render the selected subjects
+    renderSelectedSubjects();
+    
+    // If the materia has a curso_division, set it in the course select
+    if (materia.Curso_division) {
+        const courseSelect = document.getElementById('studentCourse');
+        if (courseSelect) {
+            courseSelect.value = materia.Curso_division;
+        }
+    }
+    
+    // Repopulate the subjects select to remove the selected one
+    populateStudentSubjectsSelect();
+    
+    // Repopulate topics for the selected materia
+    populateStudentTopicsSelect();
+}
+
+// Make function globally accessible
+window.preSelectMateriaForNewStudent = preSelectMateriaForNewStudent;
+
 function removeSubject(index) {
     selectedSubjectsList.splice(index, 1);
     renderSelectedSubjects();
@@ -1228,6 +1266,11 @@ async function saveStudent() {
                 if (typeof updateDashboard === 'function') {
                     updateDashboard();
                 }
+                
+                // If we created a student from materia details view, reload the students list
+                if (window.currentThemesSubjectId && typeof loadMateriaStudents === 'function') {
+                    loadMateriaStudents(window.currentThemesSubjectId);
+                }
             }, 100);
             
             // Mostrar notificación
@@ -1621,6 +1664,20 @@ window.showModal = function(modalId) {
         populateStudentSubjectsSelect();
         // Poblar temas cuando se abre el modal
         populateStudentTopicsSelect();
+        
+        // Check if we're creating a student for a specific materia
+        // This flag is set when clicking "Add Student" from materia details
+        if (window.createStudentForMateriaId) {
+            const materiaIdToUse = window.createStudentForMateriaId;
+            // Clear the flag immediately to avoid reuse
+            window.createStudentForMateriaId = null;
+            
+            setTimeout(() => {
+                if (typeof preSelectMateriaForNewStudent === 'function') {
+                    preSelectMateriaForNewStudent(materiaIdToUse);
+                }
+            }, 200);
+        }
         
         setTimeout(() => {
             const submitBtn = document.querySelector('#studentForm button[type="submit"]');

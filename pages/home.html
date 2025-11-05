@@ -942,6 +942,10 @@
                             <i class="fas fa-clipboard-list"></i>
                             <span data-translate="evaluations">Evaluaciones</span>
                         </button>
+                        <button id="estudiantesTabBtn" class="tab-btn" data-tab="estudiantes">
+                            <i class="fas fa-users"></i>
+                            <span data-translate="students">Estudiantes</span>
+                        </button>
                     </div>
 
                     <!-- Temas Tab Content -->
@@ -951,9 +955,14 @@
                                 <i class="fas fa-book-open" style="margin-right: 8px;"></i>
                                 Temas de la Materia
                             </h3>
-                            <button id="showCreateThemeFormBtn" class="btn-primary" style="padding: 8px 16px; font-size: 0.9em;">
-                                <i class="fas fa-plus"></i> Crear Tema
-                            </button>
+                            <div style="display: flex; gap: 8px;">
+                                <button id="importTemasBtn" class="btn-secondary" style="padding: 8px 16px; font-size: 0.9em;">
+                                    <i class="fas fa-upload"></i> Importar Excel
+                                </button>
+                                <button id="showCreateThemeFormBtn" class="btn-primary" style="padding: 8px 16px; font-size: 0.9em;">
+                                    <i class="fas fa-plus"></i> Crear Tema
+                                </button>
+                            </div>
                         </div>
                         <div id="subjectThemesList" style="max-height: 500px; overflow-y: auto; background: var(--card-bg, #fff); border-radius: 8px; padding: 1rem;">
                             <!-- Temas will be loaded here -->
@@ -1001,9 +1010,14 @@
                                 <i class="fas fa-clipboard-list" style="margin-right: 8px;"></i>
                                 Evaluaciones
                             </h3>
-                            <button id="showCreateEvaluacionFormBtn" class="btn-primary" style="padding: 8px 16px; font-size: 0.9em;">
-                                <i class="fas fa-plus"></i> Crear Evaluación
-                            </button>
+                            <div style="display: flex; gap: 8px;">
+                                <button id="importEvaluacionesBtn" class="btn-secondary" style="padding: 8px 16px; font-size: 0.9em;">
+                                    <i class="fas fa-upload"></i> Importar Excel
+                                </button>
+                                <button id="showCreateEvaluacionFormBtn" class="btn-primary" style="padding: 8px 16px; font-size: 0.9em;">
+                                    <i class="fas fa-plus"></i> Crear Evaluación
+                                </button>
+                            </div>
                         </div>
                         <div id="subjectEvaluacionesList" style="max-height: 500px; overflow-y: auto; background: var(--card-bg, #fff); border-radius: 8px; padding: 1rem;">
                             <!-- Evaluaciones will be loaded here -->
@@ -1060,6 +1074,32 @@
                                     <button type="submit" class="btn-primary" data-translate="save">Guardar Evaluación</button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+
+                    <!-- Estudiantes Tab Content -->
+                    <div id="estudiantesTabContent" class="tab-content" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="margin: 0; color: var(--text-primary, #333); font-size: 1.2rem;">
+                                <i class="fas fa-users" style="margin-right: 8px;"></i>
+                                Estudiantes Inscritos
+                            </h3>
+                            <div style="display: flex; gap: 8px;">
+                                <button id="importEstudiantesBtn" class="btn-secondary" style="padding: 8px 16px; font-size: 0.9em;">
+                                    <i class="fas fa-upload"></i> Importar Excel
+                                </button>
+                                <button id="addStudentToMateriaBtn" class="btn-primary" style="padding: 8px 16px; font-size: 0.9em;">
+                                    <i class="fas fa-plus"></i> Agregar Estudiante
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Student Cards View -->
+                        <div id="materiaStudentsCards" style="display: none;">
+                            <!-- Student cards will be loaded here -->
+                        </div>
+                        <!-- Student List View -->
+                        <div id="materiaStudentsList" style="max-height: 500px; overflow-y: auto; background: var(--card-bg, #fff); border-radius: 8px; padding: 1rem;">
+                            <!-- Student list will be loaded here -->
                         </div>
                     </div>
                 </div>
@@ -1784,6 +1824,109 @@
                     <i class="fas fa-times"></i>
                     <span data-translate="cancel">Cancelar</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Excel Modals -->
+    <!-- Import Temas Excel Modal -->
+    <div id="importTemasModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Importar Temas desde Excel</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-form" style="padding: 2rem;">
+                <div class="form-group">
+                    <label style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Seleccionar archivo Excel (.csv o .xlsx)</span>
+                        <button type="button" id="downloadTemasExampleBtn" class="btn-secondary" style="padding: 6px 12px; font-size: 0.85em;">
+                            <i class="fas fa-file-excel"></i> Descargar Ejemplo
+                        </button>
+                    </label>
+                    <input type="file" id="importTemasFile" accept=".csv,.xlsx" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%; margin-top: 8px;">
+                    <small style="display: block; margin-top: 8px; color: #666;">
+                        Formato esperado: Tema, Descripción, Estado<br>
+                        Ejemplo: Introducción a la Programación, Conceptos básicos de programación, PENDIENTE<br>
+                        <strong>Nota:</strong> Puedes usar archivos CSV exportados desde Excel
+                    </small>
+                </div>
+                <div id="importTemasPreview" style="margin-top: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; display: none;">
+                    <h4 style="margin-bottom: 0.5rem;">Vista Previa:</h4>
+                    <div id="importTemasPreviewContent" style="max-height: 200px; overflow-y: auto;"></div>
+                </div>
+            </div>
+            <div class="form-actions" style="padding: 1rem 2rem; border-top: 1px solid #e0e0e0;">
+                <button type="button" class="btn-secondary close-modal">Cancelar</button>
+                <button type="button" id="confirmImportTemasBtn" class="btn-primary">Importar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Evaluaciones CSV Modal -->
+    <div id="importEvaluacionesModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Importar Evaluaciones desde Excel</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-form" style="padding: 2rem;">
+                <div class="form-group">
+                    <label style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Seleccionar archivo Excel</span>
+                        <button type="button" id="downloadEvaluacionesExampleBtn" class="btn-secondary" style="padding: 6px 12px; font-size: 0.85em;">
+                            <i class="fas fa-file-excel"></i> Descargar Ejemplo
+                        </button>
+                    </label>
+                    <input type="file" id="importEvaluacionesFile" accept=".csv,.xlsx" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%; margin-top: 8px;">
+                    <small style="display: block; margin-top: 8px; color: #666;">
+                        Formato esperado: Título, Descripción, Fecha (YYYY-MM-DD), Tipo, Peso, Estado<br>
+                        Ejemplo: Parcial 1, Primer parcial del año, 2024-03-15, PARCIAL, 1.0, PROGRAMADA<br>
+                        <strong>Nota:</strong> Puedes usar archivos CSV exportados desde Excel
+                    </small>
+                </div>
+                <div id="importEvaluacionesPreview" style="margin-top: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; display: none;">
+                    <h4 style="margin-bottom: 0.5rem;">Vista Previa:</h4>
+                    <div id="importEvaluacionesPreviewContent" style="max-height: 200px; overflow-y: auto;"></div>
+                </div>
+            </div>
+            <div class="form-actions" style="padding: 1rem 2rem; border-top: 1px solid #e0e0e0;">
+                <button type="button" class="btn-secondary close-modal">Cancelar</button>
+                <button type="button" id="confirmImportEvaluacionesBtn" class="btn-primary">Importar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Estudiantes Excel Modal -->
+    <div id="importEstudiantesModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Importar Estudiantes desde Excel</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-form" style="padding: 2rem;">
+                <div class="form-group">
+                    <label style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Seleccionar archivo Excel (.csv o .xlsx)</span>
+                        <button type="button" id="downloadEstudiantesExampleBtn" class="btn-secondary" style="padding: 6px 12px; font-size: 0.85em;">
+                            <i class="fas fa-file-excel"></i> Descargar Ejemplo
+                        </button>
+                    </label>
+                    <input type="file" id="importEstudiantesFile" accept=".csv,.xlsx" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%; margin-top: 8px;">
+                    <small style="display: block; margin-top: 8px; color: #666;">
+                        Formato esperado: Nombre, Apellido, Email (opcional), Estado<br>
+                        Ejemplo: Juan, Pérez, juan.perez@email.com, ACTIVO<br>
+                        <strong>Nota:</strong> Puedes usar archivos CSV exportados desde Excel
+                    </small>
+                </div>
+                <div id="importEstudiantesPreview" style="margin-top: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; display: none;">
+                    <h4 style="margin-bottom: 0.5rem;">Vista Previa:</h4>
+                    <div id="importEstudiantesPreviewContent" style="max-height: 200px; overflow-y: auto;"></div>
+                </div>
+            </div>
+            <div class="form-actions" style="padding: 1rem 2rem; border-top: 1px solid #e0e0e0;">
+                <button type="button" class="btn-secondary close-modal">Cancelar</button>
+                <button type="button" id="confirmImportEstudiantesBtn" class="btn-primary">Importar</button>
             </div>
         </div>
     </div>

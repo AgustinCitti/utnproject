@@ -999,6 +999,8 @@ window.showSubjectThemesPanel = function(subjectId) {
     
     // Store current subject ID
     currentThemesSubjectId = subjectId;
+    // Make it globally accessible for student creation callback
+    window.currentThemesSubjectId = subjectId;
     
     // Navigate to materia-details section instead of opening modal
     if (typeof showSection === 'function') {
@@ -1258,6 +1260,9 @@ async function loadSubjectEvaluaciones(subjectId) {
                             </div>
                         </div>
                         <div style="display: flex; gap: 5px;" onclick="event.stopPropagation();">
+                            <button class="btn-icon btn-grade" onclick="if(typeof openGradeMarkingForExam === 'function') openGradeMarkingForExam(${eval.ID_evaluacion})" title="Calificar Estudiantes" style="padding: 6px 8px; background: #4caf50; color: white;">
+                                <i class="fas fa-clipboard-check" style="font-size: 0.9em;"></i>
+                            </button>
                             <button class="btn-icon btn-edit" onclick="editEvaluacion(${eval.ID_evaluacion})" title="Editar Evaluación" style="padding: 6px 8px;">
                                 <i class="fas fa-edit" style="font-size: 0.9em;"></i>
                             </button>
@@ -1287,8 +1292,10 @@ function setupMateriaDetailsHandlers() {
     // Tab switching functionality
     const temasTabBtn = document.getElementById('temasTabBtn');
     const evaluacionesTabBtn = document.getElementById('evaluacionesTabBtn');
+    const estudiantesTabBtn = document.getElementById('estudiantesTabBtn');
     const temasTabContent = document.getElementById('temasTabContent');
     const evaluacionesTabContent = document.getElementById('evaluacionesTabContent');
+    const estudiantesTabContent = document.getElementById('estudiantesTabContent');
     
     // Temas tab button
     if (temasTabBtn) {
@@ -1304,12 +1311,76 @@ function setupMateriaDetailsHandlers() {
         };
     }
     
+    // Estudiantes tab button
+    if (estudiantesTabBtn) {
+        estudiantesTabBtn.onclick = function() {
+            switchToEstudiantesTab();
+        };
+    }
+    
+    // Add student to materia button
+    const addStudentToMateriaBtn = document.getElementById('addStudentToMateriaBtn');
+    if (addStudentToMateriaBtn) {
+        addStudentToMateriaBtn.onclick = function() {
+            if (currentThemesSubjectId) {
+                // Store the materia ID for pre-selection when creating student
+                // This will be picked up by the showModal function in students.js
+                window.createStudentForMateriaId = parseInt(currentThemesSubjectId);
+                
+                // Open student creation modal
+                // The modal opening will handle pre-selecting the materia
+                if (typeof showModal === 'function') {
+                    showModal('studentModal');
+                } else {
+                    const modal = document.getElementById('studentModal');
+                    if (modal) {
+                        modal.classList.add('active');
+                        // If showModal isn't available, manually trigger pre-selection
+                        setTimeout(() => {
+                            if (typeof preSelectMateriaForNewStudent === 'function') {
+                                preSelectMateriaForNewStudent(parseInt(currentThemesSubjectId));
+                            }
+                        }, 200);
+                    }
+                }
+            }
+        };
+    }
+    
     // Back to subjects button
     const backBtn = document.getElementById('backToSubjectsFromDetailsBtn');
     if (backBtn) {
         backBtn.onclick = function() {
             if (typeof showSection === 'function') {
                 showSection('subjects-management');
+            }
+        };
+    }
+    
+    // Import buttons
+    const importTemasBtn = document.getElementById('importTemasBtn');
+    if (importTemasBtn) {
+        importTemasBtn.onclick = function() {
+            if (currentThemesSubjectId) {
+                showImportTemasModal(currentThemesSubjectId);
+            }
+        };
+    }
+    
+    const importEvaluacionesBtn = document.getElementById('importEvaluacionesBtn');
+    if (importEvaluacionesBtn) {
+        importEvaluacionesBtn.onclick = function() {
+            if (currentThemesSubjectId) {
+                showImportEvaluacionesModal(currentThemesSubjectId);
+            }
+        };
+    }
+    
+    const importEstudiantesBtn = document.getElementById('importEstudiantesBtn');
+    if (importEstudiantesBtn) {
+        importEstudiantesBtn.onclick = function() {
+            if (currentThemesSubjectId) {
+                showImportEstudiantesModal(currentThemesSubjectId);
             }
         };
     }
@@ -1362,12 +1433,15 @@ function setupMateriaDetailsHandlers() {
 function switchToTemasTab() {
     const temasTabBtn = document.getElementById('temasTabBtn');
     const evaluacionesTabBtn = document.getElementById('evaluacionesTabBtn');
+    const estudiantesTabBtn = document.getElementById('estudiantesTabBtn');
     const temasTabContent = document.getElementById('temasTabContent');
     const evaluacionesTabContent = document.getElementById('evaluacionesTabContent');
+    const estudiantesTabContent = document.getElementById('estudiantesTabContent');
     
     // Update tab buttons
     if (temasTabBtn) temasTabBtn.classList.add('active');
     if (evaluacionesTabBtn) evaluacionesTabBtn.classList.remove('active');
+    if (estudiantesTabBtn) estudiantesTabBtn.classList.remove('active');
     
     // Update tab content
     if (temasTabContent) {
@@ -1378,18 +1452,25 @@ function switchToTemasTab() {
         evaluacionesTabContent.classList.remove('active');
         evaluacionesTabContent.style.display = 'none';
     }
+    if (estudiantesTabContent) {
+        estudiantesTabContent.classList.remove('active');
+        estudiantesTabContent.style.display = 'none';
+    }
 }
 
 // Switch to Evaluaciones tab
 function switchToEvaluacionesTab() {
     const temasTabBtn = document.getElementById('temasTabBtn');
     const evaluacionesTabBtn = document.getElementById('evaluacionesTabBtn');
+    const estudiantesTabBtn = document.getElementById('estudiantesTabBtn');
     const temasTabContent = document.getElementById('temasTabContent');
     const evaluacionesTabContent = document.getElementById('evaluacionesTabContent');
+    const estudiantesTabContent = document.getElementById('estudiantesTabContent');
     
     // Update tab buttons
     if (temasTabBtn) temasTabBtn.classList.remove('active');
     if (evaluacionesTabBtn) evaluacionesTabBtn.classList.add('active');
+    if (estudiantesTabBtn) estudiantesTabBtn.classList.remove('active');
     
     // Update tab content
     if (temasTabContent) {
@@ -1400,10 +1481,212 @@ function switchToEvaluacionesTab() {
         evaluacionesTabContent.classList.add('active');
         evaluacionesTabContent.style.display = 'block';
     }
+    if (estudiantesTabContent) {
+        estudiantesTabContent.classList.remove('active');
+        estudiantesTabContent.style.display = 'none';
+    }
     
     // Always load evaluaciones when switching to this tab
     if (currentThemesSubjectId) {
         loadSubjectEvaluaciones(currentThemesSubjectId);
+    }
+}
+
+// Switch to Estudiantes tab
+function switchToEstudiantesTab() {
+    const temasTabBtn = document.getElementById('temasTabBtn');
+    const evaluacionesTabBtn = document.getElementById('evaluacionesTabBtn');
+    const estudiantesTabBtn = document.getElementById('estudiantesTabBtn');
+    const temasTabContent = document.getElementById('temasTabContent');
+    const evaluacionesTabContent = document.getElementById('evaluacionesTabContent');
+    const estudiantesTabContent = document.getElementById('estudiantesTabContent');
+    
+    // Update tab buttons
+    if (temasTabBtn) temasTabBtn.classList.remove('active');
+    if (evaluacionesTabBtn) evaluacionesTabBtn.classList.remove('active');
+    if (estudiantesTabBtn) estudiantesTabBtn.classList.add('active');
+    
+    // Update tab content
+    if (temasTabContent) {
+        temasTabContent.classList.remove('active');
+        temasTabContent.style.display = 'none';
+    }
+    if (evaluacionesTabContent) {
+        evaluacionesTabContent.classList.remove('active');
+        evaluacionesTabContent.style.display = 'none';
+    }
+    if (estudiantesTabContent) {
+        estudiantesTabContent.classList.add('active');
+        estudiantesTabContent.style.display = 'block';
+    }
+    
+    // Always load students when switching to this tab
+    if (currentThemesSubjectId) {
+        loadMateriaStudents(currentThemesSubjectId);
+    }
+}
+
+// Function to load students for a specific materia
+function loadMateriaStudents(subjectId) {
+    const studentsList = document.getElementById('materiaStudentsList');
+    const studentsCards = document.getElementById('materiaStudentsCards');
+    
+    if (!studentsList) {
+        console.error('materiaStudentsList element not found');
+        return;
+    }
+    
+    // Show loading state
+    studentsList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">Cargando estudiantes...</div>';
+    
+    // Ensure appData is available
+    if (!appData && window.appData) {
+        appData = window.appData;
+    } else if (!appData && window.data) {
+        appData = window.data;
+    }
+    
+    // Get students enrolled in this materia
+    let enrolledStudents = [];
+    
+    if (appData && appData.alumnos_x_materia && Array.isArray(appData.alumnos_x_materia) &&
+        appData.estudiante && Array.isArray(appData.estudiante)) {
+        
+        // Get student IDs enrolled in this materia
+        const enrolledStudentIds = appData.alumnos_x_materia
+            .filter(axm => {
+                const materiaId = parseInt(axm.Materia_ID_materia);
+                const subjectIdNum = parseInt(subjectId);
+                return materiaId === subjectIdNum;
+            })
+            .map(axm => parseInt(axm.Estudiante_ID_Estudiante));
+        
+        // Get full student objects
+        enrolledStudents = appData.estudiante
+            .filter(student => enrolledStudentIds.includes(parseInt(student.ID_Estudiante)))
+            .sort((a, b) => {
+                // Sort by last name, then first name
+                const lastNameA = (a.Apellido || '').toLowerCase();
+                const lastNameB = (b.Apellido || '').toLowerCase();
+                if (lastNameA !== lastNameB) {
+                    return lastNameA.localeCompare(lastNameB);
+                }
+                const firstNameA = (a.Nombre || '').toLowerCase();
+                const firstNameB = (b.Nombre || '').toLowerCase();
+                return firstNameA.localeCompare(firstNameB);
+            });
+        
+        console.log(`Found ${enrolledStudents.length} students enrolled in materia ${subjectId}`);
+    }
+    
+    // Display students - similar to unified student management display
+    if (enrolledStudents.length > 0) {
+        // List view (table format similar to unified student list)
+        studentsList.innerHTML = `
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: var(--bg-secondary, #f5f5f5); border-bottom: 2px solid var(--border-color, #ddd);">
+                        <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary, #333);">Estudiante</th>
+                        <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary, #333);">ID</th>
+                        <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary, #333);">Estado</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 600; color: var(--text-primary, #333);">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${enrolledStudents.map(student => {
+                        const isIntensificador = (student.INTENSIFICA === true || student.INTENSIFICA === 1 || student.INTENSIFICA === '1');
+                        const displayEstado = getStudentDisplayEstado ? getStudentDisplayEstado(student) : (student.Estado || 'ACTIVO');
+                        
+                        // Get student statistics
+                        const studentIdNum = parseInt(student.ID_Estudiante);
+                        const studentGrades = (appData.notas || []).filter(g => 
+                            parseInt(g.Estudiante_ID_Estudiante) === studentIdNum
+                        );
+                        const studentAttendance = (appData.asistencia || []).filter(a => 
+                            parseInt(a.Estudiante_ID_Estudiante) === studentIdNum
+                        );
+                        
+                        // Calculate average
+                        const gradesForAverage = studentGrades.filter(g => parseFloat(g.Calificacion) > 0);
+                        const averageGrade = gradesForAverage.length > 0 
+                            ? parseFloat((gradesForAverage.reduce((sum, g) => sum + parseFloat(g.Calificacion), 0) / gradesForAverage.length).toFixed(1))
+                            : 0;
+                        
+                        // Calculate attendance rate
+                        const attendanceRate = studentAttendance.length > 0
+                            ? Math.round((studentAttendance.filter(a => a.Presente === 'P' || a.Presente === 'Y').length / studentAttendance.length) * 100)
+                            : 0;
+                        
+                        return `
+                            <tr onclick="if(typeof showStudentDetail === 'function') showStudentDetail(${studentIdNum})" style="cursor: pointer; border-bottom: 1px solid var(--border-color, #eee); transition: background 0.2s;" 
+                                onmouseover="this.style.background='var(--bg-secondary, #f9f9f9)'" 
+                                onmouseout="this.style.background='transparent'">
+                                <td style="padding: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color, #667eea); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                            ${student.Nombre ? student.Nombre.charAt(0).toUpperCase() : ''}${student.Apellido ? student.Apellido.charAt(0).toUpperCase() : ''}
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 500; color: var(--text-primary, #333);">
+                                                ${student.Nombre} ${student.Apellido}
+                                                ${isIntensificador ? '<span style="color: #ff9800; font-size: 0.85em; margin-left: 6px;">(Intensificador)</span>' : ''}
+                                            </div>
+                                            <div style="font-size: 0.85em; color: var(--text-secondary, #666); margin-top: 2px;">
+                                                Promedio: <strong style="color: ${averageGrade >= 8 ? '#4caf50' : averageGrade >= 6 ? '#ff9800' : '#f44336'}">${averageGrade.toFixed(1)}</strong> | 
+                                                Asistencia: <strong style="color: ${attendanceRate >= 80 ? '#4caf50' : attendanceRate >= 60 ? '#ff9800' : '#f44336'}">${attendanceRate}%</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="padding: 12px; color: var(--text-secondary, #666);">${student.ID_Estudiante}</td>
+                                <td style="padding: 12px;">
+                                    <span class="status-badge status-${displayEstado.toLowerCase()}" style="font-size: 0.85em; padding: 4px 10px; border-radius: 12px;">
+                                        ${displayEstado}
+                                    </span>
+                                </td>
+                                <td style="padding: 12px; text-align: center;" onclick="event.stopPropagation();">
+                                    <div style="display: flex; gap: 8px; justify-content: center;">
+                                        <button class="btn-icon btn-attendance" onclick="markAttendanceForStudent(${studentIdNum}, ${parseInt(subjectId)})" title="Marcar Asistencia" style="padding: 6px 10px; background: #4caf50; color: white;">
+                                            <i class="fas fa-check-circle" style="font-size: 0.9em;"></i>
+                                        </button>
+                                        ${isIntensificador ? `
+                                            <button class="btn-icon btn-assign" onclick="if(typeof assignThemesToIntensificador === 'function') assignThemesToIntensificador(${studentIdNum})" title="Asignar Temas de Intensificación" style="padding: 6px 10px;">
+                                                <i class="fas fa-book-reader" style="font-size: 0.9em;"></i>
+                                            </button>
+                                        ` : ''}
+                                        <button class="btn-icon btn-edit" onclick="if(typeof editStudent === 'function') editStudent(${studentIdNum})" title="Editar Estudiante" style="padding: 6px 10px;">
+                                            <i class="fas fa-edit" style="font-size: 0.9em;"></i>
+                                        </button>
+                                        <button class="btn-icon btn-delete" onclick="if(typeof deleteStudent === 'function') deleteStudent(${studentIdNum})" title="Eliminar Estudiante" style="padding: 6px 10px;">
+                                            <i class="fas fa-trash" style="font-size: 0.9em;"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+        
+        // Hide cards view (we're using list view by default)
+        if (studentsCards) {
+            studentsCards.style.display = 'none';
+        }
+    } else {
+        studentsList.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary, #999);">
+                <i class="fas fa-users" style="font-size: 2.5em; margin-bottom: 15px; opacity: 0.3;"></i>
+                <p style="margin: 0; font-size: 1.1em;">No hay estudiantes inscritos en esta materia</p>
+                <p style="margin: 10px 0 0 0; font-size: 0.9em; color: var(--text-secondary, #999);">
+                    Puedes asignar estudiantes desde la sección de Gestión de Estudiantes
+                </p>
+            </div>
+        `;
+        
+        if (studentsCards) {
+            studentsCards.style.display = 'none';
+        }
     }
 }
 
@@ -1498,6 +1781,628 @@ window.deleteEvaluacion = function(evaluacionId) {
         alert('Función de eliminación de evaluaciones en desarrollo');
     }
 }
+
+// ============================================================================
+// CSV IMPORT FUNCTIONS
+// ============================================================================
+
+// Function to download CSV file
+function downloadCSV(content, filename) {
+    const blob = new Blob(['\ufeff' + content], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Download Temas Example Excel (CSV format)
+function downloadTemasExampleCSV() {
+    const csvContent = [
+        'Tema,Descripción,Estado',
+        'Introducción a la Programación,Conceptos básicos de programación y algoritmos,PENDIENTE',
+        'Variables y Tipos de Datos,Definición y uso de variables en diferentes lenguajes,EN_PROGRESO',
+        'Estructuras de Control,If/else, loops y condicionales,COMPLETADO',
+        'Funciones y Procedimientos,Definición y llamada de funciones,CANCELADO'
+    ].join('\n');
+    
+    downloadCSV(csvContent, 'ejemplo_temas.xlsx');
+}
+
+// Download Evaluaciones Example Excel (CSV format)
+function downloadEvaluacionesExampleCSV() {
+    const csvContent = [
+        'Título,Descripción,Fecha,Tipo,Peso,Estado',
+        'Parcial 1,Primer parcial del año,2024-03-15,PARCIAL,1.0,PROGRAMADA',
+        'Examen Final,Examen final del curso,2024-06-20,EXAMEN,2.0,PROGRAMADA',
+        'Trabajo Práctico 1,Primer trabajo práctico,2024-04-10,TRABAJO_PRACTICO,0.5,EN_CURSO',
+        'Proyecto Final,Proyecto integrador,2024-05-30,PROYECTO,1.5,PROGRAMADA',
+        'Evaluación Oral,Presentación oral,2024-04-25,ORAL,0.8,PROGRAMADA'
+    ].join('\n');
+    
+    downloadCSV(csvContent, 'ejemplo_evaluaciones.xlsx');
+}
+
+// Download Estudiantes Example Excel (CSV format)
+function downloadEstudiantesExampleCSV() {
+    const csvContent = [
+        'Nombre,Apellido,Email,Estado',
+        'Juan,Pérez,juan.perez@email.com,ACTIVO',
+        'María,García,maria.garcia@email.com,ACTIVO',
+        'Carlos,López,carlos.lopez@email.com,ACTIVO',
+        'Ana,Martínez,ana.martinez@email.com,ACTIVO',
+        'Pedro,Rodríguez,pedro.rodriguez@email.com,ACTIVO'
+    ].join('\n');
+    
+    downloadCSV(csvContent, 'ejemplo_estudiantes.xlsx');
+}
+
+// Function to parse CSV file
+function parseCSV(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        const lines = text.split('\n').filter(line => line.trim());
+        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+        const data = [];
+        
+        for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+            if (values.length > 0 && values.some(v => v)) {
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] || '';
+                });
+                data.push(row);
+            }
+        }
+        
+        callback(data);
+    };
+    reader.readAsText(file);
+}
+
+// Show Import Temas Modal
+function showImportTemasModal(subjectId) {
+    const modal = document.getElementById('importTemasModal');
+    const fileInput = document.getElementById('importTemasFile');
+    const previewDiv = document.getElementById('importTemasPreview');
+    const previewContent = document.getElementById('importTemasPreviewContent');
+    
+    if (!modal || !fileInput) return;
+    
+    // Reset form
+    fileInput.value = '';
+    previewDiv.style.display = 'none';
+    
+    // Show modal
+    if (typeof showModal === 'function') {
+        showModal('importTemasModal');
+    } else {
+        modal.classList.add('active');
+    }
+    
+    // Setup modal handlers
+    setupModalHandlers('importTemasModal');
+    
+    // Download example button
+    const downloadExampleBtn = document.getElementById('downloadTemasExampleBtn');
+    if (downloadExampleBtn) {
+        downloadExampleBtn.onclick = function() {
+            downloadTemasExampleCSV();
+        };
+    }
+    
+    // File input change handler
+    fileInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        parseCSV(file, function(data) {
+            if (data.length === 0) {
+                alert('El archivo CSV está vacío o no tiene el formato correcto');
+                return;
+            }
+            
+            // Show preview
+            previewDiv.style.display = 'block';
+            previewContent.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                    <thead>
+                        <tr style="background: #f0f0f0;">
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Tema</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Descripción</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.slice(0, 5).map(row => `
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Tema || row.tema || ''}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Descripción || row.Descripcion || row.descripcion || ''}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Estado || row.estado || 'PENDIENTE'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ${data.length > 5 ? `<p style="margin-top: 8px; color: #666;">... y ${data.length - 5} más</p>` : ''}
+                <p style="margin-top: 8px; color: #666; font-weight: 600;">Total: ${data.length} tema(s)</p>
+            `;
+            
+            // Store parsed data
+            fileInput._parsedData = data;
+        });
+    };
+    
+    // Confirm import button
+    const confirmBtn = document.getElementById('confirmImportTemasBtn');
+    if (confirmBtn) {
+        confirmBtn.onclick = async function() {
+            if (!fileInput._parsedData || fileInput._parsedData.length === 0) {
+                alert('Por favor selecciona un archivo CSV válido');
+                return;
+            }
+            
+            await importTemasFromCSV(subjectId, fileInput._parsedData);
+        };
+    }
+}
+
+// Import Temas from CSV
+async function importTemasFromCSV(subjectId, data) {
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (const row of data) {
+        try {
+            const tema = (row.Tema || row.tema || '').trim();
+            const descripcion = (row.Descripción || row.Descripcion || row.descripcion || '').trim();
+            const estado = (row.Estado || row.estado || 'PENDIENTE').trim().toUpperCase();
+            
+            if (!tema) {
+                errorCount++;
+                continue;
+            }
+            
+            const response = await fetch('../api/contenido.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    Tema: tema,
+                    Descripcion: descripcion,
+                    Estado: estado,
+                    Materia_ID_materia: parseInt(subjectId)
+                })
+            });
+            
+            if (response.ok) {
+                successCount++;
+            } else {
+                errorCount++;
+            }
+        } catch (err) {
+            errorCount++;
+            console.error('Error importing tema:', err);
+        }
+    }
+    
+    // Reload data
+    if (typeof loadData === 'function') {
+        await loadData();
+    }
+    
+    // Reload temas list
+    if (currentThemesSubjectId) {
+        showMateriaDetails(currentThemesSubjectId);
+    }
+    
+    // Close modal
+    if (typeof closeModal === 'function') {
+        closeModal('importTemasModal');
+    }
+    
+    // Show notification
+    if (typeof showNotification === 'function') {
+        showNotification(
+            `Importación completada: ${successCount} tema(s) importado(s)${errorCount > 0 ? `, ${errorCount} error(es)` : ''}`,
+            successCount > 0 ? 'success' : 'error'
+        );
+    } else {
+        alert(`Importación completada: ${successCount} tema(s) importado(s)${errorCount > 0 ? `, ${errorCount} error(es)` : ''}`);
+    }
+}
+
+// Show Import Evaluaciones Modal
+function showImportEvaluacionesModal(subjectId) {
+    const modal = document.getElementById('importEvaluacionesModal');
+    const fileInput = document.getElementById('importEvaluacionesFile');
+    const previewDiv = document.getElementById('importEvaluacionesPreview');
+    const previewContent = document.getElementById('importEvaluacionesPreviewContent');
+    
+    if (!modal || !fileInput) return;
+    
+    // Reset form
+    fileInput.value = '';
+    previewDiv.style.display = 'none';
+    
+    // Show modal
+    if (typeof showModal === 'function') {
+        showModal('importEvaluacionesModal');
+    } else {
+        modal.classList.add('active');
+    }
+    
+    // Setup modal handlers
+    setupModalHandlers('importEvaluacionesModal');
+    
+    // Download example button
+    const downloadExampleBtn = document.getElementById('downloadEvaluacionesExampleBtn');
+    if (downloadExampleBtn) {
+        downloadExampleBtn.onclick = function() {
+            downloadEvaluacionesExampleCSV();
+        };
+    }
+    
+    // File input change handler
+    fileInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        parseCSV(file, function(data) {
+            if (data.length === 0) {
+                alert('El archivo CSV está vacío o no tiene el formato correcto');
+                return;
+            }
+            
+            // Show preview
+            previewDiv.style.display = 'block';
+            previewContent.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                    <thead>
+                        <tr style="background: #f0f0f0;">
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Título</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Fecha</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Tipo</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.slice(0, 5).map(row => `
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Título || row.Titulo || row.titulo || ''}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Fecha || row.fecha || ''}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Tipo || row.tipo || ''}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Estado || row.estado || 'PROGRAMADA'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ${data.length > 5 ? `<p style="margin-top: 8px; color: #666;">... y ${data.length - 5} más</p>` : ''}
+                <p style="margin-top: 8px; color: #666; font-weight: 600;">Total: ${data.length} evaluación(es)</p>
+            `;
+            
+            // Store parsed data
+            fileInput._parsedData = data;
+        });
+    };
+    
+    // Confirm import button
+    const confirmBtn = document.getElementById('confirmImportEvaluacionesBtn');
+    if (confirmBtn) {
+        confirmBtn.onclick = async function() {
+            if (!fileInput._parsedData || fileInput._parsedData.length === 0) {
+                alert('Por favor selecciona un archivo CSV válido');
+                return;
+            }
+            
+            await importEvaluacionesFromCSV(subjectId, fileInput._parsedData);
+        };
+    }
+}
+
+// Import Evaluaciones from CSV
+async function importEvaluacionesFromCSV(subjectId, data) {
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (const row of data) {
+        try {
+            const titulo = (row.Título || row.Titulo || row.titulo || '').trim();
+            const descripcion = (row.Descripción || row.Descripcion || row.descripcion || '').trim();
+            const fecha = (row.Fecha || row.fecha || '').trim();
+            const tipo = (row.Tipo || row.tipo || 'EXAMEN').trim().toUpperCase();
+            const peso = parseFloat(row.Peso || row.peso || '1.0') || 1.0;
+            const estado = (row.Estado || row.estado || 'PROGRAMADA').trim().toUpperCase();
+            
+            if (!titulo || !fecha) {
+                errorCount++;
+                continue;
+            }
+            
+            const response = await fetch('../api/evaluacion.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    Titulo: titulo,
+                    Descripcion: descripcion,
+                    Fecha: fecha,
+                    Tipo: tipo,
+                    Peso: peso,
+                    Estado: estado,
+                    Materia_ID_materia: parseInt(subjectId)
+                })
+            });
+            
+            if (response.ok) {
+                successCount++;
+            } else {
+                errorCount++;
+            }
+        } catch (err) {
+            errorCount++;
+            console.error('Error importing evaluacion:', err);
+        }
+    }
+    
+    // Reload data
+    if (typeof loadData === 'function') {
+        await loadData();
+    }
+    
+    // Reload evaluaciones list
+    if (currentThemesSubjectId) {
+        loadSubjectEvaluaciones(currentThemesSubjectId);
+    }
+    
+    // Close modal
+    if (typeof closeModal === 'function') {
+        closeModal('importEvaluacionesModal');
+    }
+    
+    // Show notification
+    if (typeof showNotification === 'function') {
+        showNotification(
+            `Importación completada: ${successCount} evaluación(es) importada(s)${errorCount > 0 ? `, ${errorCount} error(es)` : ''}`,
+            successCount > 0 ? 'success' : 'error'
+        );
+    } else {
+        alert(`Importación completada: ${successCount} evaluación(es) importada(s)${errorCount > 0 ? `, ${errorCount} error(es)` : ''}`);
+    }
+}
+
+// Show Import Estudiantes Modal
+function showImportEstudiantesModal(subjectId) {
+    const modal = document.getElementById('importEstudiantesModal');
+    const fileInput = document.getElementById('importEstudiantesFile');
+    const previewDiv = document.getElementById('importEstudiantesPreview');
+    const previewContent = document.getElementById('importEstudiantesPreviewContent');
+    
+    if (!modal || !fileInput) return;
+    
+    // Reset form
+    fileInput.value = '';
+    previewDiv.style.display = 'none';
+    
+    // Show modal
+    if (typeof showModal === 'function') {
+        showModal('importEstudiantesModal');
+    } else {
+        modal.classList.add('active');
+    }
+    
+    // Setup modal handlers
+    setupModalHandlers('importEstudiantesModal');
+    
+    // Download example button
+    const downloadExampleBtn = document.getElementById('downloadEstudiantesExampleBtn');
+    if (downloadExampleBtn) {
+        downloadExampleBtn.onclick = function() {
+            downloadEstudiantesExampleCSV();
+        };
+    }
+    
+    // File input change handler
+    fileInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        parseCSV(file, function(data) {
+            if (data.length === 0) {
+                alert('El archivo CSV está vacío o no tiene el formato correcto');
+                return;
+            }
+            
+            // Show preview
+            previewDiv.style.display = 'block';
+            previewContent.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                    <thead>
+                        <tr style="background: #f0f0f0;">
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Nombre</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Apellido</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Email</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.slice(0, 5).map(row => `
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Nombre || row.nombre || ''}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Apellido || row.apellido || ''}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Email || row.email || ''}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Estado || row.estado || 'ACTIVO'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ${data.length > 5 ? `<p style="margin-top: 8px; color: #666;">... y ${data.length - 5} más</p>` : ''}
+                <p style="margin-top: 8px; color: #666; font-weight: 600;">Total: ${data.length} estudiante(s)</p>
+            `;
+            
+            // Store parsed data
+            fileInput._parsedData = data;
+        });
+    };
+    
+    // Confirm import button
+    const confirmBtn = document.getElementById('confirmImportEstudiantesBtn');
+    if (confirmBtn) {
+        confirmBtn.onclick = async function() {
+            if (!fileInput._parsedData || fileInput._parsedData.length === 0) {
+                alert('Por favor selecciona un archivo CSV válido');
+                return;
+            }
+            
+            await importEstudiantesFromCSV(subjectId, fileInput._parsedData);
+        };
+    }
+}
+
+// Import Estudiantes from CSV
+async function importEstudiantesFromCSV(subjectId, data) {
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (const row of data) {
+        try {
+            const nombre = (row.Nombre || row.nombre || '').trim();
+            const apellido = (row.Apellido || row.apellido || '').trim();
+            const email = (row.Email || row.email || '').trim() || null;
+            const estado = (row.Estado || row.estado || 'ACTIVO').trim().toUpperCase();
+            
+            if (!nombre || !apellido) {
+                errorCount++;
+                continue;
+            }
+            
+            // Create student
+            const studentResponse = await fetch('../api/estudiantes.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    Nombre: nombre,
+                    Apellido: apellido,
+                    Email: email,
+                    Estado: estado
+                })
+            });
+            
+            if (!studentResponse.ok) {
+                errorCount++;
+                continue;
+            }
+            
+            const studentResult = await studentResponse.json();
+            const studentId = studentResult.data?.ID_Estudiante || studentResult.ID_Estudiante || studentResult.id;
+            
+            if (!studentId) {
+                errorCount++;
+                continue;
+            }
+            
+            // Assign student to materia
+            const enrollmentResponse = await fetch('../api/alumnos_x_materia.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify([{
+                    Materia_ID_materia: parseInt(subjectId),
+                    Estudiante_ID_Estudiante: parseInt(studentId),
+                    Estado: 'INSCRITO'
+                }])
+            });
+            
+            if (enrollmentResponse.ok) {
+                successCount++;
+            } else {
+                errorCount++;
+            }
+        } catch (err) {
+            errorCount++;
+            console.error('Error importing estudiante:', err);
+        }
+    }
+    
+    // Reload data
+    if (typeof loadData === 'function') {
+        await loadData();
+    }
+    
+    // Reload estudiantes list
+    if (currentThemesSubjectId) {
+        loadMateriaStudents(currentThemesSubjectId);
+    }
+    
+    // Close modal
+    if (typeof closeModal === 'function') {
+        closeModal('importEstudiantesModal');
+    }
+    
+    // Show notification
+    if (typeof showNotification === 'function') {
+        showNotification(
+            `Importación completada: ${successCount} estudiante(s) importado(s)${errorCount > 0 ? `, ${errorCount} error(es)` : ''}`,
+            successCount > 0 ? 'success' : 'error'
+        );
+    } else {
+        alert(`Importación completada: ${successCount} estudiante(s) importado(s)${errorCount > 0 ? `, ${errorCount} error(es)` : ''}`);
+    }
+}
+
+// Function to mark attendance for a specific student with materia pre-selected
+window.markAttendanceForStudent = function(studentId, materiaId) {
+    // Navigate to attendance section
+    if (typeof showSection === 'function') {
+        showSection('attendance');
+    }
+    
+    // Show attendance view
+    if (typeof showAttendanceView === 'function') {
+        showAttendanceView();
+    }
+    
+    // Wait a bit for the DOM to update, then pre-select the materia
+    setTimeout(() => {
+        const attendanceSubjectSelect = document.getElementById('attendanceSubjectSelect');
+        if (attendanceSubjectSelect && materiaId) {
+            attendanceSubjectSelect.value = String(materiaId);
+            
+            // Trigger change event to load students
+            const changeEvent = new Event('change', { bubbles: true });
+            attendanceSubjectSelect.dispatchEvent(changeEvent);
+        }
+        
+        // Set current date
+        const attendanceDate = document.getElementById('attendanceDate');
+        if (attendanceDate) {
+            attendanceDate.value = new Date().toISOString().split('T')[0];
+        }
+        
+        // After loading students, scroll to the specific student if needed
+        setTimeout(() => {
+            if (studentId) {
+                const tableRows = document.querySelectorAll('#attendanceTableBody tr');
+                tableRows.forEach(row => {
+                    const rowStudentId = parseInt(row.dataset.studentId);
+                    if (rowStudentId === parseInt(studentId)) {
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // Highlight the row briefly
+                        row.style.backgroundColor = '#e8f5e9';
+                        setTimeout(() => {
+                            row.style.backgroundColor = '';
+                        }, 2000);
+                    }
+                });
+            }
+        }, 500);
+    }, 300);
+};
 
 // Function to toggle collapsible theme cards
 window.toggleThemeCard = function(uniqueId) {
@@ -3299,6 +4204,11 @@ async function saveStudentsToSubject(subjectId, studentIds) {
         
         // Reload subjects view
         if (typeof loadSubjects === 'function') loadSubjects();
+        
+        // Reload materia students list if we're in the materia details view
+        if (currentThemesSubjectId && parseInt(currentThemesSubjectId) === parseInt(subjectId)) {
+            loadMateriaStudents(subjectId);
+        }
         
         if (errorCount === 0) {
             if (typeof showNotification === 'function') {
