@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- ===================================================================
+         HEAD SECTION - Meta Tags, Stylesheets, and External Resources
+         =================================================================== -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSync - Sistema de Gestión Académica</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/app.css">
+    <link rel="stylesheet" href="../styles/components.css">
+    <link rel="stylesheet" href="../styles/responsive.css">
+    <link rel="stylesheet" href="../styles/scrollbar-fix.css">
+    <link rel="stylesheet" href="../styles/dark-mode.css">
+    <link rel="stylesheet" href="../styles/components/notifications.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="../styles/assets/icon.ico" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            background-image: url('../styles/assets/background.jpeg');
+            background-size: 200px 200px;
+            background-position: top left;
+            background-repeat: repeat;
+        }
+        
+        /* Ensure navigation maintains white background */
+        .landing-header,
+        .desktop-nav,
+        .landing-nav,
+        .app-header,
+        .mobile-header,
+        .nav-overlay,
+        .nav-content,
+        .nav-header,
+        .mobile-nav,
+        .nav-menu,
+        .nav-dropdown .dropdown-menu {
+            background-color: white !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- ===================================================================
+         NAVIGATION SECTION - Mobile and Desktop Navigation
+         =================================================================== -->
+    
+    <!-- Mobile Navigation Overlay -->
+    <div id="navOverlay" class="nav-overlay">
+        <div class="nav-content">
+            <div class="nav-header">
+                <h2>EduSync</h2>
+                <button id="closeNav" class="close-nav">&times;</button>
+            </div>
+            <nav class="mobile-nav">
+                <!-- Mobile Search Bar - Search Functionality in Mobile Nav -->
+                <div class="mobile-search-container">
+                    <div class="search-bar-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="mobileSearchInput" class="nav-search-input" placeholder="Buscar..." data-translate="search_placeholder">
+                        <button id="mobileFiltersBtn" class="search-filters-btn" title="Filtros">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                    </div>
+                </div>
+                <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span data-translate="dashboard">Panel de Control</span>
+                </a>
+                <a href="#student-management" class="nav-item" data-section="student-management">
+                    <i class="fas fa-users"></i>
+                    <span data-translate="student_management">Gestión de Estudiantes</span>
+                </a>
+                <a href="#subjects-management" class="nav-item" data-section="subjects-management">
+                   
+                    <span data-translate="subjects_management">Gestión de Materias</span>
+                </a>
+                <a href="#notifications" class="nav-item" data-section="notifications">
+                    <i class="fas fa-bell"></i>
+                    <span data-translate="notifications">Notificaciones</span>
+                    <span class="notification-badge" id="notificationCount">0</span>
+                </a>
+                <a href="#reports" class="nav-item" data-section="reports">
+                    <i class="fas fa-chart-bar"></i>
+                    <span data-translate="reports">Reportes</span>
+                </a>
+                
+                <!-- Language Selector in Navigation - Mobile Language Switcher -->
+                <div class="nav-language-selector">
+                    <div class="nav-language-label">
+                        <i class="fas fa-globe"></i>
+                        <span data-translate="language">Idioma</span>
+                    </div>
+                    <select id="languageSelect" class="nav-language-dropdown">
+                        <option value="es">Español</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Desktop Navigation Header -->
+    <header class="landing-header desktop-nav">
+        <nav class="landing-nav">
+            <div class="nav-brand">
+                <img src="../styles/assets/icon.ico" alt="EduSync" style="width:50px;height:50px;">
+                <span>EduSync</span>
+            </div>
+            
+            <!-- Dark Mode Toggle Switch - Theme Switcher -->
+            <div class="dark-mode-toggle-container">
+                <label class="dark-mode-toggle" for="darkModeToggle">
+                    <input type="checkbox" id="darkModeToggle" aria-label="Toggle dark mode">
+                    <span class="toggle-slider"></span>
+                    <i class="fas fa-moon toggle-icon"></i>
+                </label>
+            </div>
+            
+            <div class="nav-menu" id="desktopNavMenu">
+                <!-- Search Bar - Desktop Search Functionality -->
+                <div class="nav-search-container">
+                    <div class="search-bar-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="desktopSearchInput" class="nav-search-input" placeholder="Buscar..." data-translate="search_placeholder">
+                        <button id="desktopFiltersBtn" class="search-filters-btn" title="Filtros">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                    </div>
+                </div>
+                <a href="#dashboard" class="nav-link" data-section="dashboard">
+                    <span data-translate="dashboard">Panel de Control</span>
+                </a>
+                <!-- Student Management Dropdown - Nested Navigation -->
+                <div class="nav-dropdown">
+                    <a href="#student-management" class="nav-link dropdown-toggle" data-section="student-management">
+                        <span data-translate="student_management">Gestión de Estudiantes</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a href="#student-management" class="dropdown-item" data-section="student-management" data-subsection="students">
+                            <i class="fas fa-users"></i>
+                            <span data-translate="students">Estudiantes</span>
+                        </a>
+                        <a href="#student-management" class="dropdown-item" data-section="student-management" data-subsection="exams">
+                            <i class="fas fa-file-alt"></i>
+                            <span data-translate="exams">Exámenes</span>
+                        </a>
+                    </div>
+                </div>
+                <!-- Subjects Management Link -->
+                <a href="#subjects-management" class="nav-link" data-section="subjects-management">
+                    <span data-translate="subjects_management">Gestión de Materias</span>
+                </a>
+                <!-- Reports Link -->
+                <a href="#reports" class="nav-link" data-section="reports">
+                    <span data-translate="reports">Reportes</span>
+                </a>
+                <a href="#notifications" class="nav-link notifications-icon" data-section="notifications" title="Notificaciones">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="desktopNotificationCount">0</span>
+                </a>
+                <!-- Desktop Language Selector - Language Switcher -->
+                <div class="language-selector">
+                    <button id="desktopLanguageToggle" class="language-toggle">
+                        <i class="fas fa-globe"></i>
+                        <span id="languageCode">ES</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div id="languageDropdown" class="language-dropdown-menu">
+                        <div class="language-option" data-lang="es">
+                            <span class="language-flag">🇪🇸</span>
+                            <span class="language-name">Español</span>
+                        </div>
+                        <div class="language-option" data-lang="en">
+                            <span class="language-flag">🇺🇸</span>
+                            <span class="language-name">English</span>
+                        </div>
+                    </div>
+                    <select id="desktopLanguageSelect" class="language-dropdown" style="display: none;">
+                        <option value="es">Español</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <div class="user-info">
+                    <button id="desktopLogoutBtn" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="nav-toggle" id="desktopNavToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- ===================================================================
+         MAIN APPLICATION CONTAINER
+         =================================================================== -->
+    <div class="app-container">
+        <!-- Mobile Header -->
+        <header class="app-header mobile-header">
+            <div class="header-left">
+                <button id="menuToggle" class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1>EduSync</h1>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <span id="welcomeUser" data-translate="welcome_user">¡Bienvenido, Usuario!</span>
+                    <button id="logoutBtn" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ===================================================================
+             MAIN CONTENT AREA - All Application Sections
+             =================================================================== -->
+        <main class="app-main">
+            
+            <!-- ===============================================================
+                 DASHBOARD SECTION - Overview and Quick Actions
+                 =============================================================== -->
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <!-- Hero Section - Welcome Banner -->
+                <div class="dashboard-hero">
+                    <div class="hero-content">
+                        <h1 class="hero-title" data-translate="welcome_dashboard">Panel de Control</h1>
+                        <p class="hero-subtitle" data-translate="welcome_subtitle">Gestiona tus clases, estudiantes y evaluaciones desde un solo lugar</p>
+                        <div class="hero-actions">
+                            <button class="hero-btn hero-btn-primary" id="quickCreateClassBtn">
+                                <i class="fas fa-plus-circle"></i>
+                                <span data-translate="create_class">Crear Clase</span>
+                            </button>
+                            <button class="hero-btn hero-btn-secondary" id="quickUploadMaterialBtn">
+                                <i class="fas fa-upload"></i>
+                                <span data-translate="upload_material">Subir Material</span>
+                            </button>
+                            <button class="hero-btn hero-btn-secondary" id="quickViewReportsBtn">
+                                <i class="fas fa-chart-line"></i>
+                                <span data-translate="view_reports">Ver Reportes</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI Cards Section - Key Performance Indicators -->
+                <div class="dashboard-kpis">
+                    <div class="kpi-card kpi-students">
+                        <div class="kpi-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <div class="kpi-value" id="totalStudents">0</div>
+                            <div class="kpi-label" data-translate="students">Estudiantes</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card kpi-attendance">
+                        <div class="kpi-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <div class="kpi-value" id="attendanceRate">0%</div>
+                            <div class="kpi-label" data-translate="attendance_rate">Asistencia</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card kpi-tasks">
+                        <div class="kpi-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <div class="kpi-value" id="pendingTasks">0</div>
+                            <div class="kpi-label" data-translate="pending_tasks">Tareas Pendientes</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card kpi-next-class">
+                        <div class="kpi-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <div class="kpi-value" id="nextClassTime">--</div>
+                            <div class="kpi-label" data-translate="next_class">Próxima Clase</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Grid - Dashboard Layout -->
+                <div class="dashboard-content-grid">
+                    <!-- Left Column: Main Content -->
+                    <div class="dashboard-main-column">
+                        <!-- Quick Actions Section - Common Action Buttons -->
+                        <div class="dashboard-card quick-actions-card">
+                            <h2 class="card-title" data-translate="quick_actions">Acciones Rápidas</h2>
+                            <div class="quick-actions-grid">
+                                <button class="quick-action-btn" data-action="students" data-modal="studentModal">
+                                    <i class="fas fa-user-plus"></i>
+                                    <span data-translate="add_student">Agregar Estudiante</span>
+                                </button>
+                                <button class="quick-action-btn" data-action="attendance">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span data-translate="mark_attendance">Marcar Asistencia</span>
+                                </button>
+                                <button class="quick-action-btn" data-action="grades">
+                                    <i class="fas fa-graduation-cap"></i>
+                                    <span data-translate="grade_students">Calificar</span>
+                                </button>
+                                <button class="quick-action-btn" data-action="subjects" data-modal="subjectModal">
+                                    <i class="fas fa-book"></i>
+                                    <span data-translate="add_subject">Agregar Materia</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Unified Notifications and Classes Section - Combined View -->
+                        <div class="dashboard-card next-classes-card">
+                            <div class="card-header">
+                                <h2 class="card-title" data-translate="notifications_and_classes">Notificaciones y Próximas Clases</h2>
+                            </div>
+                            <div class="classes-list" id="unifiedNotificationsList">
+                                <!-- Unified notifications, recordatorios, and upcoming classes will be loaded dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Calendar Widget - Mini Calendar View -->
+                    <div class="dashboard-sidebar">
+                        <div class="dashboard-card calendar-widget">
+                            <div class="calendar-widget-header">
+                                <h3 class="widget-title" data-translate="calendar">Calendario</h3>
+                                <div class="calendar-widget-nav">
+                                    <button id="prevMonth" class="widget-nav-btn" title="Mes anterior">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <button id="nextMonth" class="widget-nav-btn" title="Mes siguiente">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="calendar-widget-month" id="currentMonth">Enero 2024</div>
+                            <div class="calendar-widget-grid" id="calendarGrid">
+                                <!-- Calendar will be generated by JavaScript -->
+                            </div>
+                            <div class="calendar-widget-footer">
+                                <button class="calendar-view-full-btn" id="viewFullCalendarBtn">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span data-translate="view_full_calendar">Ver Calendario Completo</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===============================================================
+                 STUDENT MANAGEMENT SECTION - Students and Exams Management
+                 =============================================================== -->
+            <!-- Unified Student Management Section -->
+            <section id="student-management" class="content-section">
+                <div class="section-header">
+                    
+                    <div class="section-actions">
+                        <div class="filters students-only">
+                            <select id="unifiedSubjectFilter" class="filter-select">
+                                <option value="" data-translate="all_subjects">Todas las Materias</option>
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                            <select id="unifiedCourseFilter" class="filter-select">
+                                <option value="" data-translate="all_courses">Todos los Cursos</option>
+                                <!-- Options will be populated dynamically based on user's subjects -->
+                            </select>
+                            <select id="unifiedTopicFilter" class="filter-select">
+                                <option value="" data-translate="all_topics">Todos los Temas</option>
+                                <option value="COMPLETADO" data-translate="completed_topics">Temas Completados</option>
+                                <option value="EN_PROGRESO" data-translate="in_progress_topics">Temas en Progreso</option>
+                                <option value="PENDIENTE" data-translate="pending_topics">Temas Pendientes</option>
+                            </select>
+                        </div>
+                        <div class="filters exams-only" style="display: none;">
+                            <select id="examsSubjectFilter" class="filter-select">
+                                <option value="" data-translate="all_subjects">Todas las Materias</option>
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                            <select id="examsCourseFilter" class="filter-select">
+                                <option value="" data-translate="all_courses">Todos los Cursos</option>
+                                <!-- Options will be populated dynamically based on user's subjects -->
+                            </select>
+                            <select id="examsDateFilter" class="filter-select">
+                                <option value="" data-translate="all_dates">Todas las Fechas</option>
+                                <option value="today" data-translate="today">Hoy</option>
+                                <option value="this_week" data-translate="this_week">Esta Semana</option>
+                                <option value="this_month" data-translate="this_month">Este Mes</option>
+                                <option value="upcoming" data-translate="upcoming">Próximos</option>
+                                <option value="past" data-translate="past">Pasados</option>
+                            </select>
+                        </div>
+                        <div class="view-toggle">
+                            <button id="unifiedGridViewBtn" class="view-btn" data-view="grid" title="Vista de Tarjetas">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button id="unifiedListViewBtn" class="view-btn active" data-view="list" title="Vista de Lista">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                        <div class="action-buttons" id="globalActionButtons">
+                            <button id="addStudentBtn" class="btn-primary students-only">
+                                <i class="fas fa-user-plus"></i>
+                                <span data-translate="add_student">Agregar Estudiante</span>
+                            </button>
+                            <button id="markAttendanceBtn" class="btn-secondary students-only">
+                                <i class="fas fa-calendar-check"></i>
+                                <span data-translate="mark_attendance">Marcar Asistencia</span>
+                            </button>
+                            <button id="createExamBtn" class="btn-primary exams-only" style="display: none;">
+                                <i class="fas fa-plus"></i>
+                                <span data-translate="create_exam">Crear Examen</span>
+                            </button>
+                            <button id="exportListBtn" class="btn-secondary">
+                                <i class="fas fa-download"></i>
+                                <span data-translate="export_list">Exportar Lista</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Tab Navigation -->
+                <div class="tab-navigation mobile-only">
+                    <button id="studentsTab" class="tab-btn active" data-tab="students">
+                        <i class="fas fa-users"></i>
+                        <span data-translate="students">Estudiantes</span>
+                    </button>
+                    <button id="examsTab" class="tab-btn" data-tab="exams">
+                        <i class="fas fa-file-alt"></i>
+                        <span data-translate="exams">Exámenes</span>
+                    </button>
+                </div>
+
+                <!-- Students Tab Content - Main Student Management Interface -->
+                <div id="studentsTabContent" class="tab-content active">
+                    <!-- Student Overview Cards - Grid View of Students -->
+                    <div class="unified-student-cards" id="unifiedStudentCards" style="display: none;">
+                        <!-- Student cards with integrated grades and attendance will be loaded dynamically -->
+                    </div>
+
+                    <!-- Detailed List View - Tabular Student Data -->
+                    <div class="unified-student-list" id="unifiedStudentList">
+                        <!-- Detailed student information with grades and attendance will be loaded dynamically -->
+                    </div>
+
+                    <!-- Matrix View: Students by Subjects - Cross-Reference Table -->
+                    <div class="unified-student-matrix" id="unifiedStudentMatrix" style="display: none;">
+                        <!-- Cross-table: Students (rows) x Subjects (columns) will be loaded dynamically -->
+                    </div>
+
+                    <!-- Quick Stats for Selected Student - Detail Panel -->
+                    <div class="student-detail-panel" id="studentDetailPanel" style="display: none;">
+                        <div class="panel-header">
+                            <h3 id="selectedStudentName">Student Name</h3>
+                            <button id="closeStudentDetail" class="btn-icon">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="panel-content">
+                            <!-- Porcentaje de Asistencias -->
+                            <div style="padding: 15px 0; border-bottom: 1px solid #e0e0e0;">
+                                <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Asistencia</div>
+                                <div id="studentAttendance" style="font-size: 1.8em; font-weight: 700; color: #667eea;">0%</div>
+                            </div>
+                            
+                            <!-- Sección de Calificaciones o Temas de Intensificación -->
+                            <div style="padding: 15px 0;">
+                                <div id="studentGradesTitle" style="font-size: 0.9em; color: #666; margin-bottom: 15px; font-weight: 600;">Calificaciones</div>
+                                <div id="studentRecentGrades" style="display: flex; flex-direction: column; gap: 12px;">
+                                    <!-- Calificaciones o Temas de Intensificación will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exams Tab Content - Exam Management Interface -->
+                <div id="examsTabContent" class="tab-content">
+                    <div class="exams-container" id="examsContainer" style="display: none;">
+                        <!-- Exams will be loaded dynamically -->
+                    </div>
+                    <div class="exams-list" id="examsList">
+                        <!-- Exams list view will be loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Exam Notes Tab Content - View and Manage Exam Grades -->
+                <div id="examNotesTabContent" class="tab-content">
+                    <div class="section-header">
+                        
+                        <div class="section-actions">
+                            <button id="exportExamNotesBtn" class="btn-primary" style="display: none;">
+                                <i class="fas fa-download"></i>
+                                <span data-translate="export_notes">Export Notes</span>
+                            </button>
+                            <button id="backToExamsBtn" class="btn-secondary" onclick="if(typeof backToExams === 'function') { backToExams(); } else if(typeof window.backToExams === 'function') { window.backToExams(); }">
+                                <i class="fas fa-arrow-left"></i>
+                                <span data-translate="back_to_exams">Back to Exams</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Exam Info Summary - Exam Details Display -->
+                    <div class="exam-info-summary" id="examInfoSummary">
+                        <!-- Exam information will be loaded here -->
+                    </div>
+                    
+                    <!-- Notes List - Student Grades Table -->
+                    <div class="notes-list" id="notesList">
+                        <!-- Notes table or empty state will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===============================================================
+                 ATTENDANCE SECTION - Mark and View Student Attendance
+                 =============================================================== -->
+            <!-- Attendance Section -->
+            <section id="attendance" class="content-section">
+                <div class="section-header">
+                    
+                    <div class="section-actions">
+                        <button id="backAttendanceBtn" class="btn-secondary">
+                            <i class="fas fa-arrow-left"></i>
+                            <span data-translate="back">Volver</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Attendance View - Form for Marking Attendance -->
+                <div id="attendanceView" style="display: none;">
+                    <!-- Attendance Form - Date, Subject, and Notes Selection -->
+                    <div class="attendance-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="attendanceDate" data-translate="date">Fecha:</label>
+                                <input type="date" id="attendanceDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="attendanceSubjectSelect" data-translate="subject">Materia:</label>
+                                <select id="attendanceSubjectSelect" required>
+                                    <option value="" data-translate="select_subject">- Seleccionar -</option>
+                                    <!-- Materia options will be populated dynamically from logged-in user's materias -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="attendanceNotes" data-translate="notes">Observaciones:</label>
+                            <textarea id="attendanceNotes" rows="3" placeholder="Notas adicionales..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Students Table for Attendance - Attendance Entry Table -->
+                    <div class="attendance-table-container">
+                        <table class="data-table attendance-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Estudiante</th>
+                                    <th data-translate="present">Presente</th>
+                                    <th data-translate="absent">Ausente</th>
+                                    <th data-translate="absences">Faltas</th>
+                                    <th data-translate="status">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Seleccione una materia para ver los estudiantes</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="attendance-actions">
+                        <button id="saveAttendanceBtn" class="btn-primary">
+                            <i class="fas fa-save"></i>
+                            <span data-translate="save_attendance">Guardar Asistencia</span>
+                        </button>
+                        <button id="cancelAttendanceBtn" class="btn-secondary">
+                            <i class="fas fa-times"></i>
+                            <span data-translate="cancel">Cancelar</span>
+                        </button>
+                    </div>
+                    </div>
+
+                    <!-- Attendance List - Historical Attendance Records -->
+                <div id="attendanceList">
+                    <!-- Attendance records will be loaded here -->
+                </div>
+            </section>
+
+            <!-- ===============================================================
+                 GRADE MARKING SECTION - Mark and View Student Grades
+                 =============================================================== -->
+            <!-- Grade Marking Section -->
+            <section id="grade-marking" class="content-section">
+                <div class="section-header">
+                  
+                    <div class="section-actions">
+                        <button id="backToStudentsBtn" class="btn-secondary">
+                            <i class="fas fa-arrow-left"></i>
+                            <span data-translate="back">Volver</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grade Marking Form - Form for Entering Grades -->
+                <div id="gradeMarkingView" style="display: none;">
+                    <!-- Grade Form - Evaluation, Date, and Notes Selection -->
+                    <div class="grade-form">
+                        <div class="form-row">
+                            <!-- Evaluation selector is hidden - automatically selected -->
+                            <div class="form-group" style="display: none;">
+                                <label for="gradeEvaluation" data-translate="evaluation">Evaluación:</label>
+                                <select id="gradeEvaluation" required>
+                                    <option value="" data-translate="select_evaluation">- Seleccionar Evaluación -</option>
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="gradeDate" data-translate="date">Fecha:</label>
+                                <input type="date" id="gradeDate" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="gradeNotes" data-translate="notes">Observaciones:</label>
+                            <textarea id="gradeNotes" rows="3" placeholder="Notas adicionales sobre la evaluación..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Students Table for Grade Marking - Grade Entry Table -->
+                    <div class="grade-table-container">
+                        <table class="data-table grade-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Estudiante</th>
+                                    <th data-translate="grade">Calificación</th>
+                                    <th>Observaciones</th>
+                                    <th data-translate="status">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gradeTableBody">
+                                <tr>
+                                    <td colspan="5" class="text-center">Seleccione una evaluación para ver los estudiantes</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grade-actions">
+                        <button id="saveGradesBtn" class="btn-primary">
+                            <i class="fas fa-save"></i>
+                            <span data-translate="save_grades">Guardar Calificaciones</span>
+                        </button>
+                        <button id="cancelGradesBtn" class="btn-secondary">
+                            <i class="fas fa-times"></i>
+                            <span data-translate="cancel">Cancelar</span>
+                        </button>
+                    </div>
+                    </div>
+
+                <!-- Grade List - Historical Grade Records -->
+                <div id="gradeMarkingList">
+                    <!-- Grade records will be loaded here -->
+                </div>
+            </section>
+            
+            <!-- ===============================================================
+                 REPORTS SECTION - Generate and View Academic Reports
+                 =============================================================== -->
+            <!-- Reports Section -->
+            <section id="reports" class="content-section">
+               
+                <div class="reports-container" id="reportsContainer">
+                    <!-- Reports will be loaded dynamically -->
+                </div>
+            </section>
+            
+            <!-- ===============================================================
+                 NOTIFICATIONS SECTION - View and Manage Notifications
+                 =============================================================== -->
+            <!-- Notifications Section -->
+<section id="notifications" class="content-section">
+    <div class="notifications-header">
+        <div class="notifications-title">
+            <h2><i class="fas fa-bell"></i> <span data-translate="notifications">Notificaciones</span></h2>
+            <span class="notification-count" id="notificationCount">0</span>
+        </div>
+        <div class="notifications-controls">
+            <div class="view-toggle">
+                <button id="notificationsGridViewBtn" class="view-btn active" data-view="grid" title="Grid View">
+                    <i class="fas fa-th"></i>
+                </button>
+                <button id="notificationsListViewBtn" class="view-btn" data-view="list" title="List View">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+            <button id="markAllReadBtn" class="btn btn-primary">
+                <i class="fas fa-check-double"></i>
+                <span data-translate="mark_all_read">Mark All Read</span>
+            </button>
+        </div>
+    </div>
+    
+    <div class="notifications-content">
+        <div class="notifications-grid" id="notificationsContainer" style="display: grid; gap: 1rem; padding: 1rem;">
+            <!-- Notifications will be loaded dynamically -->
+        </div>
+                        <div class="notifications-table" id="notificationsList" style="display: none;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th data-translate="notification_type">Tipo</th>
+                        <th data-translate="notification_title">Título</th>
+                        <th data-translate="notification_message">Descripción</th>
+                        <th data-translate="notification_date">Fecha</th>
+                        <th>Prioridad</th>
+                        <th data-translate="notification_status">Estado</th>
+                        <th>Fecha Creación</th>
+                        <th data-translate="notification_actions">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Notifications list view will be loaded dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+            
+            <!-- ===============================================================
+                 CALENDAR SECTION - View Academic Calendar and Events
+                 =============================================================== -->
+            <!-- Calendar Section -->
+            <section id="calendar" class="content-section">
+                <div class="calendar-header">
+                    <div class="calendar-title-section">
+                        <h2 class="calendar-title" data-translate="calendar">Calendario</h2>
+                    </div>
+                    <div class="calendar-controls">
+                        <div class="view-toggle">
+                            <button id="calendarWeekBtn" class="view-btn active" data-view="week">
+                                <span data-translate="week">Semana</span>
+                            </button>
+                            <button id="calendarMonthBtn" class="view-btn" data-view="month">
+                                <span data-translate="month">Mes</span>
+                            </button>
+                        </div>
+                        <div class="date-navigation">
+                            <button id="calendarPrevBtn" class="nav-btn">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="current-date-range" id="currentDateRange">
+                                Jan 8, 2024 - Jan 14, 2024
+                            </div>
+                            <button id="calendarNextBtn" class="nav-btn">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="calendar-actions">
+                            <button id="calendarTodayBtn" class="action-btn">
+                                <i class="fas fa-calendar-day"></i>
+                                <span data-translate="today">Hoy</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Week View - Weekly Calendar Display -->
+                <div id="calendarWeekView" class="calendar-week-view">
+                    <div class="calendar-time-column">
+                        <div class="time-header"></div>
+                        <div class="time-slots" id="timeSlots"></div>
+                    </div>
+                    <div class="calendar-days-container">
+                        <div class="calendar-days-header" id="calendarDaysHeader"></div>
+                        <div class="calendar-days-grid" id="calendarDaysGrid"></div>
+                    </div>
+                </div>
+                
+                <!-- Month View - Monthly Calendar Display -->
+                <div id="calendarMonthView" class="calendar-month-view" style="display: none;">
+                    <div class="calendar-month-grid" id="calendarMonthGrid"></div>
+                </div>
+            </section>
+
+            <!-- ===============================================================
+                 SUBJECTS MANAGEMENT SECTION - Manage Academic Subjects
+                 =============================================================== -->
+            <!-- Subjects Management Section -->
+            <section id="subjects-management" class="content-section">
+                <div class="section-header">
+                    
+                    <div class="section-actions">
+                        <div class="filters">
+                            <select id="subjectsCourseFilter" class="filter-select">
+                                <option value="" data-translate="all_courses">Todos los Cursos</option>
+                                <!-- Options will be populated dynamically based on user's subjects -->
+                            </select>
+                            <select id="subjectsStatusFilter" class="filter-select">
+                                <option value="" data-translate="all_status">Todos los Estados</option>
+                                <option value="ACTIVA" data-translate="active">Activa</option>
+                                <option value="INACTIVA" data-translate="inactive">Inactiva</option>
+                                <option value="FINALIZADA" data-translate="finished">Finalizada</option>
+                            </select>
+                        </div>
+                        <div class="view-toggle">
+                            <button id="subjectsGridViewBtn" class="view-btn" data-view="grid">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button id="subjectsListViewBtn" class="view-btn active" data-view="list">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                        <div class="action-buttons">
+                            <button id="addSubjectBtn" class="btn-primary">
+                                <i class="fas fa-plus"></i>
+                                <span data-translate="add_subject">Agregar Materia</span>
+                            </button>
+                            <button id="exportSubjectsBtn" class="btn-secondary">
+                                <i class="fas fa-download"></i>
+                                <span data-translate="export_subjects">Exportar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subjects Content - Grid and List Views -->
+                <div class="subjects-container" id="subjectsContainer" style="display: none;">
+                    <!-- Subject cards will be loaded dynamically -->
+                </div>
+
+                <!-- Detailed List View -->
+                <div class="subjects-list" id="subjectsList">
+                    <!-- Detailed subject information will be loaded dynamically -->
+                </div>
+
+                <!-- Subject Details View - Detailed Subject Information -->
+                <div id="subjectDetailsView" class="subject-details-view" style="display: none;">
+                    <div class="section-header">
+                        <h2 id="subjectDetailsTitle">Detalles de la Materia</h2>
+                        <div class="section-actions">
+                            <button id="exportSubjectDetailsBtn" class="btn-primary" style="display: none;">
+                                <i class="fas fa-download"></i>
+                                <span data-translate="export_details">Export Details</span>
+                            </button>
+                            <button id="backToSubjectsBtn" class="btn-secondary">
+                                <i class="fas fa-arrow-left"></i>
+                                <span data-translate="back_to_subjects">Back to Subjects</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Subject Details Tab Navigation - Details and Content Tabs -->
+                    <div class="subject-details-tabs">
+                        <button id="subjectDetailsTab" class="tab-btn active" data-tab="details">
+                            <i class="fas fa-info-circle"></i>
+                            <span data-translate="details">Detalles</span>
+                        </button>
+                        <button id="subjectContentTab" class="tab-btn" data-tab="content">
+                            <i class="fas fa-list"></i>
+                            <span data-translate="content">Contenido</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Subject Details Tab Content - Subject Information Display -->
+                    <div id="subjectDetailsTabContent" class="tab-content active">
+                        <!-- Subject Info Summary - Basic Subject Information -->
+                        <div class="subject-info-summary" id="subjectInfoSummary">
+                            <!-- Subject information will be loaded here -->
+                        </div>
+                        
+                        <!-- Subject Details Content - Statistics and Related Data -->
+                        <div class="subject-details-content" id="subjectDetailsContent">
+                            <!-- Subject statistics, students, evaluations, etc. will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Subject Content Tab Content - Subject Topics Management -->
+                    <div id="subjectContentTabContent" class="tab-content">
+                        <!-- Content Management - Subject Topics/Content Management -->
+                        <div class="content-management">
+                            <div class="content-header">
+                                <h3 data-translate="subject_content">Contenido de la Materia</h3>
+                                <button id="addContentBtn" class="btn-primary">
+                                    <i class="fas fa-plus"></i>
+                                    <span data-translate="add_content">Agregar Contenido</span>
+                                </button>
+                            </div>
+                            <!-- Content List Container - List of Subject Topics -->
+                            <div class="content-list-container" id="subjectContentList">
+                                <!-- Content list will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===============================================================
+                 MATERIA DETAILS SECTION - View Subject Themes and Evaluaciones
+                 =============================================================== -->
+            <!-- Materia Details Section -->
+            <section id="materia-details" class="content-section">
+                <div class="section-header">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button id="backToSubjectsFromDetailsBtn" class="btn-secondary" style="padding: 8px 16px;">
+                            <i class="fas fa-arrow-left"></i>
+                            <span data-translate="back">Volver</span>
+                        </button>
+                        <h2 id="materiaDetailsTitle">Detalles de la Materia</h2>
+                    </div>
+                </div>
+
+                <div style="padding: 1.5rem 2rem;">
+                    <!-- Tab Navigation -->
+                    <div class="subject-details-tabs" style="margin-bottom: 1.5rem;">
+                        <button id="temasTabBtn" class="tab-btn active" data-tab="temas">
+                            <i class="fas fa-book-open"></i>
+                            <span data-translate="themes">Temas</span>
+                        </button>
+                        <button id="evaluacionesTabBtn" class="tab-btn" data-tab="evaluaciones">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span data-translate="evaluations">Evaluaciones</span>
+                        </button>
+                    </div>
+
+                    <!-- Temas Tab Content -->
+                    <div id="temasTabContent" class="tab-content active">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="margin: 0; color: var(--text-primary, #333); font-size: 1.2rem;">
+                                <i class="fas fa-book-open" style="margin-right: 8px;"></i>
+                                Temas de la Materia
+                            </h3>
+                            <button id="showCreateThemeFormBtn" class="btn-primary" style="padding: 8px 16px; font-size: 0.9em;">
+                                <i class="fas fa-plus"></i> Crear Tema
+                            </button>
+                        </div>
+                        <div id="subjectThemesList" style="max-height: 500px; overflow-y: auto; background: var(--card-bg, #fff); border-radius: 8px; padding: 1rem;">
+                            <!-- Temas will be loaded here -->
+                        </div>
+
+                        <!-- Create Theme Form View - Form to Create New Theme -->
+                        <div id="createThemeFormView" style="display: none; margin-top: 2rem; background: var(--card-bg, #fff); border-radius: 8px; padding: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h4 style="margin: 0; color: var(--text-primary, #333);">Crear Nuevo Tema</h4>
+                                <button id="backToThemesListBtn" class="btn-secondary" style="padding: 8px 16px; font-size: 0.9em;">
+                                    <i class="fas fa-arrow-left"></i> Volver
+                                </button>
+                            </div>
+                            <form id="unifiedContentForm">
+                                <input type="hidden" id="unifiedContentSubjectId" value="">
+                                <div class="form-group">
+                                    <label for="unifiedContentTopic" data-translate="topic">Tema</label>
+                                    <input type="text" id="unifiedContentTopic" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="unifiedContentDescription" data-translate="description">Descripción</label>
+                                    <textarea id="unifiedContentDescription" rows="3" placeholder="Descripción del tema..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="unifiedContentStatus" data-translate="status">Estado</label>
+                                    <select id="unifiedContentStatus">
+                                        <option value="PENDIENTE" data-translate="pending">Pendiente</option>
+                                        <option value="EN_PROGRESO" data-translate="in_progress">En Progreso</option>
+                                        <option value="COMPLETADO" data-translate="completed">Completado</option>
+                                        <option value="CANCELADO" data-translate="cancelled">Cancelado</option>
+                                    </select>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" id="cancelCreateThemeBtn" class="btn-secondary" data-translate="cancel">Cancelar</button>
+                                    <button type="submit" class="btn-primary" data-translate="save_content">Guardar Tema</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Evaluaciones Tab Content -->
+                    <div id="evaluacionesTabContent" class="tab-content" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="margin: 0; color: var(--text-primary, #333); font-size: 1.2rem;">
+                                <i class="fas fa-clipboard-list" style="margin-right: 8px;"></i>
+                                Evaluaciones
+                            </h3>
+                            <button id="showCreateEvaluacionFormBtn" class="btn-primary" style="padding: 8px 16px; font-size: 0.9em;">
+                                <i class="fas fa-plus"></i> Crear Evaluación
+                            </button>
+                        </div>
+                        <div id="subjectEvaluacionesList" style="max-height: 500px; overflow-y: auto; background: var(--card-bg, #fff); border-radius: 8px; padding: 1rem;">
+                            <!-- Evaluaciones will be loaded here -->
+                        </div>
+
+                        <!-- Create Evaluacion Form View -->
+                        <div id="createEvaluacionFormView" style="display: none; margin-top: 2rem; background: var(--card-bg, #fff); border-radius: 8px; padding: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h4 style="margin: 0; color: var(--text-primary, #333);">Crear Nueva Evaluación</h4>
+                                <button id="backToEvaluacionesListBtn" class="btn-secondary" style="padding: 8px 16px; font-size: 0.9em;">
+                                    <i class="fas fa-arrow-left"></i> Volver
+                                </button>
+                            </div>
+                            <form id="evaluacionForm">
+                                <input type="hidden" id="evaluacionSubjectId" value="">
+                                <div class="form-group">
+                                    <label for="evaluacionTitulo" data-translate="title">Título</label>
+                                    <input type="text" id="evaluacionTitulo" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="evaluacionDescripcion" data-translate="description">Descripción</label>
+                                    <textarea id="evaluacionDescripcion" rows="3" placeholder="Descripción de la evaluación..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="evaluacionFecha" data-translate="date">Fecha</label>
+                                    <input type="date" id="evaluacionFecha" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="evaluacionTipo" data-translate="type">Tipo</label>
+                                    <select id="evaluacionTipo" required>
+                                        <option value="EXAMEN" data-translate="exam">Examen</option>
+                                        <option value="PARCIAL" data-translate="partial">Parcial</option>
+                                        <option value="TRABAJO_PRACTICO" data-translate="practical_work">Trabajo Práctico</option>
+                                        <option value="PROYECTO" data-translate="project">Proyecto</option>
+                                        <option value="ORAL" data-translate="oral">Oral</option>
+                                        <option value="PRACTICO" data-translate="practical">Práctico</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="evaluacionPeso" data-translate="weight">Peso</label>
+                                    <input type="number" id="evaluacionPeso" min="0" max="9.99" step="0.01" value="1.00" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="evaluacionEstado" data-translate="status">Estado</label>
+                                    <select id="evaluacionEstado">
+                                        <option value="PROGRAMADA" data-translate="scheduled">Programada</option>
+                                        <option value="EN_CURSO" data-translate="in_progress">En Curso</option>
+                                        <option value="FINALIZADA" data-translate="finished">Finalizada</option>
+                                        <option value="CANCELADA" data-translate="cancelled">Cancelada</option>
+                                    </select>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" id="cancelCreateEvaluacionBtn" class="btn-secondary" data-translate="cancel">Cancelar</button>
+                                    <button type="submit" class="btn-primary" data-translate="save">Guardar Evaluación</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            
+
+
+        </main>
+    </div>
+
+    <!-- ===================================================================
+         FOOTER SECTION - Desktop Footer with Links and Copyright
+         =================================================================== -->
+    <!-- Footer (Desktop Only) -->
+    <footer class="footer desktop-only">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="../styles/assets/icon.ico" alt="EduSync" style="width:20px;height:20px;">
+                    <span>EduSync</span>
+                </div>
+                <div class="footer-links">
+                    <a href="#features" data-translate="features">Features</a>
+                    <a href="#about" data-translate="about">About</a>
+                    <a href="contact.html" data-translate="contact">Contact</a>
+                </div>
+                <div class="footer-copyright">
+                    <p>&copy; 2024 EduSync. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ===================================================================
+         MODALS SECTION - All Application Modal Dialogs
+         =================================================================== -->
+    
+    <!-- Student Modal - Add/Edit Student -->
+    <div id="studentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-translate="add_edit_student">Agregar/Editar Estudiante</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="studentForm" class="modal-form">
+                <div class="form-group">
+                    <label for="studentFirstName" data-translate="first_name">Nombre</label>
+                    <input type="text" id="studentFirstName" required>
+                </div>
+                <div class="form-group">
+                    <label for="studentLastName" data-translate="last_name">Apellido</label>
+                    <input type="text" id="studentLastName" required>
+                </div>
+                <div class="form-group">
+                    <label for="studentEmail" data-translate="email">Correo Electrónico</label>
+                    <input type="email" id="studentEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="studentSubjects" data-translate="subjects">Materias</label>
+                    <select id="studentSubjects" required>
+                        <option value="" data-translate="select_subject">- Seleccionar Materia -</option>
+                        <!-- Se poblará dinámicamente con las materias del docente actual -->
+                    </select>
+                    <div id="selectedSubjectsContainer" class="selected-subjects-container" style="display: none; margin-top: 10px;">
+                        <!-- Selected subjects will be displayed here as chips -->
+                    </div>
+                    <small style="display: block; margin-top: 5px; color: #666;">Puedes seleccionar múltiples materias. El curso se determina automáticamente según la materia seleccionada.</small>
+                </div>
+                <div class="form-group">
+                    <label for="studentStatus" data-translate="status">Estado</label>
+                    <select id="studentStatus" required onchange="toggleIntensificacionThemes()">
+                        <option value="ACTIVO" data-translate="active">Activo</option>
+                        <option value="INACTIVO" data-translate="inactive">Inactivo</option>
+                        <option value="INTENSIFICA" data-translate="intensifica">Intensifica</option>
+                    </select>
+                    <small style="display: block; margin-top: 5px; color: #666;">Los estudiantes en Intensifica aparecerán destacados y verán temas de recuperación.</small>
+                </div>
+                <!-- Selector de temas para intensificadores - Intensification Theme Selector -->
+                <div id="intensificacionThemesContainer" class="form-group" style="display: none;">
+                    <label data-translate="themes_to_intensify">Temas a Intensificar</label>
+                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background: #f9f9f9;">
+                        <div id="intensificacionThemesList">
+                            <!-- Los temas se cargarán dinámicamente -->
+                        </div>
+                    </div>
+                    <small style="display: block; margin-top: 5px; color: #666;">Los temas mostrados corresponden a las materias seleccionadas arriba. Si una materia no tiene temas, puedes crearlos directamente desde aquí.</small>
+                </div>
+                <!-- Selector de temas para asignar al estudiante - Assign Topics to Student -->
+                <div class="form-group">
+                    <label for="studentTopics" data-translate="assign_topics">Asignar Temas</label>
+                    <select id="studentTopics">
+                        <option value="" data-translate="select_topic">- Seleccionar Tema -</option>
+                        <!-- Se poblará dinámicamente con los temas de las materias seleccionadas -->
+                    </select>
+                    <div id="selectedTopicsContainer" class="selected-subjects-container" style="display: none; margin-top: 10px;">
+                        <!-- Selected topics will be displayed here as chips -->
+                    </div>
+                    <small style="display: block; margin-top: 5px; color: #666;">Selecciona temas específicos para asignar al estudiante. Los temas disponibles corresponden a las materias seleccionadas arriba.</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
+                    <button type="button" class="btn-primary" data-translate="save_student" onclick="saveStudent(); event.preventDefault(); return false;">Guardar Estudiante</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Subject Modal - Add/Edit Subject -->
+    <div id="subjectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-translate="add_edit_subject">Agregar/Editar Materia</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="subjectForm" class="modal-form">
+                <div class="form-group">
+                    <label for="subjectName" data-translate="subject_name">Nombre de la Materia</label>
+                    <input type="text" id="subjectName" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="subjectCourse" data-translate="course">Curso</label>
+                        <select id="subjectCourse" required>
+                            <option value="" data-translate="select_course">- Seleccionar Curso -</option>
+                            <option value="1">1º Curso</option>
+                            <option value="2">2º Curso</option>
+                            <option value="3">3º Curso</option>
+                            <option value="4">4º Curso</option>
+                            <option value="5">5º Curso</option>
+                            <option value="6">6º Curso</option>
+                            <option value="7">7º Curso</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="subjectDivision" data-translate="division">División</label>
+                        <select id="subjectDivision" required>
+                            <option value="" data-translate="select_division">- Seleccionar División -</option>
+                            <option value="A">División A</option>
+                            <option value="B">División B</option>
+                            <option value="C">División C</option>
+                            <option value="D">División D</option>
+                            <option value="E">División E</option>
+                            <option value="F">División F</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="subjectDescription" data-translate="description">Descripción</label>
+                    <textarea id="subjectDescription" rows="3" placeholder="Descripción de la materia..."></textarea>
+                </div>
+                <!-- Schedule Selector - Subject Schedule Configuration -->
+                <div class="form-group">
+                    <label data-translate="schedule">Horario</label>
+                    <div class="schedule-selector">
+                        <!-- Day Selector - Select Days of Week -->
+                        <div class="day-selector-group">
+                            <label class="schedule-sub-label">Días:</label>
+                            <div class="day-selector-wrapper">
+                                <select id="subjectScheduleDays" class="time-select">
+                                    <option value="">Seleccionar día</option>
+                                    <option value="lunes">Lunes</option>
+                                    <option value="martes">Martes</option>
+                                    <option value="miércoles">Miércoles</option>
+                                    <option value="jueves">Jueves</option>
+                                    <option value="viernes">Viernes</option>
+                                    <option value="sábado">Sábado</option>
+                                    <option value="domingo">Domingo</option>
+                                </select>
+                                <button type="button" id="addDayBtn" class="btn btn-primary" title="Agregar día">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <div class="selected-days-container" id="selectedDaysContainer">
+                                <!-- Selected days will be displayed here -->
+                            </div>
+                        </div>
+                        <!-- Time Selector - Select Start and End Times -->
+                        <div class="time-selector-group">
+                            <label class="schedule-sub-label">Hora:</label>
+                            <select id="subjectScheduleHour" class="time-select">
+                                <option value="">Seleccionar hora inicio</option>
+                                <option value="07:00">07:00</option>
+                                <option value="07:30">07:30</option>
+                                <option value="08:00">08:00</option>
+                                <option value="08:30">08:30</option>
+                                <option value="09:00">09:00</option>
+                                <option value="09:30">09:30</option>
+                                <option value="10:00">10:00</option>
+                                <option value="10:30">10:30</option>
+                                <option value="11:00">11:00</option>
+                                <option value="11:30">11:30</option>
+                                <option value="12:00">12:00</option>
+                                <option value="12:30">12:30</option>
+                                <option value="13:00">13:00</option>
+                                <option value="13:30">13:30</option>
+                                <option value="14:00">14:00</option>
+                                <option value="14:30">14:30</option>
+                                <option value="15:00">15:00</option>
+                                <option value="15:30">15:30</option>
+                                <option value="16:00">16:00</option>
+                                <option value="16:30">16:30</option>
+                                <option value="17:00">17:00</option>
+                                <option value="17:30">17:30</option>
+                                <option value="18:00">18:00</option>
+                                <option value="18:30">18:30</option>
+                                <option value="19:00">19:00</option>
+                                <option value="19:30">19:30</option>
+                                <option value="20:00">20:00</option>
+                                <option value="20:30">20:30</option>
+                                <option value="21:00">21:00</option>
+                                <option value="21:30">21:30</option>
+                                <option value="22:00">22:00</option>
+                            </select>
+                            <span class="time-separator">-</span>
+                            <select id="subjectScheduleEndHour" class="time-select">
+                                <option value="">Seleccionar hora fin</option>
+                                <option value="07:00">07:00</option>
+                                <option value="07:30">07:30</option>
+                                <option value="08:00">08:00</option>
+                                <option value="08:30">08:30</option>
+                                <option value="09:00">09:00</option>
+                                <option value="09:30">09:30</option>
+                                <option value="10:00">10:00</option>
+                                <option value="10:30">10:30</option>
+                                <option value="11:00">11:00</option>
+                                <option value="11:30">11:30</option>
+                                <option value="12:00">12:00</option>
+                                <option value="12:30">12:30</option>
+                                <option value="13:00">13:00</option>
+                                <option value="13:30">13:30</option>
+                                <option value="14:00">14:00</option>
+                                <option value="14:30">14:30</option>
+                                <option value="15:00">15:00</option>
+                                <option value="15:30">15:30</option>
+                                <option value="16:00">16:00</option>
+                                <option value="16:30">16:30</option>
+                                <option value="17:00">17:00</option>
+                                <option value="17:30">17:30</option>
+                                <option value="18:00">18:00</option>
+                                <option value="18:30">18:30</option>
+                                <option value="19:00">19:00</option>
+                                <option value="19:30">19:30</option>
+                                <option value="20:00">20:00</option>
+                                <option value="20:30">20:30</option>
+                                <option value="21:00">21:00</option>
+                                <option value="21:30">21:30</option>
+                                <option value="22:00">22:00</option>
+                                <option value="22:30">22:30</option>
+                                <option value="23:00">23:00</option>
+                            </select>
+                        </div>
+                        <input type="hidden" id="subjectSchedule" name="subjectSchedule">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="subjectClassroom" data-translate="classroom">Aula</label>
+                    <input type="number" id="subjectClassroom" placeholder="Ej: 101" min="1" step="1">
+                </div>
+                <div class="form-group">
+                    <label for="subjectStatus" data-translate="status">Estado</label>
+                    <select id="subjectStatus">
+                        <option value="ACTIVA" data-translate="active">Activa</option>
+                        <option value="INACTIVA" data-translate="inactive">Inactiva</option>
+                        <option value="FINALIZADA" data-translate="finished">Finalizada</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
+                    <button type="submit" class="btn-primary" data-translate="save_subject">Guardar Materia</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Content Modal - Create/Edit Content/Topic -->
+    <div id="contentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-translate="add_edit_content">Agregar/Editar Contenido</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="contentForm" class="modal-form">
+                <div class="form-group">
+                    <label for="contentSubject" data-translate="subject">Materia</label>
+                    <select id="contentSubject" required>
+                        <option value="" data-translate="select_subject">- Seleccionar Materia -</option>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="contentTopic" data-translate="topic">Tema</label>
+                    <input type="text" id="contentTopic" required>
+                </div>
+                <div class="form-group">
+                    <label for="contentDescription" data-translate="description">Descripción</label>
+                    <textarea id="contentDescription" rows="3" placeholder="Descripción del tema..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="contentStatus" data-translate="status">Estado</label>
+                    <select id="contentStatus">
+                        <option value="PENDIENTE" data-translate="pending">Pendiente</option>
+                        <option value="EN_PROGRESO" data-translate="in_progress">En Progreso</option>
+                        <option value="COMPLETADO" data-translate="completed">Completado</option>
+                        <option value="CANCELADO" data-translate="cancelled">Cancelado</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
+                    <button type="submit" class="btn-primary" data-translate="save_content">Guardar Contenido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Subject Themes Modal - View and Manage Subject Themes -->
+    <div id="subjectThemesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="selectedSubjectName">Nombre de la Materia</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            
+            <!-- Themes List View - Display All Subject Themes -->
+            <div id="themesListView" class="modal-form" style="padding: 1.5rem 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div style="font-size: 0.9em; color: var(--text-secondary, #666); font-weight: 600;">Temas de la Materia</div>
+                    <button id="showCreateThemeFormBtn" class="btn-primary" style="padding: 8px 16px; font-size: 0.9em;">
+                        <i class="fas fa-plus"></i> Crear Tema
+                    </button>
+                </div>
+                <div id="subjectThemesList" style="max-height: 500px; overflow-y: auto;">
+                    <!-- Temas will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Create Theme Form View - Form to Create New Theme -->
+            <div id="createThemeFormView" class="modal-form" style="padding: 1.5rem 2rem; display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h4 style="margin: 0; color: var(--text-primary, #333);">Crear Nuevo Tema</h4>
+                    <button id="backToThemesListBtn" class="btn-secondary" style="padding: 8px 16px; font-size: 0.9em;">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </button>
+                </div>
+                <form id="unifiedContentForm">
+                    <input type="hidden" id="unifiedContentSubjectId" value="">
+                    <div class="form-group">
+                        <label for="unifiedContentTopic" data-translate="topic">Tema</label>
+                        <input type="text" id="unifiedContentTopic" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="unifiedContentDescription" data-translate="description">Descripción</label>
+                        <textarea id="unifiedContentDescription" rows="3" placeholder="Descripción del tema..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="unifiedContentStatus" data-translate="status">Estado</label>
+                        <select id="unifiedContentStatus">
+                            <option value="PENDIENTE" data-translate="pending">Pendiente</option>
+                            <option value="EN_PROGRESO" data-translate="in_progress">En Progreso</option>
+                            <option value="COMPLETADO" data-translate="completed">Completado</option>
+                            <option value="CANCELADO" data-translate="cancelled">Cancelado</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="cancelCreateThemeBtn" class="btn-secondary" data-translate="cancel">Cancelar</button>
+                        <button type="submit" class="btn-primary" data-translate="save_content">Guardar Tema</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Edit Modal - Edit Existing Content -->
+    <div id="contentEditModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-translate="edit_content">Editar Contenido</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="contentEditForm" class="modal-form">
+                <div class="form-group">
+                    <label for="editContentTopic" data-translate="content_topic">Tema del Contenido</label>
+                    <input type="text" id="editContentTopic" required>
+                </div>
+                <div class="form-group">
+                    <label for="editContentDescription" data-translate="description">Descripción</label>
+                    <textarea id="editContentDescription" rows="3" placeholder="Descripción del contenido..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editContentStatus" data-translate="status">Estado</label>
+                    <select id="editContentStatus" required>
+                        <option value="PENDIENTE" data-translate="pending">Pendiente</option>
+                        <option value="EN_PROGRESO" data-translate="in_progress">En Progreso</option>
+                        <option value="COMPLETADO" data-translate="completed">Completado</option>
+                        <option value="CANCELADO" data-translate="cancelled">Cancelado</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
+                    <button type="submit" class="btn-primary" data-translate="save_content">Guardar Contenido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- No Subjects Warning Modal - Warn User When No Subjects Exist -->
+    <div id="noSubjectsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle" style="color: #ffc107; margin-right: 10px;"></i> Materias Requeridas</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-form" style="padding: 20px;">
+                <div class="form-group" style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 3rem; color: #ffc107; margin-bottom: 15px;">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <p style="font-size: 1.1rem; color: #333; line-height: 1.6; margin-bottom: 10px;">
+                        No tienes materias creadas todavía.
+                    </p>
+                    <p style="color: #666; line-height: 1.6;">
+                        Para agregar estudiantes, primero necesitas crear al menos una materia desde la sección de <strong>"Gestión de Materias"</strong>.
+                    </p>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
+                    <button type="button" class="btn-primary" id="goToSubjectsBtn">
+                        <i class="fas fa-book"></i>
+                        <span>Ir a Gestión de Materias</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Filters Modal - Configure Search Filters -->
+    <div id="searchFiltersModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-translate="search_filters">Filtros de Búsqueda</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-form">
+                <div class="filter-options">
+                    <div class="filter-option-group">
+                        <h4 data-translate="search_in">Buscar en:</h4>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="students" checked>
+                            <span class="toggle-label" data-translate="students">Estudiantes</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="subjects" checked>
+                            <span class="toggle-label" data-translate="subjects">Materias</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="exams" checked>
+                            <span class="toggle-label" data-translate="exams">Exámenes</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="notifications" checked>
+                            <span class="toggle-label" data-translate="notifications">Notificaciones</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="reports" checked>
+                            <span class="toggle-label" data-translate="reports">Reportes</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="calendar" checked>
+                            <span class="toggle-label" data-translate="calendar">Calendario</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="resetFiltersBtn" data-translate="reset_filters">Restablecer</button>
+                    <button type="button" class="btn-primary close-modal" data-translate="apply_filters">Aplicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Details Modal - View Calendar Event Details -->
+    <div id="eventDetailsModal" class="modal">
+        <div class="modal-content modern-modal">
+            <div class="modal-header modern-header" id="eventModalHeader">
+                <button class="close-modal">&times;</button>
+                <div class="modal-icon" id="eventModalIcon">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <h3 id="eventModalTitle">Detalles del Evento</h3>
+                <p class="modal-subtitle" id="eventModalSubtitle">Información del evento</p>
+            </div>
+            <div class="modern-body" id="eventModalBody">
+                <!-- Event details will be populated here -->
+            </div>
+            <div class="form-actions" style="padding: 1rem 2rem 2rem;">
+                <button type="button" class="btn-primary close-modal" style="width: 100%;">
+                    <i class="fas fa-check"></i>
+                    <span>Cerrar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Dialog Modal - Export Students or Exams List -->
+    <div id="exportDialogModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 data-translate="export_list">Exportar Lista</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-form" style="padding: 2rem;">
+                <p style="margin-bottom: 1.5rem; color: #666;" id="exportDialogText">
+                    <span data-translate="select_export_format">Seleccione el formato de exportación:</span>
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <button id="exportCSVBtn" class="btn-primary" style="width: 100%; justify-content: center;">
+                        <i class="fas fa-file-csv"></i>
+                        <span data-translate="export_csv">Exportar como CSV</span>
+                    </button>
+                    <button id="exportDOCBtn" class="btn-primary" style="width: 100%; justify-content: center;">
+                        <i class="fas fa-file-word"></i>
+                        <span data-translate="export_doc">Exportar como DOC</span>
+                    </button>
+                </div>
+            </div>
+            <div class="form-actions" style="padding: 1rem 2rem; border-top: 1px solid #e0e0e0;">
+                <button type="button" class="btn-secondary close-modal" style="width: 100%;">
+                    <i class="fas fa-times"></i>
+                    <span data-translate="cancel">Cancelar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Details Modal - View Detailed Student Information -->
+    <div id="studentDetailsModal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3 id="studentDetailsModalTitle">Detalles del Estudiante</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-form" style="padding: 1.5rem 2rem;">
+                <!-- Student Basic Information - Personal Details -->
+                <div class="student-details-section" style="margin-bottom: 2rem;">
+                    <h4 style="margin-bottom: 1rem; color: #667eea; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-user"></i>
+                        Información del Estudiante
+                    </h4>
+                    <div id="studentDetailsInfo" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <!-- Student info will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Tema Estudiante Section - Student Topic Progress -->
+                <div class="student-details-section">
+                    <h4 style="margin-bottom: 1rem; color: #667eea; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-book"></i>
+                        Temas del Estudiante
+                    </h4>
+                    <div id="studentTemaEstudianteList" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Tema estudiante records will be populated here -->
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions" style="padding: 1rem 2rem; border-top: 1px solid #e0e0e0;">
+                <button type="button" class="btn-primary close-modal" style="width: 100%;">
+                    <i class="fas fa-check"></i>
+                    <span>Cerrar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================
+         SCRIPTS SECTION - JavaScript Modules and Dependencies
+         =================================================================== -->
+    <!-- Script Modules -->
+    <script src="../scripts/translations.js"></script>
+    <script src="../scripts/utils.js"></script>
+    <script src="../scripts/navigation.js"></script>
+    <script src="../scripts/search.js"></script>
+    <script src="../scripts/auth.js"></script>
+    <script src="../scripts/dashboard.js"></script>
+    <script src="../scripts/students.js"></script>
+    <script src="../scripts/subjects.js"></script>
+    <script src="../scripts/grades.js"></script>
+    <script src="../scripts/attendance.js"></script>
+    <script src="../scripts/unified-student-management.js"></script>
+    <script src="../scripts/exams.js"></script>
+    <script src="../scripts/notifications.js"></script>
+    
+    <!-- Report System Components (Load in order) -->
+    <script src="../scripts/reports/data-processor.js"></script>
+    <script src="../scripts/reports/chart-manager.js"></script>
+    <script src="../scripts/reports/report-generator.js"></script>
+    <script src="../scripts/reports/export-manager.js"></script>
+    <script src="../scripts/reports.js"></script>
+    <script src="../scripts/reports/index.js"></script>
+    <script src="../scripts/calendar.js"></script>
+    <script src="../scripts/main.js"></script>
+</body>
+</html>

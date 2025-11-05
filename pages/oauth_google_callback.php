@@ -1,21 +1,21 @@
 <?php
 // Callback de Google OAuth: intercambia code por tokens y crea/inicia sesión
 session_start();
-header('Content-Type: application/json');
+
+// Habilitar la visualización de errores para depuración
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 require_once __DIR__ . '/../config/oauth_google.php';
 require_once __DIR__ . '/../config/database.php';
 
 if (!isset($_GET['code']) || !isset($_GET['state'])) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Solicitud inválida.']);
-    exit;
+    die('Error: Solicitud inválida. Faltan los parámetros "code" o "state".');
 }
 
 if (!isset($_SESSION['oauth2state']) || $_GET['state'] !== $_SESSION['oauth2state']) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Estado de seguridad no válido.']);
-    exit;
+    die('Error: Estado de seguridad no válido. Posible ataque CSRF.');
 }
 
 $code = $_GET['code'];
@@ -34,18 +34,15 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postFields));
 $tokenResponse = curl_exec($ch);
+
 if ($tokenResponse === false) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error al obtener token de Google.']);
-    exit;
+    die('Error de cURL al obtener token de Google: ' . curl_error($ch));
 }
 $tokens = json_decode($tokenResponse, true);
 curl_close($ch);
 
 if (!isset($tokens['access_token'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Autenticación con Google fallida.']);
-    exit;
+    die('Error: Autenticación con Google fallida. No se recibió un access_token. Respuesta de Google: ' . htmlspecialchars($tokenResponse));
 }
 
 // 2) Obtener perfil del usuario
@@ -53,13 +50,15 @@ $ch = curl_init('https://www.googleapis.com/oauth2/v2/userinfo');
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $tokens['access_token']]);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $userInfoResponse = curl_exec($ch);
+
+if ($userInfoResponse === false) {
+    die('Error de cURL al obtener información del usuario: ' . curl_error($ch));
+}
 curl_close($ch);
 
 $gUser = json_decode($userInfoResponse, true);
 if (!isset($gUser['email'])) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'No se pudo obtener el email de Google.']);
-    exit;
+    die('Error: No se pudo obtener el email de Google. Respuesta de Google: ' . htmlspecialchars($userInfoResponse));
 }
 
 $email = $gUser['email'];
@@ -108,19 +107,12 @@ try {
     $_SESSION['user_role'] = $userRole;
     $_SESSION['logged_in'] = true;
 
-    echo json_encode(['success' => true, 'message' => 'Inicio de sesión con Google exitoso.', 'user' => [
-        'id' => $userId,
-        'name' => $userName . ' ' . $userLast,
-        'email' => $email,
-        'role' => $userRole,
-        'avatar' => $picture
-    ]]);
+    // Redirigir al usuario a la página principal de la aplicación
+    header('Location: http://localhost/utnproject/pages/home_test.html');
+    exit();
 
 } catch (PDOException $e) {
     if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error de base de datos.']);
+    die('Error de base de datos: ' . $e->getMessage());
 }
 ?>
-
-

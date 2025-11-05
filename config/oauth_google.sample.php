@@ -1,16 +1,15 @@
 <?php
-// Copiar como oauth_google.php y completar con tus credenciales de Google Cloud
-// Console: https://console.cloud.google.com/apis/credentials
+// config/oauth_google.sample.php
 
-define('GOOGLE_CLIENT_ID', 'TU_CLIENT_ID.apps.googleusercontent.com');
+// URL de redireccionamiento de Google OAuth 2.0
+define('GOOGLE_REDIRECT_URL', 'http://localhost/utnproject/pages/oauth_google_callback.php');
+
+// ID de cliente de Google
+// Reemplaza 'TU_CLIENT_ID' con tu ID de cliente real de Google Cloud.
+define('GOOGLE_CLIENT_ID', 'TU_CLIENT_ID');
+
+// Secreto de cliente de Google
+// Reemplaza 'TU_CLIENT_SECRET' con tu secreto de cliente real de Google Cloud.
 define('GOOGLE_CLIENT_SECRET', 'TU_CLIENT_SECRET');
 
-// Debe coincidir exactamente con lo configurado en Google
-define('GOOGLE_REDIRECT_URI', 'http://localhost/utnproject/pages/oauth_google_callback.php');
-
-// Scopes requeridos: email y perfil básico
-define('GOOGLE_OAUTH_SCOPE', 'openid email profile');
-
 ?>
-
-
