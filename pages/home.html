@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/utilities.css">
     <link rel="stylesheet" href="../styles/app.css">
     <link rel="stylesheet" href="../styles/components.css">
     <link rel="stylesheet" href="../styles/responsive.css">
@@ -50,52 +51,52 @@
          =================================================================== -->
     
     <!-- Mobile Navigation Overlay -->
-    <div id="navOverlay" class="nav-overlay">
-        <div class="nav-content">
-            <div class="nav-header">
-                <h2>EduSync</h2>
+    <div id="navOverlay" class="nav-overlay position-fixed top-0 left-0 w-full h-screen z-1000">
+        <div class="nav-content position-absolute top-0 left-0 bg-white">
+            <div class="nav-header d-flex justify-between items-center p-4">
+                <h2 class="text-2xl font-bold text-primary">EduSync</h2>
                 <button id="closeNav" class="close-nav">&times;</button>
             </div>
             <nav class="mobile-nav">
                 <!-- Mobile Search Bar - Search Functionality in Mobile Nav -->
-                <div class="mobile-search-container">
-                    <div class="search-bar-wrapper">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="mobileSearchInput" class="nav-search-input" placeholder="Buscar..." data-translate="search_placeholder">
-                        <button id="mobileFiltersBtn" class="search-filters-btn" title="Filtros">
+                <div class="p-4 mb-4 border-b border-gray">
+                    <div class="d-flex items-center bg-white border border-gray rounded-lg p-2 gap-2 focus-within:border-primary focus-within:shadow-md transition-all">
+                        <i class="fas fa-search text-secondary text-sm ml-1"></i>
+                        <input type="text" id="mobileSearchInput" class="flex-1 border-none outline-none bg-transparent text-sm px-2 py-1 text-dark" placeholder="Buscar..." data-translate="search_placeholder">
+                        <button id="mobileFiltersBtn" class="border-none bg-transparent cursor-pointer text-secondary hover:bg-light hover:text-primary transition-colors p-2 rounded" title="Filtros">
                             <i class="fas fa-filter"></i>
                         </button>
                     </div>
                 </div>
-                <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                <a href="#dashboard" class="d-flex items-center gap-3 px-4 py-3 text-dark no-underline transition-colors hover:bg-light hover:text-primary rounded-md" data-section="dashboard">
                     <i class="fas fa-home"></i>
                     <span data-translate="dashboard">Panel de Control</span>
                 </a>
-                <a href="#student-management" class="nav-item" data-section="student-management">
+                <a href="#student-management" class="d-flex items-center gap-3 px-4 py-3 text-dark no-underline transition-colors hover:bg-light hover:text-primary rounded-md" data-section="student-management">
                     <i class="fas fa-users"></i>
                     <span data-translate="student_management">Gestión de Estudiantes</span>
                 </a>
-                <a href="#subjects-management" class="nav-item" data-section="subjects-management">
-                   
+                <a href="#subjects-management" class="d-flex items-center gap-3 px-4 py-3 text-dark no-underline transition-colors hover:bg-light hover:text-primary rounded-md" data-section="subjects-management">
+                    <i class="fas fa-book"></i>
                     <span data-translate="subjects_management">Gestión de Materias</span>
                 </a>
-                <a href="#notifications" class="nav-item" data-section="notifications">
+                <a href="#notifications" class="d-flex items-center gap-3 px-4 py-3 text-dark no-underline transition-colors hover:bg-light hover:text-primary rounded-md position-relative" data-section="notifications">
                     <i class="fas fa-bell"></i>
                     <span data-translate="notifications">Notificaciones</span>
-                    <span class="notification-badge" id="notificationCount">0</span>
+                    <span class="notification-badge position-absolute top-0 right-0 bg-danger text-white rounded-full text-xs px-2 py-1 min-w-5 h-5 d-flex items-center justify-center font-bold" id="notificationCount">0</span>
                 </a>
-                <a href="#reports" class="nav-item" data-section="reports">
+                <a href="#reports" class="d-flex items-center gap-3 px-4 py-3 text-dark no-underline transition-colors hover:bg-light hover:text-primary rounded-md" data-section="reports">
                     <i class="fas fa-chart-bar"></i>
                     <span data-translate="reports">Reportes</span>
                 </a>
                 
                 <!-- Language Selector in Navigation - Mobile Language Switcher -->
-                <div class="nav-language-selector">
-                    <div class="nav-language-label">
-                        <i class="fas fa-globe"></i>
-                        <span data-translate="language">Idioma</span>
+                <div class="p-4 border-t border-gray mt-4">
+                    <div class="d-flex items-center gap-2 mb-2">
+                        <i class="fas fa-globe text-primary"></i>
+                        <span class="text-sm font-medium text-dark" data-translate="language">Idioma</span>
                     </div>
-                    <select id="languageSelect" class="nav-language-dropdown">
+                    <select id="languageSelect" class="w-full p-2 border border-gray rounded-md bg-white text-dark text-sm cursor-pointer">
                         <option value="es">Español</option>
                         <option value="en">English</option>
                     </select>
@@ -105,9 +106,9 @@
     </div>
 
     <!-- Desktop Navigation Header -->
-    <header class="landing-header desktop-nav">
-        <nav class="landing-nav">
-            <div class="nav-brand">
+    <header class="landing-header desktop-nav d-none w-full max-w-full">
+        <nav class="landing-nav d-flex justify-between items-center px-8 py-4 max-w-7xl mx-auto w-full">
+            <div class="nav-brand d-flex items-center gap-2 text-2xl font-bold text-primary">
                 <img src="../styles/assets/icon.ico" alt="EduSync" style="width:50px;height:50px;">
                 <span>EduSync</span>
             </div>
@@ -121,18 +122,18 @@
                 </label>
             </div>
             
-            <div class="nav-menu" id="desktopNavMenu">
+            <div class="nav-menu d-flex items-center gap-6" id="desktopNavMenu">
                 <!-- Search Bar - Desktop Search Functionality -->
-                <div class="nav-search-container">
-                    <div class="search-bar-wrapper">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="desktopSearchInput" class="nav-search-input" placeholder="Buscar..." data-translate="search_placeholder">
-                        <button id="desktopFiltersBtn" class="search-filters-btn" title="Filtros">
+                <div class="position-relative mr-4">
+                    <div class="d-flex items-center bg-white border border-gray rounded-lg p-2 gap-2 focus-within:border-primary focus-within:shadow-md transition-all">
+                        <i class="fas fa-search text-secondary text-sm ml-1"></i>
+                        <input type="text" id="desktopSearchInput" class="flex-1 border-none outline-none bg-transparent text-sm px-2 py-1 text-dark" placeholder="Buscar..." data-translate="search_placeholder">
+                        <button id="desktopFiltersBtn" class="border-none bg-transparent cursor-pointer text-secondary hover:bg-light hover:text-primary transition-colors p-2 rounded" title="Filtros">
                             <i class="fas fa-filter"></i>
                         </button>
                     </div>
                 </div>
-                <a href="#dashboard" class="nav-link" data-section="dashboard">
+                <a href="#dashboard" class="nav-link d-flex items-center no-underline text-dark font-medium transition-colors px-4 py-2 rounded-md position-relative" data-section="dashboard">
                     <span data-translate="dashboard">Panel de Control</span>
                 </a>
                 <!-- Student Management Dropdown - Nested Navigation -->
@@ -186,7 +187,7 @@
                         <option value="en">English</option>
                     </select>
                 </div>
-                <div class="user-info">
+                <div class="user-info d-flex items-center gap-4">
                     <button id="desktopLogoutBtn" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
@@ -203,18 +204,18 @@
     <!-- ===================================================================
          MAIN APPLICATION CONTAINER
          =================================================================== -->
-    <div class="app-container">
+    <div class="app-container min-h-screen d-flex flex-column">
         <!-- Mobile Header -->
-        <header class="app-header mobile-header">
-            <div class="header-left">
+        <header class="app-header mobile-header bg-white px-5 py-4 shadow-md d-flex justify-between items-center position-sticky top-0 z-100">
+            <div class="header-left d-flex items-center gap-4">
                 <button id="menuToggle" class="menu-toggle">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h1>EduSync</h1>
+                <h1 class="text-2xl font-semibold text-dark">EduSync</h1>
             </div>
-            <div class="header-right">
-                <div class="user-info">
-                    <span id="welcomeUser" data-translate="welcome_user">¡Bienvenido, Usuario!</span>
+            <div class="header-right d-flex items-center">
+                <div class="user-info d-flex items-center gap-4">
+                    <span id="welcomeUser" class="text-base font-medium text-dark" data-translate="welcome_user">¡Bienvenido, Usuario!</span>
                     <button id="logoutBtn" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
@@ -225,7 +226,7 @@
         <!-- ===================================================================
              MAIN CONTENT AREA - All Application Sections
              =================================================================== -->
-        <main class="app-main">
+        <main class="app-main flex-1 p-5 w-full max-w-full box-border">
             
             <!-- ===============================================================
                  DASHBOARD SECTION - Overview and Quick Actions
@@ -234,10 +235,10 @@
             <section id="dashboard" class="content-section active">
                 <!-- Hero Section - Welcome Banner -->
                 <div class="dashboard-hero">
-                    <div class="hero-content">
-                        <h1 class="hero-title" data-translate="welcome_dashboard">Panel de Control</h1>
-                        <p class="hero-subtitle" data-translate="welcome_subtitle">Gestiona tus clases, estudiantes y evaluaciones desde un solo lugar</p>
-                        <div class="hero-actions">
+                    <div class="hero-content d-grid grid-cols-1 gap-8">
+                        <h1 class="hero-title text-4xl font-bold text-center text-dark" data-translate="welcome_dashboard">Panel de Control</h1>
+                        <p class="hero-subtitle text-xl text-center text-muted" data-translate="welcome_subtitle">Gestiona tus clases, estudiantes y evaluaciones desde un solo lugar</p>
+                        <div class="hero-actions d-flex justify-center items-center gap-4 flex-wrap">
                             <button class="hero-btn hero-btn-primary" id="quickCreateClassBtn">
                                 <i class="fas fa-plus-circle"></i>
                                 <span data-translate="create_class">Crear Clase</span>
@@ -255,53 +256,53 @@
                 </div>
 
                 <!-- KPI Cards Section - Key Performance Indicators -->
-                <div class="dashboard-kpis">
-                    <div class="kpi-card kpi-students">
-                        <div class="kpi-icon">
+                <div class="dashboard-kpis d-grid grid-cols-4 grid-gap-4 mb-8">
+                    <div class="kpi-card kpi-students d-flex items-center gap-4 p-6 bg-white rounded-xl shadow-lg">
+                        <div class="kpi-icon d-flex items-center justify-center w-16 h-16 rounded-lg">
                             <i class="fas fa-users"></i>
                         </div>
-                        <div class="kpi-content">
-                            <div class="kpi-value" id="totalStudents">0</div>
-                            <div class="kpi-label" data-translate="students">Estudiantes</div>
+                        <div class="kpi-content flex-1">
+                            <div class="kpi-value text-4xl font-bold text-dark mb-2" id="totalStudents">0</div>
+                            <div class="kpi-label text-sm font-medium text-muted uppercase" data-translate="students">Estudiantes</div>
                         </div>
                     </div>
-                    <div class="kpi-card kpi-attendance">
-                        <div class="kpi-icon">
+                    <div class="kpi-card kpi-attendance d-flex items-center gap-4 p-6 bg-white rounded-xl shadow-lg">
+                        <div class="kpi-icon d-flex items-center justify-center w-16 h-16 rounded-lg">
                             <i class="fas fa-calendar-check"></i>
                         </div>
-                        <div class="kpi-content">
-                            <div class="kpi-value" id="attendanceRate">0%</div>
-                            <div class="kpi-label" data-translate="attendance_rate">Asistencia</div>
+                        <div class="kpi-content flex-1">
+                            <div class="kpi-value text-4xl font-bold text-dark mb-2" id="attendanceRate">0%</div>
+                            <div class="kpi-label text-sm font-medium text-muted uppercase" data-translate="attendance_rate">Asistencia</div>
                         </div>
                     </div>
-                    <div class="kpi-card kpi-tasks">
-                        <div class="kpi-icon">
+                    <div class="kpi-card kpi-tasks d-flex items-center gap-4 p-6 bg-white rounded-xl shadow-lg">
+                        <div class="kpi-icon d-flex items-center justify-center w-16 h-16 rounded-lg">
                             <i class="fas fa-tasks"></i>
                         </div>
-                        <div class="kpi-content">
-                            <div class="kpi-value" id="pendingTasks">0</div>
-                            <div class="kpi-label" data-translate="pending_tasks">Tareas Pendientes</div>
+                        <div class="kpi-content flex-1">
+                            <div class="kpi-value text-4xl font-bold text-dark mb-2" id="pendingTasks">0</div>
+                            <div class="kpi-label text-sm font-medium text-muted uppercase" data-translate="pending_tasks">Tareas Pendientes</div>
                         </div>
                     </div>
-                    <div class="kpi-card kpi-next-class">
-                        <div class="kpi-icon">
+                    <div class="kpi-card kpi-next-class d-flex items-center gap-4 p-6 bg-white rounded-xl shadow-lg">
+                        <div class="kpi-icon d-flex items-center justify-center w-16 h-16 rounded-lg">
                             <i class="fas fa-chalkboard-teacher"></i>
                         </div>
-                        <div class="kpi-content">
-                            <div class="kpi-value" id="nextClassTime">--</div>
-                            <div class="kpi-label" data-translate="next_class">Próxima Clase</div>
+                        <div class="kpi-content flex-1">
+                            <div class="kpi-value text-4xl font-bold text-dark mb-2" id="nextClassTime">--</div>
+                            <div class="kpi-label text-sm font-medium text-muted uppercase" data-translate="next_class">Próxima Clase</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Main Content Grid - Dashboard Layout -->
-                <div class="dashboard-content-grid">
+                <div class="dashboard-content-grid d-grid w-full max-w-full mb-8" style="grid-template-columns: 1fr 380px; gap: 2rem;">
                     <!-- Left Column: Main Content -->
-                    <div class="dashboard-main-column">
+                    <div class="dashboard-main-column d-flex flex-column gap-8">
                         <!-- Quick Actions Section - Common Action Buttons -->
-                        <div class="dashboard-card quick-actions-card">
-                            <h2 class="card-title" data-translate="quick_actions">Acciones Rápidas</h2>
-                            <div class="quick-actions-grid">
+                        <div class="dashboard-card quick-actions-card bg-white rounded-2xl p-8 shadow-lg border box-border w-full">
+                            <h2 class="card-title text-2xl font-semibold text-dark mb-6" data-translate="quick_actions">Acciones Rápidas</h2>
+                            <div class="quick-actions-grid d-grid grid-cols-2 gap-4">
                                 <button class="quick-action-btn" data-action="students" data-modal="studentModal">
                                     <i class="fas fa-user-plus"></i>
                                     <span data-translate="add_student">Agregar Estudiante</span>
@@ -322,22 +323,22 @@
                         </div>
 
                         <!-- Unified Notifications and Classes Section - Combined View -->
-                        <div class="dashboard-card next-classes-card">
-                            <div class="card-header">
-                                <h2 class="card-title" data-translate="notifications_and_classes">Notificaciones y Próximas Clases</h2>
+                        <div class="dashboard-card next-classes-card bg-white rounded-2xl p-8 shadow-lg border box-border w-full">
+                            <div class="card-header d-flex justify-between items-center mb-6">
+                                <h2 class="card-title text-2xl font-semibold text-dark mb-0" data-translate="notifications_and_classes">Notificaciones y Próximas Clases</h2>
                             </div>
-                            <div class="classes-list" id="unifiedNotificationsList">
+                            <div class="classes-list d-flex flex-column gap-4" id="unifiedNotificationsList">
                                 <!-- Unified notifications, recordatorios, and upcoming classes will be loaded dynamically -->
                             </div>
                         </div>
                     </div>
 
                     <!-- Right Column: Calendar Widget - Mini Calendar View -->
-                    <div class="dashboard-sidebar">
-                        <div class="dashboard-card calendar-widget">
-                            <div class="calendar-widget-header">
-                                <h3 class="widget-title" data-translate="calendar">Calendario</h3>
-                                <div class="calendar-widget-nav">
+                    <div class="dashboard-sidebar d-flex flex-column gap-8">
+                        <div class="dashboard-card calendar-widget bg-white rounded-2xl p-8 shadow-lg border box-border w-full">
+                            <div class="calendar-widget-header d-flex justify-between items-center mb-4">
+                                <h3 class="widget-title text-xl font-semibold text-dark" data-translate="calendar">Calendario</h3>
+                                <div class="calendar-widget-nav d-flex gap-2">
                                     <button id="prevMonth" class="widget-nav-btn" title="Mes anterior">
                                         <i class="fas fa-chevron-left"></i>
                                     </button>
@@ -366,9 +367,9 @@
                  =============================================================== -->
             <!-- Unified Student Management Section -->
             <section id="student-management" class="content-section">
-                <div class="section-header">
-                    
-                    <div class="section-actions">
+                <div class="section-header d-flex justify-between items-center mb-8 flex-wrap gap-4">
+                    <h2 class="text-3xl font-semibold text-dark">Gestión de Estudiantes</h2>
+                    <div class="section-actions d-flex gap-4">
                         <div class="filters students-only">
                             <select id="unifiedSubjectFilter" class="filter-select">
                                 <option value="" data-translate="all_subjects">Todas las Materias</option>
@@ -503,9 +504,9 @@
 
                 <!-- Exam Notes Tab Content - View and Manage Exam Grades -->
                 <div id="examNotesTabContent" class="tab-content">
-                    <div class="section-header">
-                        
-                        <div class="section-actions">
+                    <div class="section-header d-flex justify-between items-center mb-8 flex-wrap gap-4">
+                        <h2 class="text-3xl font-semibold text-dark">Notas del Examen</h2>
+                        <div class="section-actions d-flex gap-4">
                             <button id="exportExamNotesBtn" class="btn-primary" style="display: none;">
                                 <i class="fas fa-download"></i>
                                 <span data-translate="export_notes">Export Notes</span>
@@ -534,9 +535,9 @@
                  =============================================================== -->
             <!-- Attendance Section -->
             <section id="attendance" class="content-section">
-                <div class="section-header">
-                    
-                    <div class="section-actions">
+                <div class="section-header d-flex justify-between items-center mb-8 flex-wrap gap-4">
+                    <h2 class="text-3xl font-semibold text-dark">Asistencia</h2>
+                    <div class="section-actions d-flex gap-4">
                         <button id="backAttendanceBtn" class="btn-secondary">
                             <i class="fas fa-arrow-left"></i>
                             <span data-translate="back">Volver</span>
@@ -611,9 +612,9 @@
                  =============================================================== -->
             <!-- Grade Marking Section -->
             <section id="grade-marking" class="content-section">
-                <div class="section-header">
-                  
-                    <div class="section-actions">
+                <div class="section-header d-flex justify-between items-center mb-8 flex-wrap gap-4">
+                    <h2 class="text-3xl font-semibold text-dark">Calificaciones</h2>
+                    <div class="section-actions d-flex gap-4">
                         <button id="backToStudentsBtn" class="btn-secondary">
                             <i class="fas fa-arrow-left"></i>
                             <span data-translate="back">Volver</span>
@@ -807,9 +808,9 @@
                  =============================================================== -->
             <!-- Subjects Management Section -->
             <section id="subjects-management" class="content-section">
-                <div class="section-header">
-                    
-                    <div class="section-actions">
+                <div class="section-header d-flex justify-between items-center mb-8 flex-wrap gap-4">
+                    <h2 class="text-3xl font-semibold text-dark">Gestión de Materias</h2>
+                    <div class="section-actions d-flex gap-4">
                         <div class="filters">
                             <select id="subjectsCourseFilter" class="filter-select">
                                 <option value="" data-translate="all_courses">Todos los Cursos</option>
@@ -855,9 +856,9 @@
 
                 <!-- Subject Details View - Detailed Subject Information -->
                 <div id="subjectDetailsView" class="subject-details-view" style="display: none;">
-                    <div class="section-header">
-                        <h2 id="subjectDetailsTitle">Detalles de la Materia</h2>
-                        <div class="section-actions">
+                    <div class="section-header d-flex justify-between items-center mb-8 flex-wrap gap-4">
+                        <h2 id="subjectDetailsTitle" class="text-3xl font-semibold text-dark">Detalles de la Materia</h2>
+                        <div class="section-actions d-flex gap-4">
                             <button id="exportSubjectDetailsBtn" class="btn-primary" style="display: none;">
                                 <i class="fas fa-download"></i>
                                 <span data-translate="export_details">Export Details</span>
@@ -919,13 +920,13 @@
                  =============================================================== -->
             <!-- Materia Details Section -->
             <section id="materia-details" class="content-section">
-                <div class="section-header">
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <button id="backToSubjectsFromDetailsBtn" class="btn-secondary" style="padding: 8px 16px;">
+                <div class="section-header d-flex justify-between items-center mb-8 flex-wrap gap-4">
+                    <div class="d-flex items-center gap-4">
+                        <button id="backToSubjectsFromDetailsBtn" class="btn-secondary px-4 py-2">
                             <i class="fas fa-arrow-left"></i>
                             <span data-translate="back">Volver</span>
                         </button>
-                        <h2 id="materiaDetailsTitle">Detalles de la Materia</h2>
+                        <h2 id="materiaDetailsTitle" class="text-3xl font-semibold text-dark">Detalles de la Materia</h2>
                     </div>
                 </div>
 
@@ -1137,13 +1138,14 @@
          =================================================================== -->
     
     <!-- Student Modal - Add/Edit Student -->
-    <div id="studentModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 data-translate="add_edit_student">Agregar/Editar Estudiante</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <form id="studentForm" class="modal-form">
+    <div id="studentModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header">
+                    <h3 data-translate="add_edit_student">Agregar/Editar Estudiante</h3>
+                    <button class="modal-dialog-close close-modal">&times;</button>
+                </div>
+                <form id="studentForm" class="modal-dialog-body">
                 <div class="form-group">
                     <label for="studentFirstName" data-translate="first_name">Nombre</label>
                     <input type="text" id="studentFirstName" required>
@@ -1206,22 +1208,24 @@
                     </div>
                     <small style="display: block; margin-top: 5px; color: #666;">Selecciona temas específicos para asignar al estudiante. Los temas disponibles corresponden a las materias seleccionadas arriba.</small>
                 </div>
-                <div class="form-actions">
+                <div class="modal-dialog-footer">
                     <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
                     <button type="button" class="btn-primary" data-translate="save_student" onclick="saveStudent(); event.preventDefault(); return false;">Guardar Estudiante</button>
                 </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
     <!-- Load Course Division Modal - Bulk Student Import -->
-    <div id="loadCourseDivisionModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Cargar Curso/División</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <form id="loadCourseDivisionForm" class="modal-form">
+    <div id="loadCourseDivisionModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header">
+                    <h3>Cargar Curso/División</h3>
+                    <button class="modal-dialog-close close-modal">&times;</button>
+                </div>
+                <form id="loadCourseDivisionForm" class="modal-dialog-body">
                 <div class="form-group">
                     <label for="bulkCourseDivision">Curso y División</label>
                     <select id="bulkCourseDivision" required>
@@ -1311,23 +1315,25 @@
                     </select>
                     <small style="display: block; margin-top: 5px; color: #666;">Estado que se asignará a todos los alumnos cargados.</small>
                 </div>
-                <div class="form-actions">
+                <div class="modal-dialog-footer">
                     <button type="button" class="btn-secondary close-modal">Cancelar</button>
                     <button type="button" class="btn-primary" onclick="processBulkStudents(); return false;">Cargar Alumnos</button>
                 </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
     <!-- Subject Modal - Add/Edit Subject -->
     <!-- Course Management Modal -->
-    <div id="courseModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="courseModalTitle">Agregar Curso</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <form id="courseForm" class="modal-form">
+    <div id="courseModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header">
+                    <h3 id="courseModalTitle">Agregar Curso</h3>
+                    <button class="modal-dialog-close close-modal">&times;</button>
+                </div>
+                <form id="courseForm" class="modal-dialog-body">
                 <input type="hidden" id="courseId" value="">
                 <div class="form-group">
                     <label for="courseNumber">Curso</label>
@@ -1373,21 +1379,23 @@
                         Se creará como: <strong id="coursePreview">-</strong>
                     </small>
                 </div>
-                <div class="form-actions">
+                <div class="modal-dialog-footer">
                     <button type="button" class="btn-secondary close-modal">Cancelar</button>
                     <button type="button" class="btn-primary" onclick="saveCourse(); event.preventDefault(); return false;">Guardar Curso</button>
                 </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
-    <div id="subjectModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 data-translate="add_edit_subject">Agregar/Editar Materia</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <form id="subjectForm" class="modal-form">
+    <div id="subjectModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header">
+                    <h3 data-translate="add_edit_subject">Agregar/Editar Materia</h3>
+                    <button class="modal-dialog-close close-modal">&times;</button>
+                </div>
+                <form id="subjectForm" class="modal-dialog-body">
                 <div class="form-group">
                     <label for="subjectName" data-translate="subject_name">Nombre de la Materia</label>
                     <input type="text" id="subjectName" required>
@@ -1472,22 +1480,24 @@
                         <option value="FINALIZADA" data-translate="finished">Finalizada</option>
                     </select>
                 </div>
-                <div class="form-actions">
+                <div class="modal-dialog-footer">
                     <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
                     <button type="submit" class="btn-primary" data-translate="save_subject">Guardar Materia</button>
                 </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
     <!-- Content Modal - Create/Edit Content/Topic -->
-    <div id="contentModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 data-translate="add_edit_content">Agregar/Editar Contenido</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <form id="contentForm" class="modal-form">
+    <div id="contentModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header">
+                    <h3 data-translate="add_edit_content">Agregar/Editar Contenido</h3>
+                    <button class="modal-dialog-close close-modal">&times;</button>
+                </div>
+                <form id="contentForm" class="modal-dialog-body">
                 <div class="form-group">
                     <label for="contentSubject" data-translate="subject">Materia</label>
                     <select id="contentSubject" required>
@@ -1512,79 +1522,84 @@
                         <option value="CANCELADO" data-translate="cancelled">Cancelado</option>
                     </select>
                 </div>
-                <div class="form-actions">
+                <div class="modal-dialog-footer">
                     <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
                     <button type="submit" class="btn-primary" data-translate="save_content">Guardar Contenido</button>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Subject Themes Modal - View and Manage Subject Themes -->
-    <div id="subjectThemesModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="selectedSubjectName">Nombre de la Materia</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            
-            <!-- Themes List View - Display All Subject Themes -->
-            <div id="themesListView" class="modal-form" style="padding: 1.5rem 2rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <div style="font-size: 0.9em; color: var(--text-secondary, #666); font-weight: 600;">Temas de la Materia</div>
-                    <button id="showCreateThemeFormBtn" class="btn-primary" style="padding: 8px 16px; font-size: 0.9em;">
-                        <i class="fas fa-plus"></i> Crear Tema
-                    </button>
-                </div>
-                <div id="subjectThemesList" style="max-height: 500px; overflow-y: auto;">
-                    <!-- Temas will be loaded here -->
-                </div>
-            </div>
-            
-            <!-- Create Theme Form View - Form to Create New Theme -->
-            <div id="createThemeFormView" class="modal-form" style="padding: 1.5rem 2rem; display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h4 style="margin: 0; color: var(--text-primary, #333);">Crear Nuevo Tema</h4>
-                    <button id="backToThemesListBtn" class="btn-secondary" style="padding: 8px 16px; font-size: 0.9em;">
-                        <i class="fas fa-arrow-left"></i> Volver
-                    </button>
-                </div>
-                <form id="unifiedContentForm">
-                    <input type="hidden" id="unifiedContentSubjectId" value="">
-                    <div class="form-group">
-                        <label for="unifiedContentTopic" data-translate="topic">Tema</label>
-                        <input type="text" id="unifiedContentTopic" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="unifiedContentDescription" data-translate="description">Descripción</label>
-                        <textarea id="unifiedContentDescription" rows="3" placeholder="Descripción del tema..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="unifiedContentStatus" data-translate="status">Estado</label>
-                        <select id="unifiedContentStatus">
-                            <option value="PENDIENTE" data-translate="pending">Pendiente</option>
-                            <option value="EN_PROGRESO" data-translate="in_progress">En Progreso</option>
-                            <option value="COMPLETADO" data-translate="completed">Completado</option>
-                            <option value="CANCELADO" data-translate="cancelled">Cancelado</option>
-                        </select>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" id="cancelCreateThemeBtn" class="btn-secondary" data-translate="cancel">Cancelar</button>
-                        <button type="submit" class="btn-primary" data-translate="save_content">Guardar Tema</button>
-                    </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Content Edit Modal - Edit Existing Content -->
-    <div id="contentEditModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 data-translate="edit_content">Editar Contenido</h3>
-                <button class="close-modal">&times;</button>
+    <!-- Subject Themes Modal - View and Manage Subject Themes -->
+    <div id="subjectThemesModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header">
+                    <h3 id="selectedSubjectName">Nombre de la Materia</h3>
+                    <button class="modal-dialog-close close-modal">&times;</button>
+                </div>
+                <div class="modal-dialog-body">
+                    <!-- Themes List View - Display All Subject Themes -->
+                    <div id="themesListView">
+                        <div class="d-flex justify-between items-center mb-4">
+                            <div class="text-sm font-semibold text-secondary">Temas de la Materia</div>
+                            <button id="showCreateThemeFormBtn" class="btn-primary px-4 py-2 text-sm">
+                                <i class="fas fa-plus"></i> Crear Tema
+                            </button>
+                        </div>
+                        <div id="subjectThemesList" class="max-h-96 overflow-y-auto">
+                            <!-- Temas will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Create Theme Form View - Form to Create New Theme -->
+                    <div id="createThemeFormView" class="d-none">
+                        <div class="d-flex justify-between items-center mb-4">
+                            <h4 class="text-lg font-semibold text-dark m-0">Crear Nuevo Tema</h4>
+                            <button id="backToThemesListBtn" class="btn-secondary px-4 py-2 text-sm">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </button>
+                        </div>
+                        <form id="unifiedContentForm">
+                            <input type="hidden" id="unifiedContentSubjectId" value="">
+                            <div class="form-group">
+                                <label for="unifiedContentTopic" data-translate="topic">Tema</label>
+                                <input type="text" id="unifiedContentTopic" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="unifiedContentDescription" data-translate="description">Descripción</label>
+                                <textarea id="unifiedContentDescription" rows="3" placeholder="Descripción del tema..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="unifiedContentStatus" data-translate="status">Estado</label>
+                                <select id="unifiedContentStatus">
+                                    <option value="PENDIENTE" data-translate="pending">Pendiente</option>
+                                    <option value="EN_PROGRESO" data-translate="in_progress">En Progreso</option>
+                                    <option value="COMPLETADO" data-translate="completed">Completado</option>
+                                    <option value="CANCELADO" data-translate="cancelled">Cancelado</option>
+                                </select>
+                            </div>
+                            <div class="modal-dialog-footer">
+                                <button type="button" id="cancelCreateThemeBtn" class="btn-secondary" data-translate="cancel">Cancelar</button>
+                                <button type="submit" class="btn-primary" data-translate="save_content">Guardar Tema</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <form id="contentEditForm" class="modal-form">
+        </div>
+    </div>
+
+    <!-- Content Edit Modal - Edit Existing Content -->
+    <div id="contentEditModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header">
+                    <h3 data-translate="edit_content">Editar Contenido</h3>
+                    <button class="modal-dialog-close close-modal">&times;</button>
+                </div>
+                <form id="contentEditForm" class="modal-dialog-body">
                 <div class="form-group">
                     <label for="editContentTopic" data-translate="content_topic">Tema del Contenido</label>
                     <input type="text" id="editContentTopic" required>
@@ -1602,51 +1617,53 @@
                         <option value="CANCELADO" data-translate="cancelled">Cancelado</option>
                     </select>
                 </div>
-                <div class="form-actions">
+                <div class="modal-dialog-footer">
                     <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
                     <button type="submit" class="btn-primary" data-translate="save_content">Guardar Contenido</button>
                 </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
     <!-- No Subjects Warning Modal - Warn User When No Subjects Exist -->
-    <div id="noSubjectsModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-exclamation-triangle" style="color: #ffc107; margin-right: 10px;"></i> Materias Requeridas</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-form" style="padding: 20px;">
-                <div class="form-group" style="text-align: center; margin-bottom: 20px;">
-                    <div style="font-size: 3rem; color: #ffc107; margin-bottom: 15px;">
+    <div id="noSubjectsModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header">
+                    <h3><i class="fas fa-exclamation-triangle text-warning mr-2"></i> Materias Requeridas</h3>
+                    <button class="modal-dialog-close close-modal">&times;</button>
+                </div>
+                <div class="modal-dialog-body text-center">
+                    <div class="text-5xl text-warning mb-4">
                         <i class="fas fa-book-open"></i>
                     </div>
-                    <p style="font-size: 1.1rem; color: #333; line-height: 1.6; margin-bottom: 10px;">
+                    <p class="text-lg text-dark mb-2">
                         No tienes materias creadas todavía.
                     </p>
-                    <p style="color: #666; line-height: 1.6;">
+                    <p class="text-secondary mb-6">
                         Para agregar estudiantes, primero necesitas crear al menos una materia desde la sección de <strong>"Gestión de Materias"</strong>.
                     </p>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
-                    <button type="button" class="btn-primary" id="goToSubjectsBtn">
-                        <i class="fas fa-book"></i>
-                        <span>Ir a Gestión de Materias</span>
-                    </button>
+                    <div class="modal-dialog-footer">
+                        <button type="button" class="btn-secondary close-modal" data-translate="cancel">Cancelar</button>
+                        <button type="button" class="btn-primary" id="goToSubjectsBtn">
+                            <i class="fas fa-book"></i>
+                            <span>Ir a Gestión de Materias</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Search Filters Modal - Configure Search Filters -->
-    <div id="searchFiltersModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 data-translate="search_filters">Filtros de Búsqueda</h3>
-                <button class="close-modal">&times;</button>
-            </div>
+    <div id="searchFiltersModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header">
+                    <h3 data-translate="search_filters">Filtros de Búsqueda</h3>
+                    <button class="modal-dialog-close close-modal">&times;</button>
+                </div>
             <div class="modal-form">
                 <div class="filter-options">
                     <div class="filter-option-group">
@@ -1686,68 +1703,75 @@
     </div>
 
     <!-- Event Details Modal - View Calendar Event Details -->
-    <div id="eventDetailsModal" class="modal">
-        <div class="modal-content modern-modal">
-            <div class="modal-header modern-header" id="eventModalHeader">
-                <button class="close-modal">&times;</button>
-                <div class="modal-icon" id="eventModalIcon">
-                    <i class="fas fa-calendar-day"></i>
+    <div id="eventDetailsModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header" id="eventModalHeader">
+                    <h3 id="eventModalTitle">Detalles del Evento</h3>
+                    <button class="modal-dialog-close close-modal">&times;</button>
                 </div>
-                <h3 id="eventModalTitle">Detalles del Evento</h3>
-                <p class="modal-subtitle" id="eventModalSubtitle">Información del evento</p>
-            </div>
-            <div class="modern-body" id="eventModalBody">
-                <!-- Event details will be populated here -->
-            </div>
-            <div class="form-actions" style="padding: 1rem 2rem 2rem;">
-                <button type="button" class="btn-primary close-modal" style="width: 100%;">
-                    <i class="fas fa-check"></i>
-                    <span>Cerrar</span>
-                </button>
+                <div class="modal-dialog-body" id="eventModalBody">
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 bg-primary rounded-full d-flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-calendar-day text-white text-2xl" id="eventModalIcon"></i>
+                        </div>
+                        <p class="text-secondary" id="eventModalSubtitle">Información del evento</p>
+                    </div>
+                    <!-- Event details will be populated here -->
+                </div>
+                <div class="modal-dialog-footer">
+                    <button type="button" class="btn-primary close-modal w-full">
+                        <i class="fas fa-check"></i>
+                        <span>Cerrar</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Export Dialog Modal - Export Students or Exams List -->
-    <div id="exportDialogModal" class="modal">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">
-                <h3 data-translate="export_list">Exportar Lista</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-form" style="padding: 2rem;">
-                <p style="margin-bottom: 1.5rem; color: #666;" id="exportDialogText">
-                    <span data-translate="select_export_format">Seleccione el formato de exportación:</span>
-                </p>
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    <button id="exportExcelBtn" class="btn-primary" style="width: 100%; justify-content: center;">
-                        <i class="fas fa-file-excel"></i>
-                        <span>Exportar como Excel</span>
-                    </button>
-                    <button id="exportDOCBtn" class="btn-primary" style="width: 100%; justify-content: center;">
-                        <i class="fas fa-file-word"></i>
-                        <span data-translate="export_doc">Exportar como DOC</span>
+    <div id="exportDialogModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header">
+                    <h3 data-translate="export_list">Exportar Lista</h3>
+                    <button class="modal-dialog-close close-modal">&times;</button>
+                </div>
+                <div class="modal-dialog-body">
+                    <p class="mb-6 text-secondary" id="exportDialogText">
+                        <span data-translate="select_export_format">Seleccione el formato de exportación:</span>
+                    </p>
+                    <div class="d-flex flex-column gap-4">
+                        <button id="exportExcelBtn" class="btn-primary w-full justify-center">
+                            <i class="fas fa-file-excel"></i>
+                            <span>Exportar como Excel</span>
+                        </button>
+                        <button id="exportDOCBtn" class="btn-primary w-full justify-center">
+                            <i class="fas fa-file-word"></i>
+                            <span data-translate="export_doc">Exportar como DOC</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-dialog-footer">
+                    <button type="button" class="btn-secondary close-modal w-full">
+                        <i class="fas fa-times"></i>
+                        <span data-translate="cancel">Cancelar</span>
                     </button>
                 </div>
-            </div>
-            <div class="form-actions" style="padding: 1rem 2rem; border-top: 1px solid #e0e0e0;">
-                <button type="button" class="btn-secondary close-modal" style="width: 100%;">
-                    <i class="fas fa-times"></i>
-                    <span data-translate="cancel">Cancelar</span>
-                </button>
             </div>
         </div>
     </div>
 
     <!-- Import Excel Modals -->
     <!-- Import Temas Excel Modal -->
-    <div id="importTemasModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h3>Importar Temas desde Excel</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-form" style="padding: 2rem;">
+    <div id="importTemasModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header">
+                    <h3>Importar Temas desde Excel</h3>
+                    <button class="modal-dialog-close close-modal">&times;</button>
+                </div>
+                <div class="modal-dialog-body">
                 <div class="form-group">
                     <label style="display: flex; justify-content: space-between; align-items: center;">
                         <span>Seleccionar archivo Excel (.csv o .xlsx)</span>
@@ -1762,26 +1786,28 @@
                         <strong>Nota:</strong> Puedes usar archivos CSV exportados desde Excel
                     </small>
                 </div>
-                <div id="importTemasPreview" style="margin-top: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; display: none;">
-                    <h4 style="margin-bottom: 0.5rem;">Vista Previa:</h4>
-                    <div id="importTemasPreviewContent" style="max-height: 200px; overflow-y: auto;"></div>
+                    <div id="importTemasPreview" class="mt-4 p-4 bg-light rounded" style="display: none;">
+                        <h4 class="mb-2">Vista Previa:</h4>
+                        <div id="importTemasPreviewContent" class="max-h-50 overflow-y-auto"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="form-actions" style="padding: 1rem 2rem; border-top: 1px solid #e0e0e0;">
-                <button type="button" class="btn-secondary close-modal">Cancelar</button>
-                <button type="button" id="confirmImportTemasBtn" class="btn-primary">Importar</button>
+                <div class="modal-dialog-footer">
+                    <button type="button" class="btn-secondary close-modal">Cancelar</button>
+                    <button type="button" id="confirmImportTemasBtn" class="btn-primary">Importar</button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Import Evaluaciones CSV Modal -->
-    <div id="importEvaluacionesModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h3>Importar Evaluaciones desde Excel</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-form" style="padding: 2rem;">
+    <div id="importEvaluacionesModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header">
+                    <h3>Importar Evaluaciones desde Excel</h3>
+                    <button class="modal-dialog-close close-modal">&times;</button>
+                </div>
+                <div class="modal-dialog-body">
                 <div class="form-group">
                     <label style="display: flex; justify-content: space-between; align-items: center;">
                         <span>Seleccionar archivo Excel</span>
@@ -1796,26 +1822,28 @@
                         <strong>Nota:</strong> Puedes usar archivos CSV exportados desde Excel
                     </small>
                 </div>
-                <div id="importEvaluacionesPreview" style="margin-top: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; display: none;">
-                    <h4 style="margin-bottom: 0.5rem;">Vista Previa:</h4>
-                    <div id="importEvaluacionesPreviewContent" style="max-height: 200px; overflow-y: auto;"></div>
+                    <div id="importEvaluacionesPreview" class="mt-4 p-4 bg-light rounded" style="display: none;">
+                        <h4 class="mb-2">Vista Previa:</h4>
+                        <div id="importEvaluacionesPreviewContent" class="max-h-50 overflow-y-auto"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="form-actions" style="padding: 1rem 2rem; border-top: 1px solid #e0e0e0;">
-                <button type="button" class="btn-secondary close-modal">Cancelar</button>
-                <button type="button" id="confirmImportEvaluacionesBtn" class="btn-primary">Importar</button>
+                <div class="modal-dialog-footer">
+                    <button type="button" class="btn-secondary close-modal">Cancelar</button>
+                    <button type="button" id="confirmImportEvaluacionesBtn" class="btn-primary">Importar</button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Import Estudiantes Excel Modal -->
-    <div id="importEstudiantesModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h3>Importar Estudiantes desde Excel</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-form" style="padding: 2rem;">
+    <div id="importEstudiantesModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header">
+                    <h3>Importar Estudiantes desde Excel</h3>
+                    <button class="modal-dialog-close close-modal">&times;</button>
+                </div>
+                <div class="modal-dialog-body">
                 <div class="form-group">
                     <label style="display: flex; justify-content: space-between; align-items: center;">
                         <span>Seleccionar archivo Excel (.csv o .xlsx)</span>
@@ -1830,26 +1858,28 @@
                         <strong>Nota:</strong> Puedes usar archivos CSV exportados desde Excel
                     </small>
                 </div>
-                <div id="importEstudiantesPreview" style="margin-top: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; display: none;">
-                    <h4 style="margin-bottom: 0.5rem;">Vista Previa:</h4>
-                    <div id="importEstudiantesPreviewContent" style="max-height: 200px; overflow-y: auto;"></div>
+                    <div id="importEstudiantesPreview" class="mt-4 p-4 bg-light rounded" style="display: none;">
+                        <h4 class="mb-2">Vista Previa:</h4>
+                        <div id="importEstudiantesPreviewContent" class="max-h-50 overflow-y-auto"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="form-actions" style="padding: 1rem 2rem; border-top: 1px solid #e0e0e0;">
-                <button type="button" class="btn-secondary close-modal">Cancelar</button>
-                <button type="button" id="confirmImportEstudiantesBtn" class="btn-primary">Importar</button>
+                <div class="modal-dialog-footer">
+                    <button type="button" class="btn-secondary close-modal">Cancelar</button>
+                    <button type="button" id="confirmImportEstudiantesBtn" class="btn-primary">Importar</button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Student Details Modal - View Detailed Student Information -->
-    <div id="studentDetailsModal" class="modal">
-        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
-            <div class="modal-header">
-                <h3 id="studentDetailsModalTitle">Detalles del Estudiante</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-form" style="padding: 1.5rem 2rem;">
+    <div id="studentDetailsModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header">
+                    <h3 id="studentDetailsModalTitle">Detalles del Estudiante</h3>
+                    <button class="modal-dialog-close close-modal">&times;</button>
+                </div>
+                <div class="modal-dialog-body">
                 <!-- Student Basic Information - Personal Details -->
                 <div class="student-details-section" style="margin-bottom: 2rem;">
                     <h4 style="margin-bottom: 1rem; color: #667eea; display: flex; align-items: center; gap: 0.5rem;">
@@ -1887,6 +1917,7 @@
     <!-- Script Modules -->
     <script src="../scripts/translations.js"></script>
     <script src="../scripts/utils.js"></script>
+    <script src="../scripts/modal-helper.js"></script>
     <script src="../scripts/navigation.js"></script>
     <script src="../scripts/search.js"></script>
     <script src="../scripts/auth.js"></script>

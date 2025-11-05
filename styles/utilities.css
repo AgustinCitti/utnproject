@@ -1,0 +1,815 @@
+/* ==========================================================================
+   UTILITY CSS LIBRARY
+   Reusable utility classes for common styling patterns
+   ========================================================================== */
+
+/* ==========================================================================
+   SPACING UTILITIES - Padding
+   ========================================================================== */
+
+/* Padding - All sides */
+.p-0 { padding: 0; }
+.p-1 { padding: 0.25rem; }
+.p-2 { padding: 0.5rem; }
+.p-3 { padding: 0.75rem; }
+.p-4 { padding: 1rem; }
+.p-5 { padding: 1.25rem; }
+.p-6 { padding: 1.5rem; }
+.p-8 { padding: 2rem; }
+.p-10 { padding: 2.5rem; }
+.p-12 { padding: 3rem; }
+
+/* Padding - Horizontal */
+.px-0 { padding-left: 0; padding-right: 0; }
+.px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
+.px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+.px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+.px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
+.px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+.px-8 { padding-left: 2rem; padding-right: 2rem; }
+
+/* Padding - Vertical */
+.py-0 { padding-top: 0; padding-bottom: 0; }
+.py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+.py-5 { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+.py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+
+/* Padding - Individual sides */
+.pt-0 { padding-top: 0; }
+.pt-1 { padding-top: 0.25rem; }
+.pt-2 { padding-top: 0.5rem; }
+.pt-3 { padding-top: 0.75rem; }
+.pt-4 { padding-top: 1rem; }
+.pt-6 { padding-top: 1.5rem; }
+.pt-8 { padding-top: 2rem; }
+
+.pr-0 { padding-right: 0; }
+.pr-1 { padding-right: 0.25rem; }
+.pr-2 { padding-right: 0.5rem; }
+.pr-3 { padding-right: 0.75rem; }
+.pr-4 { padding-right: 1rem; }
+.pr-6 { padding-right: 1.5rem; }
+.pr-8 { padding-right: 2rem; }
+
+.pb-0 { padding-bottom: 0; }
+.pb-1 { padding-bottom: 0.25rem; }
+.pb-2 { padding-bottom: 0.5rem; }
+.pb-3 { padding-bottom: 0.75rem; }
+.pb-4 { padding-bottom: 1rem; }
+.pb-6 { padding-bottom: 1.5rem; }
+.pb-8 { padding-bottom: 2rem; }
+
+.pl-0 { padding-left: 0; }
+.pl-1 { padding-left: 0.25rem; }
+.pl-2 { padding-left: 0.5rem; }
+.pl-3 { padding-left: 0.75rem; }
+.pl-4 { padding-left: 1rem; }
+.pl-6 { padding-left: 1.5rem; }
+.pl-8 { padding-left: 2rem; }
+
+/* ==========================================================================
+   SPACING UTILITIES - Margin
+   ========================================================================== */
+
+/* Margin - All sides */
+.m-0 { margin: 0; }
+.m-1 { margin: 0.25rem; }
+.m-2 { margin: 0.5rem; }
+.m-3 { margin: 0.75rem; }
+.m-4 { margin: 1rem; }
+.m-5 { margin: 1.25rem; }
+.m-6 { margin: 1.5rem; }
+.m-8 { margin: 2rem; }
+.m-auto { margin: auto; }
+
+/* Margin - Horizontal */
+.mx-0 { margin-left: 0; margin-right: 0; }
+.mx-1 { margin-left: 0.25rem; margin-right: 0.25rem; }
+.mx-2 { margin-left: 0.5rem; margin-right: 0.5rem; }
+.mx-3 { margin-left: 0.75rem; margin-right: 0.75rem; }
+.mx-4 { margin-left: 1rem; margin-right: 1rem; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+
+/* Margin - Vertical */
+.my-0 { margin-top: 0; margin-bottom: 0; }
+.my-1 { margin-top: 0.25rem; margin-bottom: 0.25rem; }
+.my-2 { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+.my-3 { margin-top: 0.75rem; margin-bottom: 0.75rem; }
+.my-4 { margin-top: 1rem; margin-bottom: 1rem; }
+.my-6 { margin-top: 1.5rem; margin-bottom: 1.5rem; }
+.my-8 { margin-top: 2rem; margin-bottom: 2rem; }
+
+/* Margin - Individual sides */
+.mt-0 { margin-top: 0; }
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 0.75rem; }
+.mt-4 { margin-top: 1rem; }
+.mt-6 { margin-top: 1.5rem; }
+.mt-8 { margin-top: 2rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+
+.mr-0 { margin-right: 0; }
+.mr-1 { margin-right: 0.25rem; }
+.mr-2 { margin-right: 0.5rem; }
+.mr-3 { margin-right: 0.75rem; }
+.mr-4 { margin-right: 1rem; }
+.mr-6 { margin-right: 1.5rem; }
+.mr-8 { margin-right: 2rem; }
+
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 0.75rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+.mb-8 { margin-bottom: 2rem; }
+
+.ml-0 { margin-left: 0; }
+.ml-1 { margin-left: 0.25rem; }
+.ml-2 { margin-left: 0.5rem; }
+.ml-3 { margin-left: 0.75rem; }
+.ml-4 { margin-left: 1rem; }
+.ml-6 { margin-left: 1.5rem; }
+.ml-8 { margin-left: 2rem; }
+.ml-auto { margin-left: auto; }
+
+/* ==========================================================================
+   DISPLAY UTILITIES
+   ========================================================================== */
+
+.d-none { display: none; }
+.d-block { display: block; }
+.d-inline { display: inline; }
+.d-inline-block { display: inline-block; }
+.d-flex { display: flex; }
+.d-grid { display: grid; }
+.d-inline-flex { display: inline-flex; }
+
+/* ==========================================================================
+   FLEXBOX UTILITIES
+   ========================================================================== */
+
+/* Flex Direction */
+.flex-row { flex-direction: row; }
+.flex-column { flex-direction: column; }
+.flex-row-reverse { flex-direction: row-reverse; }
+.flex-column-reverse { flex-direction: column-reverse; }
+
+/* Flex Wrap */
+.flex-wrap { flex-wrap: wrap; }
+.flex-nowrap { flex-wrap: nowrap; }
+
+/* Justify Content */
+.justify-start { justify-content: flex-start; }
+.justify-end { justify-content: flex-end; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-around { justify-content: space-around; }
+.justify-evenly { justify-content: space-evenly; }
+
+/* Align Items */
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.items-center { align-items: center; }
+.items-baseline { align-items: baseline; }
+.items-stretch { align-items: stretch; }
+
+/* Align Self */
+.self-start { align-self: flex-start; }
+.self-end { align-self: flex-end; }
+.self-center { align-self: center; }
+.self-stretch { align-self: stretch; }
+
+/* Flex Grow/Shrink */
+.flex-1 { flex: 1 1 0%; }
+.flex-auto { flex: 1 1 auto; }
+.flex-none { flex: none; }
+.flex-grow { flex-grow: 1; }
+.flex-shrink { flex-shrink: 1; }
+
+/* Gap */
+.gap-0 { gap: 0; }
+.gap-1 { gap: 0.25rem; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 0.75rem; }
+.gap-4 { gap: 1rem; }
+.gap-5 { gap: 1.25rem; }
+.gap-6 { gap: 1.5rem; }
+.gap-8 { gap: 2rem; }
+
+/* ==========================================================================
+   GRID UTILITIES
+   ========================================================================== */
+
+/* Grid Template Columns */
+.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.grid-cols-auto { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+
+/* Grid Gap */
+.grid-gap-0 { gap: 0; }
+.grid-gap-1 { gap: 0.25rem; }
+.grid-gap-2 { gap: 0.5rem; }
+.grid-gap-3 { gap: 0.75rem; }
+.grid-gap-4 { gap: 1rem; }
+.grid-gap-6 { gap: 1.5rem; }
+.grid-gap-8 { gap: 2rem; }
+
+/* ==========================================================================
+   POSITION UTILITIES
+   ========================================================================== */
+
+.position-static { position: static; }
+.position-relative { position: relative; }
+.position-absolute { position: absolute; }
+.position-fixed { position: fixed; }
+.position-sticky { position: sticky; }
+
+/* Position Values */
+.top-0 { top: 0; }
+.right-0 { right: 0; }
+.bottom-0 { bottom: 0; }
+.left-0 { left: 0; }
+.top-100 { top: 100%; }
+.left-100 { left: 100%; }
+.right-100 { right: 100%; }
+
+/* Z-Index */
+.z-0 { z-index: 0; }
+.z-10 { z-index: 10; }
+.z-20 { z-index: 20; }
+.z-30 { z-index: 30; }
+.z-40 { z-index: 40; }
+.z-50 { z-index: 50; }
+.z-100 { z-index: 100; }
+.z-1000 { z-index: 1000; }
+.z-2000 { z-index: 2000; }
+
+/* ==========================================================================
+   TYPOGRAPHY UTILITIES
+   ========================================================================== */
+
+/* Text Alignment */
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-justify { text-align: justify; }
+
+/* Font Weight */
+.font-thin { font-weight: 100; }
+.font-light { font-weight: 300; }
+.font-normal { font-weight: 400; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+.font-extrabold { font-weight: 800; }
+
+/* Font Size */
+.text-xs { font-size: 0.75rem; }
+.text-sm { font-size: 0.875rem; }
+.text-base { font-size: 1rem; }
+.text-lg { font-size: 1.125rem; }
+.text-xl { font-size: 1.25rem; }
+.text-2xl { font-size: 1.5rem; }
+.text-3xl { font-size: 1.875rem; }
+.text-4xl { font-size: 2.25rem; }
+.text-5xl { font-size: 3rem; }
+
+/* Text Transform */
+.uppercase { text-transform: uppercase; }
+.lowercase { text-transform: lowercase; }
+.capitalize { text-transform: capitalize; }
+.normal-case { text-transform: none; }
+
+/* Text Decoration */
+.underline { text-decoration: underline; }
+.no-underline { text-decoration: none; }
+
+/* Line Height */
+.leading-none { line-height: 1; }
+.leading-tight { line-height: 1.25; }
+.leading-snug { line-height: 1.375; }
+.leading-normal { line-height: 1.5; }
+.leading-relaxed { line-height: 1.625; }
+.leading-loose { line-height: 2; }
+
+/* Letter Spacing */
+.tracking-tight { letter-spacing: -0.02em; }
+.tracking-normal { letter-spacing: 0; }
+.tracking-wide { letter-spacing: 0.05em; }
+
+/* White Space */
+.whitespace-normal { white-space: normal; }
+.whitespace-nowrap { white-space: nowrap; }
+.whitespace-pre { white-space: pre; }
+
+/* Text Overflow */
+.overflow-hidden { overflow: hidden; }
+.text-ellipsis { text-overflow: ellipsis; }
+
+/* ==========================================================================
+   COLOR UTILITIES
+   ========================================================================== */
+
+/* Text Colors */
+.text-primary { color: #667eea; }
+.text-secondary { color: #6c757d; }
+.text-success { color: #28a745; }
+.text-danger { color: #dc3545; }
+.text-warning { color: #ffc107; }
+.text-info { color: #17a2b8; }
+.text-dark { color: #333; }
+.text-light { color: #f8f9fa; }
+.text-muted { color: #718096; }
+.text-white { color: #ffffff; }
+.text-black { color: #000000; }
+
+/* Background Colors */
+.bg-primary { background-color: #667eea; }
+.bg-secondary { background-color: #6c757d; }
+.bg-success { background-color: #28a745; }
+.bg-danger { background-color: #dc3545; }
+.bg-warning { background-color: #ffc107; }
+.bg-info { background-color: #17a2b8; }
+.bg-dark { background-color: #333; }
+.bg-light { background-color: #f8f9fa; }
+.bg-white { background-color: #ffffff; }
+.bg-transparent { background-color: transparent; }
+
+/* ==========================================================================
+   BORDER UTILITIES
+   ========================================================================== */
+
+/* Border Width */
+.border { border-width: 1px; }
+.border-0 { border-width: 0; }
+.border-2 { border-width: 2px; }
+.border-4 { border-width: 4px; }
+
+/* Border Sides */
+.border-t { border-top-width: 1px; border-top-style: solid; }
+.border-r { border-right-width: 1px; border-right-style: solid; }
+.border-b { border-bottom-width: 1px; border-bottom-style: solid; }
+.border-l { border-left-width: 1px; border-left-style: solid; }
+
+/* Border Color */
+.border-primary { border-color: #667eea; }
+.border-secondary { border-color: #6c757d; }
+.border-gray { border-color: #e9ecef; }
+.border-white { border-color: #ffffff; }
+.border-transparent { border-color: transparent; }
+
+/* Border Style */
+.border-solid { border-style: solid; }
+.border-dashed { border-style: dashed; }
+.border-dotted { border-style: dotted; }
+.border-none { border-style: none; }
+
+/* Border Radius */
+.rounded-none { border-radius: 0; }
+.rounded-sm { border-radius: 0.125rem; }
+.rounded { border-radius: 0.25rem; }
+.rounded-md { border-radius: 0.375rem; }
+.rounded-lg { border-radius: 0.5rem; }
+.rounded-xl { border-radius: 0.75rem; }
+.rounded-2xl { border-radius: 1rem; }
+.rounded-full { border-radius: 9999px; }
+
+/* Border Radius Sides */
+.rounded-t { border-top-left-radius: 0.25rem; border-top-right-radius: 0.25rem; }
+.rounded-r { border-top-right-radius: 0.25rem; border-bottom-right-radius: 0.25rem; }
+.rounded-b { border-bottom-left-radius: 0.25rem; border-bottom-right-radius: 0.25rem; }
+.rounded-l { border-top-left-radius: 0.25rem; border-bottom-left-radius: 0.25rem; }
+
+/* ==========================================================================
+   SHADOW UTILITIES
+   ========================================================================== */
+
+.shadow-none { box-shadow: none; }
+.shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+.shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
+.shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+.shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+.shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+
+/* ==========================================================================
+   WIDTH UTILITIES
+   ========================================================================== */
+
+.w-auto { width: auto; }
+.w-full { width: 100%; }
+.w-screen { width: 100vw; }
+.w-min { width: min-content; }
+.w-max { width: max-content; }
+
+/* Specific Widths */
+.w-1 { width: 0.25rem; }
+.w-2 { width: 0.5rem; }
+.w-3 { width: 0.75rem; }
+.w-4 { width: 1rem; }
+.w-6 { width: 1.5rem; }
+.w-8 { width: 2rem; }
+.w-12 { width: 3rem; }
+.w-16 { width: 4rem; }
+.w-20 { width: 5rem; }
+.w-24 { width: 6rem; }
+
+/* Min/Max Width */
+.min-w-0 { min-width: 0; }
+.min-w-full { min-width: 100%; }
+.max-w-full { max-width: 100%; }
+.max-w-screen { max-width: 100vw; }
+
+/* ==========================================================================
+   HEIGHT UTILITIES
+   ========================================================================== */
+
+.h-auto { height: auto; }
+.h-full { height: 100%; }
+.h-screen { height: 100vh; }
+.h-min { height: min-content; }
+.h-max { height: max-content; }
+
+/* Specific Heights */
+.h-1 { height: 0.25rem; }
+.h-2 { height: 0.5rem; }
+.h-3 { height: 0.75rem; }
+.h-4 { height: 1rem; }
+.h-6 { height: 1.5rem; }
+.h-8 { height: 2rem; }
+.h-12 { height: 3rem; }
+.h-16 { height: 4rem; }
+.h-20 { height: 5rem; }
+.h-24 { height: 6rem; }
+
+/* Min/Max Height */
+.min-h-0 { min-height: 0; }
+.min-h-full { min-height: 100%; }
+.min-h-screen { min-height: 100vh; }
+.max-h-full { max-height: 100%; }
+.max-h-screen { max-height: 100vh; }
+.max-h-50 { max-height: 12.5rem; }
+.max-h-96 { max-height: 24rem; }
+
+/* ==========================================================================
+   OVERFLOW UTILITIES
+   ========================================================================== */
+
+.overflow-auto { overflow: auto; }
+.overflow-hidden { overflow: hidden; }
+.overflow-visible { overflow: visible; }
+.overflow-scroll { overflow: scroll; }
+
+.overflow-x-auto { overflow-x: auto; }
+.overflow-x-hidden { overflow-x: hidden; }
+.overflow-x-scroll { overflow-x: scroll; }
+
+.overflow-y-auto { overflow-y: auto; }
+.overflow-y-hidden { overflow-y: hidden; }
+.overflow-y-scroll { overflow-y: scroll; }
+
+/* ==========================================================================
+   CURSOR UTILITIES
+   ========================================================================== */
+
+.cursor-auto { cursor: auto; }
+.cursor-default { cursor: default; }
+.cursor-pointer { cursor: pointer; }
+.cursor-not-allowed { cursor: not-allowed; }
+
+/* ==========================================================================
+   OPACITY UTILITIES
+   ========================================================================== */
+
+.opacity-0 { opacity: 0; }
+.opacity-25 { opacity: 0.25; }
+.opacity-50 { opacity: 0.5; }
+.opacity-75 { opacity: 0.75; }
+.opacity-100 { opacity: 1; }
+
+/* ==========================================================================
+   TRANSFORM UTILITIES
+   ========================================================================== */
+
+.transform { transform: translateZ(0); }
+.scale-0 { transform: scale(0); }
+.scale-100 { transform: scale(1); }
+.scale-110 { transform: scale(1.1); }
+.scale-98 { transform: scale(0.98); }
+
+.translate-y-0 { transform: translateY(0); }
+.translate-y-1 { transform: translateY(-0.25rem); }
+.translate-y-2 { transform: translateY(-0.5rem); }
+.translate-y-4 { transform: translateY(-1rem); }
+.translate-y-10 { transform: translateY(-10px); }
+
+/* ==========================================================================
+   TRANSITION UTILITIES
+   ========================================================================== */
+
+.transition-none { transition: none; }
+.transition-all { transition: all 0.3s ease; }
+.transition { transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform; transition-duration: 150ms; }
+.transition-colors { transition-property: background-color, border-color, color; transition-duration: 150ms; }
+.transition-opacity { transition-property: opacity; transition-duration: 150ms; }
+.transition-transform { transition-property: transform; transition-duration: 150ms; }
+
+/* ==========================================================================
+   VISIBILITY UTILITIES
+   ========================================================================== */
+
+.visible { visibility: visible; }
+.invisible { visibility: hidden; }
+
+/* ==========================================================================
+   BOX SIZING UTILITIES
+   ========================================================================== */
+
+.box-border { box-sizing: border-box; }
+.box-content { box-sizing: content-box; }
+
+/* ==========================================================================
+   HOVER UTILITIES
+   ========================================================================== */
+
+.hover\:bg-light:hover { background-color: #f8f9fa; }
+.hover\:bg-primary:hover { background-color: #667eea; }
+.hover\:text-primary:hover { color: #667eea; }
+.hover\:text-white:hover { color: #ffffff; }
+
+/* ==========================================================================
+   ACTIVE UTILITIES
+   ========================================================================== */
+
+.active\:bg-primary:active,
+.active.active { background-color: #667eea; }
+.active\:text-white:active,
+.active.active { color: #ffffff; }
+
+/* ==========================================================================
+   FOCUS UTILITIES
+   ========================================================================== */
+
+.focus\:border-primary:focus { border-color: #667eea; }
+.focus\:outline-none:focus { outline: none; }
+.focus-within\:border-primary:focus-within { border-color: #667eea; }
+.focus-within\:shadow-md:focus-within { box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+
+/* ==========================================================================
+   ADDITIONAL UTILITIES
+   ========================================================================== */
+
+.min-w-5 { min-width: 1.25rem; }
+.min-w-6 { min-width: 1.5rem; }
+.min-w-8 { min-width: 2rem; }
+
+/* ==========================================================================
+   MODAL UTILITIES - Unified Modal Classes
+   ========================================================================== */
+
+/* Modal Overlay - Backdrop */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 2000;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(2px);
+}
+
+.modal-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Modal Container - Side Dialog */
+.modal-dialog {
+    position: fixed;
+    top: 0;
+    right: -30%;
+    width: 30%;
+    height: 100%;
+    background: white;
+    z-index: 2001;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+    transition: right 0.3s ease;
+    overflow: hidden;
+}
+
+.modal-overlay.active .modal-dialog {
+    right: 0;
+}
+
+/* Modal Content - Scrollable area */
+.modal-dialog-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Modal Header */
+.modal-dialog-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    flex-shrink: 0;
+}
+
+.modal-dialog-header h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.modal-dialog-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    padding: 0.5rem;
+    line-height: 1;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.25rem;
+}
+
+.modal-dialog-close:hover {
+    background: #f8f9fa;
+    color: #667eea;
+}
+
+/* Modal Body */
+.modal-dialog-body {
+    padding: 2rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Modal Footer */
+.modal-dialog-footer {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+    background: #f8f9fa;
+    flex-shrink: 0;
+}
+
+/* Responsive - On mobile, modal takes full width */
+@media (max-width: 768px) {
+    .modal-dialog {
+        width: 100%;
+        right: -100%;
+    }
+    
+    .modal-overlay.active .modal-dialog {
+        right: 0;
+    }
+}
+
+/* ==========================================================================
+   DARK MODE STYLES FOR MODALS
+   ========================================================================== */
+
+/* Dark mode overlay - slightly darker shadow */
+[data-theme="dark"] .modal-overlay {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode dialog container */
+[data-theme="dark"] .modal-dialog {
+    background: var(--card-bg, #2d2d2d);
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Dark mode modal header */
+[data-theme="dark"] .modal-dialog-header {
+    background: var(--bg-secondary, #2d2d2d);
+    border-bottom-color: var(--border-color, #404040);
+}
+
+[data-theme="dark"] .modal-dialog-header h3 {
+    color: var(--text-primary, #e0e0e0);
+}
+
+/* Dark mode close button */
+[data-theme="dark"] .modal-dialog-close {
+    color: var(--text-secondary, #b0b0b0);
+}
+
+[data-theme="dark"] .modal-dialog-close:hover {
+    background: var(--bg-primary, #1a1a1a);
+    color: #667eea;
+}
+
+/* Dark mode modal body */
+[data-theme="dark"] .modal-dialog-body {
+    background: var(--card-bg, #2d2d2d);
+    color: var(--text-primary, #e0e0e0);
+}
+
+/* Dark mode modal footer */
+[data-theme="dark"] .modal-dialog-footer {
+    background: var(--bg-secondary, #2d2d2d);
+    border-top-color: var(--border-color, #404040);
+}
+
+/* Dark mode form elements inside modal */
+[data-theme="dark"] .modal-dialog-body input,
+[data-theme="dark"] .modal-dialog-body textarea,
+[data-theme="dark"] .modal-dialog-body select {
+    background: var(--bg-primary, #1a1a1a);
+    color: var(--text-primary, #e0e0e0);
+    border-color: var(--border-color, #404040);
+}
+
+[data-theme="dark"] .modal-dialog-body input:focus,
+[data-theme="dark"] .modal-dialog-body textarea:focus,
+[data-theme="dark"] .modal-dialog-body select:focus {
+    border-color: #667eea;
+    outline: none;
+}
+
+[data-theme="dark"] .modal-dialog-body label {
+    color: var(--text-primary, #e0e0e0);
+}
+
+/* Dark mode buttons inside modal */
+[data-theme="dark"] .modal-dialog-body .btn-primary,
+[data-theme="dark"] .modal-dialog-footer .btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+[data-theme="dark"] .modal-dialog-body .btn-secondary,
+[data-theme="dark"] .modal-dialog-footer .btn-secondary {
+    background: var(--bg-primary, #1a1a1a);
+    color: var(--text-primary, #e0e0e0);
+    border-color: var(--border-color, #404040);
+}
+
+[data-theme="dark"] .modal-dialog-body .btn-secondary:hover,
+[data-theme="dark"] .modal-dialog-footer .btn-secondary:hover {
+    background: var(--bg-secondary, #2d2d2d);
+    border-color: #667eea;
+}
+
+/* Dark mode tables inside modal */
+[data-theme="dark"] .modal-dialog-body table,
+[data-theme="dark"] .modal-dialog-body .data-table {
+    color: var(--text-primary, #e0e0e0);
+}
+
+[data-theme="dark"] .modal-dialog-body th {
+    background: var(--bg-secondary, #2d2d2d);
+    color: var(--text-primary, #e0e0e0);
+    border-color: var(--border-color, #404040);
+}
+
+[data-theme="dark"] .modal-dialog-body td {
+    border-color: var(--border-color, #404040);
+    color: var(--text-primary, #e0e0e0);
+}
+
+/* Dark mode text colors inside modal */
+[data-theme="dark"] .modal-dialog-body p,
+[data-theme="dark"] .modal-dialog-body span,
+[data-theme="dark"] .modal-dialog-body div {
+    color: var(--text-primary, #e0e0e0);
+}
+
+[data-theme="dark"] .modal-dialog-body .text-muted,
+[data-theme="dark"] .modal-dialog-body .text-secondary {
+    color: var(--text-secondary, #b0b0b0);
+}
+

@@ -1,14 +1,18 @@
 /* Tablet and Medium Screen Styles */
+/* Note: Responsive utilities can be added to utilities.css for responsive breakpoints */
 @media (min-width: 769px) and (max-width: 1024px) {
+    /* Can use utilities: px-6 py-4 max-w-full */
     .landing-nav {
         padding: 1rem 1.5rem;
         max-width: 100%;
     }
     
+    /* Can use utilities: gap-6 */
     .nav-menu {
         gap: 1.5rem;
     }
     
+    /* Can use utilities: px-3 py-1 text-sm */
     .nav-btn {
         padding: 0.4rem 0.8rem;
         font-size: 0.85rem;
@@ -130,33 +134,40 @@
 }
 
 @media (max-width: 768px) {
+    /* Can use utilities: px-6 py-10 rounded-2xl */
     .dashboard-hero {
         padding: 2.5rem 1.5rem;
         border-radius: 16px;
     }
     
+    /* Can use utilities: text-2xl */
     .hero-title {
         font-size: 2rem;
     }
     
+    /* Can use utilities: text-base */
     .hero-subtitle {
         font-size: 1rem;
     }
     
+    /* Can use utilities: flex-column */
     .hero-actions {
         flex-direction: column;
     }
     
+    /* Can use utilities: w-full justify-center */
     .hero-btn {
         width: 100%;
         justify-content: center;
     }
     
+    /* Can use utilities: grid-cols-2 gap-4 */
     .dashboard-kpis {
         grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
     }
     
+    /* Can use utilities: p-4 gap-4 */
     .kpi-card {
         padding: 1rem;
         gap: 1rem;
@@ -1432,23 +1443,27 @@
 
 @media (max-width: 768px) {
     /* Reset dashboard layout for mobile */
+    /* Can use utilities: d-grid grid-cols-1 gap-5 */
     .dashboard-grid {
         display: grid;
         grid-template-columns: 1fr;
         gap: 20px;
     }
     
+    /* Can use utilities: d-grid grid-cols-1 gap-5 */
     .dashboard-main-content {
         display: grid;
         grid-template-columns: 1fr;
         gap: 20px;
     }
     
+    /* Can use utilities: max-w-full m-0 */
     .dashboard-right-content {
         max-width: 100%;
         margin: 0;
     }
     
+    /* Can use utilities: p-4 */
     .app-main {
         padding: 15px;
     }
@@ -1855,7 +1870,6 @@
     }
 }
 
-/* Accessibility improvements */
 .form-tab:focus,
 .indicator:focus {
     outline: 2px solid #667eea;
@@ -1910,3 +1924,6 @@
         border: 1px solid #ddd;
     }
 }
+
+
+/* Accessibility improvements *

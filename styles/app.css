@@ -2,6 +2,9 @@
    MAIN APPLICATION STYLES
    ========================================================================== */
 
+/* Import Utility CSS Library - Reusable utility classes */
+@import url('./utilities.css');
+
 /* Import Unified Button System - Centralized button styling for consistency */
 @import url('./components/buttons.css');
 
@@ -9,7 +12,7 @@
    LAYOUT CONTAINERS
    ========================================================================== */
 
-/* Main application container - Provides full viewport height and flex layout */
+/* Main application container - Uses utility classes */
 .app-container {
     min-height: 100vh;
     display: flex;
@@ -20,14 +23,14 @@
    DESKTOP NAVIGATION SYSTEM
    ========================================================================== */
 
-/* Desktop navigation container - Hidden by default, shown on larger screens */
+/* Desktop navigation container - Uses utility classes */
 .desktop-nav {
     display: none;
     width: 100%;
     max-width: 100%;
 }
 
-/* Main navigation wrapper - Centers content with max-width constraint */
+/* Main navigation wrapper - Uses utility classes */
 .desktop-nav .landing-nav {
     display: flex;
     justify-content: space-between;
@@ -38,7 +41,7 @@
     width: 100%;
 }
 
-/* Brand/logo section - Contains app name and icon */
+/* Brand/logo section - Uses utility classes */
 .desktop-nav .nav-brand {
     display: flex;
     align-items: center;
@@ -53,14 +56,14 @@
     font-size: 2rem;
 }
 
-/* Navigation menu container - Horizontal flex layout for nav items */
+/* Navigation menu container - Uses utility classes */
 .desktop-nav .nav-menu {
     display: flex;
     align-items: center;
     gap: 1.5rem;
 }
 
-/* Individual navigation links - Styled links with hover effects */
+/* Individual navigation links - Uses utility classes */
 .desktop-nav .nav-link {
     display: flex;
     align-items: center;
@@ -638,6 +641,7 @@
    ========================================================================== */
 
 /* Main application header - Sticky header with navigation and user controls */
+/* App header - Can use utilities: bg-white px-5 py-4 shadow-md d-flex justify-between items-center position-sticky top-0 z-100 */
 .app-header {
     background: white;
     padding: 15px 20px;
@@ -719,6 +723,7 @@
    ========================================================================== */
 
 /* Main application content area - Flexible container for page content */
+/* App main - Can use utilities: flex-1 p-5 w-full max-w-full box-border */
 .app-main {
     flex: 1;
     padding: 20px;
@@ -1043,6 +1048,7 @@
 }
 
 /* Dashboard Content Grid - Main layout */
+/* Can use utilities: d-grid w-full max-w-full mb-8 (grid-cols custom) */
 .dashboard-content-grid {
     display: grid;
     grid-template-columns: 1fr 380px;
@@ -1067,12 +1073,14 @@
     }
 }
 
+/* Dashboard main column - Can use utilities: d-flex flex-column gap-8 */
 .dashboard-main-column {
     display: flex;
     flex-direction: column;
     gap: 2rem;
 }
 
+/* Dashboard sidebar - Can use utilities: d-flex flex-column gap-8 */
 .dashboard-sidebar {
     display: flex;
     flex-direction: column;
@@ -1080,6 +1088,7 @@
 }
 
 /* Dashboard Cards - Reusable card component */
+/* Can be replaced with utilities: bg-white rounded-2xl p-8 shadow-lg border box-border w-full */
 .dashboard-card {
     background: white;
     border-radius: 20px;
@@ -1108,6 +1117,7 @@
     }
 }
 
+/* Card title - Can use utilities: text-2xl font-semibold text-dark mb-6 tracking-tight */
 .card-title {
     font-size: 1.5rem;
     font-weight: 600;
@@ -1116,6 +1126,7 @@
     letter-spacing: -0.01em;
 }
 
+/* Card header - Can use utilities: d-flex justify-between items-center mb-6 */
 .card-header {
     display: flex;
     justify-content: space-between;
@@ -1123,7 +1134,7 @@
     margin-bottom: 1.5rem;
 }
 
-/* Quick Actions Card */
+/* Quick Actions Card - Can use utilities: d-grid grid-cols-2 gap-4 */
 .quick-actions-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -1347,7 +1358,7 @@
     gap: 1rem;
 }
 
-/* Statistics grid - Grid layout for dashboard statistics cards */
+/* Statistics grid - Can use utilities: d-grid grid-cols-3 gap-4 mb-5 max-w-full w-full */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1357,7 +1368,7 @@
     width: 100%;
 }
 
-/* Statistics card - Individual dashboard metric card */
+/* Statistics card - Can use utilities: bg-white rounded-xl p-4 shadow-md d-flex items-center gap-3 transition-transform */
 .stat-card {
     background: white;
     border-radius: 12px;
@@ -1425,6 +1436,7 @@
    ========================================================================== */
 
 /* Section header container - Title and action controls wrapper */
+/* Section header - Can use utilities: d-flex justify-between items-center mb-8 flex-wrap gap-4 */
 .section-header {
     display: flex;
     justify-content: space-between;
@@ -1434,7 +1446,7 @@
     gap: 15px;
 }
 
-/* Section header title - Large section heading */
+/* Section header title - Can use utilities: text-dark text-3xl font-semibold */
 .section-header h2 {
     color: #333;
     font-size: 1.8rem;
