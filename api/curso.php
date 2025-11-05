@@ -17,6 +17,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+function columnExists($db, $table, $column) {
+    try {
+        $stmt = $db->prepare("SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?");
+        $stmt->execute([$table, $column]);
+        $result = $stmt->fetch();
+        return $result && $result['count'] > 0;
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
+function tableExists($db, $table) {
+    try {
+        $stmt = $db->prepare("SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?");
+        $stmt->execute([$table]);
+        $result = $stmt->fetch();
+        return $result && $result['count'] > 0;
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
@@ -141,9 +163,13 @@ try {
             // Construir Curso_division
             $cursoDivision = "{$numeroCurso}º Curso - División {$division}";
 
-            // Gestión de la Escuela
+            // Verificar si la columna Escuela_ID existe
+            $hasEscuelaId = columnExists($db, 'Curso', 'Escuela_ID');
+            $hasEscuelaTable = tableExists($db, 'Escuela');
+            
+            // Gestión de la Escuela (solo si la tabla y columna existen)
             $escuelaId = null;
-            if (!empty($institucion)) {
+            if ($hasEscuelaId && $hasEscuelaTable && !empty($institucion)) {
                 // Verificar si la escuela ya existe
                 $escuelaStmt = $db->prepare("SELECT ID_escuela FROM Escuela WHERE Nombre = ?");
                 $escuelaStmt->execute([$institucion]);
@@ -179,11 +205,19 @@ try {
             
             $estado = isset($body['Estado']) ? $body['Estado'] : 'ACTIVO';
             
-            $stmt = $db->prepare("
-                INSERT INTO Curso (Curso_division, Numero_curso, Division, Institucion, Escuela_ID, Usuarios_docente_ID_docente, Estado)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ");
-            $stmt->execute([$cursoDivision, $numeroCurso, $division, $institucion, $escuelaId, $teacherId, $estado]);
+            if ($hasEscuelaId) {
+                $stmt = $db->prepare("
+                    INSERT INTO Curso (Curso_division, Numero_curso, Division, Institucion, Escuela_ID, Usuarios_docente_ID_docente, Estado)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ");
+                $stmt->execute([$cursoDivision, $numeroCurso, $division, $institucion, $escuelaId, $teacherId, $estado]);
+            } else {
+                $stmt = $db->prepare("
+                    INSERT INTO Curso (Curso_division, Numero_curso, Division, Institucion, Usuarios_docente_ID_docente, Estado)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ");
+                $stmt->execute([$cursoDivision, $numeroCurso, $division, $institucion, $teacherId, $estado]);
+            }
             
             $newId = (int)$db->lastInsertId();
             

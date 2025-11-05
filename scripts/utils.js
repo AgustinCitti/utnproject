@@ -153,3 +153,175 @@ function toggleView(section, view) {
         if (listBtn) listBtn.classList.add('active');
     }
 }
+
+/**
+ * Fancy Confirmation Dialog
+ * Simple but elegant confirmation dialog replacement for browser confirm()
+ * @param {string} message - The message to display
+ * @param {string} title - Optional title (default: 'Confirmar')
+ * @returns {Promise<boolean>} - Promise that resolves to true if confirmed, false if cancelled
+ */
+function fancyConfirm(message, title = 'Confirmar') {
+    return new Promise((resolve) => {
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'fancy-confirm-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.2s ease-out;
+        `;
+
+        // Create dialog
+        const dialog = document.createElement('div');
+        dialog.className = 'fancy-confirm-dialog';
+        dialog.style.cssText = `
+            background: white;
+            border-radius: 16px;
+            padding: 0;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+            overflow: hidden;
+        `;
+
+        // Create content
+        dialog.innerHTML = `
+            <div style="padding: 2rem;">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <div style="
+                        width: 64px;
+                        height: 64px;
+                        margin: 0 auto 1rem;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                    ">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11.07 12.85c.77-1.39 2.25-2.21 3.11-3.44.91-1.29.4-3.7-2.18-3.7-1.69 0-2.52 1.28-2.87 2.34L6.54 6.96C7.25 4.83 9.18 3 11.99 3c2.35 0 3.96 1.07 4.78 2.41.7 1.15 1.11 3.3.03 4.9-1.2 1.77-2.35 2.31-2.97 3.45-.25.46-.35.76-.35 2.24h-2.89c-.01-.78-.13-2.05.48-3.15zM14 20c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2z" fill="white"/>
+                        </svg>
+                    </div>
+                    <h3 style="
+                        margin: 0 0 0.75rem;
+                        font-size: 1.5rem;
+                        font-weight: 600;
+                        color: #1a1a1a;
+                    ">${title}</h3>
+                    <p style="
+                        margin: 0;
+                        font-size: 1rem;
+                        color: #666;
+                        line-height: 1.5;
+                    ">${message}</p>
+                </div>
+                <div style="
+                    display: flex;
+                    gap: 0.75rem;
+                    justify-content: center;
+                ">
+                    <button class="fancy-confirm-btn fancy-confirm-cancel btn btn-secondary" style="
+                        flex: 1;
+                        padding: 0.75rem 1.5rem;
+                        font-size: 0.95rem;
+                    ">
+                        Cancelar
+                    </button>
+                    <button class="fancy-confirm-btn fancy-confirm-ok btn btn-primary" style="
+                        flex: 1;
+                        padding: 0.75rem 1.5rem;
+                        font-size: 0.95rem;
+                    ">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Add animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px) scale(0.95);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+            }
+            .fancy-confirm-btn {
+                transition: all 0.2s ease;
+            }
+            .fancy-confirm-btn:hover {
+                transform: translateY(-2px);
+            }
+            .fancy-confirm-btn:active {
+                transform: translateY(0);
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Append to body
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        // Handle clicks
+        const handleConfirm = () => {
+            overlay.style.animation = 'fadeIn 0.2s ease-out reverse';
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+                document.head.removeChild(style);
+            }, 200);
+            resolve(true);
+        };
+
+        const handleCancel = () => {
+            overlay.style.animation = 'fadeIn 0.2s ease-out reverse';
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+                document.head.removeChild(style);
+            }, 200);
+            resolve(false);
+        };
+
+        dialog.querySelector('.fancy-confirm-ok').addEventListener('click', handleConfirm);
+        dialog.querySelector('.fancy-confirm-cancel').addEventListener('click', handleCancel);
+
+        // Close on overlay click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                handleCancel();
+            }
+        });
+
+        // Close on Escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                handleCancel();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+    });
+}
+
+// Expose to global scope
+window.fancyConfirm = fancyConfirm;

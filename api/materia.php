@@ -34,6 +34,17 @@ function readJson() {
 	return is_array($decoded) ? $decoded : [];
 }
 
+function columnExists($db, $table, $column) {
+	try {
+		$stmt = $db->prepare("SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?");
+		$stmt->execute([$table, $column]);
+		$result = $stmt->fetch();
+		return $result && $result['count'] > 0;
+	} catch (Exception $e) {
+		return false;
+	}
+}
+
 function parseHorario($horario) {
 	// Parse schedule string like "Lunes 09:00-11:00, Miércoles 14:00-16:00"
 	if (!$horario) return null;
@@ -173,20 +184,36 @@ try {
 				respond(404, ['success'=>false,'message'=>'El docente especificado no existe o no está activo. Por favor, inicia sesión nuevamente.']);
 			}
 
-			// Obtener Escuela_ID del curso
-			$cursoStmt = $db->prepare("SELECT Escuela_ID FROM Curso WHERE Curso_division = ? AND Usuarios_docente_ID_docente = ?");
-			$cursoStmt->execute([$Curso_division, $DocenteId]);
-			$curso = $cursoStmt->fetch();
-			$Escuela_ID = $curso ? $curso['Escuela_ID'] : null;
+			// Verificar si la columna Escuela_ID existe
+			$hasEscuelaId = columnExists($db, 'Materia', 'Escuela_ID');
+			$hasEscuelaIdInCurso = columnExists($db, 'Curso', 'Escuela_ID');
+			
+			// Obtener Escuela_ID del curso si la columna existe
+			$Escuela_ID = null;
+			if ($hasEscuelaIdInCurso) {
+				$cursoStmt = $db->prepare("SELECT Escuela_ID FROM Curso WHERE Curso_division = ? AND Usuarios_docente_ID_docente = ?");
+				$cursoStmt->execute([$Curso_division, $DocenteId]);
+				$curso = $cursoStmt->fetch();
+				$Escuela_ID = $curso ? $curso['Escuela_ID'] : null;
+			}
 
 			// Verificar si ya existe una materia con el mismo nombre, curso y docente (previene duplicados)
-			$checkStmt = $db->prepare("
-				SELECT ID_materia, Nombre, Curso_division 
-				FROM Materia 
-				WHERE Nombre = ? AND Curso_division = ? AND Usuarios_docente_ID_docente = ?
-				AND (Escuela_ID = ? OR (Escuela_ID IS NULL AND ? IS NULL))
-			");
-			$checkStmt->execute([$Nombre, $Curso_division, $DocenteId, $Escuela_ID, $Escuela_ID]);
+			if ($hasEscuelaId) {
+				$checkStmt = $db->prepare("
+					SELECT ID_materia, Nombre, Curso_division 
+					FROM Materia 
+					WHERE Nombre = ? AND Curso_division = ? AND Usuarios_docente_ID_docente = ?
+					AND (Escuela_ID = ? OR (Escuela_ID IS NULL AND ? IS NULL))
+				");
+				$checkStmt->execute([$Nombre, $Curso_division, $DocenteId, $Escuela_ID, $Escuela_ID]);
+			} else {
+				$checkStmt = $db->prepare("
+					SELECT ID_materia, Nombre, Curso_division 
+					FROM Materia 
+					WHERE Nombre = ? AND Curso_division = ? AND Usuarios_docente_ID_docente = ?
+				");
+				$checkStmt->execute([$Nombre, $Curso_division, $DocenteId]);
+			}
 			$existing = $checkStmt->fetch();
 			
 			if ($existing) {
@@ -197,8 +224,13 @@ try {
 				]);
 			}
 
-			$stmt = $db->prepare("INSERT INTO Materia (Nombre, Curso_division, Usuarios_docente_ID_docente, Estado, Horario, Aula, Descripcion, Escuela_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-			$stmt->execute([$Nombre, $Curso_division, $DocenteId, $Estado, $Horario, $Aula, $Descripcion, $Escuela_ID]);
+			if ($hasEscuelaId) {
+				$stmt = $db->prepare("INSERT INTO Materia (Nombre, Curso_division, Usuarios_docente_ID_docente, Estado, Horario, Aula, Descripcion, Escuela_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+				$stmt->execute([$Nombre, $Curso_division, $DocenteId, $Estado, $Horario, $Aula, $Descripcion, $Escuela_ID]);
+			} else {
+				$stmt = $db->prepare("INSERT INTO Materia (Nombre, Curso_division, Usuarios_docente_ID_docente, Estado, Horario, Aula, Descripcion) VALUES (?, ?, ?, ?, ?, ?, ?)");
+				$stmt->execute([$Nombre, $Curso_division, $DocenteId, $Estado, $Horario, $Aula, $Descripcion]);
+			}
 			$newId = (int)$db->lastInsertId();
 			
 			// Create automatic recordatorios for classes if horario is provided
@@ -228,8 +260,11 @@ try {
 				}
 			}
 
-			// Si se actualiza Curso_division, también actualizar Escuela_ID
-			if (isset($body['Curso_division'])) {
+			// Si se actualiza Curso_division, también actualizar Escuela_ID (si la columna existe)
+			$hasEscuelaId = columnExists($db, 'Materia', 'Escuela_ID');
+			$hasEscuelaIdInCurso = columnExists($db, 'Curso', 'Escuela_ID');
+			
+			if (isset($body['Curso_division']) && $hasEscuelaId && $hasEscuelaIdInCurso) {
 				$DocenteId = isset($body['Usuarios_docente_ID_docente']) ? (int)$body['Usuarios_docente_ID_docente'] : $currentMateria['Usuarios_docente_ID_docente'];
 				$cursoStmt = $db->prepare("SELECT Escuela_ID FROM Curso WHERE Curso_division = ? AND Usuarios_docente_ID_docente = ?");
 				$cursoStmt->execute([$body['Curso_division'], $DocenteId]);

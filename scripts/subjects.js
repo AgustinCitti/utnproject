@@ -554,7 +554,7 @@ async function saveSubject() {
 		
 		// Si es una materia nueva, preguntar si quiere asignar estudiantes
 		if (newSubjectId) {
-			const assignStudents = confirm('¿Deseas asignar estudiantes a esta materia ahora?');
+			const assignStudents = await fancyConfirm('¿Deseas asignar estudiantes a esta materia ahora?', 'Asignar Estudiantes');
 			if (assignStudents) {
 				await assignStudentsToSubject(newSubjectId, finalCursoDivision);
 			}
