@@ -443,6 +443,54 @@
     border-color: #667eea;
 }
 
+/* Dark mode styles for schedule entries */
+[data-theme="dark"] .schedule-entry,
+[data-theme="dark"] #scheduleEntriesContainer .schedule-entry {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+}
+
+[data-theme="dark"] .schedule-entry-field .schedule-sub-label {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .schedule-entry-field select,
+[data-theme="dark"] .schedule-day-select,
+[data-theme="dark"] .schedule-start-select,
+[data-theme="dark"] .schedule-end-select {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23b0b0b0' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e") !important;
+}
+
+[data-theme="dark"] .schedule-entry-field select:focus,
+[data-theme="dark"] .schedule-day-select:focus,
+[data-theme="dark"] .schedule-start-select:focus,
+[data-theme="dark"] .schedule-end-select:focus {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
+}
+
+[data-theme="dark"] .schedule-entry-field select option,
+[data-theme="dark"] .schedule-day-select option,
+[data-theme="dark"] .schedule-start-select option,
+[data-theme="dark"] .schedule-end-select option {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .remove-schedule-entry-btn {
+    background: #dc3545 !important;
+    color: white !important;
+}
+
+[data-theme="dark"] .remove-schedule-entry-btn:hover {
+    background: #c82333 !important;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3) !important;
+}
+
 [data-theme="dark"] .day-chip {
     background: #667eea;
     color: white;
