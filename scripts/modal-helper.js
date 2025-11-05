@@ -33,13 +33,17 @@ document.addEventListener('click', function(e) {
 
 // Close modal when clicking close button
 document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('close-modal') || e.target.closest('.close-modal')) {
-        const modal = e.target.closest('.modal-overlay');
-        if (modal) {
+    // Check if the clicked element is a close button or inside one
+    const closeButton = e.target.closest('.close-modal');
+    if (closeButton) {
+        e.preventDefault();
+        e.stopPropagation();
+        const modal = closeButton.closest('.modal-overlay');
+        if (modal && modal.id) {
             closeModal(modal.id);
         }
     }
-});
+}, true); // Use capture phase to ensure we catch the event early
 
 // Close modal with Escape key
 document.addEventListener('keydown', function(e) {
@@ -59,5 +63,37 @@ if (typeof window.openModal === 'undefined') {
 
 if (typeof window.closeModal === 'undefined') {
     window.closeModal = closeModal;
+}
+
+// Initialize all modal handlers on page load
+function initializeAllModalHandlers() {
+    // Find all modals with close buttons
+    const allModals = document.querySelectorAll('.modal-overlay');
+    allModals.forEach(modal => {
+        const closeButtons = modal.querySelectorAll('.close-modal');
+        closeButtons.forEach(button => {
+            // Check if handler already set
+            if (!button.hasAttribute('data-modal-handler-set')) {
+                // Add click handler
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const targetModal = button.closest('.modal-overlay');
+                    if (targetModal && targetModal.id) {
+                        closeModal(targetModal.id);
+                    }
+                });
+                button.setAttribute('data-modal-handler-set', 'true');
+            }
+        });
+    });
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAllModalHandlers);
+} else {
+    // DOM is already loaded
+    initializeAllModalHandlers();
 }
 

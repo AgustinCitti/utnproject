@@ -9,7 +9,31 @@ function showModal(modalId) {
         if (typeof setupModalHandlers === 'function') {
             setupModalHandlers(modalId);
         }
+        // Also ensure direct close button handlers are set up as fallback
+        setupDirectCloseHandlers(modal);
     }
+}
+
+// Fallback direct close button handlers
+function setupDirectCloseHandlers(modal) {
+    if (!modal) return;
+    
+    const closeButtons = modal.querySelectorAll('.close-modal');
+    closeButtons.forEach(button => {
+        // Remove existing listeners by adding a new one with once option or checking if already set
+        const existingHandler = button.getAttribute('data-close-handler-set');
+        if (!existingHandler) {
+            const handler = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (modal && modal.id) {
+                    closeModal(modal.id);
+                }
+            };
+            button.addEventListener('click', handler);
+            button.setAttribute('data-close-handler-set', 'true');
+        }
+    });
 }
 
 function closeModal(modal) {
@@ -24,6 +48,8 @@ function closeModal(modal) {
     if (modalElement) {
         // Just hide the modal instead of removing it from DOM
         modalElement.classList.remove('active');
+        // Restore body scroll when modal is closed
+        document.body.style.overflow = '';
     }
 }
 
