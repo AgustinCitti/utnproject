@@ -127,15 +127,7 @@ function loadReports() {
                     </div>
                 </div>
 
-                <!-- Subject Comparison Chart -->
-                <div class="chart-card bg-white rounded-lg shadow overflow-hidden">
-                    <div class="chart-header d-flex justify-between items-center px-6 py-4 border-b border-gray">
-                        <h3 class="text-lg font-semibold text-dark m-0">Comparación de Materias</h3>
-                    </div>
-                    <div class="chart-container p-4 position-relative" style="height: 300px;">
-                        <canvas id="subjectChart"></canvas>
-                    </div>
-                </div>
+              
             </div>
 
             <!-- Detailed Reports -->
