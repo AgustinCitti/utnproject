@@ -2146,8 +2146,8 @@
 }
 
 [data-theme="dark"] .subject-details-tabs .tab-btn.active {
-    background: var(--card-bg);
-    color: #667eea;
+    background: var(--primary-color, #667eea);
+    color: white;
     box-shadow: 0 2px 8px var(--shadow);
 }
 
@@ -2765,6 +2765,97 @@
 
 [data-theme="dark"] #subjectModal label,
 [data-theme="dark"] #courseModal label {
+    color: var(--text-primary) !important;
+}
+
+/* ==========================================================================
+   DARK MODE STYLES - TEXT UTILITY CLASSES
+   ========================================================================== */
+
+/* Override text-dark utility class for dark mode */
+[data-theme="dark"] .text-dark {
+    color: var(--text-primary) !important;
+}
+
+/* Override text-muted utility class for dark mode */
+[data-theme="dark"] .text-muted {
+    color: var(--text-secondary) !important;
+}
+
+/* Hero section text colors */
+[data-theme="dark"] .hero-title.text-dark {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .hero-subtitle.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+/* KPI values and labels */
+[data-theme="dark"] .kpi-value.text-dark {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .kpi-label.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+/* Card titles */
+[data-theme="dark"] .card-title.text-dark {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .widget-title.text-dark {
+    color: var(--text-primary) !important;
+}
+
+/* Navigation links */
+[data-theme="dark"] .nav-link.text-dark {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .nav-link.text-dark:hover {
+    color: #667eea !important;
+}
+
+/* Mobile navigation links */
+[data-theme="dark"] a.text-dark {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] a.text-dark:hover {
+    color: #667eea !important;
+}
+
+/* Search inputs */
+[data-theme="dark"] input.text-dark {
+    color: var(--text-primary) !important;
+}
+
+/* Select elements */
+[data-theme="dark"] select.text-dark {
+    color: var(--text-primary) !important;
+}
+
+/* Section headings */
+[data-theme="dark"] h1.text-dark,
+[data-theme="dark"] h2.text-dark,
+[data-theme="dark"] h3.text-dark,
+[data-theme="dark"] h4.text-dark {
+    color: var(--text-primary) !important;
+}
+
+/* Paragraphs and general text */
+[data-theme="dark"] p.text-dark {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] span.text-dark {
+    color: var(--text-primary) !important;
+}
+
+/* Welcome user text */
+[data-theme="dark"] #welcomeUser.text-dark {
     color: var(--text-primary) !important;
 }
 

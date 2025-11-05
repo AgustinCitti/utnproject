@@ -333,7 +333,7 @@ const translations = {
         
         // Subject Details
         subject_info: "Información de la Materia",
-        enrolled_students: "Estudiantes Inscritos",
+        enrolled_students: "Estudiantes Inscriptos",
         total_students: "Estudiantes",
         total_evaluations: "Total Evaluaciones",
         total_content: "Total Contenidos",

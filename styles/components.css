@@ -31,8 +31,7 @@
 }
 
 .tab-btn.active {
-    background: var(--card-bg, white);
-    color: #667eea;
+    
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -42,6 +41,11 @@
 
 .tab-content.active {
     display: block;
+}
+
+/* Ensure header rows in tab content don't have colored backgrounds */
+.tab-content > div:first-child {
+    background: transparent !important;
 }
 
 /* Subject Details View */
@@ -259,8 +263,8 @@
 }
 
 .subject-details-tabs .tab-btn.active {
-    background: var(--card-bg, white);
-    color: #667eea;
+    background: var(--primary-color, #667eea);
+    color: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
