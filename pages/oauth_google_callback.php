@@ -108,7 +108,7 @@ try {
     $_SESSION['logged_in'] = true;
 
     // Redirigir al usuario a la página principal de la aplicación
-    header('Location: /utnproject/pages/home.html');
+    header('Location: /pages/home.html');
     exit();
 
 } catch (PDOException $e) {
