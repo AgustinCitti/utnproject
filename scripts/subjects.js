@@ -38,9 +38,17 @@ function initializeSubjects() {
     const contentForm = document.getElementById('contentForm');
 
     // Helper function to setup and show modal
-    function setupAndShowModal(modalId) {
+    async function setupAndShowModal(modalId) {
         const el = document.getElementById(modalId);
         if (!el) return false;
+        
+        // Si es el modal de materias, poblar el desplegable de cursos
+        if (modalId === 'subjectModal') {
+            await populateCourseDivisionDropdown();
+            // Ocultar sección de crear nuevo curso por defecto
+            const createNewSection = document.getElementById('createNewCourseSection');
+            if (createNewSection) createNewSection.style.display = 'none';
+        }
         
         if (typeof setupModalHandlers === 'function') {
             setupModalHandlers(modalId);
@@ -63,14 +71,14 @@ function initializeSubjects() {
                 
                 if (!modalElement) {
                     // Try again after a short delay (in case DOM is updating)
-                    setTimeout(() => {
+                    setTimeout(async () => {
                         modalElement = document.getElementById('subjectModal');
                         if (!modalElement) {
                             alert('Error: No se encontró el formulario de materia. Por favor, recarga la página.');
                             return;
                         }
                         // If found on retry, proceed with opening
-                        setupAndShowModal('subjectModal');
+                        await setupAndShowModal('subjectModal');
                     }, 100);
                     return;
                 }
@@ -95,15 +103,7 @@ function initializeSubjects() {
                 }
                 
                 // Limpiar el formulario
-                if (typeof clearSubjectForm === 'function') {
-                    clearSubjectForm();
-                } else {
-                    const form = document.getElementById('subjectForm');
-                    if (form) {
-                        form.reset();
-                    }
-                    currentSubjectId = null;
-                }
+                resetSubjectForm();
             } catch (e) {
                 alert('Error al abrir el formulario de materia: ' + e.message);
             }
@@ -314,13 +314,29 @@ function loadSubjects() {
                         
                         return `
                             <tr onclick="showSubjectThemesPanel(${subject.ID_materia})" class="clickable-row">
-                                <td><strong>${subject.Nombre}</strong></td>
-                                <td>${subject.Curso_division}</td>
+                                <td>
+                                    <strong>${subject.Nombre}</strong>
+                                    <br>
+                                    <small style="color: #667eea; font-weight: 600;">
+                                        <i class="fas fa-graduation-cap" style="margin-right: 4px;"></i>
+                                        ${subject.Curso_division}
+                                    </small>
+                                </td>
+                                <td>
+                                    <span style="display: inline-block; padding: 4px 10px; background: #e3f2fd; color: #1976d2; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+                                        ${subject.Curso_division}
+                                    </span>
+                                </td>
                                 <td>${teacher ? `${teacher.Nombre_docente} ${teacher.Apellido_docente}` : 'N/A'}</td>
                                 <td>${subject.Horario || 'No especificado'}</td>
                                 <td>${subject.Aula || 'No especificada'}</td>
                                 <td><span class="table-status ${subject.Estado.toLowerCase()}">${getStatusText(subject.Estado)}</span></td>
-                                <td>${studentCount}</td>
+                                <td>
+                                    <span style="display: inline-flex; align-items: center; gap: 6px;">
+                                        <i class="fas fa-users" style="color: #667eea;"></i>
+                                        <strong>${studentCount}</strong>
+                                    </span>
+                                </td>
                                 <td>
                                     <div class="table-actions" onclick="event.stopPropagation();">
                                         <button class="btn-icon btn-edit" onclick="editSubject(${subject.ID_materia})" title="Editar">
@@ -359,14 +375,47 @@ async function saveSubject() {
 		return;
 	}
 
-	// Obtener curso y división por separado
-	const courseValue = document.getElementById('subjectCourse').value;
-	const divisionValue = document.getElementById('subjectDivision').value;
+	// Obtener curso_division del desplegable
+	const cursoDivisionSelect = document.getElementById('subjectCourseDivision');
+	const curso_division = cursoDivisionSelect ? cursoDivisionSelect.value : '';
 	
-	// Combinar curso y división en el formato esperado
-	const curso_division = courseValue && divisionValue 
-		? `${courseValue}º Curso - División ${divisionValue}`
-		: '';
+	// Si se seleccionó "crear nuevo", obtener los valores de curso, división e institución
+	let finalCursoDivision = curso_division;
+	if (curso_division === '__new__') {
+		const courseValue = document.getElementById('subjectCourse').value;
+		const divisionValue = document.getElementById('subjectDivision').value;
+		const institucionValue = document.getElementById('subjectInstitucion')?.value?.trim();
+		if (courseValue && divisionValue) {
+			finalCursoDivision = `${courseValue}º Curso - División ${divisionValue}`;
+			// Si se proporciona institución, también crear el curso en la tabla Curso
+			if (institucionValue) {
+				// Crear curso en la tabla Curso
+				try {
+					const cursoPayload = {
+						Numero_curso: parseInt(courseValue, 10),
+						Division: divisionValue,
+						Institucion: institucionValue,
+						Usuarios_docente_ID_docente: teacherId,
+						Estado: 'ACTIVO'
+					};
+					const cursoResponse = await fetch('api/curso.php', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(cursoPayload)
+					});
+					const cursoResult = await cursoResponse.json();
+					if (!cursoResult.success && cursoResult.error !== 'DUPLICATE_COURSE') {
+						console.warn('No se pudo crear el curso automáticamente:', cursoResult.message);
+					}
+				} catch (err) {
+					console.warn('Error al crear curso automáticamente:', err);
+				}
+			}
+		} else {
+			alert('Completá Curso y División para crear un nuevo curso.');
+			return;
+		}
+	}
 
 	// Update schedule hidden field before submitting
 	updateScheduleHiddenField();
@@ -382,7 +431,7 @@ async function saveSubject() {
 
 	const payload = {
 		Nombre: document.getElementById('subjectName').value.trim(),
-		Curso_division: curso_division,
+		Curso_division: finalCursoDivision,
 		Usuarios_docente_ID_docente: teacherId,
 		Estado: document.getElementById('subjectStatus').value,
 		Horario: (document.getElementById('subjectSchedule').value || '').trim() || null,
@@ -390,16 +439,40 @@ async function saveSubject() {
 		Descripcion: (document.getElementById('subjectDescription').value || '').trim() || null
 	};
 
-	// Validación mejorada
-	if (!payload.Nombre || !curso_division) {
-		alert('Completá Nombre, Curso y División.');
+	// Validación mejorada - permitir crear materia solo con nombre
+	if (!payload.Nombre) {
+		alert('El nombre de la materia es obligatorio.');
 		return;
+	}
+	
+	// Si no hay curso, permitir crear la materia sin curso (puede asignarse después)
+	if (!finalCursoDivision) {
+		const confirmar = confirm('¿Deseas crear la materia sin asignarle un curso? Podrás asignarlo después.');
+		if (!confirmar) {
+			return;
+		}
+		// Asignar un valor temporal para evitar errores en la base de datos
+		payload.Curso_division = 'Sin asignar';
 	}
 	
 	// Validar que el teacherId es válido
 	if (!payload.Usuarios_docente_ID_docente || payload.Usuarios_docente_ID_docente <= 0) {
 		alert('Error: ID de profesor inválido. Por favor, inicia sesión nuevamente.');
 		return;
+	}
+
+	// Validar que no exista una materia con el mismo nombre y curso para este docente
+	if (!currentSubjectId) {
+		const existingSubject = window.appData?.materia?.find(m => 
+			m.Nombre === payload.Nombre && 
+			m.Curso_division === finalCursoDivision &&
+			m.Usuarios_docente_ID_docente === teacherId
+		);
+		
+		if (existingSubject) {
+			alert(`Ya existe una materia "${payload.Nombre}" con el curso "${finalCursoDivision}". No se puede duplicar la misma materia y curso. Puedes crear la misma materia en un curso diferente (ej: ${payload.Nombre} en otro curso).`);
+			return;
+		}
 	}
 
 	// Prevenir doble submit
@@ -417,26 +490,29 @@ async function saveSubject() {
 			submitBtn.disabled = true;
 			submitBtn.textContent = 'Guardando...';
 		}
+		
+		let res, data;
+		let newSubjectId = null;
+		
 		if (currentSubjectId) {
 			// UPDATE con PUT
-			const res = await fetch(`../api/materia.php?id=${currentSubjectId}`, {
+			res = await fetch(`../api/materia.php?id=${currentSubjectId}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
 				credentials: 'include',
 				body: JSON.stringify(payload)
 			});
-			const data = await res.json().catch(() => ({}));
+			data = await res.json().catch(() => ({}));
 			if (!res.ok) throw new Error(data.message || 'No se pudo actualizar la materia');
 		} else {
 			// CREATE con POST
-			const res = await fetch('../api/materia.php', {
+			res = await fetch('../api/materia.php', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
 				credentials: 'include',
 				body: JSON.stringify(payload)
 			});
 			
-			let data = {};
 			const text = await res.text();
 			try {
 				data = JSON.parse(text);
@@ -445,21 +521,48 @@ async function saveSubject() {
 			}
 			
 			if (!res.ok) {
-				const errorMsg = data.error ? `${data.message || 'Error'}: ${data.error}` : (data.message || 'No se pudo crear la materia');
+				let errorMsg = data.message || 'No se pudo crear la materia';
+				if (data.error === 'DUPLICATE_SUBJECT_COURSE') {
+					errorMsg = data.message || 'Ya existe una materia con este nombre y curso. No se puede duplicar la misma materia y curso.';
+				} else if (data.error) {
+					errorMsg = `${data.message || 'Error'}: ${data.error}`;
+				}
 				throw new Error(errorMsg);
 			}
+			
+			// Si es una materia nueva, guardar el ID antes de recargar
+			if (res.ok && data.success !== false) {
+				// El endpoint devuelve { success: true, id: ... }
+				newSubjectId = data.id || data.ID_materia || null;
+			}
 		}
-
+		
 		if (typeof loadData === 'function') await loadData(); // recarga desde backend
+		
 		closeModal('subjectModal');
 		loadSubjects();
 		populateCourseFilter();
+		// Repoblar el desplegable de cursos con los nuevos cursos
+		if (typeof populateCourseDivisionDropdown === 'function') {
+			await populateCourseDivisionDropdown();
+		}
 		if (typeof populateSubjectFilter === 'function') populateSubjectFilter();
 		if (typeof populateExamsSubjectFilter === 'function') populateExamsSubjectFilter();
 		if (typeof populateUnifiedCourseFilter === 'function') populateUnifiedCourseFilter();
 		if (typeof loadUnifiedStudentData === 'function') loadUnifiedStudentData();
 		updateDashboard();
+		
+		// Si es una materia nueva, preguntar si quiere asignar estudiantes
+		if (newSubjectId) {
+			const assignStudents = confirm('¿Deseas asignar estudiantes a esta materia ahora?');
+			if (assignStudents) {
+				await assignStudentsToSubject(newSubjectId, finalCursoDivision);
+			}
+		}
+		
 		currentSubjectId = null;
+		// Resetear formulario
+		resetSubjectForm();
 		alert('Materia guardada correctamente');
 	} catch (err) {
 		const errorMsg = err.message || 'Error al guardar la materia';
@@ -477,6 +580,34 @@ async function saveSubject() {
 
 
 // Función helper para parsear curso_division y extraer curso y división
+// Función para resetear el formulario de materias
+async function resetSubjectForm() {
+    const form = document.getElementById('subjectForm');
+    if (form) form.reset();
+    
+    // Ocultar sección de crear nuevo curso
+    const createNewSection = document.getElementById('createNewCourseSection');
+    if (createNewSection) createNewSection.style.display = 'none';
+    
+    // Limpiar campos de curso y división
+    const courseSelect = document.getElementById('subjectCourse');
+    const divisionSelect = document.getElementById('subjectDivision');
+    if (courseSelect) courseSelect.value = '';
+    if (divisionSelect) divisionSelect.value = '';
+    
+    // Repoblar el desplegable de cursos
+    await populateCourseDivisionDropdown();
+    
+    // Resetear título del modal
+    const modalTitle = document.querySelector('#subjectModal .modal-header h3');
+    if (modalTitle) {
+        modalTitle.textContent = 'Agregar Materia';
+        modalTitle.setAttribute('data-translate', 'add_subject');
+    }
+    
+    currentSubjectId = null;
+}
+
 function parseCourseDivision(cursoDivision) {
     if (!cursoDivision) return { course: '', division: '' };
     
@@ -567,16 +698,34 @@ window.editSubject = async function(id) {
             subjectNameEl.value = subject.Nombre || '';
         }
         
-        // Parsear curso_division para separar curso y división
-        const { course, division } = parseCourseDivision(subject.Curso_division);
-        const courseSelect = document.getElementById('subjectCourse');
-        const divisionSelect = document.getElementById('subjectDivision');
-        
-        if (courseSelect && course) {
-            courseSelect.value = course;
+        // Poblar el desplegable de curso_division y seleccionar el curso actual
+        await populateCourseDivisionDropdown();
+        const courseDivisionSelect = document.getElementById('subjectCourseDivision');
+        if (courseDivisionSelect && subject.Curso_division) {
+            // Verificar si el curso existe en el desplegable
+            const courseExists = Array.from(courseDivisionSelect.options).some(opt => opt.value === subject.Curso_division);
+            if (courseExists) {
+                courseDivisionSelect.value = subject.Curso_division;
+            } else {
+                // Si no existe, agregarlo temporalmente
+                const option = document.createElement('option');
+                option.value = subject.Curso_division;
+                option.textContent = subject.Curso_division;
+                courseDivisionSelect.insertBefore(option, courseDivisionSelect.lastChild);
+                courseDivisionSelect.value = subject.Curso_division;
+            }
         }
-        if (divisionSelect && division) {
-            divisionSelect.value = division;
+        
+        // Si el curso no está en la lista, mostrar la sección de crear nuevo
+        const createNewSection = document.getElementById('createNewCourseSection');
+        if (createNewSection && !courseDivisionSelect.value) {
+            createNewSection.style.display = 'block';
+            // Parsear curso_division para separar curso y división
+            const { course, division } = parseCourseDivision(subject.Curso_division);
+            const courseSelect = document.getElementById('subjectCourse');
+            const divisionSelect = document.getElementById('subjectDivision');
+            if (courseSelect && course) courseSelect.value = course;
+            if (divisionSelect && division) divisionSelect.value = division;
         }
         
         const subjectDescriptionEl = document.getElementById('subjectDescription');
@@ -1745,6 +1894,92 @@ function getStudentCountBySubject(subjectId) {
 }
 
 // Populate course filter with user's subjects course divisions
+// Función para obtener todos los cursos únicos de las materias existentes
+async function getAllUniqueCourses() {
+    const courses = [];
+    
+    // Primero, obtener cursos de la tabla Curso desde la API
+    const userIdString = localStorage.getItem('userId');
+    if (userIdString) {
+        try {
+            const response = await fetch(`api/curso.php?userId=${userIdString}`);
+            const result = await response.json();
+            if (result.success && result.data && Array.isArray(result.data)) {
+                result.data.forEach(c => {
+                    if (c.Curso_division && c.Estado === 'ACTIVO' && !courses.includes(c.Curso_division)) {
+                        courses.push(c.Curso_division);
+                    }
+                });
+            }
+        } catch (error) {
+            console.warn('Error al cargar cursos desde API:', error);
+            // Si falla, intentar usar la función getAvailableCourses si existe
+            if (typeof getAvailableCourses === 'function') {
+                const cursosFromTable = getAvailableCourses();
+                cursosFromTable.forEach(c => {
+                    if (c.Curso_division && !courses.includes(c.Curso_division)) {
+                        courses.push(c.Curso_division);
+                    }
+                });
+            }
+        }
+    }
+    
+    // Luego, obtener cursos de Materia (para compatibilidad con datos existentes)
+    if (window.appData && window.appData.materia && Array.isArray(window.appData.materia)) {
+        window.appData.materia.forEach(m => {
+            if (m.Curso_division && m.Curso_division.trim() !== '' && m.Curso_division !== 'Sin asignar' && !courses.includes(m.Curso_division)) {
+                courses.push(m.Curso_division);
+            }
+        });
+    }
+    
+    return courses.sort();
+}
+
+// Función para poblar el desplegable de cursos en el modal de materias
+async function populateCourseDivisionDropdown() {
+    const select = document.getElementById('subjectCourseDivision');
+    if (!select) return;
+    
+    // Limpiar el select primero
+    select.innerHTML = '<option value="">- Seleccionar Curso -</option>';
+    
+    // Obtener cursos únicos (ahora es async)
+    const courses = await getAllUniqueCourses();
+    
+    // Agregar cursos existentes
+    courses.forEach(course => {
+        const option = document.createElement('option');
+        option.value = course;
+        option.textContent = course;
+        select.appendChild(option);
+    });
+    
+    // Agregar opción para crear nuevo curso
+    const newOption = document.createElement('option');
+    newOption.value = '__new__';
+    newOption.textContent = '+ Crear Nuevo Curso';
+    select.appendChild(newOption);
+    
+    // Agregar evento para mostrar/ocultar campos de creación
+    select.addEventListener('change', function() {
+        const createNewSection = document.getElementById('createNewCourseSection');
+        const courseSelect = document.getElementById('subjectCourse');
+        const divisionSelect = document.getElementById('subjectDivision');
+        
+        if (this.value === '__new__') {
+            if (createNewSection) createNewSection.style.display = 'block';
+            if (courseSelect) courseSelect.required = true;
+            if (divisionSelect) divisionSelect.required = true;
+        } else {
+            if (createNewSection) createNewSection.style.display = 'none';
+            if (courseSelect) courseSelect.required = false;
+            if (divisionSelect) divisionSelect.required = false;
+        }
+    });
+}
+
 function populateCourseFilter() {
     const courseFilter = document.getElementById('subjectsCourseFilter');
     if (!courseFilter) return;
@@ -1955,8 +2190,12 @@ function loadSubjectDetailsTab(subject, teacher, students, evaluations) {
     subjectDetailsContent.innerHTML = `
         <div class="details-grid">
             <div class="details-card">
-                <div class="card-header">
-                    <h4><i class="fas fa-users"></i> Estudiantes Inscritos (${students.length})</h4>
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h4>
+                        <i class="fas fa-users"></i> 
+                        Estudiantes del Curso: <span style="color: #667eea; font-weight: 600;">${subject.Curso_division}</span>
+                        <span style="font-size: 0.9em; color: #666; margin-left: 8px;">(${students.length} inscritos)</span>
+                    </h4>
                 </div>
                 <div class="card-content">
                     ${students.length > 0 ? `
@@ -1968,7 +2207,7 @@ function loadSubjectDetailsTab(subject, teacher, students, evaluations) {
                                 </div>
                             `).join('')}
                         </div>
-                    ` : '<p class="empty-state">No hay estudiantes inscritos</p>'}
+                    ` : '<p class="empty-state">No hay estudiantes inscritos en este curso. Puedes asignar estudiantes desde la sección de Gestión de Estudiantes.</p>'}
                 </div>
             </div>
             
@@ -2899,6 +3138,180 @@ async function assignStudentsToContent(contenidoId, subjectId) {
     
     // Show modal
     showModal('assignStudentsModal');
+}
+
+// Función para asignar estudiantes a una materia
+async function assignStudentsToSubject(subjectId, cursoDivision) {
+    if (!subjectId) {
+        alert('Error: Falta el ID de la materia');
+        return;
+    }
+    
+    // Obtener el ID del docente actual
+    const userIdString = localStorage.getItem('userId');
+    if (!userIdString) {
+        alert('Error: No se encontró el ID de usuario');
+        return;
+    }
+    const teacherId = parseInt(userIdString, 10);
+    
+    // Obtener todos los estudiantes que no están ya asignados a esta materia
+    const enrolledStudentIds = (appData.alumnos_x_materia || [])
+        .filter(axm => axm.Materia_ID_materia === subjectId)
+        .map(axm => axm.Estudiante_ID_Estudiante);
+    
+    // Si hay curso_division, filtrar estudiantes que ya están en otras materias de ese curso
+    // Esto permite asignar estudiantes que ya están en el mismo curso
+    let availableStudents = (appData.estudiante || []).filter(student => 
+        !enrolledStudentIds.includes(student.ID_Estudiante)
+    );
+    
+    if (availableStudents.length === 0) {
+        alert('No hay estudiantes disponibles para asignar. Todos los estudiantes ya están asignados a esta materia.');
+        return;
+    }
+    
+    // Crear modal content con checkboxes para estudiantes
+    const modalContent = `
+        <div style="padding: 20px;">
+            <h3 style="margin-bottom: 15px;">Asignar Estudiantes a la Materia</h3>
+            <p style="margin-bottom: 15px; color: #666;">
+                <strong>Curso:</strong> ${cursoDivision || 'N/A'}
+            </p>
+            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px;">
+                ${availableStudents.map(student => `
+                    <label style="display: flex; align-items: center; padding: 8px; cursor: pointer;">
+                        <input type="checkbox" 
+                               value="${student.ID_Estudiante}" 
+                               class="student-checkbox-subject-${subjectId}"
+                               style="margin-right: 10px;">
+                        <span style="flex: 1;">${student.Nombre} ${student.Apellido}</span>
+                        <span style="color: #666; font-size: 0.9em;">${student.Email || 'Sin email'}</span>
+                    </label>
+                `).join('')}
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button id="cancelAssignSubjectBtn" class="btn-secondary" style="padding: 8px 16px;">Cancelar</button>
+                <button id="saveAssignSubjectBtn" class="btn-primary" style="padding: 8px 16px;">Guardar Asignaciones</button>
+            </div>
+        </div>
+    `;
+    
+    // Create or update modal
+    let modal = document.getElementById('assignStudentsToSubjectModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'assignStudentsToSubjectModal';
+        modal.className = 'modal';
+        document.body.appendChild(modal);
+    }
+    
+    const modalWrapper = document.createElement('div');
+    modalWrapper.className = 'modal-content';
+    modalWrapper.innerHTML = `
+        <div class="modal-header">
+            <h3>Asignar Estudiantes a la Materia</h3>
+            <button class="close-modal">&times;</button>
+        </div>
+        ${modalContent}
+    `;
+    
+    modal.innerHTML = '';
+    modal.appendChild(modalWrapper);
+    
+    // Setup modal handlers
+    setupModalHandlers('assignStudentsToSubjectModal');
+    
+    // Setup event listeners
+    const cancelBtn = modalWrapper.querySelector('#cancelAssignSubjectBtn');
+    const saveBtn = modalWrapper.querySelector('#saveAssignSubjectBtn');
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            closeModal('assignStudentsToSubjectModal');
+        });
+    }
+    
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            const checkboxes = modalWrapper.querySelectorAll(`.student-checkbox-subject-${subjectId}`);
+            const selectedStudentIds = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => parseInt(cb.value));
+            
+            if (selectedStudentIds.length === 0) {
+                alert('Selecciona al menos un estudiante');
+                return;
+            }
+            
+            // Save assignments
+            await saveStudentsToSubject(subjectId, selectedStudentIds);
+            closeModal('assignStudentsToSubjectModal');
+        });
+    }
+    
+    // Show modal
+    showModal('assignStudentsToSubjectModal');
+}
+
+// Función para guardar estudiantes en una materia
+async function saveStudentsToSubject(subjectId, studentIds) {
+    try {
+        let successCount = 0;
+        let errorCount = 0;
+        
+        for (const estudianteId of studentIds) {
+            try {
+                const payload = [{
+                    Materia_ID_materia: subjectId,
+                    Estudiante_ID_Estudiante: estudianteId,
+                    Estado: 'INSCRITO'
+                }];
+                
+                const res = await fetch('../api/alumnos_x_materia.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json().catch(() => ({}));
+                
+                if (res.ok) {
+                    successCount++;
+                } else {
+                    // Check if it's a conflict (already assigned)
+                    if (res.status === 409) {
+                        successCount++; // Already assigned, count as success
+                    } else {
+                        errorCount++;
+                        console.error(`Error assigning student ${estudianteId}:`, data.message);
+                    }
+                }
+            } catch (err) {
+                errorCount++;
+                console.error(`Error assigning student ${estudianteId}:`, err);
+            }
+        }
+        
+        // Reload data from backend
+        if (typeof loadData === 'function') await loadData();
+        
+        // Reload subjects view
+        if (typeof loadSubjects === 'function') loadSubjects();
+        
+        if (errorCount === 0) {
+            if (typeof showNotification === 'function') {
+                showNotification(`Se asignaron ${successCount} estudiante(s) correctamente`, 'success');
+            } else {
+                alert(`Se asignaron ${successCount} estudiante(s) correctamente`);
+            }
+        } else {
+            alert(`Se asignaron ${successCount} estudiante(s). ${errorCount} error(es).`);
+        }
+    } catch (err) {
+        alert('Error al guardar las asignaciones: ' + (err.message || 'Error desconocido'));
+    }
 }
 
 async function saveStudentAssignments(contenidoId, studentIds) {

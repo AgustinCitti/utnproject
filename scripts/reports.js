@@ -29,23 +29,37 @@ function loadReports() {
                     <!-- UNIFIED FILTER - This is the ONLY filter that affects ALL charts -->
                    
                     <div class="report-actions">
-                          
-                        <select id="globalSubjectFilter" onchange="updateAllCharts()" class="filter-select" title="Este filtro afecta TODOS los gráficos y reportes simultáneamente">
-                            <option value="all">Todas las Materias</option>
-                        </select>
-                   
-                        <button class="btn btn-primary" onclick="exportReport('pdf')" title="Download comprehensive PDF report">
-                            <i class="fas fa-file-pdf"></i> 
-                            <span data-translate="export_pdf">Exportar PDF</span>
-                        </button>
-                        <button class="btn btn-secondary" onclick="exportReport('excel')" title="Download CSV files for data analysis">
-                            <i class="fas fa-file-csv"></i> 
-                            <span data-translate="export_csv">Exportar CSV</span>
-                        </button>
-                        <button class="btn btn-secondary" onclick="printReport()" title="Print the current report">
-                            <i class="fas fa-print"></i> 
-                            <span data-translate="print_report">Imprimir</span>
-                        </button>
+                        <div class="report-actions-row">
+                            <select id="globalSubjectFilter" onchange="updateAllCharts()" class="filter-select" title="Este filtro afecta TODOS los gráficos y reportes simultáneamente">
+                                <option value="all">Todas las Materias</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="exportReport('pdf')" title="Download comprehensive PDF report">
+                                <i class="fas fa-file-pdf"></i> 
+                                <span data-translate="export_pdf">Exportar PDF</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportReport('excel')" title="Descargar archivos Excel para análisis de datos">
+                                <i class="fas fa-file-excel"></i> 
+                                <span>Exportar Excel</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportAttendanceOnly()" title="Exportar solo lista de asistencia">
+                                <i class="fas fa-calendar-check"></i> 
+                                <span>Exportar Asistencia</span>
+                            </button>
+                        </div>
+                        <div class="report-actions-row">
+                            <button class="btn btn-secondary" onclick="exportGradesOnly()" title="Exportar solo lista de notas">
+                                <i class="fas fa-graduation-cap"></i> 
+                                <span>Exportar Notas</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportProgressReport()" title="Exportar informes de avance por cuatrimestre">
+                                <i class="fas fa-chart-line"></i> 
+                                <span>Exportar Informes de Avance</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="printReport()" title="Print the current report">
+                                <i class="fas fa-print"></i> 
+                                <span data-translate="print_report">Imprimir</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

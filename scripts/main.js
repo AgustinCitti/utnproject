@@ -38,6 +38,17 @@ async function initializeApp() {
         populateAttendanceMateriaSelect();
     }
     
+    // Poblar desplegable de cursos después de cargar datos (async)
+    if (typeof populateCourseDivisionDropdown === 'function') {
+        await populateCourseDivisionDropdown();
+    }
+    
+    // Initialize courses management - Comentado: sección de gestión de cursos eliminada
+    // Los cursos se pueden crear desde el modal de materias
+    // if (typeof initializeCourses === 'function') {
+    //     initializeCourses();
+    // }
+    
     // Initialize components
     if (typeof initializeNavigation === 'function') {
         initializeNavigation();

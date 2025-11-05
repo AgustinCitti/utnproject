@@ -1227,25 +1227,39 @@ function exportExamNotes(examId) {
         return;
     }
     
-    // Create CSV content
-    let csvContent = `Exam Notes Export\n`;
-    csvContent += `Exam: ${exam.Titulo}\n`;
-    csvContent += `Subject: ${subject ? subject.Nombre : 'Unknown'}\n`;
-    csvContent += `Date: ${exam.Fecha}\n\n`;
-    csvContent += `Student,Grade,Date,Status,Observations\n`;
+    // Create Excel content with proper headers in Spanish (usando punto y coma como separador)
+    const separator = ';';
+    let csvContent = `"Apellido"${separator}"Nombre"${separator}"Calificación"${separator}"Fecha"${separator}"Estado"${separator}"Observaciones"\n`;
     
     examNotes.forEach(note => {
         const student = appData.estudiante.find(s => s.ID_Estudiante === note.Estudiante_ID_Estudiante);
-        const studentName = student ? `${student.Nombre} ${student.Apellido}` : 'Unknown Student';
-        csvContent += `"${studentName}",${note.Calificacion},"${note.Fecha_calificacion}","${note.Estado}","${note.Observacion || ''}"\n`;
+        const apellido = student ? student.Apellido : '';
+        const nombre = student ? student.Nombre : '';
+        // Si no hay calificación, dejar campo vacío
+        const calificacion = (note.Calificacion !== null && note.Calificacion !== undefined && note.Calificacion !== '') 
+            ? note.Calificacion 
+            : '';
+        const fecha = note.Fecha_calificacion || '';
+        const estado = note.Estado || '';
+        const observaciones = (note.Observacion || '').replace(/"/g, '""');
+        
+        csvContent += `"${apellido}"${separator}"${nombre}"${separator}"${calificacion}"${separator}"${fecha}"${separator}"${estado}"${separator}"${observaciones}"\n`;
     });
     
-    // Create and download file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Create and download file with BOM UTF-8 for proper accents as Excel
+    const encoder = new TextEncoder();
+    const bomBytes = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const contentBytes = encoder.encode(csvContent);
+    const finalContent = new Uint8Array(bomBytes.length + contentBytes.length);
+    finalContent.set(bomBytes, 0);
+    finalContent.set(contentBytes, bomBytes.length);
+    
+    const blob = new Blob([finalContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `exam_notes_${exam.Titulo.replace(/[^a-zA-Z0-9]/g, '_')}_${exam.Fecha}.csv`);
+    const safeTitle = exam.Titulo.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ]/g, '_');
+    link.setAttribute('download', `notas_examen_${safeTitle}_${exam.Fecha}.xls`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();

@@ -93,6 +93,53 @@ try {
 			$stmt = $db->prepare("INSERT INTO Contenido (Tema, Descripcion, Estado, Materia_ID_materia) VALUES (?, ?, ?, ?)");
 			$stmt->execute([$Tema, $Descripcion, $Estado, $Materia_ID_materia]);
 			$newId = (int)$db->lastInsertId();
+			
+			// Automáticamente asignar este tema a todos los estudiantes inscritos en la materia
+			try {
+				// Obtener todos los estudiantes inscritos en esta materia
+				$enrolledStmt = $db->prepare("
+					SELECT DISTINCT Estudiante_ID_Estudiante 
+					FROM Alumnos_X_Materia 
+					WHERE Materia_ID_materia = ? AND Estado = 'INSCRITO'
+				");
+				$enrolledStmt->execute([$Materia_ID_materia]);
+				$enrolledStudents = $enrolledStmt->fetchAll();
+				
+				// Crear registro tema_estudiante para cada estudiante inscrito
+				$checkStmt = $db->prepare("
+					SELECT COUNT(*) as count 
+					FROM Tema_estudiante 
+					WHERE Contenido_ID_contenido = ? AND Estudiante_ID_Estudiante = ?
+				");
+				$insertStmt = $db->prepare("
+					INSERT INTO Tema_estudiante (Contenido_ID_contenido, Estudiante_ID_Estudiante, Estado) 
+					VALUES (?, ?, 'PENDIENTE')
+				");
+				
+				$assignedCount = 0;
+				foreach ($enrolledStudents as $enrollment) {
+					$estudianteId = (int)$enrollment['Estudiante_ID_Estudiante'];
+					try {
+						// Verificar si ya existe el registro
+						$checkStmt->execute([$newId, $estudianteId]);
+						$exists = $checkStmt->fetch()['count'] > 0;
+						
+						if (!$exists) {
+							// Solo insertar si no existe
+							$insertStmt->execute([$newId, $estudianteId]);
+							$assignedCount++;
+						}
+					} catch (PDOException $e) {
+						// Registrar errores pero no fallar
+						error_log("Error asignando tema a estudiante $estudianteId: " . $e->getMessage());
+					}
+				}
+			} catch (Exception $e) {
+				// No fallar la creación del contenido si hay error al asignar estudiantes
+				// Solo registrar el error
+				error_log("Error asignando tema a estudiantes: " . $e->getMessage());
+			}
+			
 			respond(201, ['success'=>true,'id'=>$newId]);
 
 		case 'PUT':

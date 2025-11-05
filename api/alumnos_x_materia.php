@@ -44,6 +44,57 @@ function validarMateriaDelDocente($db, $materiaId, $docenteId) {
 	return $stmt->fetch() !== false;
 }
 
+// Función para asignar todos los temas de una materia a un estudiante
+function assignAllTopicsToStudent($db, $materiaId, $estudianteId) {
+	try {
+		// Obtener todos los temas (contenidos) de esta materia
+		$topicsStmt = $db->prepare("SELECT ID_contenido FROM Contenido WHERE Materia_ID_materia = ?");
+		$topicsStmt->execute([$materiaId]);
+		$topics = $topicsStmt->fetchAll();
+		
+		if (empty($topics)) {
+			return; // No hay temas para asignar
+		}
+		
+		// Verificar si ya existe un registro tema_estudiante antes de insertar
+		$checkStmt = $db->prepare("
+			SELECT COUNT(*) as count 
+			FROM Tema_estudiante 
+			WHERE Contenido_ID_contenido = ? AND Estudiante_ID_Estudiante = ?
+		");
+		$insertStmt = $db->prepare("
+			INSERT INTO Tema_estudiante (Contenido_ID_contenido, Estudiante_ID_Estudiante, Estado) 
+			VALUES (?, ?, 'PENDIENTE')
+		");
+		
+		$assignedCount = 0;
+		foreach ($topics as $topic) {
+			$contenidoId = (int)$topic['ID_contenido'];
+			try {
+				// Verificar si ya existe
+				$checkStmt->execute([$contenidoId, $estudianteId]);
+				$exists = $checkStmt->fetch()['count'] > 0;
+				
+				if (!$exists) {
+					// Solo insertar si no existe
+					$insertStmt->execute([$contenidoId, $estudianteId]);
+					$assignedCount++;
+				}
+			} catch (PDOException $e) {
+				// Registrar errores pero no fallar
+				error_log("Error asignando tema $contenidoId a estudiante $estudianteId: " . $e->getMessage());
+			}
+		}
+		
+		if ($assignedCount > 0) {
+			error_log("Asignados $assignedCount tema(s) al estudiante $estudianteId de la materia $materiaId");
+		}
+	} catch (Exception $e) {
+		// No fallar si hay error al asignar temas
+		error_log("Error en assignAllTopicsToStudent: " . $e->getMessage());
+	}
+}
+
 try {
 	$db = pdo();
 	$method = $_SERVER['REQUEST_METHOD'];
@@ -140,6 +191,11 @@ try {
 						$stmt->execute([$materiaId, $estudianteId, $estado]);
 						$inserted[] = ['Materia_ID_materia' => $materiaId, 'Estudiante_ID_Estudiante' => $estudianteId];
 						error_log("Insertado: materia=$materiaId, estudiante=$estudianteId");
+						
+						// Asignar automáticamente todos los temas existentes de esta materia al estudiante
+						if ($estado === 'INSCRITO') {
+							assignAllTopicsToStudent($db, $materiaId, $estudianteId);
+						}
 					} catch (PDOException $e) {
 						$errorMsg = $e->getMessage();
 						$errors[] = "Error con materia $materiaId, estudiante $estudianteId: $errorMsg";
@@ -152,6 +208,11 @@ try {
 								$updateStmt->execute([$estado, $materiaId, $estudianteId]);
 								$inserted[] = ['Materia_ID_materia' => $materiaId, 'Estudiante_ID_Estudiante' => $estudianteId, 'updated' => true];
 								error_log("Actualizado (duplicado): materia=$materiaId, estudiante=$estudianteId");
+								
+								// Asignar temas si el estado es INSCRITO
+								if ($estado === 'INSCRITO') {
+									assignAllTopicsToStudent($db, $materiaId, $estudianteId);
+								}
 							} catch (PDOException $e2) {
 								$errors[] = "Error actualizando materia $materiaId: " . $e2->getMessage();
 							}
@@ -187,6 +248,12 @@ try {
 					$stmt = $db->prepare("INSERT INTO Alumnos_X_Materia (Materia_ID_materia, Estudiante_ID_Estudiante, Estado) VALUES (?, ?, ?)");
 					$stmt->execute([$materiaId, $estudianteId, $estado]);
 					error_log("Insertado único: materia=$materiaId, estudiante=$estudianteId");
+					
+					// Asignar automáticamente todos los temas existentes de esta materia al estudiante
+					if ($estado === 'INSCRITO') {
+						assignAllTopicsToStudent($db, $materiaId, $estudianteId);
+					}
+					
 					respond(201, ['success' => true, 'Materia_ID_materia' => $materiaId, 'Estudiante_ID_Estudiante' => $estudianteId]);
 				} catch (PDOException $e) {
 					$errorMsg = $e->getMessage();
@@ -197,6 +264,12 @@ try {
 						try {
 							$updateStmt = $db->prepare("UPDATE Alumnos_X_Materia SET Estado = ? WHERE Materia_ID_materia = ? AND Estudiante_ID_Estudiante = ?");
 							$updateStmt->execute([$estado, $materiaId, $estudianteId]);
+							
+							// Asignar temas si el estado es INSCRITO
+							if ($estado === 'INSCRITO') {
+								assignAllTopicsToStudent($db, $materiaId, $estudianteId);
+							}
+							
 							respond(200, ['success' => true, 'Materia_ID_materia' => $materiaId, 'Estudiante_ID_Estudiante' => $estudianteId, 'updated' => true]);
 						} catch (PDOException $e2) {
 							respond(500, ['success' => false, 'message' => 'Error actualizando: ' . $e2->getMessage()]);

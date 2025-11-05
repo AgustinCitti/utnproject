@@ -5,6 +5,106 @@ let selectedSubjectsList = [];
 // Lista de temas seleccionados para asignar al estudiante
 let selectedTopicsList = [];
 
+// Función para poblar el select de cursos con los cursos disponibles
+function populateStudentCourseSelect() {
+    const courseSelect = document.getElementById('studentCourse');
+    if (!courseSelect) return;
+    
+    // Obtener el ID del docente actual
+    const userIdString = localStorage.getItem('userId');
+    const teacherId = userIdString ? parseInt(userIdString, 10) : null;
+    
+    if (!teacherId) {
+        courseSelect.innerHTML = '<option value="">- Seleccionar Curso (Opcional) -</option>';
+        return;
+    }
+    
+    // Obtener todos los curso_division únicos de las materias del docente
+    const teacherSubjects = (appData.materia || []).filter(m => 
+        m.Usuarios_docente_ID_docente === teacherId && 
+        (!m.Estado || m.Estado === 'ACTIVA')
+    );
+    
+    const uniqueCourses = [...new Set(teacherSubjects.map(s => s.Curso_division).filter(Boolean))].sort();
+    
+    // Limpiar opciones actuales
+    courseSelect.innerHTML = '<option value="">- Seleccionar Curso (Opcional) -</option>';
+    
+    uniqueCourses.forEach(course => {
+        const option = document.createElement('option');
+        option.value = course;
+        option.textContent = course;
+        courseSelect.appendChild(option);
+    });
+    
+    // Agregar event listener para cuando se selecciona un curso
+    if (!courseSelect._hasCourseListener) {
+        courseSelect.addEventListener('change', handleCourseSelection);
+        courseSelect._hasCourseListener = true;
+    }
+}
+
+// Función para manejar la selección de curso
+function handleCourseSelection() {
+    const courseSelect = document.getElementById('studentCourse');
+    const selectedCourse = courseSelect ? courseSelect.value : '';
+    
+    if (!selectedCourse) {
+        return;
+    }
+    
+    // Obtener el ID del docente actual
+    const userIdString = localStorage.getItem('userId');
+    const teacherId = userIdString ? parseInt(userIdString, 10) : null;
+    
+    if (!teacherId) {
+        alert('Error: No se encontró el ID de usuario');
+        return;
+    }
+    
+    // Limpiar materias seleccionadas previamente
+    selectedSubjectsList = [];
+    
+    // Obtener todas las materias del curso seleccionado para este docente
+    const courseSubjects = (appData.materia || []).filter(m => 
+        m.Usuarios_docente_ID_docente === teacherId &&
+        m.Curso_division === selectedCourse &&
+        (!m.Estado || m.Estado === 'ACTIVA')
+    );
+    
+    if (courseSubjects.length === 0) {
+        alert('No hay materias disponibles para este curso');
+        return;
+    }
+    
+    // Agregar todas las materias del curso a la lista de seleccionadas
+    courseSubjects.forEach(subject => {
+        if (!selectedSubjectsList.some(s => parseInt(s.id) === parseInt(subject.ID_materia))) {
+            selectedSubjectsList.push({
+                id: parseInt(subject.ID_materia),
+                name: subject.Nombre,
+                curso: subject.Curso_division
+            });
+        }
+    });
+    
+    // Renderizar las materias seleccionadas
+    renderSelectedSubjects();
+    
+    // Repoblar el dropdown de materias
+    populateStudentSubjectsSelect();
+    
+    // Recargar el selector de temas
+    populateStudentTopicsSelect();
+    
+    // Si está activo el selector de temas de intensificación, recargar temas
+    const studentStatus = document.getElementById('studentStatus');
+    const themesContainer = document.getElementById('intensificacionThemesContainer');
+    if (studentStatus && themesContainer && studentStatus.value === 'INTENSIFICA' && themesContainer.style.display !== 'none') {
+        loadIntensificacionThemes();
+    }
+}
+
 // Función para poblar el select de materias con las del docente actual
 function populateStudentSubjectsSelect() {
     const subjectsSelect = document.getElementById('studentSubjects');
@@ -573,9 +673,9 @@ window.assignThemesToIntensificador = function(studentId) {
         return;
     }
     
-    // Verificar que es intensificador (INACTIVO en la BD)
-    const estado = (student.Estado || '').toUpperCase();
-    if (estado !== 'INACTIVO') {
+    // Verificar que es intensificador usando la columna INTENSIFICA
+    const esIntensificador = student.INTENSIFICA === true || student.INTENSIFICA === 1 || student.INTENSIFICA === '1';
+    if (!esIntensificador) {
         alert('Esta función solo está disponible para estudiantes intensificadores');
         return;
     }
@@ -1255,7 +1355,19 @@ window.editStudent = function(id) {
         renderSelectedSubjects();
     }
     
+    // Si todas las materias pertenecen al mismo curso, establecer el curso en el select
+    if (studentSubjects.length > 0) {
+        const uniqueCourses = [...new Set(studentSubjects.map(s => s.curso).filter(Boolean))];
+        if (uniqueCourses.length === 1) {
+            const courseSelect = document.getElementById('studentCourse');
+            if (courseSelect) {
+                courseSelect.value = uniqueCourses[0];
+            }
+        }
+    }
+    
     // Poblar el dropdown con las materias disponibles
+    populateStudentCourseSelect();
     populateStudentSubjectsSelect();
     
     // Cargar temas ya asignados al estudiante
@@ -1390,6 +1502,7 @@ function clearStudentForm() {
         topicsSelect._hasTopicListener = false;
     }
     
+    populateStudentCourseSelect(); // Repoblar los cursos
     populateStudentSubjectsSelect(); // Repoblar las materias
     populateStudentTopicsSelect(); // Repoblar los temas
     
@@ -1502,6 +1615,8 @@ window.showModal = function(modalId) {
     }
     
     if (modalId === 'studentModal') {
+        // Poblar cursos cuando se abre el modal
+        populateStudentCourseSelect();
         // Poblar materias cuando se abre el modal
         populateStudentSubjectsSelect();
         // Poblar temas cuando se abre el modal

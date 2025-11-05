@@ -500,6 +500,18 @@
     color: var(--text-primary) !important;
 }
 
+[data-theme="dark"] .section-actions {
+    background-color: transparent;
+}
+
+[data-theme="dark"] .reports-dashboard .section-header {
+    background-color: transparent;
+}
+
+[data-theme="dark"] .reports-dashboard .section-header h2 {
+    color: var(--text-primary);
+}
+
 [data-theme="dark"] .section-title-with-filter {
     color: var(--text-primary);
 }
@@ -1640,6 +1652,91 @@
     box-shadow: 0 2px 8px var(--shadow);
 }
 
+/* Report actions rows */
+[data-theme="dark"] .report-actions-row {
+    background-color: transparent;
+}
+
+[data-theme="dark"] .report-actions-row .filter-select {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .report-actions-row .filter-select:hover {
+    border-color: #667eea;
+}
+
+[data-theme="dark"] .report-actions-row .filter-select:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+[data-theme="dark"] .report-actions-row .filter-select option {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* Create new course section in subject modal */
+[data-theme="dark"] #createNewCourseSection {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] #createNewCourseSection .form-group label {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #createNewCourseSection select,
+[data-theme="dark"] #createNewCourseSection input[type="text"] {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] #createNewCourseSection select:focus,
+[data-theme="dark"] #createNewCourseSection input[type="text"]:focus {
+    border-color: var(--accent-color) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+}
+
+[data-theme="dark"] #createNewCourseSection select option {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] #createNewCourseSection input[type="text"]::placeholder {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] #createNewCourseSection small {
+    color: var(--text-secondary) !important;
+}
+
+/* Subject course division select */
+[data-theme="dark"] #subjectCourseDivision {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] #subjectCourseDivision:hover {
+    border-color: #667eea;
+}
+
+[data-theme="dark"] #subjectCourseDivision:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+[data-theme="dark"] #subjectCourseDivision option {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
 /* Summary card */
 [data-theme="dark"] .summary-card {
     background-color: var(--card-bg);
@@ -1928,4 +2025,622 @@
     color: #667eea;
     box-shadow: 0 2px 8px var(--shadow);
 }
+
+/* ==========================================================================
+   DARK MODE STYLES - INTENSIFICACIÓN Y CARGA DE ESTUDIANTES
+   ========================================================================== */
+
+/* Contenedor de temas de intensificación */
+[data-theme="dark"] #intensificacionThemesContainer {
+    background: transparent;
+}
+
+[data-theme="dark"] #intensificacionThemesContainer label {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #intensificacionThemesContainer small {
+    color: var(--text-secondary) !important;
+}
+
+/* Contenedor interno de temas de intensificación */
+[data-theme="dark"] #intensificacionThemesContainer > div[style*="max-height"] {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Tarjetas de materias dentro de intensificación */
+[data-theme="dark"] #intensificacionThemesList > div[style*="background: #fff"] {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] #intensificacionThemesList > div[style*="background: #fff"] > div[style*="font-weight: 600"] {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] #intensificacionThemesList > div[style*="background: #fff"] > div[style*="font-weight: 600"] i {
+    color: #667eea !important;
+}
+
+/* Labels de checkboxes en temas de intensificación */
+[data-theme="dark"] #intensificacionThemesList label[style*="display: flex"] {
+    background: var(--bg-primary) !important;
+    border-radius: 4px;
+}
+
+[data-theme="dark"] #intensificacionThemesList label[style*="background: #e8f5e9"] {
+    background: rgba(102, 126, 234, 0.2) !important;
+}
+
+[data-theme="dark"] #intensificacionThemesList label[style*="background: #f9f9f9"] {
+    background: var(--bg-primary) !important;
+}
+
+[data-theme="dark"] #intensificacionThemesList label[style*="display: flex"] > div[style*="flex: 1"] > div[style*="font-weight: 500"] {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] #intensificacionThemesList label[style*="display: flex"] > div[style*="flex: 1"] > div[style*="font-size: 0.85em"] {
+    color: var(--text-secondary) !important;
+}
+
+/* Contenedor de creación de nuevo tema */
+[data-theme="dark"] #intensificacionThemesList > div[style*="background: #fff9e6"] {
+    background: rgba(255, 193, 7, 0.15) !important;
+    border-color: rgba(255, 193, 7, 0.4) !important;
+}
+
+[data-theme="dark"] #intensificacionThemesList > div[style*="background: #fff9e6"] small {
+    color: #ffb74d !important;
+}
+
+[data-theme="dark"] #intensificacionThemesList > div[style*="background: #fff9e6"] input[type="text"] {
+    background: var(--bg-primary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] #intensificacionThemesList > div[style*="background: #fff9e6"] input[type="text"]::placeholder {
+    color: var(--text-secondary) !important;
+}
+
+/* Mensaje cuando no hay materias seleccionadas */
+[data-theme="dark"] #intensificacionThemesList > p[style*="color: #999"] {
+    color: var(--text-secondary) !important;
+}
+
+/* Tarjetas de estudiantes intensificadores */
+[data-theme="dark"] .unified-student-card.intensificador-card {
+    background-color: rgba(255, 152, 0, 0.1) !important;
+    border-left-color: #ff9800 !important;
+}
+
+[data-theme="dark"] .unified-student-card.intensificador-card .student-name {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .unified-student-card.intensificador-card .student-name span {
+    color: #ffb74d !important;
+}
+
+/* Panel de detalles del estudiante - elementos dinámicos */
+[data-theme="dark"] .student-detail-panel .panel-content > div[style*="padding: 15px"] {
+    border-bottom-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .student-detail-panel .panel-content > div[style*="padding: 15px"] > div[style*="font-size: 0.9em"] {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .student-detail-panel .panel-content > div[style*="padding: 15px"] > div[style*="font-size: 1.8em"] {
+    color: #667eea !important;
+}
+
+[data-theme="dark"] .student-detail-panel .panel-content > div[style*="padding: 15px"] > div[style*="font-size: 0.9em"][style*="font-weight: 600"] {
+    color: var(--text-primary) !important;
+}
+
+/* Elementos de calificaciones en el panel de detalles */
+[data-theme="dark"] #studentRecentGrades > div {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] #studentRecentGrades > div > div[style*="font-weight: 600"] {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] #studentRecentGrades > div > div[style*="font-size: 0.85em"] {
+    color: var(--text-secondary) !important;
+}
+
+/* Tema estudiante list items */
+[data-theme="dark"] #studentTemaEstudianteList > div[style*="padding: 12px"] {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] #studentTemaEstudianteList > div[style*="padding: 12px"] > div[style*="font-weight: 600"] {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] #studentTemaEstudianteList > div[style*="padding: 12px"] > div[style*="font-size: 0.85em"] {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] #studentTemaEstudianteList > div[style*="padding: 12px"] > div[style*="color: #4caf50"],
+[data-theme="dark"] #studentTemaEstudianteList > div[style*="padding: 12px"] > div[style*="color: #ff9800"],
+[data-theme="dark"] #studentTemaEstudianteList > div[style*="padding: 12px"] > div[style*="color: #f44336"] {
+    color: var(--text-primary) !important;
+}
+
+/* Badges de estado en tema estudiante */
+[data-theme="dark"] #studentTemaEstudianteList span[style*="background: #4caf50"],
+[data-theme="dark"] #studentTemaEstudianteList span[style*="background: #ff9800"],
+[data-theme="dark"] #studentTemaEstudianteList span[style*="background: #f44336"] {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* Checkboxes en modo oscuro */
+[data-theme="dark"] input[type="checkbox"] {
+    accent-color: #667eea;
+}
+
+/* Inputs dentro de modales en modo oscuro */
+[data-theme="dark"] #intensificacionThemesList input[type="text"] {
+    background: var(--bg-primary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] #intensificacionThemesList input[type="text"]::placeholder {
+    color: var(--text-secondary) !important;
+}
+
+/* Clases CSS para tema estudiante cards */
+[data-theme="dark"] .tema-estudiante-card {
+    background: var(--bg-secondary) !important;
+    border-left-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .tema-estudiante-header {
+    background: transparent;
+}
+
+[data-theme="dark"] .tema-estudiante-title {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .tema-estudiante-materia {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .tema-estudiante-materia i {
+    color: #667eea !important;
+}
+
+[data-theme="dark"] .tema-estudiante-observaciones {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .tema-estudiante-observaciones i {
+    color: #667eea !important;
+}
+
+[data-theme="dark"] .tema-estudiante-fecha {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .tema-estudiante-fecha i {
+    color: var(--text-secondary) !important;
+}
+
+/* Mensaje cuando no hay temas asignados */
+[data-theme="dark"] #studentTemaEstudianteList > div[style*="text-align: center"] {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] #studentTemaEstudianteList > div[style*="text-align: center"] > p {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] #studentTemaEstudianteList > div[style*="text-align: center"] > p[style*="color: #bbb"] {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] #studentTemaEstudianteList > div[style*="text-align: center"] > i {
+    color: var(--text-secondary) !important;
+    opacity: 0.5 !important;
+}
+
+/* Badges de estado con clases */
+[data-theme="dark"] .tema-estudiante-status {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] .tema-estado-completado {
+    border-left-color: #4caf50 !important;
+}
+
+[data-theme="dark"] .tema-estado-en-progreso {
+    border-left-color: #ffc107 !important;
+}
+
+[data-theme="dark"] .tema-estado-pendiente {
+    border-left-color: #ff9800 !important;
+}
+
+[data-theme="dark"] .tema-estado-cancelado {
+    border-left-color: #f44336 !important;
+}
+
+/* Badges de estado dentro de tema estudiante */
+[data-theme="dark"] .tema-estudiante-status .status-badge {
+    background: var(--bg-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] .tema-estudiante-status .status-badge.status-completado {
+    color: #4caf50 !important;
+}
+
+[data-theme="dark"] .tema-estudiante-status .status-badge.status-en-progreso {
+    color: #ffc107 !important;
+}
+
+[data-theme="dark"] .tema-estudiante-status .status-badge.status-pendiente {
+    color: #ff9800 !important;
+}
+
+[data-theme="dark"] .tema-estudiante-status .status-badge.status-cancelado {
+    color: #f44336 !important;
+}
+
+[data-theme="dark"] .tema-estudiante-status .status-badge i {
+    color: inherit !important;
+}
+
+/* ==========================================================================
+   DARK MODE STYLES - TABLA DE ESTUDIANTES (LISTA)
+   ========================================================================== */
+
+/* Tabla de estudiantes en vista de lista */
+[data-theme="dark"] .unified-table {
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] .unified-table thead {
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .unified-table thead th {
+    color: var(--text-primary) !important;
+    border-bottom: 2px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] .unified-table tbody tr {
+    background: var(--bg-secondary) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] .unified-table tbody tr:hover {
+    background: var(--bg-primary) !important;
+}
+
+[data-theme="dark"] .unified-table tbody tr.clickable-row {
+    background: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] .unified-table tbody tr.clickable-row:hover {
+    background: rgba(102, 126, 234, 0.1) !important;
+}
+
+/* Filas de estudiantes intensificadores en modo oscuro */
+[data-theme="dark"] .unified-table tbody tr[style*="background-color: #fff3e0"] {
+    background: rgba(255, 152, 0, 0.15) !important;
+    border-left: 3px solid #ff9800 !important;
+}
+
+[data-theme="dark"] .unified-table tbody tr[style*="background-color: #fff3e0"]:hover {
+    background: rgba(255, 152, 0, 0.25) !important;
+}
+
+/* Celdas de la tabla */
+[data-theme="dark"] .unified-table tbody td {
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .unified-table tbody td strong {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .unified-table tbody td small {
+    color: var(--text-secondary) !important;
+}
+
+/* Información del estudiante en la celda */
+[data-theme="dark"] .student-cell {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .student-info strong {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .student-info strong span[style*="color: #ff9800"] {
+    color: #ffb74d !important;
+}
+
+[data-theme="dark"] .student-avatar-small {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Última actividad */
+[data-theme="dark"] .last-activity .activity-type {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .last-activity small {
+    color: var(--text-secondary) !important;
+}
+
+/* Badges de estado en la tabla */
+[data-theme="dark"] .table-status {
+    background: var(--bg-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] .table-status.grade-excellent {
+    color: #4caf50 !important;
+}
+
+[data-theme="dark"] .table-status.grade-good {
+    color: #ffc107 !important;
+}
+
+[data-theme="dark"] .table-status.grade-poor {
+    color: #f44336 !important;
+}
+
+[data-theme="dark"] .table-status.attendance-good {
+    color: #4caf50 !important;
+}
+
+[data-theme="dark"] .table-status.attendance-warning {
+    color: #ff9800 !important;
+}
+
+[data-theme="dark"] .table-status.attendance-poor {
+    color: #f44336 !important;
+}
+
+/* Acciones de la tabla */
+[data-theme="dark"] .table-actions .btn-icon {
+    background: var(--bg-primary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .table-actions .btn-icon:hover {
+    background: rgba(102, 126, 234, 0.2) !important;
+    color: #667eea !important;
+}
+
+/* Tabla responsive */
+[data-theme="dark"] .table-responsive {
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] .table-responsive .data-table {
+    background: var(--bg-primary);
+}
+
+/* ==========================================================================
+   DARK MODE STYLES - MODAL DE CARGA MASIVA DE ALUMNOS
+   ========================================================================== */
+
+/* Modal de carga masiva */
+[data-theme="dark"] #loadCourseDivisionModal .modal-content {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #loadCourseDivisionModal .modal-header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] #loadCourseDivisionModal .modal-header h3 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #loadCourseDivisionModal .close-modal {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #loadCourseDivisionModal .form-group label {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #loadCourseDivisionModal .form-group small {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] #loadCourseDivisionModal select {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #loadCourseDivisionModal textarea {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #loadCourseDivisionModal textarea::placeholder {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] #loadCourseDivisionModal .form-actions {
+    border-top: 1px solid var(--border-color);
+}
+
+/* Sección de crear nuevo curso en modo oscuro */
+[data-theme="dark"] #bulkCreateNewCourseSection {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] #bulkCreateNewCourseSection label {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] #bulkCreateNewCourseSection select {
+    background: var(--bg-primary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] #bulkCreateNewCourseSection small {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] #bulkCreateNewCourseSection strong {
+    color: var(--text-primary) !important;
+}
+
+/* Tabla manual de alumnos en modo oscuro */
+[data-theme="dark"] #bulkTableMode > div {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] #bulkTableMode .data-table {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #bulkTableMode .data-table th {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] #bulkTableMode .data-table td {
+    border-color: var(--border-color);
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] #bulkTableMode .manual-student-input {
+    background: var(--bg-primary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] #bulkTableMode .manual-student-input::placeholder {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] #bulkTableMode small {
+    color: var(--text-secondary) !important;
+}
+
+/* Estilos para gestión de cursos en modo oscuro */
+[data-theme="dark"] .course-card {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .course-card-header {
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .course-card-header h3 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .course-card-body p {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .course-card-body strong {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .course-card-actions {
+    border-top-color: var(--border-color);
+}
+
+[data-theme="dark"] .course-status.activo {
+    background: rgba(40, 167, 69, 0.2);
+    color: #6cff8a;
+}
+
+[data-theme="dark"] .course-status.inactivo {
+    background: rgba(220, 53, 69, 0.2);
+    color: #ff6b7a;
+}
+
+/* Estilos para campo institución en modo oscuro */
+[data-theme="dark"] #courseInstitucion,
+[data-theme="dark"] #subjectInstitucion {
+    background: var(--bg-primary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] #courseInstitucion::placeholder,
+[data-theme="dark"] #subjectInstitucion::placeholder {
+    color: var(--text-secondary) !important;
+}
+
+/* Modo oscuro para modales de materias y cursos - elementos adicionales */
+[data-theme="dark"] #subjectModal .form-group small,
+[data-theme="dark"] #courseModal .form-group small,
+[data-theme="dark"] #loadCourseDivisionModal .form-group small {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] #subjectModal input[type="text"],
+[data-theme="dark"] #subjectModal textarea,
+[data-theme="dark"] #subjectModal select,
+[data-theme="dark"] #courseModal input[type="text"],
+[data-theme="dark"] #courseModal textarea,
+[data-theme="dark"] #courseModal select {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] #subjectModal input[type="text"]::placeholder,
+[data-theme="dark"] #subjectModal textarea::placeholder,
+[data-theme="dark"] #courseModal input[type="text"]::placeholder {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] #subjectModal select option,
+[data-theme="dark"] #courseModal select option {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] #subjectModal .form-row,
+[data-theme="dark"] #courseModal .form-row {
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] #subjectModal label,
+[data-theme="dark"] #courseModal label {
+    color: var(--text-primary) !important;
+}
+
 

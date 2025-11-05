@@ -418,6 +418,10 @@
                                 <i class="fas fa-user-plus"></i>
                                 <span data-translate="add_student">Agregar Estudiante</span>
                             </button>
+                            <button id="loadCourseDivisionBtn" class="btn-secondary students-only">
+                                <i class="fas fa-users-cog"></i>
+                                <span>Cargar Curso/División</span>
+                            </button>
                             <button id="markAttendanceBtn" class="btn-secondary students-only">
                                 <i class="fas fa-calendar-check"></i>
                                 <span data-translate="mark_attendance">Marcar Asistencia</span>
@@ -1115,6 +1119,14 @@
                     <input type="email" id="studentEmail" required>
                 </div>
                 <div class="form-group">
+                    <label for="studentCourse" data-translate="course">Curso</label>
+                    <select id="studentCourse">
+                        <option value="" data-translate="select_course">- Seleccionar Curso (Opcional) -</option>
+                        <!-- Se poblará dinámicamente con los cursos disponibles -->
+                    </select>
+                    <small style="display: block; margin-top: 5px; color: #666;">Si seleccionas un curso, se asignarán automáticamente todas las materias de ese curso.</small>
+                </div>
+                <div class="form-group">
                     <label for="studentSubjects" data-translate="subjects">Materias</label>
                     <select id="studentSubjects" required>
                         <option value="" data-translate="select_subject">- Seleccionar Materia -</option>
@@ -1123,7 +1135,7 @@
                     <div id="selectedSubjectsContainer" class="selected-subjects-container" style="display: none; margin-top: 10px;">
                         <!-- Selected subjects will be displayed here as chips -->
                     </div>
-                    <small style="display: block; margin-top: 5px; color: #666;">Puedes seleccionar múltiples materias. El curso se determina automáticamente según la materia seleccionada.</small>
+                    <small style="display: block; margin-top: 5px; color: #666;">Puedes seleccionar múltiples materias individualmente o seleccionar un curso arriba para asignar todas las materias del curso.</small>
                 </div>
                 <div class="form-group">
                     <label for="studentStatus" data-translate="status">Estado</label>
@@ -1164,7 +1176,173 @@
         </div>
     </div>
 
+    <!-- Load Course Division Modal - Bulk Student Import -->
+    <div id="loadCourseDivisionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cargar Curso/División</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="loadCourseDivisionForm" class="modal-form">
+                <div class="form-group">
+                    <label for="bulkCourseDivision">Curso y División</label>
+                    <select id="bulkCourseDivision" required>
+                        <option value="">- Seleccionar Curso -</option>
+                        <!-- Se poblará dinámicamente con los cursos disponibles -->
+                    </select>
+                    <small style="display: block; margin-top: 5px; color: #666;">Selecciona un curso existente o elige "+ Crear Nuevo Curso".</small>
+                </div>
+                <div id="bulkCreateNewCourseSection" class="form-group" style="display:none; background: #f5f5f5; padding: 12px; border-radius: 8px;">
+                    <label>Crear nuevo Curso/División</label>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <select id="bulkCourseNumber" style="flex:1; min-width:140px;">
+                            <option value="">- Curso -</option>
+                            <option value="1">1º</option>
+                            <option value="2">2º</option>
+                            <option value="3">3º</option>
+                            <option value="4">4º</option>
+                            <option value="5">5º</option>
+                            <option value="6">6º</option>
+                            <option value="7">7º</option>
+                        </select>
+                        <select id="bulkDivisionLetter" style="flex:1; min-width:140px;">
+                            <option value="">- División -</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
+                        </select>
+                    </div>
+                    <small style="display:block; margin-top:6px; color:#666;">Se creará como: <strong>CURSOº Curso - División X</strong>.</small>
+                </div>
+                <div class="form-group">
+                    <label for="bulkStudentsList">Lista de Alumnos</label>
+                    <div style="display:flex; gap:8px; margin-bottom:8px;">
+                        <button type="button" class="btn-secondary" id="toggleInputModeBtn" onclick="toggleBulkInputMode(); return false;">
+                            <i class="fas fa-table"></i> Modo Tabla Manual
+                        </button>
+                    </div>
+                    <div id="bulkTextareaMode">
+                        <textarea id="bulkStudentsList" rows="15" placeholder="Ingresa los alumnos, uno por línea. Acepta múltiples formatos:&#10;&#10;Con coma: García, Juan&#10;Con tabulación: Pérez	María&#10;Sin coma: López Juan (primer palabra = apellido, resto = nombre)&#10;&#10;Ejemplos:&#10;García, Juan&#10;Pérez, María&#10;López Juan&#10;Martínez Carlos Alberto"></textarea>
+                        <small style="display: block; margin-top: 5px; color: #666;">
+                            Puedes pegar listas completas. El sistema detectará automáticamente el formato.
+                        </small>
+                    </div>
+                    <div id="bulkTableMode" style="display:none;">
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
+                            <table class="data-table" style="width: 100%; margin-bottom: 10px;">
+                                <thead>
+                                    <tr>
+                                        <th>Apellido</th>
+                                        <th>Nombre</th>
+                                        <th style="width: 80px;">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bulkManualStudentsTableBody">
+                                    <tr>
+                                        <td><input type="text" id="manualApellido_0" class="manual-student-input" placeholder="Apellido" style="width: 100%; padding: 6px;"></td>
+                                        <td><input type="text" id="manualNombre_0" class="manual-student-input" placeholder="Nombre" style="width: 100%; padding: 6px;"></td>
+                                        <td>
+                                            <button type="button" class="btn-icon btn-primary" onclick="addManualStudentRow(); return false;" title="Agregar siguiente alumno">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <small style="color: #666;">Presiona Enter en el campo Nombre para agregar el siguiente alumno.</small>
+                                <button type="button" class="btn-secondary" onclick="removeLastManualStudentRow(); return false;">
+                                    <i class="fas fa-trash"></i> Eliminar Último
+                                </button>
+                            </div>
+                        </div>
+                        <small style="display: block; margin-top: 5px; color: #666;">
+                            Ingresa los alumnos uno por uno. Usa el botón + o Enter para agregar el siguiente.
+                        </small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="bulkStudentStatus">Estado por Defecto</label>
+                    <select id="bulkStudentStatus">
+                        <option value="ACTIVO">Activo</option>
+                        <option value="INACTIVO">Inactivo</option>
+                        <option value="INTENSIFICA">Intensifica</option>
+                    </select>
+                    <small style="display: block; margin-top: 5px; color: #666;">Estado que se asignará a todos los alumnos cargados.</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-modal">Cancelar</button>
+                    <button type="button" class="btn-primary" onclick="processBulkStudents(); return false;">Cargar Alumnos</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Subject Modal - Add/Edit Subject -->
+    <!-- Course Management Modal -->
+    <div id="courseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="courseModalTitle">Agregar Curso</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="courseForm" class="modal-form">
+                <input type="hidden" id="courseId" value="">
+                <div class="form-group">
+                    <label for="courseNumber">Curso</label>
+                    <select id="courseNumber" required>
+                        <option value="">- Seleccionar Curso -</option>
+                        <option value="1">1º</option>
+                        <option value="2">2º</option>
+                        <option value="3">3º</option>
+                        <option value="4">4º</option>
+                        <option value="5">5º</option>
+                        <option value="6">6º</option>
+                        <option value="7">7º</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="courseDivision">División</label>
+                    <select id="courseDivision" required>
+                        <option value="">- Seleccionar División -</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                        <option value="F">F</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="courseInstitucion">Institución</label>
+                    <input type="text" id="courseInstitucion" placeholder="Ej: Escuela Secundaria N°1" required>
+                    <small style="display: block; margin-top: 5px; color: #666;">
+                        El mismo curso puede repetirse en distintas instituciones.
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label for="courseStatus">Estado</label>
+                    <select id="courseStatus">
+                        <option value="ACTIVO">Activo</option>
+                        <option value="INACTIVO">Inactivo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <small style="display: block; margin-top: 5px; color: #666;">
+                        Se creará como: <strong id="coursePreview">-</strong>
+                    </small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-modal">Cancelar</button>
+                    <button type="button" class="btn-primary" onclick="saveCourse(); event.preventDefault(); return false;">Guardar Curso</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="subjectModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1176,31 +1354,51 @@
                     <label for="subjectName" data-translate="subject_name">Nombre de la Materia</label>
                     <input type="text" id="subjectName" required>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="subjectCourse" data-translate="course">Curso</label>
-                        <select id="subjectCourse" required>
-                            <option value="" data-translate="select_course">- Seleccionar Curso -</option>
-                            <option value="1">1º Curso</option>
-                            <option value="2">2º Curso</option>
-                            <option value="3">3º Curso</option>
-                            <option value="4">4º Curso</option>
-                            <option value="5">5º Curso</option>
-                            <option value="6">6º Curso</option>
-                            <option value="7">7º Curso</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="subjectDivision" data-translate="division">División</label>
-                        <select id="subjectDivision" required>
-                            <option value="" data-translate="select_division">- Seleccionar División -</option>
-                            <option value="A">División A</option>
-                            <option value="B">División B</option>
-                            <option value="C">División C</option>
-                            <option value="D">División D</option>
-                            <option value="E">División E</option>
-                            <option value="F">División F</option>
-                        </select>
+                <div class="form-group">
+                    <label for="subjectCourseDivision" data-translate="course_division">Curso</label>
+                    <select id="subjectCourseDivision" required>
+                        <option value="" data-translate="select_course">- Seleccionar Curso -</option>
+                        <!-- Se poblará dinámicamente con cursos existentes -->
+                    </select>
+                    <small style="display: block; margin-top: 5px; color: #666;">
+                        Selecciona un curso existente o crea uno nuevo. Los cursos se cargan desde las materias creadas.
+                    </small>
+                </div>
+                <!-- Sección para crear nuevo curso (oculta por defecto) -->
+                <div id="createNewCourseSection" style="display: none; background: #f5f5f5; padding: 15px; border-radius: 6px; margin-top: 10px;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="subjectCourse" data-translate="course">Curso</label>
+                            <select id="subjectCourse">
+                                <option value="" data-translate="select_course">- Seleccionar Curso -</option>
+                                <option value="1">1º Curso</option>
+                                <option value="2">2º Curso</option>
+                                <option value="3">3º Curso</option>
+                                <option value="4">4º Curso</option>
+                                <option value="5">5º Curso</option>
+                                <option value="6">6º Curso</option>
+                                <option value="7">7º Curso</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="subjectDivision" data-translate="division">División</label>
+                            <select id="subjectDivision">
+                                <option value="" data-translate="select_division">- Seleccionar División -</option>
+                                <option value="A">División A</option>
+                                <option value="B">División B</option>
+                                <option value="C">División C</option>
+                                <option value="D">División D</option>
+                                <option value="E">División E</option>
+                                <option value="F">División F</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="subjectInstitucion">Institución</label>
+                            <input type="text" id="subjectInstitucion" placeholder="Ej: Escuela Secundaria N°1">
+                            <small style="display: block; margin-top: 5px; color: #666;">
+                                El mismo curso puede repetirse en distintas instituciones.
+                            </small>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1571,9 +1769,9 @@
                     <span data-translate="select_export_format">Seleccione el formato de exportación:</span>
                 </p>
                 <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    <button id="exportCSVBtn" class="btn-primary" style="width: 100%; justify-content: center;">
-                        <i class="fas fa-file-csv"></i>
-                        <span data-translate="export_csv">Exportar como CSV</span>
+                    <button id="exportExcelBtn" class="btn-primary" style="width: 100%; justify-content: center;">
+                        <i class="fas fa-file-excel"></i>
+                        <span>Exportar como Excel</span>
                     </button>
                     <button id="exportDOCBtn" class="btn-primary" style="width: 100%; justify-content: center;">
                         <i class="fas fa-file-word"></i>
@@ -1640,6 +1838,7 @@
     <script src="../scripts/auth.js"></script>
     <script src="../scripts/dashboard.js"></script>
     <script src="../scripts/students.js"></script>
+    <script src="../scripts/courses.js"></script>
     <script src="../scripts/subjects.js"></script>
     <script src="../scripts/grades.js"></script>
     <script src="../scripts/attendance.js"></script>

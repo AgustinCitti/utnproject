@@ -161,14 +161,40 @@ try {
 			$Horario = isset($body['Horario']) && $body['Horario'] !== '' ? $body['Horario'] : null;
 			$Aula = isset($body['Aula']) && $body['Aula'] !== '' ? $body['Aula'] : null;
 			$Descripcion = isset($body['Descripcion']) && $body['Descripcion'] !== '' ? $body['Descripcion'] : null;
+			$Escuela_ID = isset($body['Escuela_ID']) && $body['Escuela_ID'] !== '' ? (int)$body['Escuela_ID'] : null;
 
 			// Validar que el docente ID sea válido
 			if ($DocenteId <= 0) {
 				respond(400, ['success'=>false,'message'=>'ID de docente inválido']);
 			}
+			
+			// Verificar que el docente existe en la base de datos
+			$checkDocente = $db->prepare("SELECT ID_docente FROM Usuarios_docente WHERE ID_docente = ? AND Estado = 'ACTIVO'");
+			$checkDocente->execute([$DocenteId]);
+			if (!$checkDocente->fetch()) {
+				respond(404, ['success'=>false,'message'=>'El docente especificado no existe o no está activo. Por favor, inicia sesión nuevamente.']);
+			}
 
-			$stmt = $db->prepare("INSERT INTO Materia (Nombre, Curso_division, Usuarios_docente_ID_docente, Estado, Horario, Aula, Descripcion) VALUES (?, ?, ?, ?, ?, ?, ?)");
-			$stmt->execute([$Nombre, $Curso_division, $DocenteId, $Estado, $Horario, $Aula, $Descripcion]);
+			// Verificar si ya existe una materia con el mismo nombre, curso y docente (previene duplicados)
+			$checkStmt = $db->prepare("
+				SELECT ID_materia, Nombre, Curso_division 
+				FROM Materia 
+				WHERE Nombre = ? AND Curso_division = ? AND Usuarios_docente_ID_docente = ?
+				AND (Escuela_ID = ? OR (Escuela_ID IS NULL AND ? IS NULL))
+			");
+			$checkStmt->execute([$Nombre, $Curso_division, $DocenteId, $Escuela_ID, $Escuela_ID]);
+			$existing = $checkStmt->fetch();
+			
+			if ($existing) {
+				respond(409, [
+					'success'=>false,
+					'message'=>"Ya existe una materia '{$Nombre}' con el curso '{$Curso_division}'. No se puede duplicar la misma materia y curso. Puedes crear la misma materia en un curso diferente.",
+					'error'=>'DUPLICATE_SUBJECT_COURSE'
+				]);
+			}
+
+			$stmt = $db->prepare("INSERT INTO Materia (Nombre, Curso_division, Usuarios_docente_ID_docente, Estado, Horario, Aula, Descripcion, Escuela_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+			$stmt->execute([$Nombre, $Curso_division, $DocenteId, $Estado, $Horario, $Aula, $Descripcion, $Escuela_ID]);
 			$newId = (int)$db->lastInsertId();
 			
 			// Create automatic recordatorios for classes if horario is provided

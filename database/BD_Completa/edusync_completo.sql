@@ -2,6 +2,20 @@
 -- EduSync - Instalación Completa Consolidada
 -- Este archivo incluye TODO el esquema de la base de datos
 -- en un solo archivo SQL para facilitar la instalación
+-- 
+-- INCLUYE TODOS LOS ARREGLOS Y ACTUALIZACIONES:
+-- - Actualización de Estado en Notas (APROBADO, DEBE)
+-- - Actualización de valores de Asistencia (P, A, J)
+-- - Triggers de validación (email, DNI, calificaciones)
+-- - Vistas de asistencia actualizadas
+-- - Procedimientos de asistencia y validación
+-- - Sistema de suscripciones completo
+-- - Sistema de intensificación
+-- - Sistema de calificaciones por cuatrimestre
+-- - Google OAuth integrado
+-- - Sistema de escuelas
+-- - Contact messages completo
+-- - Sistema de gestión de cursos/divisiones
 -- =============================================================
 
 -- Crear la base de datos
@@ -34,6 +48,7 @@ DROP TABLE IF EXISTS Tema_estudiante;
 DROP TABLE IF EXISTS Contenido;
 DROP TABLE IF EXISTS Alumnos_X_Materia;
 DROP TABLE IF EXISTS Materia;
+DROP TABLE IF EXISTS Curso;
 DROP TABLE IF EXISTS Estudiante;
 DROP TABLE IF EXISTS Usuarios_docente;
 DROP TABLE IF EXISTS Configuracion;
@@ -139,7 +154,25 @@ CREATE TABLE Escuela (
     INDEX idx_escuela_estado (Estado)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 4. TABLA: Materia (Materias/Asignaturas)
+-- 4. TABLA: Curso (Cursos/Divisiones)
+CREATE TABLE Curso (
+    ID_curso INT AUTO_INCREMENT PRIMARY KEY,
+    Curso_division VARCHAR(100) NOT NULL COMMENT 'Formato: "Nº Curso - División X"',
+    Numero_curso INT NOT NULL COMMENT 'Número del curso (1-7)',
+    Division VARCHAR(10) NOT NULL COMMENT 'Letra de la división (A-F)',
+    Institucion VARCHAR(150) NOT NULL COMMENT 'Institución educativa',
+    Usuarios_docente_ID_docente INT NOT NULL COMMENT 'Docente que creó/gestiona el curso',
+    Estado ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO',
+    Fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_curso_docente_institucion (Curso_division, Institucion, Usuarios_docente_ID_docente),
+    FOREIGN KEY (Usuarios_docente_ID_docente) REFERENCES Usuarios_docente(ID_docente) ON DELETE CASCADE,
+    INDEX idx_docente (Usuarios_docente_ID_docente),
+    INDEX idx_estado (Estado),
+    INDEX idx_institucion (Institucion)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de cursos/divisiones gestionados por docentes';
+
+-- 5. TABLA: Materia (Materias/Asignaturas)
 CREATE TABLE Materia (
     ID_materia INT AUTO_INCREMENT PRIMARY KEY,
     Nombre VARCHAR(100) NOT NULL,
@@ -162,7 +195,7 @@ CREATE TABLE Materia (
     UNIQUE KEY uq_materia_escuela (Escuela_ID, Nombre, Curso_division)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 5. TABLA: Alumnos_X_Materia (Relación Muchos a Muchos)
+-- 6. TABLA: Alumnos_X_Materia (Relación Muchos a Muchos)
 CREATE TABLE Alumnos_X_Materia (
     ID INT AUTO_INCREMENT,
     Materia_ID_materia INT NOT NULL,
@@ -181,7 +214,7 @@ CREATE TABLE Alumnos_X_Materia (
         REFERENCES Estudiante(ID_Estudiante) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 6. TABLA: Contenido (Contenido de Materias)
+-- 7. TABLA: Contenido (Contenido de Materias)
 CREATE TABLE Contenido (
     ID_contenido INT AUTO_INCREMENT PRIMARY KEY,
     Tema VARCHAR(150) NOT NULL,
@@ -197,7 +230,7 @@ CREATE TABLE Contenido (
         REFERENCES Materia(ID_materia) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 7. TABLA: Tema_estudiante (Temas por Estudiante)
+-- 8. TABLA: Tema_estudiante (Temas por Estudiante)
 CREATE TABLE Tema_estudiante (
     ID_Tema_estudiante INT AUTO_INCREMENT PRIMARY KEY,
     Estado ENUM('PENDIENTE', 'EN_PROGRESO', 'COMPLETADO', 'CANCELADO') DEFAULT 'PENDIENTE',
@@ -214,11 +247,11 @@ CREATE TABLE Tema_estudiante (
         REFERENCES Estudiante(ID_Estudiante) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 8. TABLA: Asistencia (Control de Asistencia)
+-- 9. TABLA: Asistencia (Control de Asistencia)
 CREATE TABLE Asistencia (
     ID_Asistencia INT AUTO_INCREMENT PRIMARY KEY,
     Fecha DATE NOT NULL,
-    Presente ENUM('Y', 'N', 'T') NOT NULL COMMENT 'Y=Presente, N=Ausente, T=Tarde',
+    Presente ENUM('Y', 'N', 'T', 'P', 'A', 'J') NOT NULL COMMENT 'Y/P=Presente, N/A=Ausente, T=Tarde, J=Justificado',
     Observaciones TEXT,
     Materia_ID_materia INT NOT NULL,
     Estudiante_ID_Estudiante INT NOT NULL,
@@ -233,7 +266,7 @@ CREATE TABLE Asistencia (
         REFERENCES Estudiante(ID_Estudiante) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 9. TABLA: Evaluacion (Evaluaciones/Exámenes)
+-- 10. TABLA: Evaluacion (Evaluaciones/Exámenes)
 CREATE TABLE Evaluacion (
     ID_evaluacion INT AUTO_INCREMENT PRIMARY KEY,
     Titulo VARCHAR(100) NOT NULL,
@@ -255,7 +288,7 @@ CREATE TABLE Evaluacion (
         REFERENCES Materia(ID_materia) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 10. TABLA: Notas (Calificaciones)
+-- 11. TABLA: Notas (Calificaciones)
 CREATE TABLE Notas (
     ID_Nota INT AUTO_INCREMENT PRIMARY KEY,
     Calificacion DECIMAL(4,2) NOT NULL,
@@ -264,7 +297,7 @@ CREATE TABLE Notas (
     Fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora de registro de la nota',
     Evaluacion_ID_evaluacion INT NOT NULL,
     Estudiante_ID_Estudiante INT NOT NULL,
-    Estado ENUM('TENTATIVA', 'DEFINITIVA', 'RECUPERATORIO') DEFAULT 'DEFINITIVA' COMMENT 'Estado de la calificación',
+    Estado ENUM('TENTATIVA', 'DEFINITIVA', 'RECUPERATORIO', 'APROBADO', 'DEBE') DEFAULT 'DEFINITIVA' COMMENT 'Estado de la calificación: APROBADO (nota >= 7), DEBE (nota < 7 o ausente)',
     Peso DECIMAL(3,2) DEFAULT 1.00 COMMENT 'Peso de esta nota en el promedio (0.00 a 9.99)',
     INDEX idx_estudiante_notas (Estudiante_ID_Estudiante),
     INDEX idx_evaluacion_notas (Evaluacion_ID_evaluacion),
@@ -279,7 +312,7 @@ CREATE TABLE Notas (
         REFERENCES Estudiante(ID_Estudiante) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 11. TABLA: Archivos (Archivos de Materias)
+-- 12. TABLA: Archivos (Archivos de Materias)
 CREATE TABLE Archivos (
     ID_archivos INT AUTO_INCREMENT PRIMARY KEY,
     Nombre VARCHAR(100) NOT NULL,
@@ -296,7 +329,7 @@ CREATE TABLE Archivos (
         REFERENCES Materia(ID_materia) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 12. TABLA: Recordatorio (Recordatorios)
+-- 13. TABLA: Recordatorio (Recordatorios)
 CREATE TABLE Recordatorio (
     ID_recordatorio INT AUTO_INCREMENT PRIMARY KEY,
     Descripcion TEXT NOT NULL,
@@ -314,7 +347,7 @@ CREATE TABLE Recordatorio (
         REFERENCES Materia(ID_materia) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 13. TABLA: Notificaciones (Sistema de Notificaciones)
+-- 14. TABLA: Notificaciones (Sistema de Notificaciones)
 CREATE TABLE Notificaciones (
     ID_notificacion INT AUTO_INCREMENT PRIMARY KEY,
     Titulo VARCHAR(200) NOT NULL,
@@ -331,7 +364,7 @@ CREATE TABLE Notificaciones (
     INDEX idx_tipo_notificacion (Tipo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 14. TABLA: Contacto_mensajes (Mensajes de contacto y comentarios)
+-- 15. TABLA: Contacto_mensajes (Mensajes de contacto y comentarios)
 CREATE TABLE Contacto_mensajes (
     ID_contacto INT AUTO_INCREMENT PRIMARY KEY,
     Nombre VARCHAR(50) NOT NULL,
@@ -355,7 +388,7 @@ CREATE TABLE Contacto_mensajes (
         REFERENCES Usuarios_docente(ID_docente) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 15. TABLA: contact_messages (Mensajes de contacto en inglés - alternativa)
+-- 16. TABLA: contact_messages (Mensajes de contacto en inglés - alternativa)
 CREATE TABLE contact_messages (
     ID_message INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
@@ -380,7 +413,7 @@ CREATE TABLE contact_messages (
         REFERENCES Usuarios_docente(ID_docente) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 16. TABLA: Configuracion (Configuración del Sistema)
+-- 17. TABLA: Configuracion (Configuración del Sistema)
 CREATE TABLE Configuracion (
     ID_configuracion INT AUTO_INCREMENT PRIMARY KEY,
     Clave VARCHAR(100) UNIQUE NOT NULL,
@@ -394,7 +427,7 @@ CREATE TABLE Configuracion (
 -- PARTE 2: SISTEMA DE SUSCRIPCIONES
 -- =============================================================
 
--- 17. TABLA: Plan (Planes de suscripción)
+-- 18. TABLA: Plan (Planes de suscripción)
 CREATE TABLE Plan (
     ID_plan INT AUTO_INCREMENT PRIMARY KEY,
     Nombre VARCHAR(40) NOT NULL UNIQUE,
@@ -406,7 +439,7 @@ CREATE TABLE Plan (
     Fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 18. TABLA: Suscripcion (Suscripciones por docente)
+-- 19. TABLA: Suscripcion (Suscripciones por docente)
 CREATE TABLE Suscripcion (
     ID_suscripcion BIGINT AUTO_INCREMENT PRIMARY KEY,
     Usuario_docente_ID INT NOT NULL,
@@ -427,7 +460,7 @@ CREATE TABLE Suscripcion (
         REFERENCES Plan(ID_plan) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 19. TABLA: Pago_suscripcion (Pagos asociados a suscripciones)
+-- 20. TABLA: Pago_suscripcion (Pagos asociados a suscripciones)
 CREATE TABLE Pago_suscripcion (
     ID_pago BIGINT AUTO_INCREMENT PRIMARY KEY,
     Suscripcion_ID BIGINT NOT NULL,
@@ -451,7 +484,7 @@ ALTER TABLE Usuarios_docente
 -- PARTE 3: INTENSIFICACIÓN Y CALIFICACIONES
 -- =============================================================
 
--- 20. TABLA: Intensificacion (Intensificación por tema)
+-- 21. TABLA: Intensificacion (Intensificación por tema)
 CREATE TABLE Intensificacion (
     ID_intensificacion BIGINT PRIMARY KEY AUTO_INCREMENT,
     Estudiante_ID_Estudiante INT NOT NULL,
@@ -474,7 +507,7 @@ CREATE TABLE Intensificacion (
         REFERENCES Contenido(ID_contenido) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 21. TABLA: Calificaciones_cuatrimestre (Control de calificaciones por cuatrimestre)
+-- 22. TABLA: Calificaciones_cuatrimestre (Control de calificaciones por cuatrimestre)
 CREATE TABLE Calificaciones_cuatrimestre (
     ID_calificacion BIGINT PRIMARY KEY AUTO_INCREMENT,
     Estudiante_ID_Estudiante INT NOT NULL,
@@ -944,7 +977,334 @@ END$$
 DELIMITER ;
 
 -- =============================================================
--- PARTE 7: DATOS INICIALES
+-- PARTE 7: VISTAS DE ASISTENCIA ACTUALIZADAS
+-- =============================================================
+
+-- Vista de estadísticas de asistencia
+DROP VIEW IF EXISTS vista_estadisticas_asistencia;
+CREATE VIEW vista_estadisticas_asistencia AS
+SELECT 
+    e.ID_Estudiante,
+    CONCAT(e.Nombre, ' ', e.Apellido) as Estudiante_Nombre,
+    m.Nombre as Materia_Nombre,
+    COUNT(a.ID_Asistencia) as Total_Clases,
+    SUM(CASE WHEN a.Presente IN ('P', 'Y') THEN 1 ELSE 0 END) as Clases_Presente,
+    SUM(CASE WHEN a.Presente IN ('A', 'N') THEN 1 ELSE 0 END) as Clases_Ausente,
+    SUM(CASE WHEN a.Presente = 'J' THEN 1 ELSE 0 END) as Clases_Justificadas,
+    SUM(CASE WHEN a.Presente = 'T' THEN 1 ELSE 0 END) as Clases_Tarde,
+    ROUND((SUM(CASE WHEN a.Presente IN ('P', 'Y') THEN 1 ELSE 0 END) / COUNT(a.ID_Asistencia)) * 100, 2) as Porcentaje_Asistencia
+FROM Estudiante e
+JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
+JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+LEFT JOIN Asistencia a ON e.ID_Estudiante = a.Estudiante_ID_Estudiante AND m.ID_materia = a.Materia_ID_materia
+GROUP BY e.ID_Estudiante, e.Nombre, e.Apellido, m.ID_materia, m.Nombre;
+
+-- Vista de estudiantes con problemas
+DROP VIEW IF EXISTS vista_estudiantes_problemas;
+CREATE VIEW vista_estudiantes_problemas AS
+SELECT 
+    e.ID_Estudiante,
+    CONCAT(e.Nombre, ' ', e.Apellido) as Estudiante_Nombre,
+    e.Email,
+    e.Estado,
+    COUNT(axm.Materia_ID_materia) as Total_Materias,
+    AVG(n.Calificacion) as Promedio_General,
+    COUNT(CASE WHEN n.Calificacion < 6 THEN 1 END) as Calificaciones_Bajas,
+    COUNT(CASE WHEN a.Presente IN ('A', 'N') THEN 1 END) as Ausencias_Recientes,
+    CASE 
+        WHEN AVG(n.Calificacion) < 6 THEN 'RENDIMIENTO_BAJO'
+        WHEN COUNT(CASE WHEN a.Presente IN ('A', 'N') THEN 1 END) > 5 THEN 'ASISTENCIA_BAJA'
+        WHEN COUNT(CASE WHEN n.Calificacion < 6 THEN 1 END) > 3 THEN 'MULTIPLES_DESAPROBADOS'
+        ELSE 'SIN_PROBLEMAS'
+    END as Tipo_Problema
+FROM Estudiante e
+LEFT JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
+LEFT JOIN Notas n ON e.ID_Estudiante = n.Estudiante_ID_Estudiante AND n.Estado = 'DEFINITIVA'
+LEFT JOIN Asistencia a ON e.ID_Estudiante = a.Estudiante_ID_Estudiante
+WHERE e.Estado = 'ACTIVO'
+GROUP BY e.ID_Estudiante, e.Nombre, e.Apellido, e.Email, e.Estado
+HAVING Promedio_General < 6 OR Calificaciones_Bajas > 3 OR Ausencias_Recientes > 5;
+
+-- Vista de asistencia por materia
+DROP VIEW IF EXISTS vista_asistencia_materia;
+CREATE VIEW vista_asistencia_materia AS
+SELECT 
+    m.ID_materia,
+    m.Nombre as Materia_Nombre,
+    m.Curso_division,
+    ud.Nombre_docente,
+    ud.Apellido_docente,
+    COUNT(DISTINCT axm.Estudiante_ID_Estudiante) as Total_Estudiantes,
+    COUNT(a.ID_Asistencia) as Total_Clases_Registradas,
+    SUM(CASE WHEN a.Presente IN ('P', 'Y') THEN 1 ELSE 0 END) as Total_Presentes,
+    SUM(CASE WHEN a.Presente IN ('A', 'N') THEN 1 ELSE 0 END) as Total_Ausentes,
+    SUM(CASE WHEN a.Presente = 'J' THEN 1 ELSE 0 END) as Total_Justificadas,
+    SUM(CASE WHEN a.Presente = 'T' THEN 1 ELSE 0 END) as Total_Tardes,
+    ROUND((SUM(CASE WHEN a.Presente IN ('P', 'Y') THEN 1 ELSE 0 END) / COUNT(a.ID_Asistencia)) * 100, 2) as Porcentaje_Asistencia_General,
+    COUNT(DISTINCT a.Fecha) as Dias_Con_Clase
+FROM Materia m
+JOIN Usuarios_docente ud ON m.Usuarios_docente_ID_docente = ud.ID_docente
+LEFT JOIN Alumnos_X_Materia axm ON m.ID_materia = axm.Materia_ID_materia
+LEFT JOIN Asistencia a ON m.ID_materia = a.Materia_ID_materia
+GROUP BY m.ID_materia, m.Nombre, m.Curso_division, ud.Nombre_docente, ud.Apellido_docente;
+
+-- =============================================================
+-- PARTE 8: PROCEDIMIENTOS DE ASISTENCIA
+-- =============================================================
+
+DELIMITER $$
+
+-- Procedimiento para marcar asistencia masiva
+DROP PROCEDURE IF EXISTS marcar_asistencia_masiva_nueva$$
+CREATE PROCEDURE marcar_asistencia_masiva_nueva(
+    IN p_materia_id INT,
+    IN p_fecha DATE,
+    IN p_estudiantes_presentes TEXT,
+    IN p_estudiantes_justificados TEXT
+)
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE v_estudiante_id INT;
+    DECLARE v_presente CHAR(1);
+    DECLARE cur CURSOR FOR 
+        SELECT Estudiante_ID_Estudiante FROM Alumnos_X_Materia 
+        WHERE Materia_ID_materia = p_materia_id;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    
+    OPEN cur;
+    read_loop: LOOP
+        FETCH cur INTO v_estudiante_id;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+        
+        IF FIND_IN_SET(v_estudiante_id, p_estudiantes_presentes) > 0 THEN
+            SET v_presente = 'P';
+        ELSEIF FIND_IN_SET(v_estudiante_id, p_estudiantes_justificados) > 0 THEN
+            SET v_presente = 'J';
+        ELSE
+            SET v_presente = 'A';
+        END IF;
+        
+        INSERT INTO Asistencia (Fecha, Presente, Materia_ID_materia, Estudiante_ID_Estudiante)
+        VALUES (p_fecha, v_presente, p_materia_id, v_estudiante_id)
+        ON DUPLICATE KEY UPDATE Presente = v_presente;
+    END LOOP;
+    CLOSE cur;
+END$$
+
+-- Procedimiento para obtener resumen de asistencia por estudiante
+DROP PROCEDURE IF EXISTS resumen_asistencia_estudiante$$
+CREATE PROCEDURE resumen_asistencia_estudiante(
+    IN p_estudiante_id INT,
+    IN p_materia_id INT
+)
+BEGIN
+    SELECT 
+        e.Nombre,
+        e.Apellido,
+        m.Nombre as Materia,
+        COUNT(a.ID_Asistencia) as Total_Clases,
+        SUM(CASE WHEN a.Presente IN ('P', 'Y') THEN 1 ELSE 0 END) as Presentes,
+        SUM(CASE WHEN a.Presente IN ('A', 'N') THEN 1 ELSE 0 END) as Ausentes,
+        SUM(CASE WHEN a.Presente = 'J' THEN 1 ELSE 0 END) as Justificadas,
+        SUM(CASE WHEN a.Presente = 'T' THEN 1 ELSE 0 END) as Tardes,
+        ROUND((SUM(CASE WHEN a.Presente IN ('P', 'Y') THEN 1 ELSE 0 END) / COUNT(a.ID_Asistencia)) * 100, 2) as Porcentaje_Asistencia
+    FROM Estudiante e
+    JOIN Alumnos_X_Materia axm ON e.ID_Estudiante = axm.Estudiante_ID_Estudiante
+    JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+    LEFT JOIN Asistencia a ON e.ID_Estudiante = a.Estudiante_ID_Estudiante AND m.ID_materia = a.Materia_ID_materia
+    WHERE e.ID_Estudiante = p_estudiante_id AND m.ID_materia = p_materia_id
+    GROUP BY e.ID_Estudiante, e.Nombre, e.Apellido, m.ID_materia, m.Nombre;
+END$$
+
+DELIMITER ;
+
+-- =============================================================
+-- PARTE 9: TRIGGERS DE VALIDACIÓN ADICIONALES
+-- =============================================================
+
+DELIMITER $$
+
+-- Trigger para validar email antes de insertar docente
+DROP TRIGGER IF EXISTS trg_validar_email_docente_insert$$
+CREATE TRIGGER trg_validar_email_docente_insert
+    BEFORE INSERT ON Usuarios_docente
+    FOR EACH ROW
+BEGIN
+    IF NEW.Email_docente NOT REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Formato de email inválido';
+    END IF;
+END$$
+
+-- Trigger para validar email antes de actualizar docente
+DROP TRIGGER IF EXISTS trg_validar_email_docente_update$$
+CREATE TRIGGER trg_validar_email_docente_update
+    BEFORE UPDATE ON Usuarios_docente
+    FOR EACH ROW
+BEGIN
+    IF NEW.Email_docente NOT REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Formato de email inválido';
+    END IF;
+END$$
+
+-- Trigger para validar DNI antes de insertar docente
+DROP TRIGGER IF EXISTS trg_validar_dni_docente_insert$$
+CREATE TRIGGER trg_validar_dni_docente_insert
+    BEFORE INSERT ON Usuarios_docente
+    FOR EACH ROW
+BEGIN
+    IF NEW.DNI IS NOT NULL AND NEW.DNI NOT REGEXP '^[0-9]{7,8}$' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Formato de DNI inválido (debe ser 7-8 dígitos)';
+    END IF;
+END$$
+
+-- Trigger para validar DNI antes de actualizar docente
+DROP TRIGGER IF EXISTS trg_validar_dni_docente_update$$
+CREATE TRIGGER trg_validar_dni_docente_update
+    BEFORE UPDATE ON Usuarios_docente
+    FOR EACH ROW
+BEGIN
+    IF NEW.DNI IS NOT NULL AND NEW.DNI NOT REGEXP '^[0-9]{7,8}$' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Formato de DNI inválido (debe ser 7-8 dígitos)';
+    END IF;
+END$$
+
+-- Trigger para validar calificaciones al insertar
+DROP TRIGGER IF EXISTS trg_validar_calificacion_insert$$
+CREATE TRIGGER trg_validar_calificacion_insert
+    BEFORE INSERT ON Notas
+    FOR EACH ROW
+BEGIN
+    IF NEW.Calificacion < 0 OR NEW.Calificacion > 10 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La calificación debe estar entre 0 y 10';
+    END IF;
+END$$
+
+-- Trigger para validar calificaciones al actualizar
+DROP TRIGGER IF EXISTS trg_validar_calificacion_update$$
+CREATE TRIGGER trg_validar_calificacion_update
+    BEFORE UPDATE ON Notas
+    FOR EACH ROW
+BEGIN
+    IF NEW.Calificacion < 0 OR NEW.Calificacion > 10 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La calificación debe estar entre 0 y 10';
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- =============================================================
+-- PARTE 10: PROCEDIMIENTOS DE VALIDACIÓN
+-- =============================================================
+
+DELIMITER $$
+
+-- Procedimiento para validar datos de docente antes de insertar
+DROP PROCEDURE IF EXISTS validar_docente$$
+CREATE PROCEDURE validar_docente(
+    IN p_email VARCHAR(100),
+    IN p_dni VARCHAR(20),
+    IN p_telefono VARCHAR(20),
+    OUT p_valido BOOLEAN,
+    OUT p_mensaje VARCHAR(255)
+)
+BEGIN
+    DECLARE v_valido BOOLEAN DEFAULT TRUE;
+    DECLARE v_mensaje VARCHAR(255) DEFAULT '';
+    
+    IF p_email NOT REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$' THEN
+        SET v_valido = FALSE;
+        SET v_mensaje = 'Formato de email inválido';
+    END IF;
+    
+    IF v_valido AND p_dni IS NOT NULL AND p_dni NOT REGEXP '^[0-9]{7,8}$' THEN
+        SET v_valido = FALSE;
+        SET v_mensaje = 'Formato de DNI inválido (debe ser 7-8 dígitos)';
+    END IF;
+    
+    IF v_valido AND p_telefono IS NOT NULL AND p_telefono NOT REGEXP '^[0-9+\\-\\s\\(\\)]{10,20}$' THEN
+        SET v_valido = FALSE;
+        SET v_mensaje = 'Formato de teléfono inválido';
+    END IF;
+    
+    SET p_valido = v_valido;
+    SET p_mensaje = v_mensaje;
+END$$
+
+-- Procedimiento para validar calificación
+DROP PROCEDURE IF EXISTS validar_calificacion$$
+CREATE PROCEDURE validar_calificacion(
+    IN p_calificacion DECIMAL(4,2),
+    OUT p_valido BOOLEAN,
+    OUT p_mensaje VARCHAR(255)
+)
+BEGIN
+    DECLARE v_valido BOOLEAN DEFAULT TRUE;
+    DECLARE v_mensaje VARCHAR(255) DEFAULT '';
+    
+    IF p_calificacion < 0 OR p_calificacion > 10 THEN
+        SET v_valido = FALSE;
+        SET v_mensaje = 'La calificación debe estar entre 0 y 10';
+    END IF;
+    
+    SET p_valido = v_valido;
+    SET p_mensaje = v_mensaje;
+END$$
+
+DELIMITER ;
+
+-- =============================================================
+-- PARTE 11: ACTUALIZACIÓN DE ESTADO DE NOTAS EXISTENTES
+-- =============================================================
+-- 
+-- Este script actualiza las notas existentes para asignarles
+-- automáticamente los nuevos estados APROBADO o DEBE según su calificación.
+-- Solo se actualizan notas que tengan los estados antiguos.
+-- 
+-- Reglas:
+-- - Calificación >= 7 → Estado = 'APROBADO'
+-- - Calificación < 7 o = 0 → Estado = 'DEBE'
+-- - Notas con otros estados permanecen sin cambios
+
+-- Actualizar notas existentes: si calificación >= 7 → APROBADO, si < 7 o 0 → DEBE
+UPDATE Notas 
+SET Estado = CASE 
+    WHEN Calificacion >= 7 THEN 'APROBADO'
+    WHEN Calificacion < 7 OR Calificacion = 0 THEN 'DEBE'
+    ELSE Estado
+END
+WHERE Estado IN ('TENTATIVA', 'DEFINITIVA', 'RECUPERATORIO');
+
+-- =============================================================
+-- PARTE 12: MIGRACIÓN DE DATOS EXISTENTES A CURSO
+-- =============================================================
+
+-- Migrar datos existentes de Materia a Curso (si existen)
+-- Esto crea cursos basados en los curso_division que ya existen en Materia
+-- Si no hay Escuela_ID asociada, se usa 'Institución por Defecto'
+INSERT INTO Curso (Curso_division, Numero_curso, Division, Institucion, Usuarios_docente_ID_docente, Estado)
+SELECT DISTINCT
+    m.Curso_division,
+    CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(m.Curso_division, 'º', 1), ' ', 1) AS UNSIGNED) AS Numero_curso,
+    UPPER(SUBSTRING_INDEX(SUBSTRING_INDEX(m.Curso_division, 'División ', -1), ' ', 1)) AS Division,
+    COALESCE(e.Nombre, 'Institución por Defecto') AS Institucion,
+    m.Usuarios_docente_ID_docente,
+    'ACTIVO'
+FROM Materia m
+LEFT JOIN Escuela e ON e.ID_escuela = m.Escuela_ID
+WHERE m.Curso_division IS NOT NULL 
+  AND m.Curso_division != ''
+  AND NOT EXISTS (
+      SELECT 1 FROM Curso c 
+      WHERE c.Curso_division = m.Curso_division 
+        AND c.Usuarios_docente_ID_docente = m.Usuarios_docente_ID_docente
+        AND c.Institucion = COALESCE(e.Nombre, 'Institución por Defecto')
+  )
+ON DUPLICATE KEY UPDATE Fecha_actualizacion = CURRENT_TIMESTAMP;
+
+-- =============================================================
+-- PARTE 13: DATOS INICIALES
 -- =============================================================
 
 -- Insertar planes base
@@ -970,9 +1330,9 @@ ON DUPLICATE KEY UPDATE Valor = VALUES(Valor);
 
 SELECT 'EduSync instalado exitosamente!' as Mensaje,
        'Base de datos: edusync' as Base_Datos,
-       'Tablas creadas: 21' as Tablas_Creadas,
-       'Vistas creadas: 8' as Vistas_Creadas,
+       'Tablas creadas: 22' as Tablas_Creadas,
+       'Vistas creadas: 11' as Vistas_Creadas,
        'Funciones creadas: 2' as Funciones_Creadas,
-       'Procedimientos creados: 5' as Procedimientos_Creados,
-       'Triggers creados: 3' as Triggers_Creados;
+       'Procedimientos creados: 10' as Procedimientos_Creados,
+       'Triggers creados: 9' as Triggers_Creados;
 

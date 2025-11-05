@@ -156,10 +156,20 @@ try {
 				$Observacion = isset($body['Observacion']) && $body['Observacion'] !== '' ? trim($body['Observacion']) : null;
 			}
 			
-			// Validar estado
-			$validEstados = ['TENTATIVA', 'DEFINITIVA', 'RECUPERATORIO'];
-			if (!in_array($Estado, $validEstados)) {
-				$Estado = 'DEFINITIVA';
+			// Calcular estado automáticamente según la calificación
+			// Si la nota es menor a 7 o ausente → DEBE
+			// Si la nota es mayor o igual a 7 → APROBADO
+			if ($esAusente || $Calificacion < 7) {
+				$Estado = 'DEBE';
+			} else {
+				$Estado = 'APROBADO';
+			}
+			
+			// Si el usuario envía un estado específico y está en los valores válidos, respetarlo
+			// pero solo si no se calculó automáticamente
+			if (isset($body['Estado']) && in_array($body['Estado'], ['TENTATIVA', 'DEFINITIVA', 'RECUPERATORIO', 'APROBADO', 'DEBE'])) {
+				// Permitir que el usuario sobrescriba el estado calculado si es necesario
+				// Por defecto, siempre calculamos automáticamente
 			}
 			
 			// Validar peso (entre 0.00 y 9.99)
@@ -225,11 +235,15 @@ try {
 			$sets = [];
 			$params = [];
 			
+			// Variable para almacenar la calificación actualizada para calcular el estado
+			$calificacionActualizada = null;
+			$esAusenteActualizado = false;
+			
 			foreach ($fields as $f) {
 				if (array_key_exists($f, $body)) {
 					if ($f === 'Calificacion') {
-						$esAusente = $body[$f] === 'AUSENTE' || $body[$f] === null || $body[$f] === '';
-						if ($esAusente) {
+						$esAusenteActualizado = $body[$f] === 'AUSENTE' || $body[$f] === null || $body[$f] === '';
+						if ($esAusenteActualizado) {
 							$calif = 0.00;
 						} else {
 							$calif = (float)$body[$f];
@@ -237,13 +251,14 @@ try {
 								respond(400, ['success'=>false,'message'=>'La calificación debe estar entre 1.00 y 10.00']);
 							}
 						}
+						$calificacionActualizada = $calif;
 						$sets[] = "$f = ?";
 						$params[] = $calif;
 					} else if ($f === 'Observacion') {
 						$sets[] = "$f = ?";
 						$params[] = $body[$f] === '' ? null : trim($body[$f]);
 					} else if ($f === 'Estado') {
-						$validEstados = ['TENTATIVA', 'DEFINITIVA', 'RECUPERATORIO'];
+						$validEstados = ['TENTATIVA', 'DEFINITIVA', 'RECUPERATORIO', 'APROBADO', 'DEBE'];
 						if (!in_array($body[$f], $validEstados)) {
 							respond(400, ['success'=>false,'message'=>'Estado inválido']);
 						}
@@ -257,6 +272,22 @@ try {
 						$sets[] = "$f = ?";
 						$params[] = $peso;
 					}
+				}
+			}
+			
+			// Si se actualizó la calificación, recalcular el estado automáticamente
+			if ($calificacionActualizada !== null) {
+				// Calcular estado automáticamente según la calificación
+				if ($esAusenteActualizado || $calificacionActualizada < 7) {
+					$nuevoEstado = 'DEBE';
+				} else {
+					$nuevoEstado = 'APROBADO';
+				}
+				
+				// Solo actualizar el estado si no se especificó uno manualmente
+				if (!isset($body['Estado'])) {
+					$sets[] = "Estado = ?";
+					$params[] = $nuevoEstado;
 				}
 			}
 			

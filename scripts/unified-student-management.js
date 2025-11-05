@@ -71,6 +71,49 @@ function initializeUnifiedStudentManagement() {
         });
     }
 
+    const loadCourseDivisionBtn = document.getElementById('loadCourseDivisionBtn');
+    if (loadCourseDivisionBtn) {
+        loadCourseDivisionBtn.addEventListener('click', () => {
+            try {
+                if (typeof showModal === 'function') {
+                    showModal('loadCourseDivisionModal');
+                } else {
+                    const modal = document.getElementById('loadCourseDivisionModal');
+                    if (modal) {
+                        modal.classList.add('active');
+                    }
+                }
+                // Resetear contador de filas manuales
+                manualStudentRowCounter = 0;
+                // Limpiar tabla manual si existe
+                const tbody = document.getElementById('bulkManualStudentsTableBody');
+                if (tbody) {
+                    tbody.innerHTML = '';
+                }
+                // Asegurar que esté en modo textarea por defecto
+                const textareaMode = document.getElementById('bulkTextareaMode');
+                const tableMode = document.getElementById('bulkTableMode');
+                const toggleBtn = document.getElementById('toggleInputModeBtn');
+                if (textareaMode && tableMode && toggleBtn) {
+                    textareaMode.style.display = 'block';
+                    tableMode.style.display = 'none';
+                    toggleBtn.innerHTML = '<i class="fas fa-table"></i> Modo Tabla Manual';
+                    const textarea = document.getElementById('bulkStudentsList');
+                    if (textarea) textarea.required = true;
+                }
+                // Poblar el dropdown de cursos (async)
+                populateBulkCourseDivisionDropdown().catch(err => console.error('Error al poblar dropdown:', err));
+                // Limpiar el formulario
+                const form = document.getElementById('loadCourseDivisionForm');
+                if (form) form.reset();
+                const textarea = document.getElementById('bulkStudentsList');
+                if (textarea) textarea.value = '';
+            } catch (e) {
+                alert('Error al abrir el formulario de carga masiva');
+            }
+        });
+    }
+
     if (markAttendanceBtn) {
         markAttendanceBtn.addEventListener('click', () => {
             // Navigate to attendance section
@@ -173,6 +216,7 @@ function initializeUnifiedStudentManagement() {
     setupModalHandlers('studentModal');
     setupModalHandlers('studentDetailsModal');
     setupModalHandlers('exportDialogModal');
+    setupModalHandlers('loadCourseDivisionModal');
     
     // Grade marking functionality
     const gradeEvaluationSelect = document.getElementById('gradeEvaluation');
@@ -2276,7 +2320,7 @@ function openExportDialog() {
     }
 }
 
-function exportStudentsAsCSV() {
+function exportStudentsAsExcel() {
     const students = getFilteredUnifiedStudents();
     
     if (!students || students.length === 0) {
@@ -2327,18 +2371,26 @@ function exportStudentsAsCSV() {
         ];
     });
     
-    // Create CSV content
+    // Create Excel content (usando punto y coma como separador para Excel)
+    const separator = ';';
     const csvContent = [
-        headers.map(h => `"${h}"`).join(','),
-        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-    ].join('\n');
+        headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(separator),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(separator))
+    ].join('\r\n');
     
-    // Download CSV
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Download Excel with BOM UTF-8 for proper accents
+    const encoder = new TextEncoder();
+    const bomBytes = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const contentBytes = encoder.encode(csvContent);
+    const finalContent = new Uint8Array(bomBytes.length + contentBytes.length);
+    finalContent.set(bomBytes, 0);
+    finalContent.set(contentBytes, bomBytes.length);
+    
+    const blob = new Blob([finalContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `estudiantes_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `estudiantes_${new Date().toISOString().split('T')[0]}.xls`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -2347,9 +2399,9 @@ function exportStudentsAsCSV() {
     
     // Close modal and show notification
     if (typeof showExportNotification === 'function') {
-        showExportNotification('Lista de estudiantes exportada como CSV exitosamente!', 'success');
+        showExportNotification('Lista de estudiantes exportada como Excel exitosamente!', 'success');
     } else {
-        alert('Lista de estudiantes exportada como CSV exitosamente!');
+        alert('Lista de estudiantes exportada como Excel exitosamente!');
     }
     
     const exportDialogModal = document.getElementById('exportDialogModal');
@@ -2380,14 +2432,16 @@ function exportStudentsAsDOC() {
             <meta charset='utf-8'>
             <title>Lista de Estudiantes</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                h1 { color: #667eea; text-align: center; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th { background-color: #667eea; color: white; padding: 12px; text-align: left; border: 1px solid #ddd; }
-                td { padding: 10px; border: 1px solid #ddd; }
-                tr:nth-child(even) { background-color: #f9f9f9; }
-                .header { margin-bottom: 20px; }
-                .date { color: #666; font-size: 14px; }
+                body { font-family: Arial, sans-serif; margin: 30px; line-height: 1.6; }
+                h1 { color: #667eea; text-align: center; margin-bottom: 10px; font-size: 24px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 25px; border: 2px solid #667eea; }
+                th { background-color: #667eea; color: white; padding: 14px 12px; text-align: left; border: 1px solid #5568d3; font-weight: bold; font-size: 13px; }
+                td { padding: 12px; border: 1px solid #e2e8f0; font-size: 12px; }
+                tr:nth-child(even) { background-color: #f8f9fa; }
+                tr:nth-child(odd) { background-color: #ffffff; }
+                .header { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #667eea; }
+                .date { color: #666; font-size: 14px; text-align: center; }
+                .empty-cell { color: #999; font-style: italic; }
             </style>
         </head>
         <body>
@@ -2420,18 +2474,18 @@ function exportStudentsAsDOC() {
             .filter(s => s)
             .join(', ');
         
-        // Calculate average grade
-        const studentGrades = notas.filter(n => n.Estudiante_ID_Estudiante === student.ID_Estudiante);
+        // Calculate average grade - solo si hay calificaciones válidas
+        const studentGrades = notas.filter(n => n.Estudiante_ID_Estudiante === student.ID_Estudiante && n.Calificacion !== null && n.Calificacion !== undefined && n.Calificacion !== '');
         const average = studentGrades.length > 0
             ? (studentGrades.reduce((sum, n) => sum + parseFloat(n.Calificacion || 0), 0) / studentGrades.length).toFixed(2)
-            : '0.00';
+            : '';
         
         // Calculate attendance percentage
         const studentAttendance = asistencia.filter(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante);
         const presentCount = studentAttendance.filter(a => a.Presente === 'P' || a.Presente === 'Y').length;
         const attendanceRate = studentAttendance.length > 0
             ? ((presentCount / studentAttendance.length) * 100).toFixed(2)
-            : '0.00';
+            : '';
         
         htmlContent += `
             <tr>
@@ -2439,8 +2493,8 @@ function exportStudentsAsDOC() {
                 <td>${student.Nombre || ''}</td>
                 <td>${student.Apellido || ''}</td>
                 <td>${studentSubjects || 'Sin materias'}</td>
-                <td>${average}</td>
-                <td>${attendanceRate}%</td>
+                <td class="${average ? '' : 'empty-cell'}">${average || ''}</td>
+                <td class="${attendanceRate ? '' : 'empty-cell'}">${attendanceRate ? attendanceRate + '%' : ''}</td>
             </tr>
         `;
     });
@@ -2477,7 +2531,7 @@ function exportStudentsAsDOC() {
     }
 }
 
-function exportExamsAsCSV() {
+function exportExamsAsExcel() {
     const exams = getFilteredExams();
     
     if (!exams || exams.length === 0) {
@@ -2504,18 +2558,26 @@ function exportExamsAsCSV() {
         ];
     });
     
-    // Create CSV content
+    // Create Excel content (usando punto y coma como separador para Excel)
+    const separator = ';';
     const csvContent = [
-        headers.map(h => `"${h}"`).join(','),
-        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-    ].join('\n');
+        headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(separator),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(separator))
+    ].join('\r\n');
     
-    // Download CSV
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Download Excel with BOM UTF-8 for proper accents
+    const encoder = new TextEncoder();
+    const bomBytes = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const contentBytes = encoder.encode(csvContent);
+    const finalContent = new Uint8Array(bomBytes.length + contentBytes.length);
+    finalContent.set(bomBytes, 0);
+    finalContent.set(contentBytes, bomBytes.length);
+    
+    const blob = new Blob([finalContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `examenes_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `examenes_${new Date().toISOString().split('T')[0]}.xls`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -2524,9 +2586,9 @@ function exportExamsAsCSV() {
     
     // Close modal and show notification
     if (typeof showExportNotification === 'function') {
-        showExportNotification('Lista de exámenes exportada como CSV exitosamente!', 'success');
+        showExportNotification('Lista de exámenes exportada como Excel exitosamente!', 'success');
     } else {
-        alert('Lista de exámenes exportada como CSV exitosamente!');
+        alert('Lista de exámenes exportada como Excel exitosamente!');
     }
     
     const exportDialogModal = document.getElementById('exportDialogModal');
@@ -2641,22 +2703,25 @@ function initializeExportFunctionality() {
         exportListBtn.addEventListener('click', openExportDialog);
     }
     
-    // CSV export button handler
-    if (exportCSVBtn) {
-        exportCSVBtn.addEventListener('click', () => {
+    // Excel export button handler
+    const exportExcelBtn = document.getElementById('exportExcelBtn');
+    if (exportExcelBtn) {
+        exportExcelBtn.addEventListener('click', () => {
             const exportDialogModal = document.getElementById('exportDialogModal');
             const context = exportDialogModal ? exportDialogModal.getAttribute('data-export-context') : null;
             
             if (context === 'subjects') {
-                if (typeof exportSubjectsAsCSV === 'function') {
+                if (typeof exportSubjectsAsExcel === 'function') {
+                    exportSubjectsAsExcel();
+                } else if (typeof exportSubjectsAsCSV === 'function') {
                     exportSubjectsAsCSV();
                 }
             } else {
                 const currentTab = getCurrentTab();
                 if (currentTab === 'exams') {
-                    exportExamsAsCSV();
+                    exportExamsAsExcel();
                 } else {
-                    exportStudentsAsCSV();
+                    exportStudentsAsExcel();
                 }
             }
         });
@@ -2682,4 +2747,498 @@ function initializeExportFunctionality() {
             }
         });
     }
+}
+
+// ============================================================================
+// BULK STUDENT LOADING - Carga masiva de alumnos por curso/división
+// ============================================================================
+
+// Función para poblar el dropdown de cursos en el modal de carga masiva
+async function populateBulkCourseDivisionDropdown() {
+    const courseSelect = document.getElementById('bulkCourseDivision');
+    if (!courseSelect) return;
+    
+    // Obtener el ID del docente actual
+    const userIdString = localStorage.getItem('userId');
+    const teacherId = userIdString ? parseInt(userIdString, 10) : null;
+    
+    if (!teacherId) {
+        courseSelect.innerHTML = '<option value="">- Seleccionar Curso -</option>';
+        return;
+    }
+    
+    const uniqueCourses = [];
+    
+    // Primero, obtener cursos de la tabla Curso desde la API
+    try {
+        const response = await fetch(`api/curso.php?userId=${userIdString}`);
+        const result = await response.json();
+        if (result.success && result.data && Array.isArray(result.data)) {
+            result.data.forEach(c => {
+                if (c.Curso_division && c.Estado === 'ACTIVO' && !uniqueCourses.includes(c.Curso_division)) {
+                    uniqueCourses.push(c.Curso_division);
+                }
+            });
+        }
+    } catch (error) {
+        console.warn('Error al cargar cursos desde API:', error);
+        // Si falla, intentar usar la función getAvailableCourses si existe
+        if (typeof getAvailableCourses === 'function') {
+            const cursosFromTable = getAvailableCourses();
+            cursosFromTable.forEach(c => {
+                if (c.Curso_division && !uniqueCourses.includes(c.Curso_division)) {
+                    uniqueCourses.push(c.Curso_division);
+                }
+            });
+        }
+    }
+    
+    // Luego, obtener cursos de Materia (para compatibilidad con datos existentes)
+    const teacherSubjects = (appData.materia || []).filter(m => 
+        m.Usuarios_docente_ID_docente === teacherId && 
+        (!m.Estado || m.Estado === 'ACTIVA')
+    );
+    
+    teacherSubjects.forEach(s => {
+        if (s.Curso_division && s.Curso_division.trim() !== '' && s.Curso_division !== 'Sin asignar' && !uniqueCourses.includes(s.Curso_division)) {
+            uniqueCourses.push(s.Curso_division);
+        }
+    });
+    
+    // Limpiar opciones actuales
+    courseSelect.innerHTML = '<option value="">- Seleccionar Curso -</option>';
+    
+    // Ordenar y agregar cursos
+    uniqueCourses.sort().forEach(course => {
+        const option = document.createElement('option');
+        option.value = course;
+        option.textContent = course;
+        courseSelect.appendChild(option);
+    });
+
+    // Agregar opción para crear uno nuevo
+    const newOpt = document.createElement('option');
+    newOpt.value = '__new__';
+    newOpt.textContent = '+ Crear Nuevo Curso';
+    courseSelect.appendChild(newOpt);
+
+    // Mostrar/ocultar sección de creación
+    const createSection = document.getElementById('bulkCreateNewCourseSection');
+    courseSelect.onchange = () => {
+        if (!createSection) return;
+        createSection.style.display = courseSelect.value === '__new__' ? 'block' : 'none';
+    };
+}
+
+// Función para parsear nombres de alumnos desde el textarea
+function parseStudentNames(text) {
+    if (!text || !text.trim()) {
+        return [];
+    }
+    
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    const students = [];
+    
+    lines.forEach(line => {
+        // Intentar diferentes formatos:
+        // 1. "Apellido, Nombre" (coma)
+        // 2. "Apellido\tNombre" (tabulación)
+        // 3. "Nombre Apellido" o "Apellido Nombre" (sin coma)
+        
+        let apellido = '';
+        let nombre = '';
+        
+        // Formato con coma: "Apellido, Nombre"
+        if (line.includes(',')) {
+            const parts = line.split(',').map(p => p.trim()).filter(p => p.length > 0);
+            if (parts.length >= 2) {
+                apellido = parts[0];
+                nombre = parts.slice(1).join(' '); // Por si hay múltiples nombres
+            } else if (parts.length === 1) {
+                // Solo hay un valor antes de la coma
+                apellido = parts[0];
+            }
+        }
+        // Formato con tabulación: "Apellido\tNombre"
+        else if (line.includes('\t')) {
+            const parts = line.split('\t').map(p => p.trim()).filter(p => p.length > 0);
+            if (parts.length >= 2) {
+                apellido = parts[0];
+                nombre = parts.slice(1).join(' ');
+            }
+        }
+        // Formato simple: sin coma/tab
+        // Estrategia mejorada: para listas de 30-40 alumnos, asumimos que el formato más común es "Apellido Nombre"
+        // Si la línea tiene 2 palabras, primera = apellido, segunda = nombre
+        // Si tiene 3+ palabras, primera = apellido, resto = nombre (puede tener nombres compuestos)
+        else {
+            const parts = line.split(/\s+/).filter(p => p.length > 0);
+            if (parts.length >= 2) {
+                // Primera palabra = apellido, resto = nombre
+                apellido = parts[0];
+                nombre = parts.slice(1).join(' ');
+            } else if (parts.length === 1) {
+                // Solo hay un valor, lo tratamos como apellido
+                apellido = parts[0];
+            }
+        }
+        
+        if (apellido || nombre) {
+            students.push({
+                Apellido: apellido || '',
+                Nombre: nombre || apellido || '',
+                isValid: !!(apellido && nombre) || apellido.length > 0
+            });
+        }
+    });
+    
+    return students;
+}
+
+// Función para procesar la carga masiva de alumnos
+async function processBulkStudents() {
+    const courseDivisionSelect = document.getElementById('bulkCourseDivision');
+    const studentsListTextarea = document.getElementById('bulkStudentsList');
+    const statusSelect = document.getElementById('bulkStudentStatus');
+    
+    if (!courseDivisionSelect || !studentsListTextarea || !statusSelect) {
+        alert('Error: No se encontraron los campos del formulario');
+        return;
+    }
+    
+    let courseDivision = courseDivisionSelect.value.trim();
+    if (courseDivision === '__new__') {
+        const n = (document.getElementById('bulkCourseNumber') || {}).value || '';
+        const d = (document.getElementById('bulkDivisionLetter') || {}).value || '';
+        if (!n || !d) {
+            alert('Completá Curso y División para crear el curso');
+            return;
+        }
+        courseDivision = `${n}º Curso - División ${d}`;
+    }
+    const studentsText = studentsListTextarea.value.trim();
+    const defaultStatus = statusSelect.value;
+    
+    // Validaciones
+    if (!courseDivision) {
+        alert('Por favor selecciona un curso/división');
+        return;
+    }
+    
+    // Determinar modo de entrada
+    const tableMode = document.getElementById('bulkTableMode');
+    const isTableMode = tableMode && tableMode.style.display !== 'none';
+    
+    let students = [];
+    if (isTableMode) {
+        // Leer de la tabla manual
+        students = collectManualStudentsFromTable();
+        if (students.length === 0) {
+            alert('Por favor ingresa al menos un alumno en la tabla');
+            return;
+        }
+    } else {
+        // Parsear del textarea
+        if (!studentsText) {
+            alert('Por favor ingresa la lista de alumnos');
+            return;
+        }
+        students = parseStudentNames(studentsText);
+    }
+    
+    if (students.length === 0) {
+        alert('No se pudieron parsear alumnos de la lista. Verifica el formato.');
+        return;
+    }
+    
+    // Filtrar estudiantes válidos
+    const validStudents = students.filter(s => s.isValid);
+    
+    if (validStudents.length === 0) {
+        alert('No se encontraron alumnos válidos. Verifica el formato (Apellido, Nombre o Nombre Apellido)');
+        return;
+    }
+    
+    // Confirmar antes de proceder
+    const confirmMessage = `¿Deseas crear ${validStudents.length} alumno(s) para el curso "${courseDivision}"?`;
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    // Obtener el ID del docente actual
+    const userIdString = localStorage.getItem('userId');
+    const teacherId = userIdString ? parseInt(userIdString, 10) : null;
+    
+    if (!teacherId) {
+        alert('Error: No se encontró el ID de usuario');
+        return;
+    }
+    
+    // Obtener todas las materias del curso seleccionado para este docente
+    const courseSubjects = (appData.materia || []).filter(m => 
+        m.Usuarios_docente_ID_docente === teacherId &&
+        m.Curso_division === courseDivision &&
+        (!m.Estado || m.Estado === 'ACTIVA')
+    );
+    
+    if (courseSubjects.length === 0) {
+        alert(`No hay materias activas para el curso "${courseDivision}". Por favor crea al menos una materia para este curso primero.`);
+        return;
+    }
+    
+    const subjectIds = courseSubjects.map(s => parseInt(s.ID_materia));
+    
+    // Procesar estudiantes uno por uno
+    let successCount = 0;
+    let errorCount = 0;
+    const errors = [];
+    
+    // Mostrar indicador de progreso
+    const submitBtn = document.querySelector('#loadCourseDivisionForm button[type="button"][onclick*="processBulkStudents"]');
+    const originalBtnText = submitBtn ? submitBtn.textContent : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = `Procesando... (0/${validStudents.length})`;
+    }
+    
+    try {
+        for (let i = 0; i < validStudents.length; i++) {
+            const student = validStudents[i];
+            
+            // Actualizar progreso
+            if (submitBtn) {
+                submitBtn.textContent = `Procesando... (${i + 1}/${validStudents.length})`;
+            }
+            
+            try {
+                // Crear el estudiante
+                const studentData = {
+                    Nombre: student.Nombre,
+                    Apellido: student.Apellido,
+                    Email: null,
+                    Fecha_nacimiento: null,
+                    Estado: defaultStatus
+                };
+                
+                const createResponse = await fetch('../api/estudiantes.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(studentData)
+                });
+                
+                const createResult = await createResponse.json().catch(() => ({}));
+                
+                if (!createResponse.ok || createResult.success === false) {
+                    throw new Error(createResult.message || 'Error al crear estudiante');
+                }
+                
+                // Obtener el ID del estudiante creado
+                let studentId = null;
+                if (createResult.data && createResult.data.ID_Estudiante) {
+                    studentId = createResult.data.ID_Estudiante;
+                } else if (createResult.ID_Estudiante) {
+                    studentId = createResult.ID_Estudiante;
+                } else if (createResult.id) {
+                    studentId = createResult.id;
+                }
+                
+                if (!studentId) {
+                    throw new Error('No se pudo obtener el ID del estudiante creado');
+                }
+                
+                // Asignar el estudiante a todas las materias del curso
+                const enrollmentRelations = subjectIds.map(materiaId => ({
+                    Materia_ID_materia: materiaId,
+                    Estudiante_ID_Estudiante: studentId,
+                    Estado: 'INSCRITO'
+                }));
+                
+                const enrollmentResponse = await fetch('../api/alumnos_x_materia.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(enrollmentRelations)
+                });
+                
+                const enrollmentResult = await enrollmentResponse.json().catch(() => ({}));
+                
+                if (!enrollmentResponse.ok && enrollmentResponse.status !== 207) {
+                    // 207 es "Multi-Status" - algunos pueden haber fallado, pero otros pueden haber funcionado
+                    console.warn(`Error asignando materias a ${student.Nombre} ${student.Apellido}:`, enrollmentResult.message);
+                }
+                
+                successCount++;
+            } catch (err) {
+                errorCount++;
+                errors.push(`${student.Nombre} ${student.Apellido}: ${err.message || 'Error desconocido'}`);
+                console.error(`Error procesando ${student.Nombre} ${student.Apellido}:`, err);
+            }
+        }
+        
+        // Recargar datos
+        if (typeof loadData === 'function') {
+            await loadData();
+        }
+        
+        // Recargar vista de estudiantes
+        if (typeof loadUnifiedStudentData === 'function') {
+            loadUnifiedStudentData();
+        }
+        
+        // Cerrar modal
+        if (typeof closeModal === 'function') {
+            closeModal('loadCourseDivisionModal');
+        } else {
+            const modal = document.getElementById('loadCourseDivisionModal');
+            if (modal) modal.classList.remove('active');
+        }
+        
+        // Mostrar resultado
+        let message = `Se crearon ${successCount} alumno(s) correctamente.`;
+        if (errorCount > 0) {
+            message += `\n\nHubo ${errorCount} error(es):\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...' : ''}`;
+        }
+        
+        if (typeof showNotification === 'function') {
+            showNotification(message, errorCount > 0 ? 'warning' : 'success');
+        } else {
+            alert(message);
+        }
+        
+    } catch (err) {
+        alert('Error al procesar la carga masiva: ' + (err.message || 'Error desconocido'));
+    } finally {
+        // Restaurar botón
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText || 'Cargar Alumnos';
+        }
+    }
+}
+
+// Hacer la función globalmente accesible
+window.processBulkStudents = processBulkStudents;
+
+// ---------------------------------------------------------------------------
+// Modo tabla manual para alumnos
+// ---------------------------------------------------------------------------
+
+let manualStudentRowCounter = 0;
+
+// Función para alternar entre modo textarea y tabla manual
+window.toggleBulkInputMode = function() {
+    const textareaMode = document.getElementById('bulkTextareaMode');
+    const tableMode = document.getElementById('bulkTableMode');
+    const toggleBtn = document.getElementById('toggleInputModeBtn');
+    
+    if (!textareaMode || !tableMode || !toggleBtn) return;
+    
+    const isTableMode = tableMode.style.display !== 'none';
+    
+    if (isTableMode) {
+        // Cambiar a modo textarea
+        textareaMode.style.display = 'block';
+        tableMode.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="fas fa-table"></i> Modo Tabla Manual';
+        // Hacer el textarea requerido cuando está visible
+        const textarea = document.getElementById('bulkStudentsList');
+        if (textarea) textarea.required = true;
+    } else {
+        // Cambiar a modo tabla
+        textareaMode.style.display = 'none';
+        tableMode.style.display = 'block';
+        toggleBtn.innerHTML = '<i class="fas fa-align-left"></i> Modo Texto';
+        // Quitar required del textarea cuando está oculto
+        const textarea = document.getElementById('bulkStudentsList');
+        if (textarea) textarea.required = false;
+        
+        // Inicializar la tabla si está vacía
+        const tbody = document.getElementById('bulkManualStudentsTableBody');
+        if (tbody && tbody.children.length === 0) {
+            addManualStudentRow();
+        }
+    }
+};
+
+// Función para agregar una nueva fila en la tabla manual
+window.addManualStudentRow = function() {
+    const tbody = document.getElementById('bulkManualStudentsTableBody');
+    if (!tbody) return;
+    
+    manualStudentRowCounter++;
+    const rowId = manualStudentRowCounter;
+    
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>
+            <input type="text" 
+                   id="manualApellido_${rowId}" 
+                   class="manual-student-input" 
+                   placeholder="Apellido" 
+                   style="width: 100%; padding: 6px;">
+        </td>
+        <td>
+            <input type="text" 
+                   id="manualNombre_${rowId}" 
+                   class="manual-student-input" 
+                   placeholder="Nombre" 
+                   style="width: 100%; padding: 6px;"
+                   onkeypress="if(event.key === 'Enter') { event.preventDefault(); const nextRowId = ${rowId} + 1; addManualStudentRow(); setTimeout(() => { const nextInput = document.getElementById('manualApellido_' + nextRowId); if(nextInput) nextInput.focus(); }, 100); }">
+        </td>
+        <td>
+            <button type="button" 
+                    class="btn-icon btn-primary" 
+                    onclick="addManualStudentRow(); return false;" 
+                    title="Agregar siguiente alumno">
+                <i class="fas fa-plus"></i>
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(newRow);
+    
+    // Enfocar el campo de apellido de la nueva fila
+    setTimeout(() => {
+        const apellidoInput = document.getElementById(`manualApellido_${rowId}`);
+        if (apellidoInput) apellidoInput.focus();
+    }, 50);
+};
+
+// Función para eliminar la última fila
+window.removeLastManualStudentRow = function() {
+    const tbody = document.getElementById('bulkManualStudentsTableBody');
+    if (!tbody || tbody.children.length <= 1) {
+        alert('Debe haber al menos una fila');
+        return;
+    }
+    
+    tbody.removeChild(tbody.lastElementChild);
+};
+
+// Función para recolectar estudiantes de la tabla manual
+function collectManualStudentsFromTable() {
+    const tbody = document.getElementById('bulkManualStudentsTableBody');
+    if (!tbody) return [];
+    
+    const students = [];
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    
+    rows.forEach(row => {
+        const apellidoInput = row.querySelector('input[id^="manualApellido_"]');
+        const nombreInput = row.querySelector('input[id^="manualNombre_"]');
+        
+        const apellido = apellidoInput ? apellidoInput.value.trim() : '';
+        const nombre = nombreInput ? nombreInput.value.trim() : '';
+        
+        if (apellido || nombre) {
+            students.push({
+                Apellido: apellido || '',
+                Nombre: nombre || '',
+                isValid: !!(apellido && nombre)
+            });
+        }
+    });
+    
+    return students;
 }
