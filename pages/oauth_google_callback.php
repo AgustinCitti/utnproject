@@ -1,7 +1,7 @@
 <?php
 // Callback de Google OAuth: intercambia code por tokens y crea/inicia sesión
 session_start();
-header('Content-Type: application/json');
+
 
 require_once __DIR__ . '/../config/oauth_google.php';
 require_once __DIR__ . '/../config/database.php';
@@ -108,13 +108,9 @@ try {
     $_SESSION['user_role'] = $userRole;
     $_SESSION['logged_in'] = true;
 
-    echo json_encode(['success' => true, 'message' => 'Inicio de sesión con Google exitoso.', 'user' => [
-        'id' => $userId,
-        'name' => $userName . ' ' . $userLast,
-        'email' => $email,
-        'role' => $userRole,
-        'avatar' => $picture
-    ]]);
+    // Redirigir al usuario a la página principal de la aplicación
+    header('Location: ../index.html');
+    exit();
 
 } catch (PDOException $e) {
     if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
