@@ -108,8 +108,8 @@ try {
     $_SESSION['user_role'] = $userRole;
     $_SESSION['logged_in'] = true;
 
-    // Redirigir al usuario a la página principal de la aplicación
-    header('Location: /utnproject/index.html');
+    // Redirigir usando JavaScript para evitar bloqueos del servidor
+    echo "<script>window.location.replace('/utnproject/pages/home.html');</script>";
     exit();
 
 } catch (PDOException $e) {
