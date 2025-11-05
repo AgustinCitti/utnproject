@@ -85,7 +85,7 @@ const translations = {
         continue_with_microsoft: "Continuar con Microsoft",
         or: "o",
         or_continue_with: "O continúa con",
-        signup_with_google: "Registrarse con Google",
+        login_with_google: "Iniciar sesión con Google",
         no_account: "¿No tienes una cuenta?",
         register_now: "Regístrate ahora",
         login_illustration_title: "Transforma tu Enseñanza",

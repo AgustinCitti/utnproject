@@ -122,7 +122,7 @@
 [data-theme="dark"] .nav-dropdown .dropdown-menu {
     background-color: var(--bg-secondary) !important;
     color: var(--text-primary);
-    border-bottom: 1px solid var(--border-color);
+    /* Border removed - add border-b class if needed */
 }
 
 [data-theme="dark"] .card,
@@ -193,6 +193,83 @@
 [data-theme="dark"] .search-filters-btn.active {
     background: #667eea;
     color: white;
+}
+
+/* Desktop Search Bar - Dark mode */
+/* Override bg-white utility class in nav-menu */
+[data-theme="dark"] .nav-menu .bg-white {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* Override border-gray utility class in nav-menu */
+[data-theme="dark"] .nav-menu .border-gray {
+    border-color: var(--border-color) !important;
+    border-style: solid !important;
+    border-width: 1px !important;
+}
+
+/* Override hover:bg-light utility class in nav-menu */
+[data-theme="dark"] .nav-menu .hover\:bg-light:hover {
+    background-color: var(--bg-primary) !important;
+}
+
+/* Search bar container - Ensure border is visible */
+[data-theme="dark"] .nav-menu div.position-relative > div.d-flex.items-center.bg-white {
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* Also target the border class directly */
+[data-theme="dark"] .nav-menu div.position-relative > div.border {
+    border: 1px solid var(--border-color) !important;
+}
+
+/* Target any element with both border and border-gray classes */
+[data-theme="dark"] .nav-menu .border.border-gray {
+    border: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] .nav-menu div.position-relative > div.d-flex.items-center.bg-white:focus-within {
+    border: 1px solid #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+}
+
+/* Ensure focus-within works with border classes */
+[data-theme="dark"] .nav-menu .border.border-gray:focus-within {
+    border: 1px solid #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+}
+
+/* Search input field */
+[data-theme="dark"] #desktopSearchInput {
+    color: var(--text-primary) !important;
+    background-color: transparent !important;
+}
+
+[data-theme="dark"] #desktopSearchInput::placeholder {
+    color: var(--text-secondary) !important;
+}
+
+/* Search icon */
+[data-theme="dark"] .nav-menu .position-relative .fa-search,
+[data-theme="dark"] .nav-menu div.position-relative i.fa-search {
+    color: var(--text-secondary) !important;
+}
+
+/* Filter button */
+[data-theme="dark"] #desktopFiltersBtn {
+    color: var(--text-secondary) !important;
+    background-color: transparent !important;
+}
+
+[data-theme="dark"] #desktopFiltersBtn:hover {
+    background-color: var(--bg-primary) !important;
+    color: #667eea !important;
+}
+
+/* Filter button icon */
+[data-theme="dark"] #desktopFiltersBtn .fa-filter {
+    color: inherit;
 }
 
 /* ==========================================================================

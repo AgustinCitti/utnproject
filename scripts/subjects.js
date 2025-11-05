@@ -1279,15 +1279,7 @@ async function loadSubjectEvaluaciones(subjectId) {
             `;
         }).join('');
     } else {
-        evaluacionesList.innerHTML = `
-            <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary, #999);">
-                <i class="fas fa-clipboard-list" style="font-size: 2.5em; margin-bottom: 15px; opacity: 0.3;"></i>
-                <p>No hay evaluaciones registradas para esta materia</p>
-                <button class="btn-primary" onclick="showCreateEvaluacionForm(${subjectId})" style="margin-top: 15px;">
-                    <i class="fas fa-plus"></i> Crear Primera Evaluación
-                </button>
-            </div>
-        `;
+        evaluacionesList.innerHTML = '';
     }
 }
 
@@ -1678,15 +1670,7 @@ function loadMateriaStudents(subjectId) {
             studentsCards.style.display = 'none';
         }
     } else {
-        studentsList.innerHTML = `
-            <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary, #999);">
-                <i class="fas fa-users" style="font-size: 2.5em; margin-bottom: 15px; opacity: 0.3;"></i>
-                <p style="margin: 0; font-size: 1.1em;">No hay estudiantes inscritos en esta materia</p>
-                <p style="margin: 10px 0 0 0; font-size: 0.9em; color: var(--text-secondary, #999);">
-                    Puedes asignar estudiantes desde la sección de Gestión de Estudiantes
-                </p>
-            </div>
-        `;
+        studentsList.innerHTML = '';
         
         if (studentsCards) {
             studentsCards.style.display = 'none';

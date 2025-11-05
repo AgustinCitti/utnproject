@@ -329,21 +329,11 @@ function loadUnifiedStudentData() {
 
     const filteredStudents = getFilteredUnifiedStudents();
     
-    // Show empty state if no students
-    if (!filteredStudents || filteredStudents.length === 0) {
-        unifiedStudentList.innerHTML = `
-            <div class="no-data-message" style="text-align: center; padding: 40px; color: #666;">
-                <i class="fas fa-users" style="font-size: 3em; margin-bottom: 20px; color: #ccc;"></i>
-                <p style="font-size: 1.1em; margin-bottom: 10px;">No hay estudiantes disponibles</p>
-                <p style="color: #999;">Agrega estudiantes o verifica los filtros aplicados.</p>
-            </div>
-        `;
-        unifiedStudentCards.innerHTML = '';
-        return;
-    }
-
     // Grid view - Student cards with integrated data
-    unifiedStudentCards.innerHTML = filteredStudents.map(student => {
+    if (!filteredStudents || filteredStudents.length === 0) {
+        unifiedStudentCards.innerHTML = '';
+    } else {
+        unifiedStudentCards.innerHTML = filteredStudents.map(student => {
         // Obtener notas del estudiante y ordenarlas por fecha más reciente
         const studentIdNum = parseInt(student.ID_Estudiante);
         
@@ -486,9 +476,10 @@ function loadUnifiedStudentData() {
                 </div>
             </div>
         `;
-    }).join('');
+        }).join('');
+    }
 
-    // List view - Detailed table
+    // List view - Detailed table (always render headers, even when empty)
     unifiedStudentList.innerHTML = `
         <div class="table-responsive">
             <table class="data-table unified-table">
@@ -504,7 +495,7 @@ function loadUnifiedStudentData() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${filteredStudents.map(student => {
+                    ${(!filteredStudents || filteredStudents.length === 0) ? '' : filteredStudents.map(student => {
                         // Obtener notas del estudiante ordenadas por fecha más reciente
                         const studentIdNum = parseInt(student.ID_Estudiante);
                         

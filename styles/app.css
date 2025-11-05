@@ -462,9 +462,8 @@
     display: none;
 }
 
-/* Desktop navigation bottom separator - Visual separation line */
+/* Desktop navigation - No border by default */
 .desktop-nav {
-    border-bottom: 2px solid #e1e5e9;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
@@ -5157,6 +5156,43 @@
     .courses-list {
         grid-template-columns: 1fr;
     }
+}
+
+/* ==========================================================================
+   DESKTOP SEARCH BAR - BORDERLESS INPUT AND BUTTON
+   ========================================================================== */
+
+/* Ensure search input is completely borderless */
+#desktopSearchInput {
+    border: none !important;
+    border-width: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+#desktopSearchInput:focus {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Ensure filter button is completely borderless */
+#desktopFiltersBtn {
+    border: none !important;
+    border-width: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+#desktopFiltersBtn:focus {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+#desktopFiltersBtn:hover {
+    border: none !important;
+    outline: none !important;
 }
 
 
