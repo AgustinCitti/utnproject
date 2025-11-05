@@ -164,12 +164,12 @@ function loadExams() {
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Title</th>
-                        <th>Subject</th>
-                        <th>Type</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th data-translate="title">Título</th>
+                        <th data-translate="subject">Materia</th>
+                        <th data-translate="type">Tipo</th>
+                        <th data-translate="date">Fecha</th>
+                        <th data-translate="status">Estado</th>
+                        <th data-translate="actions">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -203,6 +203,13 @@ function loadExams() {
             </table>
         </div>
     `;
+    
+    // Apply translations to the newly rendered table headers
+    if (typeof translatePage === 'function' && typeof window.currentLanguage !== 'undefined') {
+        translatePage(window.currentLanguage);
+    } else if (typeof translatePage === 'function' && typeof currentLanguage !== 'undefined') {
+        translatePage(currentLanguage);
+    }
 }
 
 async function showExamModal(examId = null) {

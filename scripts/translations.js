@@ -340,6 +340,11 @@ const translations = {
         course: "Curso",
         actions: "Acciones",
         
+        // Table Headers
+        title: "Título",
+        date: "Fecha",
+        status: "Estado",
+        
         // Payment page
         payment_title: "Completa tu Pago",
         payment_subtitle: "Pasarela de pago seguro impulsada por EduSync",
@@ -695,6 +700,11 @@ const translations = {
         total_content: "Total Content",
         course: "Course",
         actions: "Actions",
+        
+        // Table Headers
+        title: "Title",
+        date: "Date",
+        status: "Status",
         
         // Payment page
         payment_title: "Complete Your Payment",
