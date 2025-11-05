@@ -21,46 +21,37 @@ function loadReports() {
     const passingRate = getPassingStudents();
 
     reportsContainer.innerHTML = `
-        <div class="reports-dashboard">
-            <!-- Section Header -->
-            <div class="section-header">
-                <h2 data-translate="reports">Reportes</h2>
-                <div class="section-actions">
-                    <!-- UNIFIED FILTER - This is the ONLY filter that affects ALL charts -->
-                   
-                    <div class="report-actions">
-                        <div class="report-actions-row">
-                            <select id="globalSubjectFilter" onchange="updateAllCharts()" class="filter-select" title="Este filtro afecta TODOS los gráficos y reportes simultáneamente">
-                                <option value="all">Todas las Materias</option>
-                            </select>
-                            <button class="btn btn-primary" onclick="exportReport('pdf')" title="Download comprehensive PDF report">
-                                <i class="fas fa-file-pdf"></i> 
-                                <span data-translate="export_pdf">Exportar PDF</span>
-                            </button>
-                            <button class="btn btn-secondary" onclick="exportReport('excel')" title="Descargar archivos Excel para análisis de datos">
-                                <i class="fas fa-file-excel"></i> 
-                                <span>Exportar Excel</span>
-                            </button>
-                            <button class="btn btn-secondary" onclick="exportAttendanceOnly()" title="Exportar solo lista de asistencia">
-                                <i class="fas fa-calendar-check"></i> 
-                                <span>Exportar Asistencia</span>
-                            </button>
-                        </div>
-                        <div class="report-actions-row">
-                            <button class="btn btn-secondary" onclick="exportGradesOnly()" title="Exportar solo lista de notas">
-                                <i class="fas fa-graduation-cap"></i> 
-                                <span>Exportar Notas</span>
-                            </button>
-                            <button class="btn btn-secondary" onclick="exportProgressReport()" title="Exportar informes de avance por cuatrimestre">
-                                <i class="fas fa-chart-line"></i> 
-                                <span>Exportar Informes de Avance</span>
-                            </button>
-                            <button class="btn btn-secondary" onclick="printReport()" title="Print the current report">
-                                <i class="fas fa-print"></i> 
-                                <span data-translate="print_report">Imprimir</span>
-                            </button>
-                        </div>
-                    </div>
+        <div class="reports-dashboard p-4 w-full max-w-full box-border">
+            <!-- Report Controls - Full Width, No Background -->
+            <div class="report-actions w-full mt-4 mb-6">
+                <div class="d-flex gap-4 justify-start flex-wrap items-center w-full">
+                    <select id="globalSubjectFilter" onchange="updateAllCharts()" class="filter-select" title="Este filtro afecta TODOS los gráficos y reportes simultáneamente">
+                        <option value="all">Todas las Materias</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="exportReport('pdf')" title="Download comprehensive PDF report">
+                        <i class="fas fa-file-pdf"></i> 
+                        <span data-translate="export_pdf">Exportar PDF</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportReport('excel')" title="Descargar archivos Excel para análisis de datos">
+                        <i class="fas fa-file-excel"></i> 
+                        <span>Exportar Excel</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportAttendanceOnly()" title="Exportar solo lista de asistencia">
+                        <i class="fas fa-calendar-check"></i> 
+                        <span>Exportar Asistencia</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportGradesOnly()" title="Exportar solo lista de notas">
+                        <i class="fas fa-graduation-cap"></i> 
+                        <span>Exportar Notas</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportProgressReport()" title="Exportar informes de avance por cuatrimestre">
+                        <i class="fas fa-chart-line"></i> 
+                        <span>Exportar Informes de Avance</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="printReport()" title="Print the current report">
+                        <i class="fas fa-print"></i> 
+                        <span data-translate="print_report">Imprimir</span>
+                    </button>
                 </div>
             </div>
 
@@ -105,64 +96,64 @@ function loadReports() {
             </div>
 
             <!-- Charts Section - NO INDIVIDUAL FILTERS HERE -->
-            <div class="charts-grid">
+            <div class="charts-grid d-grid grid-cols-auto grid-gap-6 mb-8 w-full max-w-full">
                 <!-- Grades Distribution Chart -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Distribución de Calificaciones</h3>
+                <div class="chart-card bg-white rounded-lg shadow overflow-hidden">
+                    <div class="chart-header d-flex justify-between items-center px-6 py-4 border-b border-gray">
+                        <h3 class="text-lg font-semibold text-dark m-0">Distribución de Calificaciones</h3>
                     </div>
-                    <div class="chart-container">
+                    <div class="chart-container p-4 position-relative" style="height: 300px;">
                         <canvas id="gradesChart"></canvas>
                     </div>
                 </div>
 
                 <!-- Attendance Trends Chart -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Tendencias de Asistencia</h3>
+                <div class="chart-card bg-white rounded-lg shadow overflow-hidden">
+                    <div class="chart-header d-flex justify-between items-center px-6 py-4 border-b border-gray">
+                        <h3 class="text-lg font-semibold text-dark m-0">Tendencias de Asistencia</h3>
                     </div>
-                    <div class="chart-container">
+                    <div class="chart-container p-4 position-relative" style="height: 300px;">
                         <canvas id="attendanceChart"></canvas>
                     </div>
                 </div>
 
                 <!-- Student Performance Chart -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Rendimiento de Estudiantes</h3>
+                <div class="chart-card bg-white rounded-lg shadow overflow-hidden">
+                    <div class="chart-header d-flex justify-between items-center px-6 py-4 border-b border-gray">
+                        <h3 class="text-lg font-semibold text-dark m-0">Rendimiento de Estudiantes</h3>
                     </div>
-                    <div class="chart-container">
+                    <div class="chart-container p-4 position-relative" style="height: 300px;">
                         <canvas id="performanceChart"></canvas>
                     </div>
                 </div>
 
                 <!-- Subject Comparison Chart -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Comparación de Materias</h3>
+                <div class="chart-card bg-white rounded-lg shadow overflow-hidden">
+                    <div class="chart-header d-flex justify-between items-center px-6 py-4 border-b border-gray">
+                        <h3 class="text-lg font-semibold text-dark m-0">Comparación de Materias</h3>
                     </div>
-                    <div class="chart-container">
+                    <div class="chart-container p-4 position-relative" style="height: 300px;">
                         <canvas id="subjectChart"></canvas>
                     </div>
                 </div>
             </div>
 
             <!-- Detailed Reports -->
-            <div class="detailed-reports">
-                <div class="report-card">
-                    <div class="report-header">
-                        <h3>Estudiantes con Mejor Rendimiento</h3>
+            <div class="detailed-reports d-grid grid-cols-auto grid-gap-6 mb-8 w-full max-w-full">
+                <div class="report-card bg-white rounded-lg shadow overflow-hidden">
+                    <div class="report-header px-6 py-4 border-b border-gray bg-light">
+                        <h3 class="text-lg font-semibold text-dark m-0">Estudiantes con Mejor Rendimiento</h3>
                     </div>
-                    <div class="report-content" id="topStudentsReport">
+                    <div class="report-content p-6" id="topStudentsReport">
                         <!-- Will be populated by JavaScript -->
                     </div>
                 </div>
 
-                <div class="report-card">
-                    <div class="report-header">
-                        <h3>Resumen de Asistencia</h3>
+                <div class="report-card bg-white rounded-lg shadow overflow-hidden">
+                    <div class="report-header px-6 py-4 border-b border-gray bg-light">
+                        <h3 class="text-lg font-semibold text-dark m-0">Resumen de Asistencia</h3>
                     </div>
-                    <div class="report-content" id="attendanceReport">
+                    <div class="report-content p-6" id="attendanceReport">
                         <!-- Will be populated by JavaScript -->
                     </div>
                 </div>

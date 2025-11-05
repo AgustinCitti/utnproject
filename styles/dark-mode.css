@@ -1772,9 +1772,9 @@
 
 /* Report actions container */
 [data-theme="dark"] .report-actions {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 2px 8px var(--shadow);
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
 }
 
 /* Report actions rows */
