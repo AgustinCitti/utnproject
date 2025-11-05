@@ -161,8 +161,6 @@ try {
 			$Horario = isset($body['Horario']) && $body['Horario'] !== '' ? $body['Horario'] : null;
 			$Aula = isset($body['Aula']) && $body['Aula'] !== '' ? $body['Aula'] : null;
 			$Descripcion = isset($body['Descripcion']) && $body['Descripcion'] !== '' ? $body['Descripcion'] : null;
-			$Escuela_ID = isset($body['Escuela_ID']) && $body['Escuela_ID'] !== '' ? (int)$body['Escuela_ID'] : null;
-
 			// Validar que el docente ID sea válido
 			if ($DocenteId <= 0) {
 				respond(400, ['success'=>false,'message'=>'ID de docente inválido']);
@@ -174,6 +172,12 @@ try {
 			if (!$checkDocente->fetch()) {
 				respond(404, ['success'=>false,'message'=>'El docente especificado no existe o no está activo. Por favor, inicia sesión nuevamente.']);
 			}
+
+			// Obtener Escuela_ID del curso
+			$cursoStmt = $db->prepare("SELECT Escuela_ID FROM Curso WHERE Curso_division = ? AND Usuarios_docente_ID_docente = ?");
+			$cursoStmt->execute([$Curso_division, $DocenteId]);
+			$curso = $cursoStmt->fetch();
+			$Escuela_ID = $curso ? $curso['Escuela_ID'] : null;
 
 			// Verificar si ya existe una materia con el mismo nombre, curso y docente (previene duplicados)
 			$checkStmt = $db->prepare("
@@ -209,7 +213,7 @@ try {
 			$body = readJson();
 			
 			// Get current materia data
-			$stmt = $db->prepare("SELECT Nombre, Horario, Estado FROM Materia WHERE ID_materia = ?");
+			$stmt = $db->prepare("SELECT Nombre, Horario, Estado, Curso_division, Usuarios_docente_ID_docente FROM Materia WHERE ID_materia = ?");
 			$stmt->execute([$id]);
 			$currentMateria = $stmt->fetch();
 			
@@ -223,6 +227,18 @@ try {
 					$params[] = $body[$f] === '' ? null : $body[$f];
 				}
 			}
+
+			// Si se actualiza Curso_division, también actualizar Escuela_ID
+			if (isset($body['Curso_division'])) {
+				$DocenteId = isset($body['Usuarios_docente_ID_docente']) ? (int)$body['Usuarios_docente_ID_docente'] : $currentMateria['Usuarios_docente_ID_docente'];
+				$cursoStmt = $db->prepare("SELECT Escuela_ID FROM Curso WHERE Curso_division = ? AND Usuarios_docente_ID_docente = ?");
+				$cursoStmt->execute([$body['Curso_division'], $DocenteId]);
+				$curso = $cursoStmt->fetch();
+				$Escuela_ID = $curso ? $curso['Escuela_ID'] : null;
+				$sets[] = "Escuela_ID = ?";
+				$params[] = $Escuela_ID;
+			}
+
 			if (!$sets) respond(400, ['success'=>false,'message'=>'Nada para actualizar']);
 			$params[] = $id;
 			$sql = "UPDATE Materia SET ".implode(', ', $sets)." WHERE ID_materia = ?";

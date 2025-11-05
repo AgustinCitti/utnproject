@@ -140,6 +140,24 @@ try {
             
             // Construir Curso_division
             $cursoDivision = "{$numeroCurso}º Curso - División {$division}";
+
+            // Gestión de la Escuela
+            $escuelaId = null;
+            if (!empty($institucion)) {
+                // Verificar si la escuela ya existe
+                $escuelaStmt = $db->prepare("SELECT ID_escuela FROM Escuela WHERE Nombre = ?");
+                $escuelaStmt->execute([$institucion]);
+                $escuela = $escuelaStmt->fetch();
+
+                if ($escuela) {
+                    $escuelaId = $escuela['ID_escuela'];
+                } else {
+                    // Si no existe, crearla
+                    $insertEscuelaStmt = $db->prepare("INSERT INTO Escuela (Nombre) VALUES (?)");
+                    $insertEscuelaStmt->execute([$institucion]);
+                    $escuelaId = $db->lastInsertId();
+                }
+            }
             
             // Verificar si ya existe (mismo curso, misma institución, mismo docente)
             $checkStmt = $db->prepare("
@@ -162,10 +180,10 @@ try {
             $estado = isset($body['Estado']) ? $body['Estado'] : 'ACTIVO';
             
             $stmt = $db->prepare("
-                INSERT INTO Curso (Curso_division, Numero_curso, Division, Institucion, Usuarios_docente_ID_docente, Estado)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO Curso (Curso_division, Numero_curso, Division, Institucion, Escuela_ID, Usuarios_docente_ID_docente, Estado)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
-            $stmt->execute([$cursoDivision, $numeroCurso, $division, $institucion, $teacherId, $estado]);
+            $stmt->execute([$cursoDivision, $numeroCurso, $division, $institucion, $escuelaId, $teacherId, $estado]);
             
             $newId = (int)$db->lastInsertId();
             
