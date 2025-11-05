@@ -1,8 +1,7 @@
 <?php
-// Copiar como oauth_google.php y completar con tus credenciales de Google Cloud
-// Console: https://console.cloud.google.com/apis/credentials
 
-define('GOOGLE_CLIENT_ID', 'TU_CLIENT_ID.apps.googleusercontent.com');
+
+define('GOOGLE_CLIENT_ID', '267133757349-33f40mdr3g9nk420gh4j39f4un26a73o.apps.googleusercontent.com');
 define('GOOGLE_CLIENT_SECRET', 'TU_CLIENT_SECRET');
 
 // Debe coincidir exactamente con lo configurado en Google
