@@ -103,10 +103,13 @@
 
                     <div class="form-options">
                         <label class="checkbox-wrapper">
-                            <input type="checkbox" id="agreeTerms" required>
+                            <input type="checkbox" id="agreeTerms">
                             <span class="checkmark"></span>
                             <span>Acepto los <a href="terms.html" class="terms-link">Términos de Servicio</a> y la <a href="privacy.html" class="terms-link">Política de Privacidad</a></span>
                         </label>
+                        <div class="terms-error-message" id="termsError">
+                            <i class="fas fa-exclamation-circle"></i> Por favor, acepte los términos y condiciones para continuar.
+                        </div>
                     </div>
 
                     <button type="submit" class="btn-primary register-btn" data-translate="create_account">

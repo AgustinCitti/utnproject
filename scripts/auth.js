@@ -110,6 +110,23 @@ function initializeLandingPage() {
         });
     }
     
+    // Terms checkbox error handling - remove error when checked
+    const agreeTermsCheckbox = document.getElementById('agreeTerms');
+    const termsErrorMsg = document.getElementById('termsError');
+    if (agreeTermsCheckbox) {
+        agreeTermsCheckbox.addEventListener('change', function() {
+            const checkboxWrapper = this.closest('.checkbox-wrapper');
+            if (this.checked) {
+                if (checkboxWrapper) {
+                    checkboxWrapper.classList.remove('error');
+                }
+                if (termsErrorMsg) {
+                    termsErrorMsg.classList.remove('show');
+                }
+            }
+        });
+    }
+    
     // Login form handling
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
@@ -148,6 +165,9 @@ async function handleRegistration() {
     const form = document.getElementById('registrationForm');
     const submitBtn = form.querySelector('button[type="submit"]');
     const originalBtnHTML = submitBtn.innerHTML;
+    const agreeTermsCheckbox = document.getElementById('agreeTerms');
+    const checkboxWrapper = agreeTermsCheckbox ? agreeTermsCheckbox.closest('.checkbox-wrapper') : null;
+    const termsErrorMsg = document.getElementById('termsError');
 
     const formData = {
         firstName: document.getElementById('regFirstName').value,
@@ -169,6 +189,27 @@ async function handleRegistration() {
     if (formData.password.length < 8) {
         showRegisterMessage('La contraseña debe tener al menos 8 caracteres.');
         return;
+    }
+    
+    // Check if terms are accepted
+    if (!agreeTermsCheckbox || !agreeTermsCheckbox.checked) {
+        if (checkboxWrapper) {
+            checkboxWrapper.classList.add('error');
+        }
+        if (termsErrorMsg) {
+            termsErrorMsg.classList.add('show');
+        }
+        // Scroll to checkbox if it's not visible
+        checkboxWrapper?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+    }
+    
+    // Remove error class if checkbox is checked
+    if (checkboxWrapper) {
+        checkboxWrapper.classList.remove('error');
+    }
+    if (termsErrorMsg) {
+        termsErrorMsg.classList.remove('show');
     }
 
     // --- Show loading state ---
@@ -361,6 +402,23 @@ function initializeRegisterPage() {
         });
     }
     
+    // Terms checkbox error handling - remove error when checked
+    const agreeTermsCheckbox = document.getElementById('agreeTerms');
+    const termsErrorMsg = document.getElementById('termsError');
+    if (agreeTermsCheckbox) {
+        agreeTermsCheckbox.addEventListener('change', function() {
+            const checkboxWrapper = this.closest('.checkbox-wrapper');
+            if (this.checked) {
+                if (checkboxWrapper) {
+                    checkboxWrapper.classList.remove('error');
+                }
+                if (termsErrorMsg) {
+                    termsErrorMsg.classList.remove('show');
+                }
+            }
+        });
+    }
+    
     // Social login buttons (placeholder functionality)
     const googleBtn = document.querySelector('.google-btn');
     const microsoftBtn = document.querySelector('.microsoft-btn');
@@ -401,6 +459,23 @@ function initializeAuthPage() {
         registrationForm.addEventListener('submit', (e) => {
             e.preventDefault();
             handleRegistration();
+        });
+    }
+    
+    // Terms checkbox error handling - remove error when checked
+    const agreeTermsCheckbox = document.getElementById('agreeTerms');
+    const termsErrorMsg = document.getElementById('termsError');
+    if (agreeTermsCheckbox) {
+        agreeTermsCheckbox.addEventListener('change', function() {
+            const checkboxWrapper = this.closest('.checkbox-wrapper');
+            if (this.checked) {
+                if (checkboxWrapper) {
+                    checkboxWrapper.classList.remove('error');
+                }
+                if (termsErrorMsg) {
+                    termsErrorMsg.classList.remove('show');
+                }
+            }
         });
     }
     
