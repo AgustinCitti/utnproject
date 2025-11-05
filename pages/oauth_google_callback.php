@@ -109,7 +109,7 @@ try {
     $_SESSION['logged_in'] = true;
 
     // Redirigir al usuario a la página principal de la aplicación
-    header('Location: ../index.html');
+    header('Location: home.html');
     exit();
 
 } catch (PDOException $e) {
