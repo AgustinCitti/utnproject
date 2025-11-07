@@ -29,16 +29,7 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     exit;
 }
 
-// --- validación de email de Google ---
-if (preg_match('/@gmail\\.com$/i', $email)) {
-    http_response_code(400);
-    echo json_encode([
-        'success' => false,
-        'message' => 'parece que estás usando una cuenta de google. por favor, utiliza el botón "iniciar sesión con google".',
-        'google_login_required' => true
-    ]);
-    exit;
-}
+
 
 // --- 5. conexión con la base de datos y verificación del usuario ---
 try {

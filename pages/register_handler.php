@@ -20,17 +20,7 @@ $email = $data['email'] ?? '';
 $password = $data['password'] ?? '';
 $confirmPassword = $data['confirmPassword'] ?? '';
 
-// --- Validación de email de Google ---
-// Si el email es de Google, se le indica al usuario que use el botón de Google.
-if (preg_match('/@gmail\\.com$/i', $email)) {
-    http_response_code(400);
-    echo json_encode([
-        'success' => false, 
-        'message' => 'Parece que estás usando una cuenta de Google. Por favor, utiliza el botón "Registrarse con Google".',
-        'google_login_required' => true
-    ]);
-    exit;
-}
+
 
 // --- validaciones básicas ---
 if (empty($firstName) || empty($lastName) || empty($email) || empty($password)) {
