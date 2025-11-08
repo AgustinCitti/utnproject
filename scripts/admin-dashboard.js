@@ -58,7 +58,7 @@ function setupEventListeners() {
         userForm.addEventListener('submit', handleUserFormSubmit);
     }
     
-    // Close modal on outside click
+    // Close modal on outside click (overlay click)
     const modal = document.getElementById('userModal');
     if (modal) {
         modal.addEventListener('click', function(e) {
