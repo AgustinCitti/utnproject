@@ -1540,13 +1540,7 @@
         margin-bottom: 1rem;
     }
     
-    .notification-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-    
-    .notification-meta {
+    .notification-card .notification-meta {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;

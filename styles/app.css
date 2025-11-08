@@ -2464,10 +2464,13 @@
     border-left: 4px solid #007bff;
 }
 
-/* Notification date - Date display for notifications */
+/* Notification date - Date display for notifications (legacy) */
 .notification-date {
     font-size: 0.9rem;
     color: #666;
+    padding: 0;
+    background: none;
+    border: none;
 }
 
 /* ==========================================================================
@@ -2511,15 +2514,7 @@
     color: white;
 }
 
-/* Recordatorio details container - Additional reminder information */
-.recordatorio-details {
-    display: flex;
-    gap: 15px;
-    margin-top: 10px;
-    font-size: 0.9rem;
-}
-
-/* Recordatorio type badge - Reminder type indicator */
+/* Recordatorio type badge - Reminder type indicator (legacy, use .notification-card .recordatorio-type) */
 .recordatorio-type {
     background: #e9ecef;
     padding: 4px 8px;
@@ -2527,7 +2522,7 @@
     font-weight: 500;
 }
 
-/* Recordatorio subject - Subject name display */
+/* Recordatorio subject - Subject name display (legacy, use .notification-card .recordatorio-subject) */
 .recordatorio-subject {
     color: #667eea;
     font-weight: 500;
@@ -3436,14 +3431,6 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-/* Notification content area - Flexible content container */
-.notification-content {
-    margin-bottom: 1rem;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-}
-
 /* Notification card hover effect - Lift animation and shadow */
 .notification-card:hover {
     transform: translateY(-2px);
@@ -3460,6 +3447,32 @@
 /* Read notification card - Dimmed appearance */
 .notification-card.read {
     opacity: 0.8;
+}
+
+/* Priority-based border colors for notification cards */
+.notification-card.priority-alta {
+    border-left-color: #dc3545 !important;
+}
+
+.notification-card.priority-media {
+    border-left-color: #ff9800 !important;
+}
+
+.notification-card.priority-baja {
+    border-left-color: #28a745 !important;
+}
+
+/* Override unread border color when priority is set */
+.notification-card.unread.priority-alta {
+    border-left-color: #dc3545 !important;
+}
+
+.notification-card.unread.priority-media {
+    border-left-color: #ff9800 !important;
+}
+
+.notification-card.unread.priority-baja {
+    border-left-color: #28a745 !important;
 }
 
 /* Notification card top border - Gradient top border for unread */
@@ -3480,52 +3493,77 @@
     opacity: 1;
 }
 
-/* Notification header section - Title and metadata area */
-.notification-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
+/* Priority-based top border colors */
+.notification-card.priority-alta::before {
+    background: linear-gradient(90deg, #dc3545, #c82333);
+    opacity: 1;
 }
 
-/* Notification title - Notification heading */
-.notification-title {
+.notification-card.priority-media::before {
+    background: linear-gradient(90deg, #ff9800, #f57c00);
+    opacity: 1;
+}
+
+.notification-card.priority-baja::before {
+    background: linear-gradient(90deg, #28a745, #218838);
+    opacity: 1;
+}
+
+/* Notification title - Notification heading directly in card */
+.notification-card .notification-title {
     font-size: 1.1rem;
     font-weight: 600;
     color: #2c3e50;
-    margin: 0;
+    margin: 0 0 0.75rem 0;
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
 /* Notification title icon - Type icon styling */
-.notification-title i {
+.notification-card .notification-title i {
     color: #667eea;
     font-size: 0.9rem;
 }
 
-/* Notification metadata - Date and priority information */
-.notification-meta {
+/* Notification metadata - Date and priority information directly in card */
+.notification-card .notification-meta {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     font-size: 0.85rem;
     color: #6c757d;
+    margin-bottom: 1rem;
+    background: none;
+    padding: 0;
 }
 
-/* Notification date badge - Date display */
-.notification-date {
-    background: #f8f9fa;
-    padding: 0.25rem 0.75rem;
-    border-radius: 6px;
+.notification-card .notification-meta * {
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+/* Notification date badge - Date display with text color only */
+.notification-card .notification-date {
     font-weight: 500;
+    color: #6c757d;
+    padding: 0;
+    background: none !important;
+    border: none;
 }
 
-/* Enhanced priority badges with better contrast */
+/* Legacy notification-date - for other contexts */
+.notification-date:not(.notification-card .notification-date) {
+    font-weight: 500;
+    color: #6c757d;
+    padding: 0;
+    background: none;
+    border: none;
+}
+
+/* Enhanced priority badges with text colors only */
 .priority-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 6px;
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -3533,27 +3571,24 @@
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
+    padding: 0;
+    background: none;
+    border: none;
 }
 
-/* High priority badge - Red styling for high priority */
+/* High priority badge - Red text color for high priority */
 .priority-badge.alta {
-    background: #fee;
     color: #dc3545;
-    border: 1px solid #f5c6cb;
 }
 
-/* Medium priority badge - Yellow styling for medium priority */
+/* Medium priority badge - Orange text color for medium priority */
 .priority-badge.media {
-    background: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeaa7;
+    color: #ff9800;
 }
 
-/* Low priority badge - Green styling for low priority */
+/* Low priority badge - Green text color for low priority */
 .priority-badge.baja {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+    color: #28a745;
 }
 
 /* Enhanced type badges */
@@ -3601,52 +3636,45 @@
     color: #004085;
 }
 
-/* Notification content area - Message content */
-.notification-content {
-    margin-bottom: 1rem;
-}
-
-/* Notification message - Main notification text */
-.notification-message {
+/* Notification message - Main notification text directly in card */
+.notification-card .notification-message {
     color: #495057;
     line-height: 1.6;
-    margin: 0;
+    margin: 0 0 0.75rem 0;
 }
 
-/* Recordatorio details container - Additional reminder information */
-.recordatorio-details {
-    display: flex;
-    gap: 1rem;
-    margin-top: 0.75rem;
-    padding: 0.75rem;
-    background: #f8f9fa;
-    border-radius: 8px;
+/* Recordatorio type badge - Reminder type indicator directly in card with text color only */
+.notification-card .recordatorio-type {
+    color: #667eea;
+    font-weight: 500;
     font-size: 0.85rem;
+    display: inline-block;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding: 0;
+    background: none !important;
+    border: none;
+    border-radius: 0;
 }
 
-/* Recordatorio type badge - Reminder type indicator */
-.recordatorio-type {
-    background: #667eea;
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 6px;
-    font-weight: 500;
-}
-
-/* Recordatorio subject badge - Subject name display */
-.recordatorio-subject {
-    background: #e9ecef;
+/* Recordatorio subject badge - Subject name display directly in card with text color only */
+.notification-card .recordatorio-subject {
     color: #495057;
-    padding: 0.25rem 0.75rem;
-    border-radius: 6px;
     font-weight: 500;
+    font-size: 0.85rem;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+    padding: 0;
+    background: none !important;
+    border: none;
+    border-radius: 0;
 }
 
-/* Notification actions container - Action buttons for notifications */
-.notification-actions {
+/* Notification actions container - Action buttons for notifications directly in card */
+.notification-card .notification-actions {
     display: flex;
     gap: 0.75rem;
-    margin-top: 1rem;
+    margin-top: auto;
     padding-top: 1rem;
     border-top: 1px solid #f0f2f5;
     flex-wrap: wrap;
@@ -3713,6 +3741,49 @@
 .notifications-table tr.unread {
     background: #f8f9ff;
     border-left: 3px solid #667eea;
+}
+
+/* Priority-based border colors for table rows */
+.notifications-table tr.priority-alta {
+    border-left-color: #dc3545 !important;
+    background: #fff5f5;
+}
+
+.notifications-table tr.priority-media {
+    border-left-color: #ff9800 !important;
+    background: #fff8f0;
+}
+
+.notifications-table tr.priority-baja {
+    border-left-color: #28a745 !important;
+    background: #f0fff4;
+}
+
+/* Override unread background when priority is set */
+.notifications-table tr.unread.priority-alta {
+    border-left-color: #dc3545 !important;
+    background: #fff5f5;
+}
+
+.notifications-table tr.unread.priority-media {
+    border-left-color: #ff9800 !important;
+    background: #fff8f0;
+}
+
+.notifications-table tr.unread.priority-baja {
+    border-left-color: #28a745 !important;
+    background: #f0fff4;
+}
+
+/* Recordatorio type in table - Text color only */
+.notifications-table .recordatorio-type {
+    color: #667eea;
+    font-weight: 500;
+    font-size: 0.85rem;
+    padding: 0;
+    background: none !important;
+    border: none;
+    border-radius: 0;
 }
 
 /* Type badge - Notification type indicator */
@@ -3854,9 +3925,11 @@
         padding: 1rem;
     }
     
-    .recordatorio-details {
-        flex-direction: column;
-        gap: 0.5rem;
+    .notification-card .recordatorio-type,
+    .notification-card .recordatorio-subject {
+        display: block;
+        margin-right: 0;
+        margin-bottom: 0.5rem;
     }
     
     .notifications-table {

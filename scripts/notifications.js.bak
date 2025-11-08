@@ -166,9 +166,7 @@ async function loadNotifications() {
                     <button class="btn btn-sm btn-outline-danger" onclick="deleteNotification('${notification.id}')" title="${translations[lang].delete}">
                         <i class="fas fa-trash"></i> ${translations[lang].delete}
                     </button>
-                    ${notification.type === 'recordatorio' ? `<button class="btn btn-sm btn-outline-primary" onclick="viewRecordatorio('${notification.recordatorio.ID_recordatorio}')" title="${translations[lang].view_details}">
-                        <i class="fas fa-eye"></i> ${translations[lang].view_details}
-                    </button>` : ''}
+                  
                 </div>
             </div>
         `).join('');
@@ -230,9 +228,7 @@ async function loadNotifications() {
                                         <button class="btn btn-sm btn-outline-danger" onclick="deleteNotification('${notification.id}')" title="${translations[lang].delete || 'Eliminar'}">
                                             <i class="fas fa-trash"></i>
                                         </button>
-                                        ${notification.type === 'recordatorio' ? `<button class="btn btn-sm btn-outline-primary" onclick="viewRecordatorio('${notification.recordatorio.ID_recordatorio}')" title="${translations[lang].view_details || 'Ver detalles'}">
-                                            <i class="fas fa-eye"></i>
-                                        </button>` : ''}
+                                        
                                     </div>
                                 </td>
                             </tr>

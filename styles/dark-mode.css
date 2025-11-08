@@ -825,6 +825,77 @@
     opacity: 0.7;
 }
 
+/* Dark mode priority-based notification card borders */
+[data-theme="dark"] .notification-card.priority-alta {
+    border-left-color: #dc3545 !important;
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, var(--card-bg) 100%);
+}
+
+[data-theme="dark"] .notification-card.priority-media {
+    border-left-color: #ff9800 !important;
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, var(--card-bg) 100%);
+}
+
+[data-theme="dark"] .notification-card.priority-baja {
+    border-left-color: #28a745 !important;
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, var(--card-bg) 100%);
+}
+
+[data-theme="dark"] .notification-card.unread.priority-alta {
+    border-left-color: #dc3545 !important;
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, var(--card-bg) 100%);
+}
+
+[data-theme="dark"] .notification-card.unread.priority-media {
+    border-left-color: #ff9800 !important;
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.15) 0%, var(--card-bg) 100%);
+}
+
+[data-theme="dark"] .notification-card.unread.priority-baja {
+    border-left-color: #28a745 !important;
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.15) 0%, var(--card-bg) 100%);
+}
+
+/* Dark mode priority top border */
+[data-theme="dark"] .notification-card.priority-alta::before {
+    background: linear-gradient(90deg, #dc3545, #c82333);
+}
+
+[data-theme="dark"] .notification-card.priority-media::before {
+    background: linear-gradient(90deg, #ff9800, #f57c00);
+}
+
+[data-theme="dark"] .notification-card.priority-baja::before {
+    background: linear-gradient(90deg, #28a745, #218838);
+}
+
+/* Dark mode recordatorio type and subject in cards */
+[data-theme="dark"] .notification-card .recordatorio-type {
+    color: #667eea;
+}
+
+[data-theme="dark"] .notification-card .recordatorio-subject {
+    color: var(--text-secondary);
+}
+
+/* Dark mode priority badges in cards */
+[data-theme="dark"] .notification-card .priority-badge {
+    background: none !important;
+    border: none;
+}
+
+[data-theme="dark"] .notification-card .priority-badge.alta {
+    color: #dc3545;
+}
+
+[data-theme="dark"] .notification-card .priority-badge.media {
+    color: #ff9800;
+}
+
+[data-theme="dark"] .notification-card .priority-badge.baja {
+    color: #28a745;
+}
+
 [data-theme="dark"] .notification-title {
     color: white;
 }
@@ -1300,9 +1371,105 @@
     border-bottom-color: var(--border-color);
 }
 
+/* Dark mode styles for notifications table */
+[data-theme="dark"] .notifications-table {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .notifications-table th {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .notifications-table td {
+    color: var(--text-primary);
+    border-bottom-color: var(--border-color);
+}
+
 [data-theme="dark"] .notifications-table tr:hover {
     background-color: var(--bg-secondary);
     color: var(--text-primary);
+}
+
+/* Dark mode default table row background */
+[data-theme="dark"] .notifications-table tr {
+    background: var(--card-bg);
+}
+
+[data-theme="dark"] .notifications-table tr.unread {
+    background: rgba(102, 126, 234, 0.15);
+    border-left-color: #667eea;
+}
+
+/* Dark mode priority-based table row styles */
+[data-theme="dark"] .notifications-table tr.priority-alta {
+    border-left-color: #dc3545 !important;
+    background: rgba(220, 53, 69, 0.2) !important;
+}
+
+[data-theme="dark"] .notifications-table tr.priority-media {
+    border-left-color: #ff9800 !important;
+    background: rgba(255, 152, 0, 0.2) !important;
+}
+
+[data-theme="dark"] .notifications-table tr.priority-baja {
+    border-left-color: #28a745 !important;
+    background: rgba(40, 167, 69, 0.2) !important;
+}
+
+[data-theme="dark"] .notifications-table tr.unread.priority-alta {
+    border-left-color: #dc3545 !important;
+    background: rgba(220, 53, 69, 0.25) !important;
+}
+
+[data-theme="dark"] .notifications-table tr.unread.priority-media {
+    border-left-color: #ff9800 !important;
+    background: rgba(255, 152, 0, 0.25) !important;
+}
+
+[data-theme="dark"] .notifications-table tr.unread.priority-baja {
+    border-left-color: #28a745 !important;
+    background: rgba(40, 167, 69, 0.25) !important;
+}
+
+/* Dark mode recordatorio type in table */
+[data-theme="dark"] .notifications-table .recordatorio-type {
+    color: #667eea;
+    background: none !important;
+}
+
+/* Dark mode priority badges in table */
+[data-theme="dark"] .notifications-table .priority-badge {
+    background: none !important;
+    border: none;
+}
+
+[data-theme="dark"] .notifications-table .priority-badge.alta {
+    color: #dc3545;
+}
+
+[data-theme="dark"] .notifications-table .priority-badge.media {
+    color: #ff9800;
+}
+
+[data-theme="dark"] .notifications-table .priority-badge.baja {
+    color: #28a745;
+}
+
+/* Dark mode table status badges */
+[data-theme="dark"] .notifications-table .table-status {
+    background: none !important;
+    border: none;
+}
+
+[data-theme="dark"] .notifications-table .table-status.read {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .notifications-table .table-status.unread {
+    color: #667eea;
 }
 
 /* Dark mode styles for theme items */

@@ -23,33 +23,45 @@
     border-left: 4px solid #4CAF50;
 }
 
-.notification-card .notification-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 0.5rem;
-}
-
 .notification-card .notification-title {
     font-size: 1.1rem;
     font-weight: 600;
-    margin: 0;
+    margin: 0 0 0.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .notification-card .notification-meta {
     font-size: 0.85rem;
     color: #666;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: none;
+    padding: 0;
+}
+
+.notification-card .notification-meta * {
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important;
 }
 
 .notification-card .notification-message {
-    margin: 0.5rem 0;
+    margin: 0 0 0.75rem 0;
     color: #333;
+    line-height: 1.6;
 }
 
 .notification-card .notification-actions {
     display: flex;
     gap: 0.5rem;
     margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f0f2f5;
+    flex-wrap: wrap;
 }
 
 /* Notification Table */
@@ -148,26 +160,26 @@
     background: #ffebee !important;
 }
 
-/* Priority Badges */
+/* Priority Badges - Text colors only */
 .priority-badge {
-    padding: 0.25rem 0.5rem;
-    border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0;
+    background: none;
+    border: none;
 }
 
 .priority-badge.alta {
-    background-color: #ffebee;
     color: #F44336;
 }
 
 .priority-badge.media {
-    background-color: #fff3e0;
     color: #FF9800;
 }
 
 .priority-badge.baja {
-    background-color: #e8f5e9;
     color: #4CAF50;
 }
 
@@ -183,6 +195,10 @@
 
 [data-theme="dark"] .notification-card .notification-message {
     color: #ccc;
+}
+
+[data-theme="dark"] .notification-card .notification-meta {
+    color: #aaa;
 }
 
 [data-theme="dark"] .notifications-table th {

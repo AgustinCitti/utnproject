@@ -123,28 +123,26 @@ async function loadNotifications() {
             </div>
         `;
     } else {
-        notificationsContainer.innerHTML = allNotifications.map(notification => `
-            <div class="notification-card ${notification.read ? 'read' : 'unread'} ${notification.type}">
-                <div class="notification-header">
-                    <h3 class="notification-title">
-                        ${notification.type === 'recordatorio' ? '<i class="fas fa-bell"></i>' : '<i class="fas fa-info-circle"></i>'}
-                        ${notification.title}
-                    </h3>
-                    <div class="notification-meta">
-                        <span class="notification-date">${notification.date}</span>
-                        ${notification.type === 'recordatorio' && notification.recordatorio ? 
-                            `<span class="priority-badge ${notification.recordatorio.Prioridad.toLowerCase()}">${notification.recordatorio.Prioridad}</span>` : ''}
-                    </div>
+        notificationsContainer.innerHTML = allNotifications.map(notification => {
+            const priorityClass = notification.type === 'recordatorio' && notification.recordatorio 
+                ? `priority-${notification.recordatorio.Prioridad.toLowerCase()}` 
+                : '';
+            return `
+            <div class="notification-card ${notification.read ? 'read' : 'unread'} ${notification.type} ${priorityClass}">
+                <h3 class="notification-title">
+                    ${notification.type === 'recordatorio' ? '<i class="fas fa-bell"></i>' : '<i class="fas fa-info-circle"></i>'}
+                    ${notification.title}
+                </h3>
+                <div class="notification-meta">
+                    <span class="notification-date">${notification.date}</span>
+                    ${notification.type === 'recordatorio' && notification.recordatorio ? 
+                        `<span class="priority-badge ${notification.recordatorio.Prioridad.toLowerCase()}">${notification.recordatorio.Prioridad}</span>` : ''}
                 </div>
-                <div class="notification-content">
-                    <p class="notification-message">${notification.message}</p>
-                    ${notification.type === 'recordatorio' && notification.recordatorio ? `
-                        <div class="recordatorio-details">
-                            <span class="recordatorio-type">${getRecordatorioTypeLabel(notification.recordatorio.Tipo)}</span>
-                            <span class="recordatorio-subject">${getSubjectName(notification.recordatorio.Materia_ID_materia)}</span>
-                        </div>
-                    ` : ''}
-                </div>
+                <p class="notification-message">${notification.message}</p>
+                ${notification.type === 'recordatorio' && notification.recordatorio ? `
+                    <span class="recordatorio-type">${getCursoDivision(notification.recordatorio.Materia_ID_materia)}</span>
+                    <span class="recordatorio-subject">${getSubjectName(notification.recordatorio.Materia_ID_materia)}</span>
+                ` : ''}
                 <div class="notification-actions">
                     ${!notification.read ? `<button class="btn btn-sm btn-success" onclick="markNotificationRead('${notification.id}')" title="Marcar como leído">
                         <i class="fas fa-check"></i> Marcar como leído
@@ -152,12 +150,10 @@ async function loadNotifications() {
                     <button class="btn btn-sm btn-outline-danger" onclick="deleteNotification('${notification.id}')" title="Eliminar">
                         <i class="fas fa-trash"></i> Eliminar
                     </button>
-                    ${notification.type === 'recordatorio' && notification.recordatorio ? `<button class="btn btn-sm btn-outline-primary" onclick="viewRecordatorio('${notification.recordatorio.ID_recordatorio}')" title="Ver detalles">
-                        <i class="fas fa-eye"></i> Ver detalles
-                    </button>` : ''}
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
     }
 
     // List view - Modern table format
@@ -174,29 +170,37 @@ async function loadNotifications() {
             <table>
                 <thead>
                     <tr>
-                        <th>Tipo</th>
+                        <th>Curso</th>
                         <th>Título</th>
                         <th>Mensaje</th>
                         <th>Fecha</th>
-                        <th>Estado</th>
+                        <th>Prioridad</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${allNotifications.map(notification => {
                         const shortMessage = notification.message.length > 30 ? notification.message.substring(0, 30) + '...' : notification.message;
+                        const priorityClass = notification.type === 'recordatorio' && notification.recordatorio 
+                            ? `priority-${notification.recordatorio.Prioridad.toLowerCase()}` 
+                            : '';
                         return `
-                            <tr class="${notification.read ? 'read' : 'unread'} ${notification.type}">
+                            <tr class="${notification.read ? 'read' : 'unread'} ${notification.type} ${priorityClass}">
                                 <td>
-                                    ${notification.type === 'recordatorio' ? 
-                                        `<span class="type-badge recordatorio"><i class="fas fa-bell"></i> Recordatorio</span>` : 
+                                    ${notification.type === 'recordatorio' && notification.recordatorio ? 
+                                        `<span class="recordatorio-type">${getCursoDivision(notification.recordatorio.Materia_ID_materia)}</span>` : 
                                         `<span class="type-badge notification"><i class="fas fa-info-circle"></i> Notificación</span>`
                                     }
                                 </td>
                                 <td><strong>${notification.title}</strong></td>
                                 <td title="${notification.message}">${shortMessage}</td>
                                 <td>${notification.date}</td>
-                                <td><span class="table-status ${notification.read ? 'read' : 'unread'}">${notification.read ? 'Leído' : 'No leído'}</span></td>
+                                <td>
+                                    ${notification.type === 'recordatorio' && notification.recordatorio ? 
+                                        `<span class="priority-badge ${notification.recordatorio.Prioridad.toLowerCase()}">${notification.recordatorio.Prioridad}</span>` : 
+                                        `<span class="table-status ${notification.read ? 'read' : 'unread'}">${notification.read ? 'Leído' : 'No leído'}</span>`
+                                    }
+                                </td>
                                 <td>
                                     <div class="table-actions">
                                         ${!notification.read ? `<button class="btn btn-sm btn-success" onclick="markNotificationRead('${notification.id}')" title="Marcar como leído">
@@ -205,9 +209,6 @@ async function loadNotifications() {
                                         <button class="btn btn-sm btn-outline-danger" onclick="deleteNotification('${notification.id}')" title="Eliminar">
                                             <i class="fas fa-trash"></i>
                                         </button>
-                                        ${notification.type === 'recordatorio' && notification.recordatorio ? `<button class="btn btn-sm btn-outline-primary" onclick="viewRecordatorio('${notification.recordatorio.ID_recordatorio}')" title="Ver detalles">
-                                            <i class="fas fa-eye"></i>
-                                        </button>` : ''}
                                     </div>
                                 </td>
                             </tr>
@@ -521,6 +522,25 @@ function getRecordatorioTypeLabel(type) {
 function getSubjectName(subjectId) {
     const subject = appData.materia.find(m => m.ID_materia === subjectId);
     return subject ? subject.Nombre : 'Materia no encontrada';
+}
+
+function getCursoDivision(subjectId) {
+    const subject = appData.materia.find(m => m.ID_materia === subjectId);
+    if (!subject || !subject.Curso_division) {
+        return 'N/A';
+    }
+    
+    // Parse Curso_division format like "1º Curso - División A" to "1 A"
+    const cursoDivision = subject.Curso_division;
+    const courseMatch = cursoDivision.match(/(\d+)/);
+    const divisionMatch = cursoDivision.match(/(?:División|Div)[\s-]*([A-F])/i) || 
+                          cursoDivision.match(/[\s-]([A-F])[\s-]*$/i) ||
+                          cursoDivision.match(/([A-F])[\s-]*$/i);
+    
+    const course = courseMatch ? courseMatch[1] : '';
+    const division = divisionMatch ? divisionMatch[1].toUpperCase() : '';
+    
+    return course && division ? `${course} ${division}` : cursoDivision;
 }
 
 // Function to view recordatorio details
