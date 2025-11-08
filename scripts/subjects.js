@@ -2925,6 +2925,9 @@ window.loadSubjectEvaluaciones = async function(subjectId) {
                             <button class="btn-icon btn-grade" onclick="showGradeStudentsDialog(${eval.ID_evaluacion}, ${subjectId})" title="Calificar Estudiantes" style="padding: 6px 8px;">
                                 <i class="fas fa-clipboard-check" style="font-size: 0.9em;"></i>
                             </button>
+                            <button class="btn-icon btn-secondary" onclick="window.exportNotasAsExcel(${eval.ID_evaluacion})" title="Exportar Notas" style="padding: 6px 8px;">
+                                <i class="fas fa-download" style="font-size: 0.9em;"></i>
+                            </button>
                             <button class="btn-icon btn-edit" onclick="window.editEvaluacion(${eval.ID_evaluacion})" title="Editar Evaluación" style="padding: 6px 8px;">
                                 <i class="fas fa-edit" style="font-size: 0.9em;"></i>
                             </button>
@@ -6494,6 +6497,106 @@ window.exportEvaluacionesAsExcel = function(subjectId) {
         showExportNotification('Lista de evaluaciones exportada como Excel exitosamente!', 'success');
     } else {
         alert('Lista de evaluaciones exportada como Excel exitosamente!');
+    }
+};
+
+/**
+ * Export notas (grades) for a specific evaluacion as Excel
+ * @param {number} evaluacionId - Evaluacion ID
+ */
+window.exportNotasAsExcel = function(evaluacionId) {
+    if (!evaluacionId) {
+        alert('Error: ID de evaluación no válido');
+        return;
+    }
+    
+    const data = window.appData || window.data || {};
+    
+    // Find the evaluacion
+    const evaluacion = data.evaluacion && Array.isArray(data.evaluacion)
+        ? data.evaluacion.find(e => parseInt(e.ID_evaluacion) === parseInt(evaluacionId))
+        : null;
+    
+    if (!evaluacion) {
+        alert('No se encontró la evaluación');
+        return;
+    }
+    
+    // Get notas for this evaluacion
+    const notas = data.notas && Array.isArray(data.notas)
+        ? data.notas.filter(note => parseInt(note.Evaluacion_ID_evaluacion) === parseInt(evaluacionId))
+        : [];
+    
+    if (notas.length === 0) {
+        alert('No hay notas para exportar para esta evaluación');
+        return;
+    }
+    
+    // Get students data
+    const estudiantes = data.estudiante && Array.isArray(data.estudiante) ? data.estudiante : [];
+    
+    // Sort notas by student last name
+    const notasWithStudents = notas.map(note => {
+        const student = estudiantes.find(s => parseInt(s.ID_Estudiante) === parseInt(note.Estudiante_ID_Estudiante));
+        return {
+            nota: note,
+            student: student
+        };
+    }).sort((a, b) => {
+        const lastNameA = (a.student?.Apellido || '').toLowerCase();
+        const lastNameB = (b.student?.Apellido || '').toLowerCase();
+        if (lastNameA !== lastNameB) {
+            return lastNameA.localeCompare(lastNameB);
+        }
+        return (a.student?.Nombre || '').toLowerCase().localeCompare((b.student?.Nombre || '').toLowerCase());
+    });
+    
+    // Prepare CSV data
+    const headers = ['Apellido', 'Nombre', 'Calificación', 'Fecha', 'Estado', 'Observaciones'];
+    const rows = notasWithStudents.map(({ nota, student }) => [
+        student ? (student.Apellido || '') : '',
+        student ? (student.Nombre || '') : '',
+        (nota.Calificacion !== null && nota.Calificacion !== undefined && nota.Calificacion !== '') 
+            ? nota.Calificacion 
+            : '',
+        nota.Fecha_calificacion || '',
+        nota.Estado || '',
+        (nota.Observacion || '').replace(/\n/g, ' ').replace(/"/g, '""')
+    ]);
+    
+    // Create Excel content (using semicolon as separator for Excel)
+    const separator = ';';
+    const csvContent = [
+        headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(separator),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(separator))
+    ].join('\r\n');
+    
+    // Download Excel with BOM UTF-8 for proper accents
+    const encoder = new TextEncoder();
+    const bomBytes = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const contentBytes = encoder.encode(csvContent);
+    const finalContent = new Uint8Array(bomBytes.length + contentBytes.length);
+    finalContent.set(bomBytes, 0);
+    finalContent.set(contentBytes, bomBytes.length);
+    
+    const blob = new Blob([finalContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    const safeTitle = evaluacion.Titulo ? evaluacion.Titulo.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ]/g, '_') : 'evaluacion';
+    const fecha = evaluacion.Fecha || new Date().toISOString().split('T')[0];
+    link.setAttribute('download', `notas_${safeTitle}_${fecha}.xls`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Show notification
+    if (typeof showExportNotification === 'function') {
+        showExportNotification('Lista de notas exportada como Excel exitosamente!', 'success');
+    } else {
+        alert('Lista de notas exportada como Excel exitosamente!');
     }
 };
 
