@@ -146,6 +146,23 @@
 }
 
 /* ==========================================================================
+   MENU TOGGLE BUTTON DARK MODE
+   ========================================================================== */
+
+[data-theme="dark"] .menu-toggle {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .menu-toggle:hover {
+    background-color: var(--bg-primary);
+    color: #667eea;
+}
+
+[data-theme="dark"] .menu-toggle i {
+    color: inherit;
+}
+
+/* ==========================================================================
    NAVIGATION SEARCH BAR DARK MODE
    ========================================================================== */
 
