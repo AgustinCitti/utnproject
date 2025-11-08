@@ -168,7 +168,7 @@
             
             <div class="nav-menu d-flex items-center gap-6" id="desktopNavMenu">
                 <!-- Search Bar - Desktop Search Functionality -->
-                <div class="position-relative mr-4 border">
+                <div class="nav-search-container position-relative mr-4">
                     <div class="d-flex items-center bg-white border border-gray rounded-lg p-2 gap-2 focus-within:border-primary focus-within:shadow-md transition-all">
                         <i class="fas fa-search text-secondary text-sm ml-1"></i>
                         <input type="text" id="desktopSearchInput" class="flex-1 border-none outline-none bg-transparent text-sm px-2 py-1 text-dark" placeholder="Buscar..." data-translate="search_placeholder">
@@ -1752,6 +1752,30 @@
                         <label class="filter-toggle">
                             <input type="checkbox" class="filter-checkbox" data-filter="exams" checked>
                             <span class="toggle-label" data-translate="exams">Exámenes</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="topics" checked>
+                            <span class="toggle-label">Temas</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="studentTopics" checked>
+                            <span class="toggle-label">Progreso de Temas</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="grades" checked>
+                            <span class="toggle-label">Calificaciones</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="attendance" checked>
+                            <span class="toggle-label">Asistencia</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="files" checked>
+                            <span class="toggle-label">Archivos</span>
+                        </label>
+                        <label class="filter-toggle">
+                            <input type="checkbox" class="filter-checkbox" data-filter="reminders" checked>
+                            <span class="toggle-label">Recordatorios</span>
                         </label>
                         <label class="filter-toggle">
                             <input type="checkbox" class="filter-checkbox" data-filter="notifications" checked>

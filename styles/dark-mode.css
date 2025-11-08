@@ -2236,42 +2236,47 @@
 
 /* Search Suggestions Dark Mode */
 [data-theme="dark"] .search-suggestions-container {
-    background-color: var(--card-bg);
-    border-color: var(--border-color);
-    box-shadow: 0 4px 20px var(--shadow);
+    background-color: var(--card-bg, #1e1e2e) !important;
+    border-color: var(--border-color, #3a3a4a) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .suggestions-category-group {
+    background-color: var(--card-bg, #1e1e2e) !important;
 }
 
 [data-theme="dark"] .suggestions-category-header {
-    background-color: var(--bg-secondary);
-    border-bottom-color: var(--border-color);
-    color: var(--text-secondary);
+    background-color: var(--bg-secondary, #2a2a3a) !important;
+    border-bottom-color: var(--border-color, #3a3a4a) !important;
+    color: var(--text-secondary, #b0b0c0) !important;
 }
 
 [data-theme="dark"] .search-suggestion-item {
-    border-bottom-color: var(--border-color);
+    background-color: var(--card-bg, #1e1e2e) !important;
+    border-bottom-color: var(--border-color, #3a3a4a) !important;
 }
 
 [data-theme="dark"] .search-suggestion-item:hover,
 [data-theme="dark"] .search-suggestion-item.highlighted {
-    background-color: rgba(102, 126, 234, 0.1);
-    border-left-color: #667eea;
+    background-color: rgba(102, 126, 234, 0.2) !important;
+    border-left-color: #667eea !important;
 }
 
 [data-theme="dark"] .search-suggestion-item i {
-    color: #667eea;
+    color: #667eea !important;
 }
 
 [data-theme="dark"] .suggestion-text {
-    color: var(--text-primary);
+    color: var(--text-primary, #e0e0e0) !important;
 }
 
 [data-theme="dark"] .search-suggestion-item.highlighted .suggestion-text {
-    color: #667eea;
+    color: #667eea !important;
 }
 
 [data-theme="dark"] .suggestion-type {
-    background-color: var(--bg-secondary);
-    color: var(--text-secondary);
+    background-color: var(--bg-secondary, #2a2a3a) !important;
+    color: var(--text-secondary, #b0b0c0) !important;
 }
 
 /* Dark mode styles for exam summary */

@@ -3,6 +3,12 @@ let searchFilters = {
     students: true,
     subjects: true,
     exams: true,
+    topics: true,
+    studentTopics: true,
+    grades: true,
+    attendance: true,
+    files: true,
+    reminders: true,
     notifications: true,
     reports: true,
     calendar: true
@@ -266,7 +272,10 @@ function showAutocompleteSuggestions(query, type) {
     const mobileSearchContainer = document.querySelector('.mobile-search-container');
     const searchContainer = type === 'desktop' ? desktopSearchContainer : mobileSearchContainer;
     
-    if (!searchContainer) return;
+    if (!searchContainer) {
+        console.warn('Search container not found:', { type, desktopSearchContainer, mobileSearchContainer });
+        return;
+    }
 
     // Remove existing suggestions
     clearSearchSuggestions();
@@ -324,6 +333,20 @@ function showAutocompleteSuggestions(query, type) {
     document.addEventListener('click', handleClickOutsideSuggestions);
 }
 
+// Helper function to remove accents for accent-insensitive search
+function removeAccents(str) {
+    if (!str) return '';
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+// Helper function to check if text matches query (accent-insensitive)
+function matchesQuery(text, query) {
+    if (!text || !query) return false;
+    const textNormalized = removeAccents(text);
+    const queryNormalized = removeAccents(query);
+    return textNormalized.includes(queryNormalized);
+}
+
 // Generate suggestions based on query
 function generateSuggestions(query) {
     const suggestions = [];
@@ -337,35 +360,40 @@ function generateSuggestions(query) {
     // Get app data if available (try multiple sources)
     const appData = window.appData || window.data || {};
     
-    // Search students
-    if (searchFilters.students && appData.estudiante) {
-        appData.estudiante.forEach(student => {
-            const fullName = `${student.Nombre || ''} ${student.Apellido || ''}`.trim().toLowerCase();
-            if (fullName.includes(queryLower) || 
-                (student.Nombre && student.Nombre.toLowerCase().includes(queryLower)) ||
-                (student.Apellido && student.Apellido.toLowerCase().includes(queryLower))) {
+    // Priority: Search subjects first (most common search)
+    if (searchFilters.subjects && appData.materia) {
+        appData.materia.forEach(subject => {
+            const subjectName = subject.Nombre_materia || '';
+            if (matchesQuery(subjectName, queryLower)) {
                 suggestions.push({
-                    type: 'student',
-                    text: `${student.Nombre || ''} ${student.Apellido || ''}`.trim(),
-                    searchQuery: `${student.Nombre || ''} ${student.Apellido || ''}`.trim(),
-                    category: 'Estudiantes',
-                    section: 'student-management'
+                    type: 'subject',
+                    text: subjectName || 'Materia',
+                    searchQuery: subjectName || '',
+                    category: 'Materias',
+                    section: 'subjects-management',
+                    priority: 1 // High priority for subjects
                 });
             }
         });
     }
-
-    // Search subjects
-    if (searchFilters.subjects && appData.materia) {
-        appData.materia.forEach(subject => {
-            const subjectName = (subject.Nombre_materia || '').toLowerCase();
-            if (subjectName.includes(queryLower)) {
+    
+    // Search students
+    if (searchFilters.students && appData.estudiante) {
+        appData.estudiante.forEach(student => {
+            const fullName = `${student.Nombre || ''} ${student.Apellido || ''}`.trim();
+            const firstName = student.Nombre || '';
+            const lastName = student.Apellido || '';
+            
+            if (matchesQuery(fullName, queryLower) || 
+                matchesQuery(firstName, queryLower) ||
+                matchesQuery(lastName, queryLower)) {
                 suggestions.push({
-                    type: 'subject',
-                    text: subject.Nombre_materia || 'Materia',
-                    searchQuery: subject.Nombre_materia || '',
-                    category: 'Materias',
-                    section: 'subjects-management'
+                    type: 'student',
+                    text: fullName || 'Estudiante',
+                    searchQuery: fullName || '',
+                    category: 'Estudiantes',
+                    section: 'student-management',
+                    priority: 2
                 });
             }
         });
@@ -374,14 +402,155 @@ function generateSuggestions(query) {
     // Search exams
     if (searchFilters.exams && appData.evaluacion) {
         appData.evaluacion.forEach(exam => {
-            const examTitle = (exam.Titulo || '').toLowerCase();
-            if (examTitle.includes(queryLower)) {
+            const examTitle = exam.Titulo || '';
+            if (matchesQuery(examTitle, queryLower)) {
                 suggestions.push({
                     type: 'exam',
-                    text: exam.Titulo || 'Examen',
-                    searchQuery: exam.Titulo || '',
+                    text: examTitle || 'Examen',
+                    searchQuery: examTitle || '',
                     category: 'Exámenes',
-                    section: 'student-management'
+                    section: 'student-management',
+                    priority: 3
+                });
+            }
+        });
+    }
+
+    // Search topics (contenido)
+    if (searchFilters.topics && appData.contenido) {
+        appData.contenido.forEach(topic => {
+            const topicName = topic.Tema || '';
+            if (matchesQuery(topicName, queryLower)) {
+                // Get subject name for context
+                const subject = appData.materia?.find(m => parseInt(m.ID_materia) === parseInt(topic.Materia_ID_materia));
+                const subjectName = subject ? subject.Nombre_materia : '';
+                suggestions.push({
+                    type: 'topic',
+                    text: topicName || 'Tema',
+                    searchQuery: topicName || '',
+                    category: 'Temas',
+                    section: 'subjects-management',
+                    metadata: { subjectName },
+                    priority: 4
+                });
+            }
+        });
+    }
+
+    // Search student topics (tema_estudiante)
+    if (searchFilters.studentTopics && appData.tema_estudiante) {
+        appData.tema_estudiante.forEach(studentTopic => {
+            // Get content/topic name
+            const content = appData.contenido?.find(c => parseInt(c.ID_contenido) === parseInt(studentTopic.Contenido_ID_contenido));
+            if (content) {
+                const topicName = content.Tema || '';
+                const status = studentTopic.Estado || '';
+                if (matchesQuery(topicName, queryLower) || matchesQuery(status, queryLower)) {
+                    // Get student name
+                    const student = appData.estudiante?.find(e => parseInt(e.ID_Estudiante) === parseInt(studentTopic.Estudiante_ID_Estudiante));
+                    const studentName = student ? `${student.Nombre || ''} ${student.Apellido || ''}`.trim() : '';
+                    suggestions.push({
+                        type: 'studentTopic',
+                        text: `${topicName || 'Tema'} - ${studentName}`,
+                        searchQuery: topicName || '',
+                        category: 'Progreso de Temas',
+                        section: 'student-management',
+                        metadata: { studentName, status: studentTopic.Estado },
+                        priority: 5
+                    });
+                }
+            }
+        });
+    }
+
+    // Search grades (notas)
+    if (searchFilters.grades && appData.notas) {
+        appData.notas.forEach(grade => {
+            // Get evaluation info
+            const evaluation = appData.evaluacion?.find(e => parseInt(e.ID_evaluacion) === parseInt(grade.Evaluacion_ID_evaluacion));
+            if (evaluation) {
+                const evalTitle = evaluation.Titulo || '';
+                const gradeValue = (grade.Calificacion || '').toString();
+                const observation = grade.Observacion || '';
+                if (matchesQuery(evalTitle, queryLower) || matchesQuery(gradeValue, queryLower) || matchesQuery(observation, queryLower)) {
+                    suggestions.push({
+                        type: 'grade',
+                        text: `${evalTitle || 'Evaluación'} - ${gradeValue || 'N/A'}`,
+                        searchQuery: evalTitle || '',
+                        category: 'Calificaciones',
+                        section: 'student-management',
+                        metadata: { grade: grade.Calificacion },
+                        priority: 6
+                    });
+                }
+            }
+        });
+    }
+
+    // Search attendance (asistencia)
+    if (searchFilters.attendance && appData.asistencia) {
+        appData.asistencia.forEach(attendance => {
+            // Get student name
+            const student = appData.estudiante?.find(e => parseInt(e.ID_Estudiante) === parseInt(attendance.Estudiante_ID_Estudiante));
+            if (student) {
+                const studentName = `${student.Nombre || ''} ${student.Apellido || ''}`.trim();
+                const observation = attendance.Observaciones || '';
+                const date = attendance.Fecha || '';
+                if (matchesQuery(studentName, queryLower) || matchesQuery(observation, queryLower) || matchesQuery(date, queryLower)) {
+                    suggestions.push({
+                        type: 'attendance',
+                        text: `Asistencia - ${studentName}`,
+                        searchQuery: studentName,
+                        category: 'Asistencia',
+                        section: 'student-management',
+                        metadata: { date: attendance.Fecha, present: attendance.Presente },
+                        priority: 7
+                    });
+                }
+            }
+        });
+    }
+
+    // Search files (archivos)
+    if (searchFilters.files && appData.archivos) {
+        appData.archivos.forEach(file => {
+            const fileName = file.Nombre || '';
+            const fileType = file.Tipo || '';
+            if (matchesQuery(fileName, queryLower) || matchesQuery(fileType, queryLower)) {
+                // Get subject name
+                const subject = appData.materia?.find(m => parseInt(m.ID_materia) === parseInt(file.Materia_ID_materia));
+                const subjectName = subject ? subject.Nombre_materia : '';
+                suggestions.push({
+                    type: 'file',
+                    text: fileName || 'Archivo',
+                    searchQuery: fileName || '',
+                    category: 'Archivos',
+                    section: 'subjects-management',
+                    metadata: { subjectName, fileType: file.Tipo },
+                    priority: 8
+                });
+            }
+        });
+    }
+
+    // Search reminders (recordatorio)
+    if (searchFilters.reminders && appData.recordatorio) {
+        appData.recordatorio.forEach(reminder => {
+            const description = reminder.Descripcion || '';
+            const reminderType = reminder.Tipo || '';
+            const date = reminder.Fecha || '';
+            if (matchesQuery(description, queryLower) || matchesQuery(reminderType, queryLower) || matchesQuery(date, queryLower)) {
+                // Get subject name
+                const subject = appData.materia?.find(m => parseInt(m.ID_materia) === parseInt(reminder.Materia_ID_materia));
+                const subjectName = subject ? subject.Nombre_materia : '';
+                suggestions.push({
+                    type: 'reminder',
+                    text: description || 'Recordatorio',
+                    searchQuery: description || '',
+                    category: 'Recordatorios',
+                    section: 'calendar',
+                    metadata: { subjectName, date: reminder.Fecha, type: reminder.Tipo },
+                    priority: 9
                 });
             }
         });
@@ -392,7 +561,8 @@ function generateSuggestions(query) {
         { text: 'Ver todos los estudiantes', type: 'quick', category: 'Acciones rápidas', section: 'student-management' },
         { text: 'Ver todas las materias', type: 'quick', category: 'Acciones rápidas', section: 'subjects-management' },
         { text: 'Ver notificaciones', type: 'quick', category: 'Acciones rápidas', section: 'notifications' },
-        { text: 'Ver reportes', type: 'quick', category: 'Acciones rápidas', section: 'reports' }
+        { text: 'Ver reportes', type: 'quick', category: 'Acciones rápidas', section: 'reports' },
+        { text: 'Ver estadísticas', type: 'quick', category: 'Acciones rápidas', section: 'reports' }
     ];
 
     commonTerms.forEach(term => {
@@ -404,8 +574,29 @@ function generateSuggestions(query) {
         }
     });
 
-    // Limit suggestions
-    return suggestions.slice(0, 15);
+    // Sort suggestions by priority (lower number = higher priority) and then alphabetically
+    suggestions.sort((a, b) => {
+        const priorityA = a.priority || 10;
+        const priorityB = b.priority || 10;
+        if (priorityA !== priorityB) {
+            return priorityA - priorityB;
+        }
+        // If same priority, sort alphabetically
+        return (a.text || '').localeCompare(b.text || '');
+    });
+
+    // Limit suggestions but prioritize subjects
+    // Show up to 20 suggestions, but ensure at least 5 subjects if available
+    const subjectSuggestions = suggestions.filter(s => s.type === 'subject');
+    const otherSuggestions = suggestions.filter(s => s.type !== 'subject');
+    
+    let limitedSuggestions = [];
+    // Add subjects first (up to 10)
+    limitedSuggestions.push(...subjectSuggestions.slice(0, 10));
+    // Then add other suggestions (up to 10 more)
+    limitedSuggestions.push(...otherSuggestions.slice(0, 10));
+    
+    return limitedSuggestions.slice(0, 20);
 }
 
 // Get quick search options when input is empty
@@ -414,8 +605,11 @@ function getQuickSearchOptions() {
         { type: 'quick', text: 'Buscar estudiantes', category: 'Búsqueda rápida', section: 'student-management', searchQuery: '' },
         { type: 'quick', text: 'Buscar materias', category: 'Búsqueda rápida', section: 'subjects-management', searchQuery: '' },
         { type: 'quick', text: 'Buscar exámenes', category: 'Búsqueda rápida', section: 'student-management', searchQuery: '' },
+        { type: 'quick', text: 'Buscar temas', category: 'Búsqueda rápida', section: 'subjects-management', searchQuery: '' },
+        { type: 'quick', text: 'Buscar calificaciones', category: 'Búsqueda rápida', section: 'student-management', searchQuery: '' },
         { type: 'quick', text: 'Ver notificaciones', category: 'Búsqueda rápida', section: 'notifications', searchQuery: '' },
-        { type: 'quick', text: 'Ver reportes', category: 'Búsqueda rápida', section: 'reports', searchQuery: '' }
+        { type: 'quick', text: 'Ver reportes', category: 'Búsqueda rápida', section: 'reports', searchQuery: '' },
+        { type: 'quick', text: 'Ver estadísticas', category: 'Búsqueda rápida', section: 'reports', searchQuery: '' }
     ];
 }
 
@@ -438,6 +632,12 @@ function getSuggestionIcon(type) {
         'student': 'fas fa-user',
         'subject': 'fas fa-book',
         'exam': 'fas fa-file-alt',
+        'topic': 'fas fa-list-alt',
+        'studentTopic': 'fas fa-tasks',
+        'grade': 'fas fa-star',
+        'attendance': 'fas fa-calendar-check',
+        'file': 'fas fa-file',
+        'reminder': 'fas fa-bell',
         'quick': 'fas fa-search',
         'notification': 'fas fa-bell',
         'report': 'fas fa-chart-bar'
@@ -509,24 +709,61 @@ function performSearch(query) {
     const results = [];
     const searchQuery = query.toLowerCase();
 
-    // Search in students
+    // Get app data
+    const appData = window.appData || window.data || {};
+
+    // Search in students (from appData)
     if (searchFilters.students) {
-        searchStudents(searchQuery, results);
+        searchStudentsData(searchQuery, results, appData);
+        searchStudents(searchQuery, results); // Also search DOM
     }
 
-    // Search in subjects
+    // Search in subjects (from appData)
     if (searchFilters.subjects) {
-        searchSubjects(searchQuery, results);
+        searchSubjectsData(searchQuery, results, appData);
+        searchSubjects(searchQuery, results); // Also search DOM
     }
 
-    // Search in exams
+    // Search in exams (from appData)
     if (searchFilters.exams) {
-        searchExams(searchQuery, results);
+        searchExamsData(searchQuery, results, appData);
+        searchExams(searchQuery, results); // Also search DOM
+    }
+
+    // Search in topics (contenido)
+    if (searchFilters.topics) {
+        searchTopicsData(searchQuery, results, appData);
+    }
+
+    // Search in student topics (tema_estudiante)
+    if (searchFilters.studentTopics) {
+        searchStudentTopicsData(searchQuery, results, appData);
+    }
+
+    // Search in grades (notas)
+    if (searchFilters.grades) {
+        searchGradesData(searchQuery, results, appData);
+    }
+
+    // Search in attendance (asistencia)
+    if (searchFilters.attendance) {
+        searchAttendanceData(searchQuery, results, appData);
+    }
+
+    // Search in files (archivos)
+    if (searchFilters.files) {
+        searchFilesData(searchQuery, results, appData);
+    }
+
+    // Search in reminders (recordatorio)
+    if (searchFilters.reminders) {
+        searchRemindersData(searchQuery, results, appData);
     }
 
     // Search in notifications
     if (searchFilters.notifications) {
-        searchNotifications(searchQuery, results);
+        searchNotificationsData(searchQuery, results, appData);
+        searchNotifications(searchQuery, results); // Also search DOM
     }
 
     // Search in reports
@@ -712,6 +949,263 @@ function searchCalendar(query, results) {
     });
 }
 
+// Search students from appData
+function searchStudentsData(query, results, appData) {
+    if (!appData.estudiante || !Array.isArray(appData.estudiante)) return;
+
+    appData.estudiante.forEach(student => {
+        const fullName = `${student.Nombre || ''} ${student.Apellido || ''}`.trim();
+        const firstName = student.Nombre || '';
+        const lastName = student.Apellido || '';
+        const dni = (student.DNI || '').toString();
+        const email = student.Email || '';
+        
+        if (matchesQuery(fullName, query) || 
+            matchesQuery(firstName, query) ||
+            matchesQuery(lastName, query) ||
+            matchesQuery(dni, query) || 
+            matchesQuery(email, query)) {
+            results.push({
+                type: 'students',
+                title: fullName || 'Estudiante',
+                description: `DNI: ${student.DNI || 'N/A'} | Email: ${student.Email || 'N/A'}`,
+                section: 'student-management',
+                metadata: { studentId: student.ID_Estudiante }
+            });
+        }
+    });
+}
+
+// Search subjects from appData
+function searchSubjectsData(query, results, appData) {
+    if (!appData.materia || !Array.isArray(appData.materia)) return;
+
+    appData.materia.forEach(subject => {
+        const subjectName = subject.Nombre_materia || '';
+        const course = subject.Curso_division || '';
+        
+        if (matchesQuery(subjectName, query) || matchesQuery(course, query)) {
+            results.push({
+                type: 'subjects',
+                title: subjectName || 'Materia',
+                description: `Curso: ${course || 'N/A'}`,
+                section: 'subjects-management',
+                metadata: { subjectId: subject.ID_materia }
+            });
+        }
+    });
+}
+
+// Search exams from appData
+function searchExamsData(query, results, appData) {
+    if (!appData.evaluacion || !Array.isArray(appData.evaluacion)) return;
+
+    appData.evaluacion.forEach(exam => {
+        const examTitle = (exam.Titulo || '').toLowerCase();
+        const examType = (exam.Tipo || '').toLowerCase();
+        const examDate = (exam.Fecha || '').toLowerCase();
+        
+        if (examTitle.includes(query) || examType.includes(query) || examDate.includes(query)) {
+            // Get subject name
+            const subject = appData.materia?.find(m => parseInt(m.ID_materia) === parseInt(exam.Materia_ID_materia));
+            const subjectName = subject ? subject.Nombre_materia : '';
+            
+            results.push({
+                type: 'exams',
+                title: exam.Titulo || 'Examen',
+                description: `${subjectName ? `Materia: ${subjectName} | ` : ''}Tipo: ${exam.Tipo || 'N/A'} | Fecha: ${exam.Fecha || 'N/A'}`,
+                section: 'student-management',
+                metadata: { examId: exam.ID_evaluacion, subjectName }
+            });
+        }
+    });
+}
+
+// Search topics (contenido) from appData
+function searchTopicsData(query, results, appData) {
+    if (!appData.contenido || !Array.isArray(appData.contenido)) return;
+
+    appData.contenido.forEach(topic => {
+        const topicName = (topic.Tema || '').toLowerCase();
+        const status = (topic.Estado || '').toLowerCase();
+        
+        if (topicName.includes(query) || status.includes(query)) {
+            // Get subject name
+            const subject = appData.materia?.find(m => parseInt(m.ID_materia) === parseInt(topic.Materia_ID_materia));
+            const subjectName = subject ? subject.Nombre_materia : '';
+            
+            results.push({
+                type: 'topics',
+                title: topic.Tema || 'Tema',
+                description: `${subjectName ? `Materia: ${subjectName} | ` : ''}Estado: ${topic.Estado || 'N/A'}`,
+                section: 'subjects-management',
+                metadata: { topicId: topic.ID_contenido, subjectName, status: topic.Estado }
+            });
+        }
+    });
+}
+
+// Search student topics (tema_estudiante) from appData
+function searchStudentTopicsData(query, results, appData) {
+    if (!appData.tema_estudiante || !Array.isArray(appData.tema_estudiante)) return;
+
+    appData.tema_estudiante.forEach(studentTopic => {
+        // Get content/topic name
+        const content = appData.contenido?.find(c => parseInt(c.ID_contenido) === parseInt(studentTopic.Contenido_ID_contenido));
+        if (content) {
+            const topicName = (content.Tema || '').toLowerCase();
+            const status = (studentTopic.Estado || '').toLowerCase();
+            
+            if (topicName.includes(query) || status.includes(query)) {
+                // Get student name
+                const student = appData.estudiante?.find(e => parseInt(e.ID_Estudiante) === parseInt(studentTopic.Estudiante_ID_Estudiante));
+                const studentName = student ? `${student.Nombre || ''} ${student.Apellido || ''}`.trim() : '';
+                
+                // Get subject name
+                const subject = appData.materia?.find(m => parseInt(m.ID_materia) === parseInt(content.Materia_ID_materia));
+                const subjectName = subject ? subject.Nombre_materia : '';
+                
+                results.push({
+                    type: 'studentTopics',
+                    title: `${content.Tema || 'Tema'} - ${studentName}`,
+                    description: `${subjectName ? `Materia: ${subjectName} | ` : ''}Estado: ${studentTopic.Estado || 'N/A'}`,
+                    section: 'student-management',
+                    metadata: { studentName, status: studentTopic.Estado, subjectName }
+                });
+            }
+        }
+    });
+}
+
+// Search grades (notas) from appData
+function searchGradesData(query, results, appData) {
+    if (!appData.notas || !Array.isArray(appData.notas)) return;
+
+    appData.notas.forEach(grade => {
+        // Get evaluation info
+        const evaluation = appData.evaluacion?.find(e => parseInt(e.ID_evaluacion) === parseInt(grade.Evaluacion_ID_evaluacion));
+        if (evaluation) {
+            const evalTitle = (evaluation.Titulo || '').toLowerCase();
+            const gradeValue = (grade.Calificacion || '').toString().toLowerCase();
+            const observation = (grade.Observacion || '').toLowerCase();
+            
+            if (evalTitle.includes(query) || gradeValue.includes(query) || observation.includes(query)) {
+                // Get student name
+                const student = appData.estudiante?.find(e => parseInt(e.ID_Estudiante) === parseInt(grade.Estudiante_ID_Estudiante));
+                const studentName = student ? `${student.Nombre || ''} ${student.Apellido || ''}`.trim() : '';
+                
+                results.push({
+                    type: 'grades',
+                    title: `${evaluation.Titulo || 'Evaluación'} - ${studentName}`,
+                    description: `Calificación: ${grade.Calificacion || 'N/A'}${grade.Observacion ? ` | ${grade.Observacion}` : ''}`,
+                    section: 'student-management',
+                    metadata: { grade: grade.Calificacion, studentName, observation: grade.Observacion }
+                });
+            }
+        }
+    });
+}
+
+// Search attendance (asistencia) from appData
+function searchAttendanceData(query, results, appData) {
+    if (!appData.asistencia || !Array.isArray(appData.asistencia)) return;
+
+    appData.asistencia.forEach(attendance => {
+        // Get student name
+        const student = appData.estudiante?.find(e => parseInt(e.ID_Estudiante) === parseInt(attendance.Estudiante_ID_Estudiante));
+        if (student) {
+            const studentName = `${student.Nombre || ''} ${student.Apellido || ''}`.trim().toLowerCase();
+            const observation = (attendance.Observaciones || '').toLowerCase();
+            const date = (attendance.Fecha || '').toLowerCase();
+            const present = (attendance.Presente || '').toLowerCase();
+            
+            if (studentName.includes(query) || observation.includes(query) || date.includes(query)) {
+                // Get subject name
+                const subject = appData.materia?.find(m => parseInt(m.ID_materia) === parseInt(attendance.Materia_ID_materia));
+                const subjectName = subject ? subject.Nombre_materia : '';
+                
+                results.push({
+                    type: 'attendance',
+                    title: `Asistencia - ${student.Nombre || ''} ${student.Apellido || ''}`.trim(),
+                    description: `${subjectName ? `Materia: ${subjectName} | ` : ''}Fecha: ${attendance.Fecha || 'N/A'} | ${attendance.Presente === 'Y' ? 'Presente' : 'Ausente'}`,
+                    section: 'student-management',
+                    metadata: { date: attendance.Fecha, present: attendance.Presente, subjectName }
+                });
+            }
+        }
+    });
+}
+
+// Search files (archivos) from appData
+function searchFilesData(query, results, appData) {
+    if (!appData.archivos || !Array.isArray(appData.archivos)) return;
+
+    appData.archivos.forEach(file => {
+        const fileName = (file.Nombre || '').toLowerCase();
+        const fileType = (file.Tipo || '').toLowerCase();
+        
+        if (fileName.includes(query) || fileType.includes(query)) {
+            // Get subject name
+            const subject = appData.materia?.find(m => parseInt(m.ID_materia) === parseInt(file.Materia_ID_materia));
+            const subjectName = subject ? subject.Nombre_materia : '';
+            
+            results.push({
+                type: 'files',
+                title: file.Nombre || 'Archivo',
+                description: `${subjectName ? `Materia: ${subjectName} | ` : ''}Tipo: ${file.Tipo || 'N/A'}`,
+                section: 'subjects-management',
+                metadata: { subjectName, fileType: file.Tipo, filePath: file.Ruta }
+            });
+        }
+    });
+}
+
+// Search reminders (recordatorio) from appData
+function searchRemindersData(query, results, appData) {
+    if (!appData.recordatorio || !Array.isArray(appData.recordatorio)) return;
+
+    appData.recordatorio.forEach(reminder => {
+        const description = (reminder.Descripcion || '').toLowerCase();
+        const reminderType = (reminder.Tipo || '').toLowerCase();
+        const date = (reminder.Fecha || '').toLowerCase();
+        
+        if (description.includes(query) || reminderType.includes(query) || date.includes(query)) {
+            // Get subject name
+            const subject = appData.materia?.find(m => parseInt(m.ID_materia) === parseInt(reminder.Materia_ID_materia));
+            const subjectName = subject ? subject.Nombre_materia : '';
+            
+            results.push({
+                type: 'reminders',
+                title: reminder.Descripcion || 'Recordatorio',
+                description: `${subjectName ? `Materia: ${subjectName} | ` : ''}Tipo: ${reminder.Tipo || 'N/A'} | Fecha: ${reminder.Fecha || 'N/A'}`,
+                section: 'calendar',
+                metadata: { subjectName, date: reminder.Fecha, type: reminder.Tipo }
+            });
+        }
+    });
+}
+
+// Search notifications from appData
+function searchNotificationsData(query, results, appData) {
+    if (!appData.notifications || !Array.isArray(appData.notifications)) return;
+
+    appData.notifications.forEach(notification => {
+        const title = (notification.Titulo || '').toLowerCase();
+        const message = (notification.Mensaje || '').toLowerCase();
+        const type = (notification.Tipo || '').toLowerCase();
+        
+        if (title.includes(query) || message.includes(query) || type.includes(query)) {
+            results.push({
+                type: 'notifications',
+                title: notification.Titulo || 'Notificación',
+                description: notification.Mensaje || '',
+                section: 'notifications',
+                metadata: { type: notification.Tipo, date: notification.Fecha_creacion }
+            });
+        }
+    });
+}
+
 // Display search results
 function displaySearchResults(results, query) {
     const desktopSearchContainer = document.querySelector('.nav-search-container');
@@ -746,10 +1240,14 @@ function displaySearchResults(results, query) {
         const highlightedTitle = highlightText(result.title, query);
         const highlightedDescription = highlightText(result.description, query);
 
+        const typeLabel = getTypeLabel(result.type);
         resultItem.innerHTML = `
             <div class="search-result-item-title">${highlightedTitle}</div>
             <div class="search-result-item-description">${highlightedDescription}</div>
-            <span class="search-result-item-section">${getSectionLabel(result.section)}</span>
+            <div class="search-result-item-meta">
+                <span class="search-result-item-type">${typeLabel}</span>
+                <span class="search-result-item-section">${getSectionLabel(result.section)}</span>
+            </div>
         `;
 
         resultItem.addEventListener('click', () => {
@@ -818,6 +1316,25 @@ function getSectionLabel(section) {
         'calendar': 'Calendario'
     };
     return labels[section] || section;
+}
+
+// Get type label for search results
+function getTypeLabel(type) {
+    const labels = {
+        'students': 'Estudiante',
+        'subjects': 'Materia',
+        'exams': 'Examen',
+        'topics': 'Tema',
+        'studentTopics': 'Progreso de Tema',
+        'grades': 'Calificación',
+        'attendance': 'Asistencia',
+        'files': 'Archivo',
+        'reminders': 'Recordatorio',
+        'notifications': 'Notificación',
+        'reports': 'Reporte',
+        'calendar': 'Calendario'
+    };
+    return labels[type] || type;
 }
 
 // Clear search results
