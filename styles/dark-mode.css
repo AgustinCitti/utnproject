@@ -2438,8 +2438,23 @@
     background-color: transparent;
 }
 
+/* Dark mode styles for tab navigation */
+[data-theme="dark"] .tab-navigation {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
 /* Dark mode styles for tab buttons */
 [data-theme="dark"] .tab-btn {
+    color: var(--text-secondary);
+    background: transparent;
+}
+
+[data-theme="dark"] .tab-btn i {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .tab-btn span {
     color: var(--text-secondary);
 }
 
@@ -2448,10 +2463,26 @@
     color: #667eea;
 }
 
+[data-theme="dark"] .tab-btn:hover i {
+    color: #667eea;
+}
+
+[data-theme="dark"] .tab-btn:hover span {
+    color: #667eea;
+}
+
 [data-theme="dark"] .tab-btn.active {
     background: var(--card-bg);
     color: #667eea;
     box-shadow: 0 2px 8px var(--shadow);
+}
+
+[data-theme="dark"] .tab-btn.active i {
+    color: #667eea;
+}
+
+[data-theme="dark"] .tab-btn.active span {
+    color: #667eea;
 }
 
 [data-theme="dark"] .subject-details-tabs {
