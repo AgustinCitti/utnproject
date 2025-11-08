@@ -1631,24 +1631,136 @@ async function showExamModal(examId = null) {
 // Make showExamModal globally available
 window.showExamModal = showExamModal;
 
-function saveExam(event) {
+async function saveExam(event) {
     event.preventDefault();
+    event.stopPropagation();
     
-    const newExam = {
-        ID_evaluacion: Date.now(),
-        Titulo: document.getElementById('examTitle').value,
-        Materia_ID_materia: parseInt(document.getElementById('examSubject').value),
-        Fecha: document.getElementById('examDate').value,
-        Tipo: document.getElementById('examType').value,
-        Descripcion: document.getElementById('examDescription').value,
-        Estado: 'PROGRAMADA'
+    const isInPages = window.location.pathname.includes('/pages/');
+    const baseUrl = isInPages ? '../api' : 'api';
+    
+    // Obtener el formulario desde el evento
+    const form = event.target;
+    if (!form || form.tagName !== 'FORM') {
+        alert('Error: No se pudo encontrar el formulario.');
+        return;
+    }
+    
+    // Obtener valores del formulario
+    const titulo = (form.querySelector('#examTitle')?.value || '').trim();
+    const materiaValue = form.querySelector('#examSubject')?.value || '';
+    const materiaId = materiaValue && !isNaN(parseInt(materiaValue)) ? parseInt(materiaValue) : 0;
+    const fecha = form.querySelector('#examDate')?.value || '';
+    const tipo = (form.querySelector('#examType')?.value || '').trim().toUpperCase();
+    const descripcion = (form.querySelector('#examDescription')?.value || '').trim() || null;
+    const peso = parseFloat(form.querySelector('#examPeso')?.value || '1.00') || 1.00;
+    const estado = form.querySelector('#examEstado')?.value || 'PROGRAMADA';
+    
+    // Validar campos requeridos
+    const missingFields = [];
+    const errors = [];
+    
+    if (!titulo || titulo.length === 0) {
+        missingFields.push('Título');
+        errors.push('El título está vacío');
+    }
+    
+    if (!materiaValue || materiaValue === '' || materiaValue === '0' || isNaN(materiaId) || materiaId <= 0) {
+        missingFields.push('Materia');
+        errors.push('Debe seleccionar una materia válida');
+    }
+    
+    if (!fecha || fecha.trim() === '') {
+        missingFields.push('Fecha');
+        errors.push('La fecha está vacía');
+    }
+    
+    if (!tipo || tipo.trim() === '') {
+        missingFields.push('Tipo');
+        errors.push('Debe seleccionar un tipo de evaluación');
+    }
+    
+    if (missingFields.length > 0) {
+        const message = 'Por favor, complete todos los campos requeridos:\n\n' + 
+                       missingFields.map((field, idx) => `• ${field}: ${errors[idx] || 'Campo requerido'}`).join('\n');
+        alert(message);
+        return;
+    }
+    
+    // Construir objeto con datos validados
+    const examData = {
+        Titulo: titulo,
+        Materia_ID_materia: materiaId,
+        Fecha: fecha,
+        Tipo: tipo,
+        Descripcion: descripcion,
+        Peso: peso,
+        Estado: estado
     };
     
-    appData.evaluacion.push(newExam);
-    saveData();
-    closeModal(document.querySelector('.modal'));
-    loadExams();
+    // Determinar si es crear o actualizar
+    const examModal = document.getElementById('examModal');
+    const existingExamId = examModal ? (examModal.dataset.examId || document.getElementById('examId')?.value) : null;
+    const isEdit = existingExamId && !isNaN(parseInt(existingExamId));
+    const url = isEdit ? `${baseUrl}/evaluacion.php?id=${existingExamId}` : `${baseUrl}/evaluacion.php`;
+    const method = isEdit ? 'PUT' : 'POST';
+    
+    try {
+        const response = await fetch(url, {
+            method: method,
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(examData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && (result.success !== false && result.id)) {
+            // Recargar datos desde el servidor
+            if (typeof loadData === 'function') {
+                await loadData();
+            }
+            
+            // Cerrar modal
+            const modal = document.getElementById('examModal');
+            if (modal) {
+                if (typeof closeModal === 'function') {
+                    closeModal('examModal');
+                } else {
+                    modal.classList.remove('active');
+                }
+                setTimeout(() => {
+                    if (modal && modal.parentNode) {
+                        modal.remove();
+                    }
+                }, 300);
+            }
+            
+            // Recargar exámenes si la función existe
+            if (typeof loadExams === 'function') {
+                loadExams();
+            }
+            
+            // Mostrar mensaje de éxito
+            if (typeof showNotification === 'function') {
+                showNotification(isEdit ? 'Evaluación actualizada exitosamente' : 'Evaluación creada exitosamente', 'success');
+            } else {
+                alert(isEdit ? 'Evaluación actualizada exitosamente' : 'Evaluación creada exitosamente');
+            }
+        } else {
+            const errorMsg = result.message || result.error || 'Error al guardar la evaluación';
+            throw new Error(errorMsg);
+        }
+    } catch (error) {
+        console.error('Error saving exam:', error);
+        alert(error.message || 'Error al guardar la evaluación. Por favor, intente nuevamente.');
+    }
 }
+
+// Make saveExam globally available
+window.saveExam = saveExam;
 
 async function editExam(id) {
     const exam = (appData.evaluacion || []).find(e => e.ID_evaluacion === id);
@@ -2352,28 +2464,7 @@ function getFilteredExams() {
 }
 
 // Funciones de manejo de exámenes (fuera de getFilteredExams)
-function saveExam(event) {
-    event.preventDefault();
-    
-    const payload = {
-        Titulo: document.getElementById('examTitle').value,
-        Materia_ID_materia: parseInt(document.getElementById('examSubject').value),
-        Fecha: document.getElementById('examDate').value,
-        Tipo: document.getElementById('examType').value,
-        Descripcion: document.getElementById('examDescription').value || '',
-        Estado: 'PROGRAMADA'
-    };
-    
-    if (typeof API !== 'undefined' && typeof API.createEvaluacion === 'function') {
-        API.createEvaluacion(payload).then(async () => {
-            closeModal(document.querySelector('.modal'));
-            if (typeof hydrateAppData === 'function') await hydrateAppData();
-            loadExams();
-        }).catch(err => alert(err.message || 'No se pudo guardar la evaluación.'));
-    } else {
-        alert('Sistema de API no disponible');
-    }
-}
+// saveExam function is defined above - this duplicate is removed
 
 async function editExam(id) {
     const exam = (appData.evaluacion || []).find(e => e.ID_evaluacion === id);
