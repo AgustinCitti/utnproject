@@ -194,7 +194,7 @@
 }
 
 [data-theme="dark"] .notification-card .notification-message {
-    color: #ccc;
+    color: white;
 }
 
 [data-theme="dark"] .notification-card .notification-meta {

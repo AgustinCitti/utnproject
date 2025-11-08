@@ -2969,7 +2969,7 @@
 
 /* Card titles */
 [data-theme="dark"] .card-title.text-dark {
-    color: var(--text-primary) !important;
+    color: white !important;
 }
 
 [data-theme="dark"] .widget-title.text-dark {
