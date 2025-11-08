@@ -395,6 +395,12 @@ function getCurrentUser() {
     const username = localStorage.getItem('username');
     if (!username) return null;
     
+    // Ensure appData is loaded
+    if (!appData || !appData.usuarios_docente || !Array.isArray(appData.usuarios_docente)) {
+        console.warn('appData not loaded yet in getCurrentUser');
+        return null;
+    }
+    
     // Try to find docente by email first
     let docente = appData.usuarios_docente.find(d => d.Email_docente === username);
     

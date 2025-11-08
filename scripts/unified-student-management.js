@@ -3376,7 +3376,7 @@ window.toggleBulkInputMode = function() {
         // Cambiar a modo tabla
         textareaMode.style.display = 'none';
         tableMode.style.display = 'block';
-        toggleBtn.innerHTML = '<i class="fas fa-file-csv"></i> Modo CSV';
+        toggleBtn.innerHTML = '<i class="fas fa-file-csv"></i> Modo Excel';
         
         // Inicializar la tabla si está vacía
         const tbody = document.getElementById('bulkManualStudentsTableBody');
