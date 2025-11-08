@@ -259,6 +259,27 @@ try {
     }
     $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // 13. OBTENER INTENSIFICACION
+    // Si hay docente logueado, filtrar solo intensificaciones de sus materias
+    try {
+        if ($docente_id) {
+            $stmt = $pdo->prepare("
+                SELECT i.* FROM Intensificacion i
+                INNER JOIN Materia m ON i.Materia_ID_materia = m.ID_materia
+                WHERE m.Usuarios_docente_ID_docente = ?
+                ORDER BY i.Fecha_asignacion DESC, i.ID_intensificacion DESC
+            ");
+            $stmt->execute([$docente_id]);
+        } else {
+            $stmt = $pdo->query("SELECT * FROM Intensificacion ORDER BY Fecha_asignacion DESC, ID_intensificacion DESC");
+        }
+        $intensificacion = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        // Si la tabla no existe, retornar array vacío
+        error_log("Error obteniendo intensificacion: " . $e->getMessage());
+        $intensificacion = [];
+    }
+
     // Formatear las fechas para JavaScript
     function formatDateForJS($date) {
         if (!$date || $date === '0000-00-00') return null;
@@ -285,7 +306,8 @@ try {
         'asistencia' => $asistencia,
         'archivos' => $archivos,
         'recordatorio' => $recordatorio,
-        'notifications' => $notifications
+        'notifications' => $notifications,
+        'intensificacion' => $intensificacion ?? []
     ];
 
     // Responder con éxito

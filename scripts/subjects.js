@@ -4008,6 +4008,23 @@ window.showAssignTemaDialog = function(studentId, subjectId) {
         temaEstudianteMap[contenidoId] = te;
     });
     
+    // Get intensificacion records for this student and materia
+    const intensificacionRecords = data.intensificacion && Array.isArray(data.intensificacion)
+        ? data.intensificacion.filter(i => 
+            parseInt(i.Estudiante_ID_Estudiante) === parseInt(studentId) && 
+            parseInt(i.Materia_ID_materia) === parseInt(subjectId)
+          )
+        : [];
+    
+    // Create a map of contenido_id => intensificacion record
+    const intensificacionMap = {};
+    intensificacionRecords.forEach(i => {
+        const contenidoId = i.Contenido_ID_contenido ? parseInt(i.Contenido_ID_contenido) : null;
+        if (contenidoId) {
+            intensificacionMap[contenidoId] = i;
+        }
+    });
+    
     // Create modal HTML
     const modalHTML = `
         <div class="modal-overlay" id="assignTemaModal">
@@ -4025,7 +4042,7 @@ window.showAssignTemaDialog = function(studentId, subjectId) {
                             </p>
                         </div>
                         ${temas.length > 0 ? `
-                            <div style="max-height: 500px; overflow-y: auto; border: 1px solid var(--border-color, #ddd); border-radius: 4px; padding: 15px;">
+                            <div style="max-height: 500px; overflow-y: auto; padding: 15px; background: var(--bg-secondary, #f9f9f9); border-radius: 4px;">
                                 ${temas.map((tema, index) => {
                                     const contenidoId = parseInt(tema.ID_contenido);
                                     const temaEstudiante = temaEstudianteMap[contenidoId];
@@ -4035,14 +4052,59 @@ window.showAssignTemaDialog = function(studentId, subjectId) {
                                     const observaciones = temaEstudiante ? (temaEstudiante.Observaciones || '') : '';
                                     const fechaActualizacion = temaEstudiante ? (temaEstudiante.Fecha_actualizacion || '') : '';
                                     
+                                    // Get intensificacion data for this tema
+                                    const intensificacion = intensificacionMap[contenidoId];
+                                    const hasIntensificacion = !!intensificacion;
+                                    const intensificacionId = intensificacion ? intensificacion.ID_intensificacion : null;
+                                    const intensEstado = intensificacion ? (intensificacion.Estado || 'PENDIENTE') : 'PENDIENTE';
+                                    const notaObjetivo = intensificacion ? (parseFloat(intensificacion.Nota_objetivo) || 6.00) : 6.00;
+                                    const notaObtenida = intensificacion && intensificacion.Nota_obtenida !== null ? (parseFloat(intensificacion.Nota_obtenida) || '') : '';
+                                    const fechaAsignacion = intensificacion ? (intensificacion.Fecha_asignacion || '') : '';
+                                    const fechaResolucion = intensificacion ? (intensificacion.Fecha_resolucion || '') : '';
+                                    const intensObservaciones = intensificacion ? (intensificacion.Observaciones || '') : '';
+                                    
+                                    // Define colors based on intensification state
+                                    const intensificacionColors = {
+                                        'PENDIENTE': {
+                                            border: '#ff9800',
+                                            background: 'rgba(255, 152, 0, 0.08)',
+                                            badge: '#ff9800'
+                                        },
+                                        'EN_CURSO': {
+                                            border: '#2196f3',
+                                            background: 'rgba(33, 150, 243, 0.08)',
+                                            badge: '#2196f3'
+                                        },
+                                        'APROBADO': {
+                                            border: '#4caf50',
+                                            background: 'rgba(76, 175, 80, 0.08)',
+                                            badge: '#4caf50'
+                                        },
+                                        'NO_APROBADO': {
+                                            border: '#f44336',
+                                            background: 'rgba(244, 67, 54, 0.08)',
+                                            badge: '#f44336'
+                                        }
+                                    };
+                                    
+                                    const colorScheme = hasIntensificacion ? intensificacionColors[intensEstado] || intensificacionColors['PENDIENTE'] : null;
+                                    const cardBorderColor = colorScheme ? colorScheme.border : 'transparent';
+                                    const cardBackground = colorScheme ? colorScheme.background : 'transparent';
+                                    const badgeColor = colorScheme ? colorScheme.badge : '#ff9800';
+                                    const cardBorderStyle = hasIntensificacion ? `2px solid ${cardBorderColor}` : 'none';
+                                    
                                     return `
                                         <div class="tema-item" data-contenido-id="${contenidoId}" data-tema-est-id="${temaEstId || ''}" 
-                                             style="padding: 15px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color, #ddd);">
+                                             data-intensificacion-estado="${intensEstado}"
+                                             style="padding: 15px; margin-bottom: 15px; border: ${cardBorderStyle}; border-radius: 8px; background: ${cardBackground}; transition: all 0.3s ease; box-shadow: ${hasIntensificacion ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};"
+                                             onmouseover="${hasIntensificacion ? "this.style.boxShadow='0 4px 12px rgba(0, 0, 0, 0.15)'; this.style.transform='translateY(-2px)';" : ''}"
+                                             onmouseout="${hasIntensificacion ? "this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.1)'; this.style.transform='translateY(0)';" : ''}">
                                             <div style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 0;" 
                                                  onclick="toggleTemaCollapse(${contenidoId})">
                                                 <div style="flex: 1;">
                                                     <div style="font-weight: 600; color: var(--text-primary, #333); font-size: 1.05em; margin-bottom: 5px;">
                                                         ${tema.Tema || 'Sin título'}
+                                                        ${hasIntensificacion ? `<span class="intensificacion-badge" style="margin-left: 8px; padding: 4px 10px; background: ${badgeColor}; color: white; border-radius: 12px; font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">${intensEstado.replace('_', ' ')}</span>` : ''}
                                                     </div>
                                                     ${tema.Descripcion ? `<div style="font-size: 0.9em; color: var(--text-secondary, #666); margin-bottom: 10px;">${tema.Descripcion}</div>` : ''}
                                                 </div>
@@ -4092,6 +4154,98 @@ window.showAssignTemaDialog = function(studentId, subjectId) {
                                                               style="width: 100%; padding: 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 0.9em; resize: vertical; font-family: inherit; background: var(--card-bg, #fff); color: var(--text-primary, #333);">${observaciones}</textarea>
                                                 </div>
                                                 ${temaEstId ? `<input type="hidden" class="tema-est-id" data-contenido-id="${contenidoId}" value="${temaEstId}">` : ''}
+                                                
+                                                <!-- Intensificación Section -->
+                                                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--border-color, #ddd);">
+                                                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                                        <input type="checkbox" 
+                                                               class="intensificacion-checkbox" 
+                                                               data-contenido-id="${contenidoId}"
+                                                               id="intensificacion_${contenidoId}"
+                                                               ${hasIntensificacion ? 'checked' : ''}
+                                                               style="margin-right: 8px; width: 18px; height: 18px; cursor: pointer;"
+                                                               onchange="toggleIntensificacionFields(${contenidoId})">
+                                                        <label for="intensificacion_${contenidoId}" style="font-weight: 600; color: var(--text-primary, #333); font-size: 1em; cursor: pointer; margin: 0;">
+                                                            Tema a Intensificar
+                                                        </label>
+                                                    </div>
+                                                    <div class="intensificacion-fields" data-contenido-id="${contenidoId}" style="display: ${hasIntensificacion ? 'block' : 'none'};">
+                                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                                            <div class="form-group">
+                                                                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary, #333); font-size: 0.9em;">
+                                                                    Estado Intensificación
+                                                                </label>
+                                                                <select class="intensificacion-estado" data-contenido-id="${contenidoId}" 
+                                                                        style="width: 100%; padding: 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 0.9em; background: var(--card-bg, #fff); color: var(--text-primary, #333);">
+                                                                    <option value="PENDIENTE" ${intensEstado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
+                                                                    <option value="EN_CURSO" ${intensEstado === 'EN_CURSO' ? 'selected' : ''}>EN_CURSO</option>
+                                                                    <option value="APROBADO" ${intensEstado === 'APROBADO' ? 'selected' : ''}>APROBADO</option>
+                                                                    <option value="NO_APROBADO" ${intensEstado === 'NO_APROBADO' ? 'selected' : ''}>NO_APROBADO</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary, #333); font-size: 0.9em;">
+                                                                    Nota Objetivo
+                                                                </label>
+                                                                <input type="number" 
+                                                                       class="intensificacion-nota-objetivo" 
+                                                                       data-contenido-id="${contenidoId}"
+                                                                       value="${notaObjetivo}"
+                                                                       min="0" 
+                                                                       max="10" 
+                                                                       step="0.01"
+                                                                       style="width: 100%; padding: 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 0.9em; background: var(--card-bg, #fff); color: var(--text-primary, #333);">
+                                                            </div>
+                                                        </div>
+                                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                                            <div class="form-group">
+                                                                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary, #333); font-size: 0.9em;">
+                                                                    Nota Obtenida
+                                                                </label>
+                                                                <input type="number" 
+                                                                       class="intensificacion-nota-obtenida" 
+                                                                       data-contenido-id="${contenidoId}"
+                                                                       value="${notaObtenida}"
+                                                                       min="0" 
+                                                                       max="10" 
+                                                                       step="0.01"
+                                                                       placeholder="Sin calificar"
+                                                                       style="width: 100%; padding: 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 0.9em; background: var(--card-bg, #fff); color: var(--text-primary, #333);">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary, #333); font-size: 0.9em;">
+                                                                    Fecha de Asignación
+                                                                </label>
+                                                                <input type="date" 
+                                                                       class="intensificacion-fecha-asignacion" 
+                                                                       data-contenido-id="${contenidoId}"
+                                                                       value="${fechaAsignacion}"
+                                                                       style="width: 100%; padding: 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 0.9em; background: var(--card-bg, #fff); color: var(--text-primary, #333);">
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group" style="margin-bottom: 15px;">
+                                                            <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary, #333); font-size: 0.9em;">
+                                                                Fecha de Resolución
+                                                            </label>
+                                                            <input type="date" 
+                                                                   class="intensificacion-fecha-resolucion" 
+                                                                   data-contenido-id="${contenidoId}"
+                                                                   value="${fechaResolucion}"
+                                                                   style="width: 100%; padding: 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 0.9em; background: var(--card-bg, #fff); color: var(--text-primary, #333);">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary, #333); font-size: 0.9em;">
+                                                                Observaciones Intensificación
+                                                            </label>
+                                                            <textarea class="intensificacion-observaciones" 
+                                                                      data-contenido-id="${contenidoId}"
+                                                                      rows="3"
+                                                                      placeholder="Ingresa observaciones sobre la intensificación..."
+                                                                      style="width: 100%; padding: 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 0.9em; resize: vertical; font-family: inherit; background: var(--card-bg, #fff); color: var(--text-primary, #333);">${intensObservaciones}</textarea>
+                                                        </div>
+                                                        ${intensificacionId ? `<input type="hidden" class="intensificacion-id" data-contenido-id="${contenidoId}" value="${intensificacionId}">` : ''}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     `;
@@ -4161,6 +4315,86 @@ window.showAssignTemaDialog = function(studentId, subjectId) {
             }
         }
     };
+    
+    // Add toggle function for intensificacion fields
+    window.toggleIntensificacionFields = function(contenidoId) {
+        const checkbox = modal.querySelector(`.intensificacion-checkbox[data-contenido-id="${contenidoId}"]`);
+        const fieldsContainer = modal.querySelector(`.intensificacion-fields[data-contenido-id="${contenidoId}"]`);
+        const temaItem = modal.querySelector(`.tema-item[data-contenido-id="${contenidoId}"]`);
+        
+        if (checkbox && fieldsContainer) {
+            if (checkbox.checked) {
+                fieldsContainer.style.display = 'block';
+                // Set default fecha_asignacion if empty
+                const fechaAsignacionInput = modal.querySelector(`.intensificacion-fecha-asignacion[data-contenido-id="${contenidoId}"]`);
+                if (fechaAsignacionInput && !fechaAsignacionInput.value) {
+                    fechaAsignacionInput.value = new Date().toISOString().split('T')[0];
+                }
+                // Update card color when intensification is enabled
+                updateTemaCardColor(contenidoId, 'PENDIENTE');
+            } else {
+                fieldsContainer.style.display = 'none';
+                // Reset card color when intensification is disabled
+                if (temaItem) {
+                    temaItem.style.border = 'none';
+                    temaItem.style.background = 'transparent';
+                    temaItem.style.boxShadow = 'none';
+                }
+            }
+        }
+    };
+    
+    // Function to update tema card color based on intensification state
+    window.updateTemaCardColor = function(contenidoId, estado) {
+        const temaItem = modal.querySelector(`.tema-item[data-contenido-id="${contenidoId}"]`);
+        if (!temaItem) return;
+        
+        const intensificacionColors = {
+            'PENDIENTE': {
+                border: '#ff9800',
+                background: 'rgba(255, 152, 0, 0.08)',
+                badge: '#ff9800'
+            },
+            'EN_CURSO': {
+                border: '#2196f3',
+                background: 'rgba(33, 150, 243, 0.08)',
+                badge: '#2196f3'
+            },
+            'APROBADO': {
+                border: '#4caf50',
+                background: 'rgba(76, 175, 80, 0.08)',
+                badge: '#4caf50'
+            },
+            'NO_APROBADO': {
+                border: '#f44336',
+                background: 'rgba(244, 67, 54, 0.08)',
+                badge: '#f44336'
+            }
+        };
+        
+        const colorScheme = intensificacionColors[estado] || intensificacionColors['PENDIENTE'];
+        temaItem.style.border = `2px solid ${colorScheme.border}`;
+        temaItem.style.background = colorScheme.background;
+        temaItem.setAttribute('data-intensificacion-estado', estado);
+        
+        // Update badge
+        const badge = temaItem.querySelector('.intensificacion-badge');
+        if (badge) {
+            badge.style.background = colorScheme.badge;
+            badge.textContent = estado.replace('_', ' ');
+        }
+    };
+    
+    // Add event listener to intensificacion estado dropdown to update card color
+    setTimeout(() => {
+        const intensEstadoSelects = modal.querySelectorAll('.intensificacion-estado');
+        intensEstadoSelects.forEach(select => {
+            select.addEventListener('change', function() {
+                const contenidoId = parseInt(this.dataset.contenidoId);
+                updateTemaCardColor(contenidoId, this.value);
+            });
+        });
+    }, 100);
     
     // Setup save button
     const saveBtn = document.getElementById('saveTemaAssignmentsBtn');
@@ -4280,6 +4514,129 @@ window.showAssignTemaDialog = function(studentId, subjectId) {
                             }
                         } catch (err) {
                             console.error(`Error creating tema_estudiante for contenido ${contenidoId}:`, err);
+                        }
+                    }
+                }
+                
+                // Process intensificacion for each tema
+                const previousIntensificacion = currentData.intensificacion && Array.isArray(currentData.intensificacion)
+                    ? currentData.intensificacion.filter(i => 
+                        parseInt(i.Estudiante_ID_Estudiante) === parseInt(studentId) && 
+                        parseInt(i.Materia_ID_materia) === parseInt(subjectId)
+                      )
+                    : [];
+                
+                for (const contenidoId of allContenidoIds) {
+                    const checkbox = modal.querySelector(`.intensificacion-checkbox[data-contenido-id="${contenidoId}"]`);
+                    const isIntensificacionChecked = checkbox ? checkbox.checked : false;
+                    
+                    if (isIntensificacionChecked) {
+                        // Get intensificacion form values
+                        const intensEstadoSelect = modal.querySelector(`.intensificacion-estado[data-contenido-id="${contenidoId}"]`);
+                        const notaObjetivoInput = modal.querySelector(`.intensificacion-nota-objetivo[data-contenido-id="${contenidoId}"]`);
+                        const notaObtenidaInput = modal.querySelector(`.intensificacion-nota-obtenida[data-contenido-id="${contenidoId}"]`);
+                        const fechaAsignacionInput = modal.querySelector(`.intensificacion-fecha-asignacion[data-contenido-id="${contenidoId}"]`);
+                        const fechaResolucionInput = modal.querySelector(`.intensificacion-fecha-resolucion[data-contenido-id="${contenidoId}"]`);
+                        const intensObservacionesTextarea = modal.querySelector(`.intensificacion-observaciones[data-contenido-id="${contenidoId}"]`);
+                        const intensificacionIdInput = modal.querySelector(`.intensificacion-id[data-contenido-id="${contenidoId}"]`);
+                        
+                        const intensEstado = intensEstadoSelect ? intensEstadoSelect.value : 'PENDIENTE';
+                        const notaObjetivo = notaObjetivoInput ? parseFloat(notaObjetivoInput.value) || 6.00 : 6.00;
+                        const notaObtenida = notaObtenidaInput && notaObtenidaInput.value !== '' ? parseFloat(notaObtenidaInput.value) : null;
+                        const fechaAsignacion = fechaAsignacionInput && fechaAsignacionInput.value ? fechaAsignacionInput.value : new Date().toISOString().split('T')[0];
+                        const fechaResolucion = fechaResolucionInput && fechaResolucionInput.value !== '' ? fechaResolucionInput.value : null;
+                        const intensObservaciones = intensObservacionesTextarea ? intensObservacionesTextarea.value.trim() : '';
+                        const intensificacionId = intensificacionIdInput ? parseInt(intensificacionIdInput.value) : null;
+                        
+                        // Check if intensificacion record already exists for this tema
+                        const existingIntensificacion = previousIntensificacion.find(i => 
+                            i.Contenido_ID_contenido && parseInt(i.Contenido_ID_contenido) === contenidoId
+                        );
+                        
+                        if (existingIntensificacion && intensificacionId) {
+                            // Update existing intensificacion record
+                            try {
+                                const updatePayload = {
+                                    Estado: intensEstado,
+                                    Contenido_ID_contenido: contenidoId,
+                                    Nota_objetivo: notaObjetivo,
+                                    Nota_obtenida: notaObtenida,
+                                    Fecha_asignacion: fechaAsignacion,
+                                    Fecha_resolucion: fechaResolucion,
+                                    Observaciones: intensObservaciones || null
+                                };
+                                
+                                const res = await fetch(`../api/intensificacion.php?id=${intensificacionId}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                                    credentials: 'include',
+                                    body: JSON.stringify(updatePayload)
+                                });
+                                
+                                if (!res.ok) {
+                                    const errorData = await res.json().catch(() => ({}));
+                                    console.error(`Error updating intensificacion ${intensificacionId}:`, errorData.message);
+                                    // Don't throw, just log - intensificacion is optional
+                                }
+                            } catch (err) {
+                                console.error(`Error updating intensificacion ${intensificacionId}:`, err);
+                                // Don't throw, just log - intensificacion is optional
+                            }
+                        } else {
+                            // Create new intensificacion record
+                            try {
+                                const createPayload = {
+                                    Estudiante_ID_Estudiante: studentId,
+                                    Materia_ID_materia: subjectId,
+                                    Contenido_ID_contenido: contenidoId,
+                                    Estado: intensEstado,
+                                    Nota_objetivo: notaObjetivo,
+                                    Nota_obtenida: notaObtenida,
+                                    Fecha_asignacion: fechaAsignacion,
+                                    Fecha_resolucion: fechaResolucion,
+                                    Observaciones: intensObservaciones || null
+                                };
+                                
+                                const res = await fetch('../api/intensificacion.php', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                                    credentials: 'include',
+                                    body: JSON.stringify(createPayload)
+                                });
+                                
+                                if (!res.ok && res.status !== 409) {
+                                    const errorData = await res.json().catch(() => ({}));
+                                    console.error(`Error creating intensificacion for contenido ${contenidoId}:`, errorData.message);
+                                    // Don't throw, just log - intensificacion is optional
+                                }
+                            } catch (err) {
+                                console.error(`Error creating intensificacion for contenido ${contenidoId}:`, err);
+                                // Don't throw, just log - intensificacion is optional
+                            }
+                        }
+                    } else {
+                        // If checkbox is unchecked, check if there's an existing intensificacion to delete
+                        const existingIntensificacion = previousIntensificacion.find(i => 
+                            i.Contenido_ID_contenido && parseInt(i.Contenido_ID_contenido) === contenidoId
+                        );
+                        
+                        if (existingIntensificacion && existingIntensificacion.ID_intensificacion) {
+                            try {
+                                const res = await fetch(`../api/intensificacion.php?id=${existingIntensificacion.ID_intensificacion}`, {
+                                    method: 'DELETE',
+                                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                                    credentials: 'include'
+                                });
+                                
+                                if (!res.ok) {
+                                    const errorData = await res.json().catch(() => ({}));
+                                    console.error(`Error deleting intensificacion ${existingIntensificacion.ID_intensificacion}:`, errorData.message);
+                                    // Don't throw, just log - intensificacion is optional
+                                }
+                            } catch (err) {
+                                console.error(`Error deleting intensificacion ${existingIntensificacion.ID_intensificacion}:`, err);
+                                // Don't throw, just log - intensificacion is optional
+                            }
                         }
                     }
                 }
