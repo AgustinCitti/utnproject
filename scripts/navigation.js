@@ -88,12 +88,56 @@ function initializeNavigation() {
     const desktopLanguageSelect = document.getElementById('desktopLanguageSelect');
     const mobileLanguageSelect = document.getElementById('languageSelect');
     const desktopLanguageToggle = document.getElementById('desktopLanguageToggle');
+    const languageDropdown = document.getElementById('languageDropdown');
     const languageCode = document.getElementById('languageCode');
+    
     
     // Initialize language code display
     if (languageCode) {
-        const currentLang = desktopLanguageSelect ? desktopLanguageSelect.value : 'es';
+        const savedLang = localStorage.getItem('language') || 'es';
+        const currentLang = desktopLanguageSelect ? desktopLanguageSelect.value : savedLang;
         languageCode.textContent = currentLang.toUpperCase();
+    }
+    
+    // Handle language dropdown toggle (click to open/close)
+    if (desktopLanguageToggle && languageDropdown) {
+        // Ensure dropdown is hidden initially
+        languageDropdown.style.display = 'none';
+        languageDropdown.classList.remove('active');
+        
+        desktopLanguageToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Toggle dropdown visibility
+            const isVisible = languageDropdown.style.display === 'block' || 
+                             languageDropdown.classList.contains('active');
+            
+            if (isVisible) {
+                languageDropdown.style.display = 'none';
+                languageDropdown.classList.remove('active');
+            } else {
+                languageDropdown.style.display = 'block';
+                languageDropdown.classList.add('active');
+                // Close other dropdowns if any
+                document.querySelectorAll('.language-dropdown-menu.active').forEach(dropdown => {
+                    if (dropdown !== languageDropdown) {
+                        dropdown.style.display = 'none';
+                        dropdown.classList.remove('active');
+                    }
+                });
+            }
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (languageDropdown && desktopLanguageToggle && 
+                !languageDropdown.contains(e.target) && 
+                !desktopLanguageToggle.contains(e.target)) {
+                languageDropdown.style.display = 'none';
+                languageDropdown.classList.remove('active');
+            }
+        });
     }
     
     if (desktopLanguageSelect && mobileLanguageSelect) {
@@ -141,6 +185,12 @@ function initializeNavigation() {
             // Change language
             if (typeof translatePage === 'function') {
                 translatePage(selectedLang);
+            }
+            
+            // Close dropdown after selection
+            if (languageDropdown) {
+                languageDropdown.style.display = 'none';
+                languageDropdown.classList.remove('active');
             }
         });
     });

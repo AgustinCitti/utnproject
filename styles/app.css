@@ -348,6 +348,15 @@
     transform: translateY(0);
 }
 
+/* Language dropdown menu visibility - Shows when active (for click-based dropdowns) */
+.language-dropdown-menu.active,
+.language-dropdown-menu[style*="display: block"] {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+    display: block !important;
+}
+
 /* Individual language option - Clickable language selection */
 .desktop-nav .language-option {
     display: flex;

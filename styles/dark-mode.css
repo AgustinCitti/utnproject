@@ -207,6 +207,94 @@
     color: #667eea;
 }
 
+/* ==========================================================================
+   ADMIN DASHBOARD DARK MODE
+   ========================================================================== */
+
+[data-theme="dark"] .admin-header {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary);
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+[data-theme="dark"] .admin-header h1 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .admin-container {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .users-table-container {
+    background: var(--card-bg) !important;
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+[data-theme="dark"] .users-table thead {
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] .users-table th {
+    color: var(--text-primary);
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .users-table td {
+    color: var(--text-primary);
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .users-table tbody tr:hover {
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] .btn-icon:hover {
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] .search-bar input {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .search-bar input::placeholder {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .form-group label {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-group input::placeholder,
+[data-theme="dark"] .form-group textarea::placeholder {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .loading {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .error-message {
+    background: rgba(220, 53, 69, 0.2);
+    color: #ff6b7a;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+[data-theme="dark"] .success-message {
+    background: rgba(40, 167, 69, 0.2);
+    color: #6bcf7f;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
 [data-theme="dark"] .search-filters-btn.active {
     background: #667eea;
     color: white;

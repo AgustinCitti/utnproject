@@ -12,6 +12,16 @@
     <link rel="stylesheet" href="../styles/dark-mode.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" href="../styles/assets/icon.ico" type="image/x-icon">
+    <script>
+        // Set language immediately before page renders
+        (function() {
+            const savedLanguage = localStorage.getItem('language') || 'es';
+            document.documentElement.lang = savedLanguage;
+            if (typeof window !== 'undefined') {
+                window.currentLanguage = savedLanguage;
+            }
+        })();
+    </script>
     <style>
         body {
             background-image: url('../styles/assets/background.jpeg');
@@ -202,17 +212,253 @@
             border-radius: 4px;
             font-size: 1rem;
         }
+        
+        /* Language Selector - Clean Design from Scratch */
+        .admin-header .language-selector {
+            position: relative;
+            display: inline-block;
+        }
+        
+        /* Language Toggle Button */
+        .admin-header .language-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            color: #495057;
+        }
+        
+        .admin-header .language-toggle:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+        
+        .admin-header .language-toggle i.fa-globe {
+            color: #667eea;
+            font-size: 16px;
+        }
+        
+        .admin-header .language-toggle #languageCode {
+            font-weight: 600;
+            min-width: 24px;
+        }
+        
+        .admin-header .language-toggle .fa-chevron-down {
+            font-size: 10px;
+            color: #6c757d;
+            transition: transform 0.2s ease;
+        }
+        
+        .admin-header .language-toggle.active .fa-chevron-down {
+            transform: rotate(180deg);
+        }
+        
+        /* Language Dropdown Menu - Clean Modern Design */
+        .admin-header #languageDropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+            min-width: 180px;
+            z-index: 10000;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            padding: 8px;
+            display: none;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px) scale(0.95);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        /* Active State - Force white background */
+        .admin-header #languageDropdown.active {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateY(0) scale(1) !important;
+            pointer-events: auto !important;
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+        }
+        
+        /* Override any inline styles */
+        .admin-header #languageDropdown.active[style*="display: none"] {
+            display: block !important;
+        }
+        
+        /* Language Option Items */
+        .admin-header .language-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            margin-bottom: 4px;
+        }
+        
+        .admin-header .language-option:last-child {
+            margin-bottom: 0;
+        }
+        
+        .admin-header .language-option:hover {
+            background: #f8f9fa;
+        }
+        
+        .admin-header .language-option:active {
+            background: #e9ecef;
+            transform: scale(0.98);
+        }
+        
+        .admin-header .language-option .language-flag {
+            font-size: 20px;
+            line-height: 1;
+        }
+        
+        .admin-header .language-option .language-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #212529;
+            flex: 1;
+        }
+        
+        /* Disable hover behavior from app.css */
+        .admin-header .language-selector:hover #languageDropdown:not(.active) {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+        
+        /* Ensure active state works even on hover */
+        .admin-header .language-selector:hover #languageDropdown.active {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateY(0) scale(1) !important;
+        }
+        
+        /* ========================================
+           DARK MODE STYLES
+           ======================================== */
+        
+        /* Dark Mode - Language Toggle Button */
+        [data-theme="dark"] .admin-header .language-toggle {
+            background: #2d2d2d !important;
+            border-color: #404040 !important;
+            color: #e0e0e0 !important;
+        }
+        
+        [data-theme="dark"] .admin-header .language-toggle:hover {
+            background: #3a3a3a !important;
+            border-color: #505050 !important;
+        }
+        
+        [data-theme="dark"] .admin-header .language-toggle i.fa-globe {
+            color: #667eea !important;
+        }
+        
+        [data-theme="dark"] .admin-header .language-toggle #languageCode {
+            color: #e0e0e0 !important;
+        }
+        
+        [data-theme="dark"] .admin-header .language-toggle .fa-chevron-down {
+            color: #b0b0b0 !important;
+        }
+        
+        /* Dark Mode - Language Dropdown Menu */
+        [data-theme="dark"] .admin-header #languageDropdown {
+            background: #2d2d2d !important;
+            background-color: #2d2d2d !important;
+            border-color: #404040 !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+        }
+        
+        [data-theme="dark"] .admin-header #languageDropdown.active {
+            background: #2d2d2d !important;
+            background-color: #2d2d2d !important;
+        }
+        
+        /* Dark Mode - Language Options */
+        [data-theme="dark"] .admin-header .language-option {
+            color: #e0e0e0 !important;
+        }
+        
+        [data-theme="dark"] .admin-header .language-option:hover {
+            background: #3a3a3a !important;
+        }
+        
+        [data-theme="dark"] .admin-header .language-option:active {
+            background: #404040 !important;
+        }
+        
+        [data-theme="dark"] .admin-header .language-option .language-name {
+            color: #e0e0e0 !important;
+        }
+        
+        /* Dark Mode - Active language option */
+        [data-theme="dark"] .admin-header .language-option.active {
+            background: #404040 !important;
+        }
+        
+        [data-theme="dark"] .admin-header .language-option.active .language-name {
+            color: #667eea !important;
+            font-weight: 600 !important;
+        }
     </style>
 </head>
 <body>
     <!-- Admin Header -->
     <header class="admin-header">
         <div class="d-flex justify-between items-center">
-            <h1><i class="fas fa-shield-alt"></i> Admin Dashboard - User Management</h1>
+            <h1><i class="fas fa-shield-alt"></i> <span data-translate="admin_dashboard">Admin Dashboard</span> - <span data-translate="user_management">User Management</span></h1>
             <div class="d-flex items-center gap-2">
+                <!-- Dark Mode Toggle -->
+                <div class="dark-mode-toggle-container">
+                    <label class="dark-mode-toggle" for="darkModeToggle">
+                        <input type="checkbox" id="darkModeToggle" aria-label="Toggle dark mode">
+                        <span class="toggle-slider"></span>
+                        <i class="fas fa-moon toggle-icon"></i>
+                    </label>
+                </div>
+                
+                <!-- Language Selector -->
+                <div class="language-selector">
+                    <button id="desktopLanguageToggle" class="language-toggle" type="button" aria-label="Select language" aria-expanded="false">
+                        <i class="fas fa-globe"></i>
+                        <span id="languageCode">ES</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div id="languageDropdown" class="language-dropdown-menu" role="menu" aria-labelledby="desktopLanguageToggle">
+                        <div class="language-option" data-lang="es" role="menuitem" tabindex="0">
+                            <span class="language-flag">🇪🇸</span>
+                            <span class="language-name">Español</span>
+                        </div>
+                        <div class="language-option" data-lang="en" role="menuitem" tabindex="0">
+                            <span class="language-flag">🇺🇸</span>
+                            <span class="language-name">English</span>
+                        </div>
+                    </div>
+                    <select id="desktopLanguageSelect" class="language-dropdown" style="display: none;" aria-hidden="true">
+                        <option value="es">Español</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                
                 <span id="adminUserName">Admin</span>
                 <button class="btn-secondary" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+                    <i class="fas fa-sign-out-alt"></i> <span data-translate="logout">Logout</span>
                 </button>
             </div>
         </div>
@@ -226,38 +472,38 @@
         <!-- Admin Actions -->
         <div class="admin-actions">
             <button class="btn-primary" onclick="openAddUserModal()">
-                <i class="fas fa-user-plus"></i> Add New User
+                <i class="fas fa-user-plus"></i> <span data-translate="add_new_user">Add New User</span>
             </button>
             <button class="btn-secondary" onclick="refreshUsers()">
-                <i class="fas fa-sync-alt"></i> Refresh
+                <i class="fas fa-sync-alt"></i> <span data-translate="refresh">Refresh</span>
             </button>
         </div>
 
         <!-- Search Bar -->
         <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Search users by name, email, or DNI..." onkeyup="filterUsers()">
+            <input type="text" id="searchInput" placeholder="" data-translate-placeholder="search_users_placeholder" onkeyup="filterUsers()">
         </div>
 
         <!-- Users Table -->
         <div class="users-table-container">
             <div id="usersTableLoading" class="loading">
-                <i class="fas fa-spinner fa-spin"></i> Loading users...
+                <i class="fas fa-spinner fa-spin"></i> <span data-translate="loading_users">Loading users...</span>
             </div>
             <table class="users-table" id="usersTable" style="display: none;">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Last Name</th>
-                        <th>Email</th>
-                        <th>DNI</th>
-                        <th>Phone</th>
-                        <th>Specialty</th>
-                        <th>Academic Title</th>
-                        <th>User Type</th>
-                        <th>Status</th>
-                        <th>Last Access</th>
-                        <th>Actions</th>
+                        <th data-translate="id">ID</th>
+                        <th data-translate="name">Name</th>
+                        <th data-translate="last_name">Last Name</th>
+                        <th data-translate="email">Email</th>
+                        <th data-translate="dni">DNI</th>
+                        <th data-translate="phone">Phone</th>
+                        <th data-translate="specialty">Specialty</th>
+                        <th data-translate="academic_title">Academic Title</th>
+                        <th data-translate="user_type">User Type</th>
+                        <th data-translate="status">Status</th>
+                        <th data-translate="last_access">Last Access</th>
+                        <th data-translate="actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
@@ -278,58 +524,58 @@
                     <input type="hidden" id="userId" name="userId">
                     
                     <div class="form-group">
-                        <label for="nombre">Name *</label>
+                        <label for="nombre"><span data-translate="name">Name</span> *</label>
                         <input type="text" id="nombre" name="nombre" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="apellido">Last Name *</label>
+                        <label for="apellido"><span data-translate="last_name">Last Name</span> *</label>
                         <input type="text" id="apellido" name="apellido" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="email">Email *</label>
+                        <label for="email"><span data-translate="email">Email</span> *</label>
                         <input type="email" id="email" name="email" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="password">Password <span id="passwordRequired" style="color: red;">*</span></label>
+                        <label for="password"><span data-translate="password">Password</span> <span id="passwordRequired" style="color: red;">*</span></label>
                         <input type="password" id="password" name="password">
                         <small style="color: #6c757d;">Leave empty to keep current password (when editing)</small>
                     </div>
                     
                     <div class="form-group">
-                        <label for="dni">DNI</label>
+                        <label for="dni"><span data-translate="dni">DNI</span></label>
                         <input type="text" id="dni" name="dni">
                     </div>
                     
                     <div class="form-group">
-                        <label for="telefono">Phone</label>
+                        <label for="telefono"><span data-translate="phone">Phone</span></label>
                         <input type="text" id="telefono" name="telefono">
                     </div>
                     
                     <div class="form-group">
-                        <label for="direccion">Address</label>
+                        <label for="direccion"><span data-translate="address">Address</span></label>
                         <input type="text" id="direccion" name="direccion">
                     </div>
                     
                     <div class="form-group">
-                        <label for="fecha_nacimiento">Birth Date</label>
+                        <label for="fecha_nacimiento"><span data-translate="birth_date">Birth Date</span></label>
                         <input type="date" id="fecha_nacimiento" name="fecha_nacimiento">
                     </div>
                     
                     <div class="form-group">
-                        <label for="especialidad">Specialty</label>
+                        <label for="especialidad"><span data-translate="specialty">Specialty</span></label>
                         <input type="text" id="especialidad" name="especialidad">
                     </div>
                     
                     <div class="form-group">
-                        <label for="titulo_academico">Academic Title</label>
+                        <label for="titulo_academico"><span data-translate="academic_title">Academic Title</span></label>
                         <input type="text" id="titulo_academico" name="titulo_academico">
                     </div>
                     
                     <div class="form-group">
-                        <label for="tipo_usuario">User Type *</label>
+                        <label for="tipo_usuario"><span data-translate="user_type">User Type</span> *</label>
                         <select id="tipo_usuario" name="tipo_usuario" required>
                             <option value="PROFESOR">PROFESOR</option>
                             <option value="PROFESOR_ADJUNTO">PROFESOR_ADJUNTO</option>
@@ -338,7 +584,7 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="estado">Status *</label>
+                        <label for="estado"><span data-translate="status">Status</span> *</label>
                         <select id="estado" name="estado" required>
                             <option value="ACTIVO">ACTIVO</option>
                             <option value="INACTIVO">INACTIVO</option>
@@ -367,7 +613,197 @@
     <!-- Scripts -->
     <script src="../scripts/utils.js"></script>
     <script src="../scripts/auth.js"></script>
+    <script src="../scripts/translations.js"></script>
+    <script src="../scripts/main.js"></script>
+    <script src="../scripts/navigation.js"></script>
     <script src="../scripts/admin-dashboard.js"></script>
+    <script>
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Force language to Spanish if not set
+            const savedLanguage = localStorage.getItem('language') || 'es';
+            localStorage.setItem('language', savedLanguage);
+            
+            // Initialize language FIRST
+            if (typeof initializeLanguage === 'function') {
+                initializeLanguage();
+            } else if (typeof translatePage === 'function') {
+                // Fallback: manually set language to Spanish
+                translatePage(savedLanguage);
+            }
+            
+            // Initialize dark mode
+            if (typeof initializeDarkMode === 'function') {
+                initializeDarkMode();
+            }
+            
+            // Store handler reference globally so we can remove it properly
+            window.adminLanguageToggleHandler = null;
+            
+            // Set up language dropdown toggle BEFORE navigation.js runs
+            // This ensures our handler takes priority
+            function setupAdminLanguageToggle() {
+                const languageToggle = document.getElementById('desktopLanguageToggle');
+                const languageDropdown = document.getElementById('languageDropdown');
+                
+                if (languageToggle && languageDropdown) {
+                    // Ensure dropdown is hidden initially
+                    languageDropdown.classList.remove('active');
+                    // Don't set inline display, let CSS handle it
+                    
+                    // Remove old handler if it exists
+                    if (window.adminLanguageToggleHandler) {
+                        languageToggle.removeEventListener('click', window.adminLanguageToggleHandler, true);
+                    }
+                    
+                    // Create and store new handler
+                    window.adminLanguageToggleHandler = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        
+                        const toggle = document.getElementById('desktopLanguageToggle');
+                        const currentDropdown = document.getElementById('languageDropdown');
+                        const isVisible = currentDropdown.classList.contains('active');
+                        
+                        if (isVisible) {
+                            currentDropdown.classList.remove('active');
+                            currentDropdown.style.display = '';
+                            toggle.classList.remove('active');
+                            toggle.setAttribute('aria-expanded', 'false');
+                        } else {
+                            // Remove any inline display styles
+                            currentDropdown.style.display = '';
+                            currentDropdown.classList.add('active');
+                            toggle.classList.add('active');
+                            toggle.setAttribute('aria-expanded', 'true');
+                            // Set background based on theme
+                            const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+                            if (isDarkMode) {
+                                currentDropdown.style.background = '#2d2d2d';
+                                currentDropdown.style.backgroundColor = '#2d2d2d';
+                            } else {
+                                currentDropdown.style.background = '#ffffff';
+                                currentDropdown.style.backgroundColor = '#ffffff';
+                            }
+                        }
+                    };
+                    
+                    // Add our handler with capture phase for priority
+                    languageToggle.addEventListener('click', window.adminLanguageToggleHandler, true);
+                    
+                    // Handle language option clicks
+                    const languageOptions = languageDropdown.querySelectorAll('.language-option');
+                    languageOptions.forEach(function(option) {
+                        // Remove old handler and add new one
+                        const optionHandler = function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const lang = option.getAttribute('data-lang');
+                            if (lang && typeof translatePage === 'function') {
+                                translatePage(lang);
+                                localStorage.setItem('language', lang);
+                                
+                                // Update language code
+                                const langCode = document.getElementById('languageCode');
+                                if (langCode) {
+                                    langCode.textContent = lang.toUpperCase();
+                                }
+                                
+                                // Update select value
+                                const desktopSelect = document.getElementById('desktopLanguageSelect');
+                                if (desktopSelect) {
+                                    desktopSelect.value = lang;
+                                }
+                                
+                                // Close dropdown
+                                const toggle = document.getElementById('desktopLanguageToggle');
+                                languageDropdown.classList.remove('active');
+                                languageDropdown.style.display = '';
+                                if (toggle) {
+                                    toggle.classList.remove('active');
+                                    toggle.setAttribute('aria-expanded', 'false');
+                                }
+                            }
+                        };
+                        option.removeEventListener('click', optionHandler);
+                        option.addEventListener('click', optionHandler);
+                        
+                        // Also handle keyboard (Enter/Space)
+                        option.addEventListener('keydown', function(e) {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                optionHandler(e);
+                            }
+                        });
+                    });
+                    
+                    // Close when clicking outside (only add once)
+                    if (!window.adminLanguageClickHandlerAdded) {
+                        document.addEventListener('click', function(e) {
+                            const toggleBtn = document.getElementById('desktopLanguageToggle');
+                            const dropdown = document.getElementById('languageDropdown');
+                            if (toggleBtn && dropdown && 
+                                !toggleBtn.contains(e.target) && 
+                                !dropdown.contains(e.target)) {
+                                dropdown.classList.remove('active');
+                                dropdown.style.display = '';
+                                if (toggleBtn) {
+                                    toggleBtn.classList.remove('active');
+                                    toggleBtn.setAttribute('aria-expanded', 'false');
+                                }
+                            }
+                        });
+                        
+                        // Close on Escape key
+                        document.addEventListener('keydown', function(e) {
+                            if (e.key === 'Escape') {
+                                const dropdown = document.getElementById('languageDropdown');
+                                const toggleBtn = document.getElementById('desktopLanguageToggle');
+                                if (dropdown && dropdown.classList.contains('active')) {
+                                    dropdown.classList.remove('active');
+                                    dropdown.style.display = '';
+                                    if (toggleBtn) {
+                                        toggleBtn.classList.remove('active');
+                                        toggleBtn.setAttribute('aria-expanded', 'false');
+                                    }
+                                }
+                            }
+                        });
+                        
+                        window.adminLanguageClickHandlerAdded = true;
+                    }
+                }
+            }
+            
+            // Set up immediately
+            setupAdminLanguageToggle();
+            
+            // Initialize navigation (includes language dropdown) - but our handler should take priority
+            if (typeof initializeNavigation === 'function') {
+                initializeNavigation();
+            }
+            
+            // Set up again after navigation.js runs to ensure our handler is active
+            setTimeout(setupAdminLanguageToggle, 100);
+            setTimeout(setupAdminLanguageToggle, 300);
+            
+            // Force translate multiple times to ensure all elements are translated
+            function forceTranslate() {
+                if (typeof translatePage === 'function') {
+                    const lang = localStorage.getItem('language') || 'es';
+                    translatePage(lang);
+                }
+            }
+            
+            // Translate immediately and multiple times
+            forceTranslate();
+            setTimeout(forceTranslate, 50);
+            setTimeout(forceTranslate, 200);
+            setTimeout(forceTranslate, 500);
+            setTimeout(forceTranslate, 1000);
+        });
+    </script>
 </body>
 </html>
 

@@ -369,7 +369,29 @@ const translations = {
         monthly: "Mensual",
         subtotal: "Subtotal:",
         tax: "Impuesto:",
-        total: "Total:"
+        total: "Total:",
+        
+        // Admin Dashboard
+        admin_dashboard: "Panel de Administración",
+        user_management: "Gestión de Usuarios",
+        add_new_user: "Agregar Nuevo Usuario",
+        refresh: "Actualizar",
+        search_users_placeholder: "Buscar usuarios por nombre, email o DNI...",
+        loading_users: "Cargando usuarios...",
+        id: "ID",
+        name: "Nombre",
+        last_name: "Apellido",
+        dni: "DNI",
+        phone: "Teléfono",
+        specialty: "Especialidad",
+        academic_title: "Título Académico",
+        user_type: "Tipo de Usuario",
+        status: "Estado",
+        last_access: "Último Acceso",
+        actions: "Acciones",
+        address: "Dirección",
+        birth_date: "Fecha de Nacimiento",
+        password: "Contraseña"
     },
     en: {
         // Landing page
@@ -730,7 +752,29 @@ const translations = {
         monthly: "Monthly",
         subtotal: "Subtotal:",
         tax: "Tax:",
-        total: "Total:"
+        total: "Total:",
+        
+        // Admin Dashboard
+        admin_dashboard: "Admin Dashboard",
+        user_management: "User Management",
+        add_new_user: "Add New User",
+        refresh: "Refresh",
+        search_users_placeholder: "Search users by name, email, or DNI...",
+        loading_users: "Loading users...",
+        id: "ID",
+        name: "Name",
+        last_name: "Last Name",
+        dni: "DNI",
+        phone: "Phone",
+        specialty: "Specialty",
+        academic_title: "Academic Title",
+        user_type: "User Type",
+        status: "Status",
+        last_access: "Last Access",
+        actions: "Actions",
+        address: "Address",
+        birth_date: "Birth Date",
+        password: "Password"
     }
 };
 
@@ -748,6 +792,15 @@ function translatePage(language) {
         const key = element.getAttribute('data-translate');
         if (translations[language] && translations[language][key]) {
             element.textContent = translations[language][key];
+        }
+    });
+    
+    // Update all elements with data-translate-placeholder attribute
+    const placeholderElements = document.querySelectorAll('[data-translate-placeholder]');
+    placeholderElements.forEach(element => {
+        const key = element.getAttribute('data-translate-placeholder');
+        if (translations[language] && translations[language][key]) {
+            element.placeholder = translations[language][key];
         }
     });
     
@@ -801,6 +854,12 @@ function initializeLanguage() {
     const desktopLanguageSelect = document.getElementById('desktopLanguageSelect');
     if (desktopLanguageSelect) {
         desktopLanguageSelect.value = savedLanguage;
+    }
+    
+    // Update language code display
+    const languageCode = document.getElementById('languageCode');
+    if (languageCode) {
+        languageCode.textContent = savedLanguage.toUpperCase();
     }
     
     // Apply translations
