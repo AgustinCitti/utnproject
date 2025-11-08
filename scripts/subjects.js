@@ -1871,6 +1871,18 @@ function setupMateriaDetailsTabs(subjectId) {
         };
     }
     
+    // Setup export temas button
+    const exportTemasBtn = document.getElementById('exportTemasBtn');
+    if (exportTemasBtn) {
+        exportTemasBtn.onclick = function() {
+            if (typeof window.exportTemasAsExcel === 'function') {
+                window.exportTemasAsExcel(subjectId);
+            } else {
+                alert('Función de exportación no disponible');
+            }
+        };
+    }
+    
     // Setup import temas button
     const importTemasBtn = document.getElementById('importTemasBtn');
     if (importTemasBtn) {
@@ -2226,9 +2238,20 @@ function switchToTemasTab() {
         estudiantesTabContent.style.display = 'none';
     }
     
-    // Setup import temas button handler
+    // Setup export temas button handler
     const subjectId = getCurrentThemesSubjectId();
     if (subjectId) {
+        const exportTemasBtn = document.getElementById('exportTemasBtn');
+        if (exportTemasBtn) {
+            exportTemasBtn.onclick = function() {
+                if (typeof window.exportTemasAsExcel === 'function') {
+                    window.exportTemasAsExcel(subjectId);
+                } else {
+                    alert('Función de exportación no disponible');
+                }
+            };
+        }
+        
         const importTemasBtn = document.getElementById('importTemasBtn');
         if (importTemasBtn) {
             // Remove existing onclick handler if any
@@ -2346,6 +2369,18 @@ function switchToEvaluacionesTab(subjectId) {
     if (showCreateEvaluacionBtn) {
         showCreateEvaluacionBtn.onclick = function() {
             showCreateEvaluacionForm(subjectId);
+        };
+    }
+    
+    // Setup export evaluaciones button
+    const exportEvaluacionesBtn = document.getElementById('exportEvaluacionesBtn');
+    if (exportEvaluacionesBtn) {
+        exportEvaluacionesBtn.onclick = function() {
+            if (typeof window.exportEvaluacionesAsExcel === 'function') {
+                window.exportEvaluacionesAsExcel(subjectId);
+            } else {
+                alert('Función de exportación no disponible');
+            }
         };
     }
     
@@ -2490,6 +2525,18 @@ function switchToEstudiantesTab(subjectId) {
     // Load students when switching to this tab
     if (subjectId && typeof loadMateriaStudents === 'function') {
         loadMateriaStudents(subjectId);
+    }
+    
+    // Setup export estudiantes button
+    const exportEstudiantesBtn = document.getElementById('exportEstudiantesBtn');
+    if (exportEstudiantesBtn) {
+        exportEstudiantesBtn.onclick = function() {
+            if (typeof window.exportEstudiantesAsExcel === 'function') {
+                window.exportEstudiantesAsExcel(subjectId);
+            } else {
+                alert('Función de exportación no disponible');
+            }
+        };
     }
     
     // Setup mark attendance button handler when tab becomes visible
@@ -6277,3 +6324,271 @@ async function saveAttendance(subjectId) {
         alert('Error al guardar');
     }
 }
+
+/**
+ * Export temas (themes/content) for a subject as Excel
+ * @param {number} subjectId - Subject ID
+ */
+window.exportTemasAsExcel = function(subjectId) {
+    if (!subjectId) {
+        subjectId = getCurrentThemesSubjectId();
+    }
+    
+    if (!subjectId) {
+        alert('Error: ID de materia no válido');
+        return;
+    }
+    
+    const data = window.appData || window.data || {};
+    const subject = getSubjectById(subjectId);
+    
+    if (!data.contenido || !Array.isArray(data.contenido)) {
+        alert('No hay temas para exportar');
+        return;
+    }
+    
+    // Get temas for this subject
+    const temas = data.contenido
+        .filter(c => {
+            const materiaId = parseInt(c.Materia_ID_materia);
+            const subjectIdNum = parseInt(subjectId);
+            return materiaId === subjectIdNum;
+        })
+        .sort((a, b) => {
+            const dateA = a.Fecha_creacion ? new Date(a.Fecha_creacion) : new Date(0);
+            const dateB = b.Fecha_creacion ? new Date(b.Fecha_creacion) : new Date(0);
+            return dateB - dateA;
+        });
+    
+    if (temas.length === 0) {
+        alert('No hay temas para exportar');
+        return;
+    }
+    
+    // Prepare CSV data
+    const headers = ['ID', 'Tema', 'Descripción', 'Estado', 'Fecha Creación'];
+    const rows = temas.map(tema => [
+        tema.ID_contenido || '',
+        tema.Tema || '',
+        (tema.Descripcion || '').replace(/\n/g, ' ').replace(/"/g, '""'),
+        tema.Estado || 'PENDIENTE',
+        tema.Fecha_creacion || ''
+    ]);
+    
+    // Create Excel content (using semicolon as separator for Excel)
+    const separator = ';';
+    const csvContent = [
+        headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(separator),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(separator))
+    ].join('\r\n');
+    
+    // Download Excel with BOM UTF-8 for proper accents
+    const encoder = new TextEncoder();
+    const bomBytes = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const contentBytes = encoder.encode(csvContent);
+    const finalContent = new Uint8Array(bomBytes.length + contentBytes.length);
+    finalContent.set(bomBytes, 0);
+    finalContent.set(contentBytes, bomBytes.length);
+    
+    const blob = new Blob([finalContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    const subjectName = subject ? subject.Nombre.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ]/g, '_') : 'materia';
+    link.setAttribute('download', `temas_${subjectName}_${new Date().toISOString().split('T')[0]}.xls`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Show notification
+    if (typeof showExportNotification === 'function') {
+        showExportNotification('Lista de temas exportada como Excel exitosamente!', 'success');
+    } else {
+        alert('Lista de temas exportada como Excel exitosamente!');
+    }
+};
+
+/**
+ * Export evaluaciones (evaluations) for a subject as Excel
+ * @param {number} subjectId - Subject ID
+ */
+window.exportEvaluacionesAsExcel = function(subjectId) {
+    if (!subjectId) {
+        subjectId = getCurrentThemesSubjectId();
+    }
+    
+    if (!subjectId) {
+        alert('Error: ID de materia no válido');
+        return;
+    }
+    
+    const data = window.appData || window.data || {};
+    const subject = getSubjectById(subjectId);
+    
+    if (!data.evaluacion || !Array.isArray(data.evaluacion)) {
+        alert('No hay evaluaciones para exportar');
+        return;
+    }
+    
+    // Get evaluaciones for this subject
+    const evaluaciones = data.evaluacion
+        .filter(e => {
+            const materiaId = parseInt(e.Materia_ID_materia);
+            const subjectIdNum = parseInt(subjectId);
+            return materiaId === subjectIdNum;
+        })
+        .sort((a, b) => {
+            const dateA = a.Fecha ? new Date(a.Fecha) : new Date(0);
+            const dateB = b.Fecha ? new Date(b.Fecha) : new Date(0);
+            return dateB - dateA;
+        });
+    
+    if (evaluaciones.length === 0) {
+        alert('No hay evaluaciones para exportar');
+        return;
+    }
+    
+    // Prepare CSV data
+    const headers = ['ID', 'Título', 'Fecha', 'Tipo', 'Descripción', 'Estado', 'Peso'];
+    const rows = evaluaciones.map(eval => [
+        eval.ID_evaluacion || '',
+        eval.Titulo || '',
+        eval.Fecha || '',
+        eval.Tipo || '',
+        (eval.Descripcion || '').replace(/\n/g, ' ').replace(/"/g, '""'),
+        eval.Estado || 'PROGRAMADA',
+        eval.Peso || '1.00'
+    ]);
+    
+    // Create Excel content (using semicolon as separator for Excel)
+    const separator = ';';
+    const csvContent = [
+        headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(separator),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(separator))
+    ].join('\r\n');
+    
+    // Download Excel with BOM UTF-8 for proper accents
+    const encoder = new TextEncoder();
+    const bomBytes = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const contentBytes = encoder.encode(csvContent);
+    const finalContent = new Uint8Array(bomBytes.length + contentBytes.length);
+    finalContent.set(bomBytes, 0);
+    finalContent.set(contentBytes, bomBytes.length);
+    
+    const blob = new Blob([finalContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    const subjectName = subject ? subject.Nombre.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ]/g, '_') : 'materia';
+    link.setAttribute('download', `evaluaciones_${subjectName}_${new Date().toISOString().split('T')[0]}.xls`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Show notification
+    if (typeof showExportNotification === 'function') {
+        showExportNotification('Lista de evaluaciones exportada como Excel exitosamente!', 'success');
+    } else {
+        alert('Lista de evaluaciones exportada como Excel exitosamente!');
+    }
+};
+
+/**
+ * Export estudiantes (students) for a subject as Excel
+ * @param {number} subjectId - Subject ID
+ */
+window.exportEstudiantesAsExcel = function(subjectId) {
+    if (!subjectId) {
+        subjectId = getCurrentThemesSubjectId();
+    }
+    
+    if (!subjectId) {
+        alert('Error: ID de materia no válido');
+        return;
+    }
+    
+    const data = window.appData || window.data || {};
+    const subject = getSubjectById(subjectId);
+    
+    if (!data.alumnos_x_materia || !Array.isArray(data.alumnos_x_materia) ||
+        !data.estudiante || !Array.isArray(data.estudiante)) {
+        alert('No hay estudiantes para exportar');
+        return;
+    }
+    
+    // Get students enrolled in this subject
+    const enrolledStudentIds = data.alumnos_x_materia
+        .filter(axm => {
+            const materiaId = parseInt(axm.Materia_ID_materia);
+            const subjectIdNum = parseInt(subjectId);
+            return materiaId === subjectIdNum;
+        })
+        .map(axm => parseInt(axm.Estudiante_ID_Estudiante));
+    
+    const estudiantes = data.estudiante
+        .filter(student => enrolledStudentIds.includes(parseInt(student.ID_Estudiante)))
+        .sort((a, b) => {
+            const lastNameA = (a.Apellido || '').toLowerCase();
+            const lastNameB = (b.Apellido || '').toLowerCase();
+            if (lastNameA !== lastNameB) {
+                return lastNameA.localeCompare(lastNameB);
+            }
+            return (a.Nombre || '').toLowerCase().localeCompare((b.Nombre || '').toLowerCase());
+        });
+    
+    if (estudiantes.length === 0) {
+        alert('No hay estudiantes para exportar');
+        return;
+    }
+    
+    // Prepare CSV data
+    const headers = ['ID', 'Nombre', 'Apellido', 'DNI', 'Email', 'Teléfono', 'Estado', 'Intensificación'];
+    const rows = estudiantes.map(student => [
+        student.ID_Estudiante || '',
+        student.Nombre || '',
+        student.Apellido || '',
+        student.DNI || '',
+        student.Email || '',
+        student.Telefono || '',
+        student.Estado || 'ACTIVO',
+        student.Intensificacion || 'NO'
+    ]);
+    
+    // Create Excel content (using semicolon as separator for Excel)
+    const separator = ';';
+    const csvContent = [
+        headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(separator),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(separator))
+    ].join('\r\n');
+    
+    // Download Excel with BOM UTF-8 for proper accents
+    const encoder = new TextEncoder();
+    const bomBytes = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const contentBytes = encoder.encode(csvContent);
+    const finalContent = new Uint8Array(bomBytes.length + contentBytes.length);
+    finalContent.set(bomBytes, 0);
+    finalContent.set(contentBytes, bomBytes.length);
+    
+    const blob = new Blob([finalContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    const subjectName = subject ? subject.Nombre.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ]/g, '_') : 'materia';
+    link.setAttribute('download', `estudiantes_${subjectName}_${new Date().toISOString().split('T')[0]}.xls`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Show notification
+    if (typeof showExportNotification === 'function') {
+        showExportNotification('Lista de estudiantes exportada como Excel exitosamente!', 'success');
+    } else {
+        alert('Lista de estudiantes exportada como Excel exitosamente!');
+    }
+};
