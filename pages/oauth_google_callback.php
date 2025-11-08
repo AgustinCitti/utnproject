@@ -111,7 +111,7 @@ try {
     if ($userRole === 'ADMIN') {
         header('Location: /utnproject/pages/admindashboard.html');
     } else {
-        header('Location: /utnproject/pages/home.html');
+        header('Location: /utnproject/pages/');
     }
     exit();
 
