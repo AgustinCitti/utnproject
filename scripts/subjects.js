@@ -2542,6 +2542,10 @@ window.toggleBulkTemasInputMode = function() {
         if (toggleBtn) {
             toggleBtn.innerHTML = '<i class="fas fa-file-csv"></i> Modo CSV';
         }
+        // Initialize delete button visibility
+        if (typeof updateTemaDeleteButtonsVisibility === 'function') {
+            updateTemaDeleteButtonsVisibility();
+        }
     }
 };
 
@@ -2561,12 +2565,20 @@ window.addManualTemaRow = function() {
         <td><input type="text" id="manualTema_${manualTemaRowCounter}" class="manual-tema-input" placeholder="Tema" style="width: 100%; padding: 6px;"></td>
         <td><input type="text" id="manualDescripcion_${manualTemaRowCounter}" class="manual-tema-input" placeholder="Descripción (opcional)" style="width: 100%; padding: 6px;"></td>
         <td>
-            <button type="button" class="btn-icon btn-primary" onclick="addManualTemaRow(); return false;" title="Agregar siguiente tema">
-                <i class="fas fa-plus"></i>
-            </button>
+            <div style="display: flex; gap: 4px; align-items: center;">
+                <button type="button" class="btn-icon btn-primary" onclick="addManualTemaRow(); return false;" title="Agregar siguiente tema">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button type="button" class="btn-icon btn-delete" onclick="removeManualTemaRow(this); return false;" title="Eliminar tema">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
         </td>
     `;
     tbody.appendChild(newRow);
+    
+    // Update delete button visibility
+    updateTemaDeleteButtonsVisibility();
     
     // Focus on the new tema input
     const newTemaInput = document.getElementById(`manualTema_${manualTemaRowCounter}`);
@@ -2587,15 +2599,44 @@ window.addManualTemaRow = function() {
 };
 
 /**
- * Remove last row from manual temas table
+ * Remove a specific row from manual temas table
  */
-window.removeLastManualTemaRow = function() {
+window.removeManualTemaRow = function(button) {
     const tbody = document.getElementById('bulkManualTemasTableBody');
-    if (!tbody || tbody.children.length <= 1) return; // Keep at least one row
+    if (!tbody || !button) return;
     
-    tbody.removeChild(tbody.lastElementChild);
+    const row = button.closest('tr');
+    if (!row) return;
+    
+    // Keep at least one row
+    if (tbody.children.length <= 1) {
+        alert('Debe haber al menos una fila');
+        return;
+    }
+    
+    tbody.removeChild(row);
     manualTemaRowCounter = Math.max(0, manualTemaRowCounter - 1);
+    
+    // Update delete button visibility
+    updateTemaDeleteButtonsVisibility();
 };
+
+/**
+ * Update delete button visibility for temas
+ */
+function updateTemaDeleteButtonsVisibility() {
+    const tbody = document.getElementById('bulkManualTemasTableBody');
+    if (!tbody) return;
+    
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((row, index) => {
+        const deleteBtn = row.querySelector('.btn-delete');
+        if (deleteBtn) {
+            // Show delete button if there's more than one row, hide for the first row
+            deleteBtn.style.display = rows.length > 1 ? '' : 'none';
+        }
+    });
+}
 
 /**
  * Collect temas from manual table
@@ -3135,6 +3176,10 @@ window.toggleBulkEvaluacionesInputMode = function() {
         if (toggleBtn) {
             toggleBtn.innerHTML = '<i class="fas fa-file-csv"></i> Modo CSV';
         }
+        // Initialize delete button visibility
+        if (typeof updateEvaluacionDeleteButtonsVisibility === 'function') {
+            updateEvaluacionDeleteButtonsVisibility();
+        }
     }
 };
 
@@ -3173,12 +3218,20 @@ window.addManualEvaluacionRow = function() {
             </select>
         </td>
         <td style="width: 80px;">
-            <button type="button" class="btn-icon btn-primary" onclick="addManualEvaluacionRow(); return false;" title="Agregar siguiente evaluación">
-                <i class="fas fa-plus"></i>
-            </button>
+            <div style="display: flex; gap: 4px; align-items: center;">
+                <button type="button" class="btn-icon btn-primary" onclick="addManualEvaluacionRow(); return false;" title="Agregar siguiente evaluación">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button type="button" class="btn-icon btn-delete" onclick="removeManualEvaluacionRow(this); return false;" title="Eliminar evaluación">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
         </td>
     `;
     tbody.appendChild(row2);
+    
+    // Update delete button visibility
+    updateEvaluacionDeleteButtonsVisibility();
     
     // Focus on the new titulo input
     const newTituloInput = document.getElementById(`manualTitulo_${manualEvaluacionRowCounter}`);
@@ -3239,17 +3292,58 @@ window.addManualEvaluacionRow = function() {
 };
 
 /**
- * Remove last row from manual evaluaciones table
+ * Remove a specific evaluacion from manual evaluaciones table
  */
-window.removeLastManualEvaluacionRow = function() {
+window.removeManualEvaluacionRow = function(button) {
     const tbody = document.getElementById('bulkManualEvaluacionesTableBody');
-    if (!tbody || tbody.children.length <= 2) return; // Keep at least one evaluacion (2 rows)
+    if (!tbody || !button) return;
     
-    // Remove last two rows (one evaluacion = 2 rows)
-    tbody.removeChild(tbody.lastElementChild); // Remove second row
-    tbody.removeChild(tbody.lastElementChild); // Remove first row
+    // Find the row containing the button (should be the second row of the evaluacion)
+    const row2 = button.closest('tr');
+    if (!row2) return;
+    
+    // Find the first row (Título and Descripción) - it's the previous sibling
+    const row1 = row2.previousElementSibling;
+    if (!row1) return;
+    
+    // Keep at least one evaluacion (2 rows)
+    if (tbody.children.length <= 2) {
+        alert('Debe haber al menos una evaluación');
+        return;
+    }
+    
+    // Remove both rows (one evaluacion = 2 rows)
+    tbody.removeChild(row2); // Remove second row
+    tbody.removeChild(row1); // Remove first row
     manualEvaluacionRowCounter = Math.max(0, manualEvaluacionRowCounter - 1);
+    
+    // Update delete button visibility
+    updateEvaluacionDeleteButtonsVisibility();
 };
+
+/**
+ * Update delete button visibility for evaluaciones
+ */
+function updateEvaluacionDeleteButtonsVisibility() {
+    const tbody = document.getElementById('bulkManualEvaluacionesTableBody');
+    if (!tbody) return;
+    
+    const rows = tbody.querySelectorAll('tr');
+    // Each evaluacion has 2 rows, so count evaluaciones
+    const evaluacionCount = rows.length / 2;
+    
+    // Process rows in pairs
+    for (let i = 0; i < rows.length; i += 2) {
+        if (i + 1 < rows.length) {
+            const row2 = rows[i + 1]; // Second row has the action buttons
+            const deleteBtn = row2.querySelector('.btn-delete');
+            if (deleteBtn) {
+                // Show delete button if there's more than one evaluacion, hide for the first one
+                deleteBtn.style.display = evaluacionCount > 1 ? '' : 'none';
+            }
+        }
+    }
+}
 
 /**
  * Collect evaluaciones from manual table

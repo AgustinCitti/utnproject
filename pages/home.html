@@ -1363,22 +1363,21 @@
                                         <td><input type="text" id="manualApellido_0" class="manual-student-input" placeholder="Apellido" style="width: 100%; padding: 6px;"></td>
                                         <td><input type="text" id="manualNombre_0" class="manual-student-input" placeholder="Nombre" style="width: 100%; padding: 6px;"></td>
                                         <td>
-                                            <button type="button" class="btn-icon btn-primary" onclick="addManualStudentRow(); return false;" title="Agregar siguiente alumno">
-                                                <i class="fas fa-plus"></i>
-                                            </button>
+                                            <div style="display: flex; gap: 4px; align-items: center;">
+                                                <button type="button" class="btn-icon btn-primary" onclick="addManualStudentRow(); return false;" title="Agregar siguiente alumno">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                                <button type="button" class="btn-icon btn-delete" onclick="removeManualStudentRow(this); return false;" title="Eliminar alumno" style="display: none;">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <small style="color: #666;">Presiona Enter en el campo Nombre para agregar el siguiente alumno.</small>
-                                <button type="button" class="btn-secondary" onclick="removeLastManualStudentRow(); return false;">
-                                    <i class="fas fa-trash"></i> Eliminar Último
-                                </button>
-                            </div>
-                        <small style="display: block; margin-top: 5px; color: #666;">
-                            Ingresa los alumnos uno por uno. Usa el botón + o Enter para agregar el siguiente.
-                        </small>
+                            <small style="display: block; margin-top: 5px; color: #666;">
+                                Presiona Enter en el campo Nombre para agregar el siguiente alumno.
+                            </small>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1907,22 +1906,21 @@
                                         <td><input type="text" id="manualTema_0" class="manual-tema-input" placeholder="Tema" style="width: 100%; padding: 6px;"></td>
                                         <td><input type="text" id="manualDescripcion_0" class="manual-tema-input" placeholder="Descripción (opcional)" style="width: 100%; padding: 6px;"></td>
                                         <td>
-                                            <button type="button" class="btn-icon btn-primary" onclick="addManualTemaRow(); return false;" title="Agregar siguiente tema">
-                                                <i class="fas fa-plus"></i>
-                                            </button>
+                                            <div style="display: flex; gap: 4px; align-items: center;">
+                                                <button type="button" class="btn-icon btn-primary" onclick="addManualTemaRow(); return false;" title="Agregar siguiente tema">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                                <button type="button" class="btn-icon btn-delete" onclick="removeManualTemaRow(this); return false;" title="Eliminar tema" style="display: none;">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <small style="color: #666;">Presiona Enter en el campo Descripción para agregar el siguiente tema.</small>
-                                <button type="button" class="btn-secondary" onclick="removeLastManualTemaRow(); return false;">
-                                    <i class="fas fa-trash"></i> Eliminar Último
-                                </button>
-                            </div>
-                        <small style="display: block; margin-top: 5px; color: #666;">
-                            Ingresa los temas uno por uno. Usa el botón + o Enter para agregar el siguiente.
-                        </small>
+                            <small style="display: block; margin-top: 5px; color: #666;">
+                                Presiona Enter en el campo Descripción para agregar el siguiente tema.
+                            </small>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2030,22 +2028,21 @@
                                             </select>
                                         </td>
                                         <td style="width: 80px;">
-                                            <button type="button" class="btn-icon btn-primary" onclick="addManualEvaluacionRow(); return false;" title="Agregar siguiente evaluación">
-                                                <i class="fas fa-plus"></i>
-                                            </button>
+                                            <div style="display: flex; gap: 4px; align-items: center;">
+                                                <button type="button" class="btn-icon btn-primary" onclick="addManualEvaluacionRow(); return false;" title="Agregar siguiente evaluación">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                                <button type="button" class="btn-icon btn-delete" onclick="removeManualEvaluacionRow(this); return false;" title="Eliminar evaluación" style="display: none;">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <small style="color: #666;">Presiona Enter en el campo Tipo para agregar la siguiente evaluación.</small>
-                                <button type="button" class="btn-secondary" onclick="removeLastManualEvaluacionRow(); return false;">
-                                    <i class="fas fa-trash"></i> Eliminar Último
-                                </button>
-                            </div>
-                        <small style="display: block; margin-top: 5px; color: #666;">
-                            Ingresa las evaluaciones una por una. Usa el botón + o Enter para agregar la siguiente.
-                        </small>
+                            <small style="display: block; margin-top: 5px; color: #666;">
+                                Presiona Enter en el campo Tipo para agregar la siguiente evaluación.
+                            </small>
                     </div>
                 </div>
                 <div class="form-group">

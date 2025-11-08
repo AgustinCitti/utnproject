@@ -3377,6 +3377,10 @@ window.toggleBulkInputMode = function() {
         textareaMode.style.display = 'none';
         tableMode.style.display = 'block';
         toggleBtn.innerHTML = '<i class="fas fa-file-csv"></i> Modo Excel';
+        // Initialize delete button visibility
+        if (typeof updateStudentDeleteButtonsVisibility === 'function') {
+            updateStudentDeleteButtonsVisibility();
+        }
         
         // Inicializar la tabla si está vacía
         const tbody = document.getElementById('bulkManualStudentsTableBody');
@@ -3412,16 +3416,27 @@ window.addManualStudentRow = function() {
                    onkeypress="if(event.key === 'Enter') { event.preventDefault(); const nextRowId = ${rowId} + 1; addManualStudentRow(); setTimeout(() => { const nextInput = document.getElementById('manualApellido_' + nextRowId); if(nextInput) nextInput.focus(); }, 100); }">
         </td>
         <td>
-            <button type="button" 
-                    class="btn-icon btn-primary" 
-                    onclick="addManualStudentRow(); return false;" 
-                    title="Agregar siguiente alumno">
-                <i class="fas fa-plus"></i>
-            </button>
+            <div style="display: flex; gap: 4px; align-items: center;">
+                <button type="button" 
+                        class="btn-icon btn-primary" 
+                        onclick="addManualStudentRow(); return false;" 
+                        title="Agregar siguiente alumno">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button type="button" 
+                        class="btn-icon btn-delete" 
+                        onclick="removeManualStudentRow(this); return false;" 
+                        title="Eliminar alumno">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
         </td>
     `;
     
     tbody.appendChild(newRow);
+    
+    // Update delete button visibility
+    updateStudentDeleteButtonsVisibility();
     
     // Enfocar el campo de apellido de la nueva fila
     setTimeout(() => {
@@ -3430,16 +3445,40 @@ window.addManualStudentRow = function() {
     }, 50);
 };
 
-// Función para eliminar la última fila
-window.removeLastManualStudentRow = function() {
+// Función para eliminar una fila específica
+window.removeManualStudentRow = function(button) {
     const tbody = document.getElementById('bulkManualStudentsTableBody');
-    if (!tbody || tbody.children.length <= 1) {
+    if (!tbody || !button) return;
+    
+    const row = button.closest('tr');
+    if (!row) return;
+    
+    // Keep at least one row
+    if (tbody.children.length <= 1) {
         alert('Debe haber al menos una fila');
         return;
     }
     
-    tbody.removeChild(tbody.lastElementChild);
+    tbody.removeChild(row);
+    
+    // Update delete button visibility - show delete buttons if more than one row
+    updateStudentDeleteButtonsVisibility();
 };
+
+// Update delete button visibility for students
+function updateStudentDeleteButtonsVisibility() {
+    const tbody = document.getElementById('bulkManualStudentsTableBody');
+    if (!tbody) return;
+    
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((row, index) => {
+        const deleteBtn = row.querySelector('.btn-delete');
+        if (deleteBtn) {
+            // Show delete button if there's more than one row, hide for the first row
+            deleteBtn.style.display = rows.length > 1 ? '' : 'none';
+        }
+    });
+}
 
 // Función para recolectar estudiantes de la tabla manual
 function collectManualStudentsFromTable() {
