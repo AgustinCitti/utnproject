@@ -1013,30 +1013,29 @@ function setupMateriaDetailsTabs(subjectId) {
             // Set subject ID in modal data attribute
             modal.dataset.subjectId = subjectId;
             
-            // Force modal to be visible
-            // First ensure display is not set to none
-            if (modal.style.display === 'none') {
-                modal.style.display = '';
+            // Ensure modal is at body level (not inside a clipped container)
+            if (modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
             }
             
-            // Add active class (CSS will handle display: block)
+            // Remove any inline styles that might be hiding it
+            modal.style.display = '';
+            modal.style.opacity = '';
+            modal.style.visibility = '';
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.zIndex = '2000';
+            
+            // Add active class (CSS will handle display: block and slide animation)
             modal.classList.add('active');
             
             // Also call showModal if available (it might do additional setup)
             if (typeof showModal === 'function') {
                 showModal('importTemasModal');
             }
-            
-            // Double-check it's visible after a brief delay
-            setTimeout(() => {
-                const computed = window.getComputedStyle(modal);
-                console.log('Modal state - display:', computed.display, 'opacity:', computed.opacity, 'has active class:', modal.classList.contains('active'));
-                if (computed.display === 'none' || computed.opacity === '0') {
-                    console.warn('Modal not visible, forcing display');
-                    modal.style.display = 'block';
-                    modal.style.opacity = '1';
-                }
-            }, 50);
             
             // Setup modal handlers
             if (typeof setupModalHandlers === 'function') {
@@ -1045,6 +1044,39 @@ function setupMateriaDetailsTabs(subjectId) {
             
             // Ensure body scroll is disabled
             document.body.style.overflow = 'hidden';
+            
+            // Double-check it's visible after a brief delay and log detailed state
+            setTimeout(() => {
+                const computed = window.getComputedStyle(modal);
+                const dialog = modal.querySelector('.modal-dialog');
+                const dialogComputed = dialog ? window.getComputedStyle(dialog) : null;
+                
+                console.log('Modal state - display:', computed.display, 'opacity:', computed.opacity, 'visibility:', computed.visibility, 'z-index:', computed.zIndex, 'has active class:', modal.classList.contains('active'));
+                if (dialogComputed) {
+                    console.log('Dialog state - right:', dialogComputed.right, 'display:', dialogComputed.display, 'z-index:', dialogComputed.zIndex);
+                }
+                
+                // Force visibility if needed
+                if (computed.display === 'none') {
+                    console.warn('Modal display is none, forcing block');
+                    modal.style.display = 'block';
+                }
+                if (computed.opacity === '0') {
+                    console.warn('Modal opacity is 0, forcing 1');
+                    modal.style.opacity = '1';
+                }
+                if (computed.visibility === 'hidden') {
+                    console.warn('Modal visibility is hidden, forcing visible');
+                    modal.style.visibility = 'visible';
+                }
+                
+                // Ensure dialog is visible
+                if (dialog) {
+                    if (dialogComputed && dialogComputed.display === 'none') {
+                        dialog.style.display = 'flex';
+                    }
+                }
+            }, 100);
         }, { once: false });
         
         // Mark as attached
@@ -1151,29 +1183,60 @@ function setupMateriaDetailsTabs(subjectId) {
             // Set subject ID in modal data attribute
             modal.dataset.subjectId = subjectId;
             
-            // Open modal using showModal function (same as loadCourseDivisionModal)
-            try {
-                if (typeof showModal === 'function') {
-                    showModal('importEvaluacionesModal');
-                } else {
-                    // Fallback: manually show modal
-                    modal.style.display = '';
-                    modal.classList.add('active');
-                }
-                
-                // Setup modal handlers
-                if (typeof setupModalHandlers === 'function') {
-                    setupModalHandlers('importEvaluacionesModal');
-                }
-                
-                // Ensure body scroll is disabled
-                document.body.style.overflow = 'hidden';
-                
-                console.log('Modal opened successfully');
-            } catch (error) {
-                console.error('Error opening modal:', error);
-                alert('Error al abrir el modal de importación');
+            // Ensure modal is at body level (not inside a clipped container)
+            if (modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
             }
+            
+            // Remove any inline styles that might be hiding it
+            modal.style.display = '';
+            modal.style.opacity = '';
+            modal.style.visibility = '';
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.zIndex = '2000';
+            
+            // Add active class (CSS will handle display: block and slide animation)
+            modal.classList.add('active');
+            
+            // Also call showModal if available
+            if (typeof showModal === 'function') {
+                showModal('importEvaluacionesModal');
+            }
+            
+            // Setup modal handlers
+            if (typeof setupModalHandlers === 'function') {
+                setupModalHandlers('importEvaluacionesModal');
+            }
+            
+            // Ensure body scroll is disabled
+            document.body.style.overflow = 'hidden';
+            
+            // Double-check it's visible after a brief delay
+            setTimeout(() => {
+                const computed = window.getComputedStyle(modal);
+                const dialog = modal.querySelector('.modal-dialog');
+                const dialogComputed = dialog ? window.getComputedStyle(dialog) : null;
+                
+                console.log('Evaluaciones Modal state - display:', computed.display, 'opacity:', computed.opacity, 'has active class:', modal.classList.contains('active'));
+                if (dialogComputed) {
+                    console.log('Dialog state - right:', dialogComputed.right, 'display:', dialogComputed.display);
+                }
+                
+                // Force visibility if needed
+                if (computed.display === 'none') {
+                    modal.style.display = 'block';
+                }
+                if (computed.opacity === '0') {
+                    modal.style.opacity = '1';
+                }
+                if (dialog && dialogComputed && dialogComputed.display === 'none') {
+                    dialog.style.display = 'flex';
+                }
+            }, 100);
         };
     }
     
@@ -1252,12 +1315,23 @@ function switchToTemasTab() {
                 if (modal) {
                     modal.dataset.subjectId = subjectId;
                     
-                    // Force modal to be visible
-                    if (modal.style.display === 'none') {
-                        modal.style.display = '';
+                    // Ensure modal is at body level (not inside a clipped container)
+                    if (modal.parentElement !== document.body) {
+                        document.body.appendChild(modal);
                     }
                     
-                    // Add active class (CSS will handle display: block)
+                    // Remove any inline styles that might be hiding it
+                    modal.style.display = '';
+                    modal.style.opacity = '';
+                    modal.style.visibility = '';
+                    modal.style.position = 'fixed';
+                    modal.style.top = '0';
+                    modal.style.left = '0';
+                    modal.style.width = '100%';
+                    modal.style.height = '100%';
+                    modal.style.zIndex = '2000';
+                    
+                    // Add active class (CSS will handle display: block and slide animation)
                     modal.classList.add('active');
                     
                     // Also call showModal if available
@@ -1272,14 +1346,28 @@ function switchToTemasTab() {
                     // Ensure body scroll is disabled
                     document.body.style.overflow = 'hidden';
                     
-                    // Double-check it's visible
+                    // Double-check it's visible after a brief delay
                     setTimeout(() => {
                         const computed = window.getComputedStyle(modal);
-                        if (computed.display === 'none' || computed.opacity === '0') {
+                        const dialog = modal.querySelector('.modal-dialog');
+                        const dialogComputed = dialog ? window.getComputedStyle(dialog) : null;
+                        
+                        console.log('Modal state (from switchToTemasTab) - display:', computed.display, 'opacity:', computed.opacity, 'has active class:', modal.classList.contains('active'));
+                        if (dialogComputed) {
+                            console.log('Dialog state - right:', dialogComputed.right, 'display:', dialogComputed.display);
+                        }
+                        
+                        // Force visibility if needed
+                        if (computed.display === 'none') {
                             modal.style.display = 'block';
+                        }
+                        if (computed.opacity === '0') {
                             modal.style.opacity = '1';
                         }
-                    }, 50);
+                        if (dialog && dialogComputed && dialogComputed.display === 'none') {
+                            dialog.style.display = 'flex';
+                        }
+                    }, 100);
                 } else {
                     console.error('importTemasModal not found in DOM');
                 }
@@ -1353,29 +1441,60 @@ function switchToEvaluacionesTab(subjectId) {
             // Set subject ID in modal data attribute
             modal.dataset.subjectId = subjectId;
             
-            // Open modal using showModal function (same as loadCourseDivisionModal)
-            try {
-                if (typeof showModal === 'function') {
-                    showModal('importEvaluacionesModal');
-                } else {
-                    // Fallback: manually show modal
-                    modal.style.display = '';
-                    modal.classList.add('active');
-                }
-                
-                // Setup modal handlers
-                if (typeof setupModalHandlers === 'function') {
-                    setupModalHandlers('importEvaluacionesModal');
-                }
-                
-                // Ensure body scroll is disabled
-                document.body.style.overflow = 'hidden';
-                
-                console.log('Modal opened successfully');
-            } catch (error) {
-                console.error('Error opening modal:', error);
-                alert('Error al abrir el modal de importación');
+            // Ensure modal is at body level (not inside a clipped container)
+            if (modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
             }
+            
+            // Remove any inline styles that might be hiding it
+            modal.style.display = '';
+            modal.style.opacity = '';
+            modal.style.visibility = '';
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.zIndex = '2000';
+            
+            // Add active class (CSS will handle display: block and slide animation)
+            modal.classList.add('active');
+            
+            // Also call showModal if available
+            if (typeof showModal === 'function') {
+                showModal('importEvaluacionesModal');
+            }
+            
+            // Setup modal handlers
+            if (typeof setupModalHandlers === 'function') {
+                setupModalHandlers('importEvaluacionesModal');
+            }
+            
+            // Ensure body scroll is disabled
+            document.body.style.overflow = 'hidden';
+            
+            // Double-check it's visible after a brief delay
+            setTimeout(() => {
+                const computed = window.getComputedStyle(modal);
+                const dialog = modal.querySelector('.modal-dialog');
+                const dialogComputed = dialog ? window.getComputedStyle(dialog) : null;
+                
+                console.log('Evaluaciones Modal state - display:', computed.display, 'opacity:', computed.opacity, 'has active class:', modal.classList.contains('active'));
+                if (dialogComputed) {
+                    console.log('Dialog state - right:', dialogComputed.right, 'display:', dialogComputed.display);
+                }
+                
+                // Force visibility if needed
+                if (computed.display === 'none') {
+                    modal.style.display = 'block';
+                }
+                if (computed.opacity === '0') {
+                    modal.style.opacity = '1';
+                }
+                if (dialog && dialogComputed && dialogComputed.display === 'none') {
+                    dialog.style.display = 'flex';
+                }
+            }, 100);
         };
     } else {
         console.warn('importEvaluacionesBtn not found in DOM');
@@ -2192,3 +2311,1266 @@ window.saveUnifiedContent = async function() {
         alert('Error: ' + (err.message || 'No se pudo crear el tema'));
     }
 };
+
+// ============================================================================
+// Bulk Upload Temas Functions
+// ============================================================================
+
+/**
+ * Parse CSV file for temas (topics)
+ */
+function parseBulkTemasCSV(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        const lines = text.split('\n').filter(line => line.trim());
+        
+        if (lines.length === 0) {
+            callback([]);
+            return;
+        }
+        
+        // Detectar delimitador (coma o punto y coma)
+        const delimiter = text.includes(';') ? ';' : ',';
+        
+        // Parsear headers
+        const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
+        
+        // Buscar columnas de Tema y Descripción (case-insensitive)
+        const temaIndex = headers.findIndex(h => 
+            h.toLowerCase() === 'tema' || h.toLowerCase() === 'topic' || 
+            h.toLowerCase() === 'título' || h.toLowerCase() === 'title'
+        );
+        const descripcionIndex = headers.findIndex(h => 
+            h.toLowerCase() === 'descripción' || h.toLowerCase() === 'descripcion' ||
+            h.toLowerCase() === 'description' || h.toLowerCase() === 'desc'
+        );
+        
+        // Si no encontramos las columnas, intentar con el orden
+        let temaCol = temaIndex >= 0 ? temaIndex : 0;
+        let descripcionCol = descripcionIndex >= 0 ? descripcionIndex : 1;
+        
+        const temas = [];
+        
+        // Procesar filas (saltar header)
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            
+            // Parsear línea considerando comillas
+            const values = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let j = 0; j < line.length; j++) {
+                const char = line[j];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if ((char === delimiter || char === ',') && !inQuotes) {
+                    values.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            values.push(current.trim()); // Último valor
+            
+            const tema = values[temaCol] || '';
+            const descripcion = values[descripcionCol] || '';
+            
+            if (tema) {
+                temas.push({
+                    Tema: tema.replace(/^"|"$/g, ''),
+                    Descripcion: descripcion.replace(/^"|"$/g, '') || null,
+                    isValid: tema.trim().length > 0
+                });
+            }
+        }
+        
+        callback(temas);
+    };
+    
+    reader.onerror = function() {
+        callback([]);
+    };
+    
+    reader.readAsText(file);
+}
+
+/**
+ * Setup CSV upload handlers for temas
+ */
+function setupBulkTemasCsvUploadHandlers() {
+    const uploadArea = document.getElementById('bulkTemasCsvUploadArea');
+    const fileInput = document.getElementById('bulkTemasFileInput');
+    const fileInfo = document.getElementById('bulkTemasCsvFileInfo');
+    const fileName = document.getElementById('bulkTemasCsvFileName');
+    const fileSize = document.getElementById('bulkTemasCsvFileSize');
+    const removeFileBtn = document.getElementById('bulkTemasCsvRemoveFile');
+    const previewDiv = document.getElementById('bulkTemasCsvPreview');
+    const previewContent = document.getElementById('bulkTemasCsvPreviewContent');
+    const previewTotal = document.getElementById('bulkTemasCsvPreviewTotal');
+    
+    if (!uploadArea || !fileInput) return;
+    
+    // Función para procesar archivo seleccionado
+    const processFile = (file) => {
+        if (!file) return;
+        
+        // Validar tipo de archivo
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        if (fileExtension === '.xlsx') {
+            alert('Por favor exporta tu archivo Excel como CSV primero. En Excel: Archivo > Guardar como > Formato CSV (delimitado por comas).');
+            return;
+        }
+        if (fileExtension !== '.csv') {
+            alert('Por favor selecciona un archivo CSV (.csv)');
+            return;
+        }
+        
+        // Mostrar información del archivo
+        fileName.textContent = file.name;
+        fileSize.textContent = (file.size / 1024).toFixed(2) + ' KB';
+        fileInfo.style.display = 'block';
+        
+        // Parsear CSV
+        parseBulkTemasCSV(file, function(temas) {
+            if (temas.length === 0) {
+                alert('El archivo CSV está vacío o no tiene el formato correcto');
+                fileInput.value = '';
+                fileInfo.style.display = 'none';
+                previewDiv.style.display = 'none';
+                return;
+            }
+            
+            // Guardar datos parseados
+            fileInput._parsedData = temas;
+            
+            // Mostrar preview
+            previewDiv.style.display = 'block';
+            const previewRows = temas.slice(0, 5);
+            previewContent.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                    <thead>
+                        <tr style="background: #f0f0f0;">
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Tema</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Descripción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${previewRows.map(row => `
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Tema || ''}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Descripcion || ''}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ${temas.length > 5 ? `<p style="margin-top: 8px; color: #666;">... y ${temas.length - 5} más</p>` : ''}
+            `;
+            previewTotal.textContent = `Total: ${temas.length} tema(s)`;
+        });
+    };
+    
+    // Handler para selección de archivo
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        processFile(file);
+    });
+    
+    // Handlers para drag-and-drop
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.add('drag-over');
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.remove('drag-over');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            processFile(files[0]);
+        }
+    });
+    
+    // Handler para remover archivo
+    if (removeFileBtn) {
+        removeFileBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileInput.value = '';
+            fileInput._parsedData = null;
+            fileInfo.style.display = 'none';
+            previewDiv.style.display = 'none';
+        });
+    }
+}
+
+/**
+ * Toggle between CSV upload and manual table mode for temas
+ */
+window.toggleBulkTemasInputMode = function() {
+    const textareaMode = document.getElementById('bulkTemasTextareaMode');
+    const tableMode = document.getElementById('bulkTemasTableMode');
+    const toggleBtn = document.getElementById('toggleTemasInputModeBtn');
+    
+    if (!textareaMode || !tableMode) return;
+    
+    const isTableMode = tableMode.style.display !== 'none';
+    
+    if (isTableMode) {
+        // Switch to CSV mode
+        tableMode.style.display = 'none';
+        textareaMode.style.display = 'block';
+        if (toggleBtn) {
+            toggleBtn.innerHTML = '<i class="fas fa-table"></i> Modo Tabla Manual';
+        }
+    } else {
+        // Switch to table mode
+        textareaMode.style.display = 'none';
+        tableMode.style.display = 'block';
+        if (toggleBtn) {
+            toggleBtn.innerHTML = '<i class="fas fa-file-csv"></i> Modo CSV';
+        }
+    }
+};
+
+// Manual table mode for temas
+let manualTemaRowCounter = 0;
+
+/**
+ * Add a new row to the manual temas table
+ */
+window.addManualTemaRow = function() {
+    const tbody = document.getElementById('bulkManualTemasTableBody');
+    if (!tbody) return;
+    
+    manualTemaRowCounter++;
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td><input type="text" id="manualTema_${manualTemaRowCounter}" class="manual-tema-input" placeholder="Tema" style="width: 100%; padding: 6px;"></td>
+        <td><input type="text" id="manualDescripcion_${manualTemaRowCounter}" class="manual-tema-input" placeholder="Descripción (opcional)" style="width: 100%; padding: 6px;"></td>
+        <td>
+            <button type="button" class="btn-icon btn-primary" onclick="addManualTemaRow(); return false;" title="Agregar siguiente tema">
+                <i class="fas fa-plus"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(newRow);
+    
+    // Focus on the new tema input
+    const newTemaInput = document.getElementById(`manualTema_${manualTemaRowCounter}`);
+    if (newTemaInput) {
+        newTemaInput.focus();
+    }
+    
+    // Setup Enter key handler for description field
+    const descInput = document.getElementById(`manualDescripcion_${manualTemaRowCounter}`);
+    if (descInput) {
+        descInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addManualTemaRow();
+            }
+        });
+    }
+};
+
+/**
+ * Remove last row from manual temas table
+ */
+window.removeLastManualTemaRow = function() {
+    const tbody = document.getElementById('bulkManualTemasTableBody');
+    if (!tbody || tbody.children.length <= 1) return; // Keep at least one row
+    
+    tbody.removeChild(tbody.lastElementChild);
+    manualTemaRowCounter = Math.max(0, manualTemaRowCounter - 1);
+};
+
+/**
+ * Collect temas from manual table
+ */
+function collectManualTemasFromTable() {
+    const tbody = document.getElementById('bulkManualTemasTableBody');
+    if (!tbody) return [];
+    
+    const temas = [];
+    const rows = tbody.querySelectorAll('tr');
+    
+    rows.forEach(row => {
+        const temaInput = row.querySelector('input[id^="manualTema_"]');
+        const descInput = row.querySelector('input[id^="manualDescripcion_"]');
+        
+        const tema = temaInput ? temaInput.value.trim() : '';
+        const descripcion = descInput ? descInput.value.trim() : '';
+        
+        if (tema) {
+            temas.push({
+                Tema: tema,
+                Descripcion: descripcion || null,
+                isValid: true
+            });
+        }
+    });
+    
+    return temas;
+}
+
+/**
+ * Process bulk temas upload
+ */
+window.processBulkTemas = async function() {
+    const temasFileInput = document.getElementById('bulkTemasFileInput');
+    const statusSelect = document.getElementById('bulkTemaStatus');
+    
+    if (!temasFileInput || !statusSelect) {
+        alert('Error: No se encontraron los campos del formulario');
+        return;
+    }
+    
+    // Get subject ID from modal or context
+    const modal = document.getElementById('importTemasModal');
+    let subjectId = null;
+    
+    if (modal && modal.dataset.subjectId) {
+        subjectId = parseInt(modal.dataset.subjectId);
+    } else if (typeof getCurrentThemesSubjectId === 'function') {
+        subjectId = getCurrentThemesSubjectId();
+    }
+    
+    if (!subjectId) {
+        alert('Error: No se pudo determinar la materia. Por favor, intente nuevamente.');
+        return;
+    }
+    
+    const defaultStatus = statusSelect.value;
+    
+    // Determinar modo de entrada
+    const tableMode = document.getElementById('bulkTemasTableMode');
+    const isTableMode = tableMode && tableMode.style.display !== 'none';
+    
+    let temas = [];
+    if (isTableMode) {
+        // Leer de la tabla manual
+        temas = collectManualTemasFromTable();
+        if (temas.length === 0) {
+            alert('Por favor ingresa al menos un tema en la tabla');
+            return;
+        }
+    } else {
+        // Parsear del archivo CSV
+        const file = temasFileInput.files[0];
+        if (!file) {
+            alert('Por favor selecciona un archivo CSV o usa el modo tabla manual');
+            return;
+        }
+        
+        // Usar los datos ya parseados si están disponibles
+        if (temasFileInput._parsedData) {
+            temas = temasFileInput._parsedData;
+        } else {
+            alert('Error: No se pudo leer el archivo. Por favor, vuelve a seleccionarlo.');
+            return;
+        }
+    }
+    
+    if (temas.length === 0) {
+        alert('No se pudieron parsear temas de la lista. Verifica el formato.');
+        return;
+    }
+    
+    // Filtrar temas válidos
+    const validTemas = temas.filter(t => t.isValid);
+    
+    if (validTemas.length === 0) {
+        alert('No se encontraron temas válidos. Verifica el formato (Tema, Descripción opcional)');
+        return;
+    }
+    
+    // Confirmar antes de proceder
+    const confirmMessage = `¿Deseas crear ${validTemas.length} tema(s) para esta materia?`;
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    // Procesar temas uno por uno
+    let successCount = 0;
+    let errorCount = 0;
+    const errors = [];
+    
+    // Mostrar indicador de progreso
+    const submitBtn = document.querySelector('#bulkTemasForm button[onclick*="processBulkTemas"]');
+    const originalBtnText = submitBtn ? submitBtn.textContent : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = `Procesando... (0/${validTemas.length})`;
+    }
+    
+    try {
+        const isInPages = window.location.pathname.includes('/pages/');
+        const baseUrl = isInPages ? '../api' : 'api';
+        
+        for (let i = 0; i < validTemas.length; i++) {
+            const tema = validTemas[i];
+            
+            // Actualizar progreso
+            if (submitBtn) {
+                submitBtn.textContent = `Procesando... (${i + 1}/${validTemas.length})`;
+            }
+            
+            try {
+                const payload = {
+                    Tema: tema.Tema,
+                    Descripcion: tema.Descripcion || null,
+                    Estado: defaultStatus,
+                    Materia_ID_materia: subjectId
+                };
+                
+                const res = await fetch(`${baseUrl}/contenido.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(payload)
+                });
+                
+                let data = {};
+                const text = await res.text();
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error(`Error del servidor (${res.status})`);
+                }
+                
+                if (!res.ok) {
+                    throw new Error(data.message || 'No se pudo crear el tema');
+                }
+                
+                successCount++;
+            } catch (err) {
+                errorCount++;
+                errors.push(`${tema.Tema}: ${err.message || 'Error desconocido'}`);
+                console.error(`Error procesando ${tema.Tema}:`, err);
+            }
+        }
+        
+        // Recargar datos
+        if (typeof loadData === 'function') {
+            await loadData();
+        }
+        
+        // Reload themes list
+        const currentId = getCurrentThemesSubjectId();
+        if (currentId) {
+            loadSubjectThemesList(currentId);
+        }
+        
+        // Cerrar modal
+        if (typeof closeModal === 'function') {
+            closeModal('importTemasModal');
+        } else {
+            const modal = document.getElementById('importTemasModal');
+            if (modal) modal.classList.remove('active');
+        }
+        
+        // Reset form
+        const form = document.getElementById('bulkTemasForm');
+        if (form) {
+            form.reset();
+            const fileInput = document.getElementById('bulkTemasFileInput');
+            if (fileInput) {
+                fileInput.value = '';
+                fileInput._parsedData = null;
+            }
+            const fileInfo = document.getElementById('bulkTemasCsvFileInfo');
+            const previewDiv = document.getElementById('bulkTemasCsvPreview');
+            if (fileInfo) fileInfo.style.display = 'none';
+            if (previewDiv) previewDiv.style.display = 'none';
+            manualTemaRowCounter = 0;
+        }
+        
+        // Mostrar resultado
+        let message = `Se crearon ${successCount} tema(s) correctamente.`;
+        if (errorCount > 0) {
+            message += `\n\nHubo ${errorCount} error(es):\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...' : ''}`;
+        }
+        
+        if (typeof showNotification === 'function') {
+            showNotification(message, errorCount > 0 ? 'warning' : 'success');
+        } else {
+            alert(message);
+        }
+        
+    } catch (err) {
+        alert('Error al procesar la carga masiva: ' + (err.message || 'Error desconocido'));
+    } finally {
+        // Restaurar botón
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText || 'Cargar Temas';
+        }
+    }
+};
+
+// Initialize bulk temas upload handlers when modal is opened
+document.addEventListener('DOMContentLoaded', function() {
+    // Setup CSV upload handlers when import temas modal is shown
+    const importTemasModal = document.getElementById('importTemasModal');
+    if (importTemasModal) {
+        // Setup handlers when modal opens
+        const setupHandlers = () => {
+            setupBulkTemasCsvUploadHandlers();
+            
+            // Setup Enter key handlers for manual table inputs
+            const temaInputs = document.querySelectorAll('.manual-tema-input');
+            temaInputs.forEach(input => {
+                if (!input.dataset.enterHandler) {
+                    input.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const isDesc = input.id.includes('manualDescripcion_');
+                            if (isDesc) {
+                                addManualTemaRow();
+                            } else {
+                                // Focus next field (description)
+                                const row = input.closest('tr');
+                                const descInput = row.querySelector('input[id^="manualDescripcion_"]');
+                                if (descInput) {
+                                    descInput.focus();
+                                } else {
+                                    addManualTemaRow();
+                                }
+                            }
+                        }
+                    });
+                    input.dataset.enterHandler = 'true';
+                }
+            });
+        };
+        
+        // Use MutationObserver to detect when modal becomes active
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const modal = mutation.target;
+                    if (modal.classList.contains('active') && modal.id === 'importTemasModal') {
+                        setTimeout(setupHandlers, 100);
+                    }
+                }
+            });
+        });
+        
+        observer.observe(importTemasModal, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+        
+        // Also setup on initial load if modal is already active
+        if (importTemasModal.classList.contains('active')) {
+            setTimeout(setupHandlers, 100);
+        }
+    }
+});
+
+// ============================================================================
+// Bulk Upload Evaluaciones Functions
+// ============================================================================
+
+/**
+ * Parse CSV file for evaluaciones
+ */
+function parseBulkEvaluacionesCSV(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        const lines = text.split('\n').filter(line => line.trim());
+        
+        if (lines.length === 0) {
+            callback([]);
+            return;
+        }
+        
+        // Detectar delimitador (coma o punto y coma)
+        const delimiter = text.includes(';') ? ';' : ',';
+        
+        // Parsear headers
+        const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+        
+        // Buscar columnas (case-insensitive)
+        const tituloIndex = headers.findIndex(h => 
+            h === 'título' || h === 'titulo' || h === 'title'
+        );
+        const descripcionIndex = headers.findIndex(h => 
+            h === 'descripción' || h === 'descripcion' || h === 'description' || h === 'desc'
+        );
+        const fechaIndex = headers.findIndex(h => 
+            h === 'fecha' || h === 'date'
+        );
+        const tipoIndex = headers.findIndex(h => 
+            h === 'tipo' || h === 'type'
+        );
+        const pesoIndex = headers.findIndex(h => 
+            h === 'peso' || h === 'weight'
+        );
+        const estadoIndex = headers.findIndex(h => 
+            h === 'estado' || h === 'status' || h === 'state'
+        );
+        
+        // Si no encontramos las columnas, usar orden por defecto
+        let tituloCol = tituloIndex >= 0 ? tituloIndex : 0;
+        let descripcionCol = descripcionIndex >= 0 ? descripcionIndex : 1;
+        let fechaCol = fechaIndex >= 0 ? fechaIndex : 2;
+        let tipoCol = tipoIndex >= 0 ? tipoIndex : 3;
+        let pesoCol = pesoIndex >= 0 ? pesoIndex : 4;
+        let estadoCol = estadoIndex >= 0 ? estadoIndex : 5;
+        
+        const evaluaciones = [];
+        
+        // Procesar filas (saltar header)
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            
+            // Parsear línea considerando comillas
+            const values = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let j = 0; j < line.length; j++) {
+                const char = line[j];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if ((char === delimiter || char === ',') && !inQuotes) {
+                    values.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            values.push(current.trim()); // Último valor
+            
+            const titulo = values[tituloCol] || '';
+            const descripcion = values[descripcionCol] || '';
+            const fecha = values[fechaCol] || '';
+            const tipo = values[tipoCol] || '';
+            const peso = values[pesoCol] || '';
+            const estado = values[estadoCol] || '';
+            
+            if (titulo && fecha && tipo) {
+                evaluaciones.push({
+                    Titulo: titulo.replace(/^"|"$/g, ''),
+                    Descripcion: descripcion.replace(/^"|"$/g, '') || null,
+                    Fecha: fecha.replace(/^"|"$/g, ''),
+                    Tipo: tipo.replace(/^"|"$/g, '').toUpperCase(),
+                    Peso: peso ? parseFloat(peso.replace(/^"|"$/g, '')) || 1.0 : 1.0,
+                    Estado: estado.replace(/^"|"$/g, '').toUpperCase() || 'PROGRAMADA',
+                    isValid: titulo.trim().length > 0 && fecha.trim().length > 0 && tipo.trim().length > 0
+                });
+            }
+        }
+        
+        callback(evaluaciones);
+    };
+    
+    reader.onerror = function() {
+        callback([]);
+    };
+    
+    reader.readAsText(file);
+}
+
+/**
+ * Setup CSV upload handlers for evaluaciones
+ */
+function setupBulkEvaluacionesCsvUploadHandlers() {
+    const uploadArea = document.getElementById('bulkEvaluacionesCsvUploadArea');
+    const fileInput = document.getElementById('bulkEvaluacionesFileInput');
+    const fileInfo = document.getElementById('bulkEvaluacionesCsvFileInfo');
+    const fileName = document.getElementById('bulkEvaluacionesCsvFileName');
+    const fileSize = document.getElementById('bulkEvaluacionesCsvFileSize');
+    const removeFileBtn = document.getElementById('bulkEvaluacionesCsvRemoveFile');
+    const previewDiv = document.getElementById('bulkEvaluacionesCsvPreview');
+    const previewContent = document.getElementById('bulkEvaluacionesCsvPreviewContent');
+    const previewTotal = document.getElementById('bulkEvaluacionesCsvPreviewTotal');
+    
+    if (!uploadArea || !fileInput) return;
+    
+    // Función para procesar archivo seleccionado
+    const processFile = (file) => {
+        if (!file) return;
+        
+        // Validar tipo de archivo
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        if (fileExtension === '.xlsx') {
+            alert('Por favor exporta tu archivo Excel como CSV primero. En Excel: Archivo > Guardar como > Formato CSV (delimitado por comas).');
+            return;
+        }
+        if (fileExtension !== '.csv') {
+            alert('Por favor selecciona un archivo CSV (.csv)');
+            return;
+        }
+        
+        // Mostrar información del archivo
+        fileName.textContent = file.name;
+        fileSize.textContent = (file.size / 1024).toFixed(2) + ' KB';
+        fileInfo.style.display = 'block';
+        
+        // Parsear CSV
+        parseBulkEvaluacionesCSV(file, function(evaluaciones) {
+            if (evaluaciones.length === 0) {
+                alert('El archivo CSV está vacío o no tiene el formato correcto');
+                fileInput.value = '';
+                fileInfo.style.display = 'none';
+                previewDiv.style.display = 'none';
+                return;
+            }
+            
+            // Guardar datos parseados
+            fileInput._parsedData = evaluaciones;
+            
+            // Mostrar preview
+            previewDiv.style.display = 'block';
+            const previewRows = evaluaciones.slice(0, 5);
+            previewContent.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                    <thead>
+                        <tr style="background: #f0f0f0;">
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Título</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Fecha</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Tipo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${previewRows.map(row => `
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Titulo || ''}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Fecha || ''}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${row.Tipo || ''}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ${evaluaciones.length > 5 ? `<p style="margin-top: 8px; color: #666;">... y ${evaluaciones.length - 5} más</p>` : ''}
+            `;
+            previewTotal.textContent = `Total: ${evaluaciones.length} evaluación(es)`;
+        });
+    };
+    
+    // Handler para selección de archivo
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        processFile(file);
+    });
+    
+    // Handlers para drag-and-drop
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.add('drag-over');
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.remove('drag-over');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            processFile(files[0]);
+        }
+    });
+    
+    // Handler para remover archivo
+    if (removeFileBtn) {
+        removeFileBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileInput.value = '';
+            fileInput._parsedData = null;
+            fileInfo.style.display = 'none';
+            previewDiv.style.display = 'none';
+        });
+    }
+}
+
+/**
+ * Toggle between CSV upload and manual table mode for evaluaciones
+ */
+window.toggleBulkEvaluacionesInputMode = function() {
+    const textareaMode = document.getElementById('bulkEvaluacionesTextareaMode');
+    const tableMode = document.getElementById('bulkEvaluacionesTableMode');
+    const toggleBtn = document.getElementById('toggleEvaluacionesInputModeBtn');
+    
+    if (!textareaMode || !tableMode) return;
+    
+    const isTableMode = tableMode.style.display !== 'none';
+    
+    if (isTableMode) {
+        // Switch to CSV mode
+        tableMode.style.display = 'none';
+        textareaMode.style.display = 'block';
+        if (toggleBtn) {
+            toggleBtn.innerHTML = '<i class="fas fa-table"></i> Modo Tabla Manual';
+        }
+    } else {
+        // Switch to table mode
+        textareaMode.style.display = 'none';
+        tableMode.style.display = 'block';
+        if (toggleBtn) {
+            toggleBtn.innerHTML = '<i class="fas fa-file-csv"></i> Modo CSV';
+        }
+    }
+};
+
+// Manual table mode for evaluaciones
+let manualEvaluacionRowCounter = 0;
+
+/**
+ * Add a new row to the manual evaluaciones table
+ */
+window.addManualEvaluacionRow = function() {
+    const tbody = document.getElementById('bulkManualEvaluacionesTableBody');
+    if (!tbody) return;
+    
+    manualEvaluacionRowCounter++;
+    
+    // Create first row (Título and Descripción)
+    const row1 = document.createElement('tr');
+    row1.innerHTML = `
+        <td style="width: 50%;"><input type="text" id="manualTitulo_${manualEvaluacionRowCounter}" class="manual-evaluacion-input" placeholder="Título" style="width: 100%; padding: 6px;"></td>
+        <td style="width: 50%;"><input type="text" id="manualDescripcionEval_${manualEvaluacionRowCounter}" class="manual-evaluacion-input" placeholder="Descripción (opcional)" style="width: 100%; padding: 6px;"></td>
+    `;
+    tbody.appendChild(row1);
+    
+    // Create second row (Fecha, Tipo, and Acción)
+    const row2 = document.createElement('tr');
+    row2.innerHTML = `
+        <td style="width: 50%;"><input type="date" id="manualFecha_${manualEvaluacionRowCounter}" class="manual-evaluacion-input" style="width: 100%; padding: 6px;"></td>
+        <td style="width: 50%;">
+            <select id="manualTipo_${manualEvaluacionRowCounter}" class="manual-evaluacion-input" style="width: 100%; padding: 6px;">
+                <option value="EXAMEN">Examen</option>
+                <option value="PARCIAL">Parcial</option>
+                <option value="TRABAJO_PRACTICO">Trabajo Práctico</option>
+                <option value="PROYECTO">Proyecto</option>
+                <option value="ORAL">Oral</option>
+                <option value="PRACTICO">Práctico</option>
+            </select>
+        </td>
+        <td style="width: 80px;">
+            <button type="button" class="btn-icon btn-primary" onclick="addManualEvaluacionRow(); return false;" title="Agregar siguiente evaluación">
+                <i class="fas fa-plus"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(row2);
+    
+    // Focus on the new titulo input
+    const newTituloInput = document.getElementById(`manualTitulo_${manualEvaluacionRowCounter}`);
+    if (newTituloInput) {
+        newTituloInput.focus();
+    }
+    
+    // Setup Enter key handlers for all fields in the new rows
+    const descInput = document.getElementById(`manualDescripcionEval_${manualEvaluacionRowCounter}`);
+    const fechaInput = document.getElementById(`manualFecha_${manualEvaluacionRowCounter}`);
+    const tipoInput = document.getElementById(`manualTipo_${manualEvaluacionRowCounter}`);
+    
+    // Título -> Descripción (same row)
+    if (newTituloInput) {
+        newTituloInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (descInput) {
+                    descInput.focus();
+                }
+            }
+        });
+    }
+    
+    // Descripción -> Fecha (next row)
+    if (descInput) {
+        descInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (fechaInput) {
+                    fechaInput.focus();
+                }
+            }
+        });
+    }
+    
+    // Fecha -> Tipo (same row)
+    if (fechaInput) {
+        fechaInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (tipoInput) {
+                    tipoInput.focus();
+                }
+            }
+        });
+    }
+    
+    // Tipo -> Add new row
+    if (tipoInput) {
+        tipoInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addManualEvaluacionRow();
+            }
+        });
+    }
+};
+
+/**
+ * Remove last row from manual evaluaciones table
+ */
+window.removeLastManualEvaluacionRow = function() {
+    const tbody = document.getElementById('bulkManualEvaluacionesTableBody');
+    if (!tbody || tbody.children.length <= 2) return; // Keep at least one evaluacion (2 rows)
+    
+    // Remove last two rows (one evaluacion = 2 rows)
+    tbody.removeChild(tbody.lastElementChild); // Remove second row
+    tbody.removeChild(tbody.lastElementChild); // Remove first row
+    manualEvaluacionRowCounter = Math.max(0, manualEvaluacionRowCounter - 1);
+};
+
+/**
+ * Collect evaluaciones from manual table
+ */
+function collectManualEvaluacionesFromTable() {
+    const tbody = document.getElementById('bulkManualEvaluacionesTableBody');
+    if (!tbody) return [];
+    
+    // Get default values from form
+    const pesoInput = document.getElementById('bulkEvaluacionPeso');
+    const estadoSelect = document.getElementById('bulkEvaluacionEstado');
+    const defaultPeso = pesoInput ? parseFloat(pesoInput.value) || 1.0 : 1.0;
+    const defaultEstado = estadoSelect ? estadoSelect.value : 'PROGRAMADA';
+    
+    const evaluaciones = [];
+    const rows = tbody.querySelectorAll('tr');
+    
+    // Process rows in pairs (each evaluacion has 2 rows)
+    for (let i = 0; i < rows.length; i += 2) {
+        if (i + 1 >= rows.length) break; // Need both rows
+        
+        const row1 = rows[i]; // Título and Descripción row
+        const row2 = rows[i + 1]; // Fecha, Tipo, and Acción row
+        
+        const tituloInput = row1.querySelector('input[id^="manualTitulo_"]');
+        const descInput = row1.querySelector('input[id^="manualDescripcionEval_"]');
+        const fechaInput = row2.querySelector('input[id^="manualFecha_"]');
+        const tipoInput = row2.querySelector('select[id^="manualTipo_"]');
+        
+        const titulo = tituloInput ? tituloInput.value.trim() : '';
+        const descripcion = descInput ? descInput.value.trim() : '';
+        const fecha = fechaInput ? fechaInput.value.trim() : '';
+        const tipo = tipoInput ? tipoInput.value.trim() : '';
+        
+        if (titulo && fecha && tipo) {
+            evaluaciones.push({
+                Titulo: titulo,
+                Descripcion: descripcion || null,
+                Fecha: fecha,
+                Tipo: tipo.toUpperCase(),
+                Peso: defaultPeso,
+                Estado: defaultEstado,
+                isValid: true
+            });
+        }
+    }
+    
+    return evaluaciones;
+}
+
+/**
+ * Process bulk evaluaciones upload
+ */
+window.processBulkEvaluaciones = async function() {
+    const evaluacionesFileInput = document.getElementById('bulkEvaluacionesFileInput');
+    const pesoInput = document.getElementById('bulkEvaluacionPeso');
+    const estadoSelect = document.getElementById('bulkEvaluacionEstado');
+    
+    if (!evaluacionesFileInput || !pesoInput || !estadoSelect) {
+        alert('Error: No se encontraron los campos del formulario');
+        return;
+    }
+    
+    // Get subject ID from modal or context
+    const modal = document.getElementById('importEvaluacionesModal');
+    let subjectId = null;
+    
+    if (modal && modal.dataset.subjectId) {
+        subjectId = parseInt(modal.dataset.subjectId);
+    } else if (typeof getCurrentThemesSubjectId === 'function') {
+        subjectId = getCurrentThemesSubjectId();
+    }
+    
+    if (!subjectId) {
+        alert('Error: No se pudo determinar la materia. Por favor, intente nuevamente.');
+        return;
+    }
+    
+    const defaultPeso = parseFloat(pesoInput.value) || 1.0;
+    const defaultEstado = estadoSelect.value;
+    
+    // Determinar modo de entrada
+    const tableMode = document.getElementById('bulkEvaluacionesTableMode');
+    const isTableMode = tableMode && tableMode.style.display !== 'none';
+    
+    let evaluaciones = [];
+    if (isTableMode) {
+        // Leer de la tabla manual
+        evaluaciones = collectManualEvaluacionesFromTable();
+        if (evaluaciones.length === 0) {
+            alert('Por favor ingresa al menos una evaluación en la tabla');
+            return;
+        }
+    } else {
+        // Parsear del archivo CSV
+        const file = evaluacionesFileInput.files[0];
+        if (!file) {
+            alert('Por favor selecciona un archivo CSV o usa el modo tabla manual');
+            return;
+        }
+        
+        // Usar los datos ya parseados si están disponibles
+        if (evaluacionesFileInput._parsedData) {
+            evaluaciones = evaluacionesFileInput._parsedData;
+        } else {
+            alert('Error: No se pudo leer el archivo. Por favor, vuelve a seleccionarlo.');
+            return;
+        }
+    }
+    
+    if (evaluaciones.length === 0) {
+        alert('No se pudieron parsear evaluaciones de la lista. Verifica el formato.');
+        return;
+    }
+    
+    // Filtrar evaluaciones válidas
+    const validEvaluaciones = evaluaciones.filter(e => e.isValid);
+    
+    if (validEvaluaciones.length === 0) {
+        alert('No se encontraron evaluaciones válidas. Verifica el formato (Título, Fecha, Tipo son obligatorios)');
+        return;
+    }
+    
+    // Confirmar antes de proceder
+    const confirmMessage = `¿Deseas crear ${validEvaluaciones.length} evaluación(es) para esta materia?`;
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    // Procesar evaluaciones una por una
+    let successCount = 0;
+    let errorCount = 0;
+    const errors = [];
+    
+    // Mostrar indicador de progreso
+    const submitBtn = document.querySelector('#bulkEvaluacionesForm button[onclick*="processBulkEvaluaciones"]');
+    const originalBtnText = submitBtn ? submitBtn.textContent : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = `Procesando... (0/${validEvaluaciones.length})`;
+    }
+    
+    try {
+        const isInPages = window.location.pathname.includes('/pages/');
+        const baseUrl = isInPages ? '../api' : 'api';
+        
+        for (let i = 0; i < validEvaluaciones.length; i++) {
+            const evaluacion = validEvaluaciones[i];
+            
+            // Actualizar progreso
+            if (submitBtn) {
+                submitBtn.textContent = `Procesando... (${i + 1}/${validEvaluaciones.length})`;
+            }
+            
+            try {
+                const payload = {
+                    Titulo: evaluacion.Titulo,
+                    Descripcion: evaluacion.Descripcion || null,
+                    Fecha: evaluacion.Fecha,
+                    Tipo: evaluacion.Tipo,
+                    Peso: evaluacion.Peso || defaultPeso,
+                    Estado: evaluacion.Estado || defaultEstado,
+                    Materia_ID_materia: subjectId
+                };
+                
+                const res = await fetch(`${baseUrl}/evaluacion.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(payload)
+                });
+                
+                let data = {};
+                const text = await res.text();
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error(`Error del servidor (${res.status})`);
+                }
+                
+                if (!res.ok) {
+                    throw new Error(data.message || 'No se pudo crear la evaluación');
+                }
+                
+                successCount++;
+            } catch (err) {
+                errorCount++;
+                errors.push(`${evaluacion.Titulo}: ${err.message || 'Error desconocido'}`);
+                console.error(`Error procesando ${evaluacion.Titulo}:`, err);
+            }
+        }
+        
+        // Recargar datos
+        if (typeof loadData === 'function') {
+            await loadData();
+        }
+        
+        // Reload evaluaciones list
+        const currentId = getCurrentThemesSubjectId();
+        if (currentId && typeof loadSubjectEvaluaciones === 'function') {
+            loadSubjectEvaluaciones(currentId);
+        }
+        
+        // Cerrar modal
+        if (typeof closeModal === 'function') {
+            closeModal('importEvaluacionesModal');
+        } else {
+            const modal = document.getElementById('importEvaluacionesModal');
+            if (modal) modal.classList.remove('active');
+        }
+        
+        // Reset form
+        const form = document.getElementById('bulkEvaluacionesForm');
+        if (form) {
+            form.reset();
+            const fileInput = document.getElementById('bulkEvaluacionesFileInput');
+            if (fileInput) {
+                fileInput.value = '';
+                fileInput._parsedData = null;
+            }
+            const fileInfo = document.getElementById('bulkEvaluacionesCsvFileInfo');
+            const previewDiv = document.getElementById('bulkEvaluacionesCsvPreview');
+            if (fileInfo) fileInfo.style.display = 'none';
+            if (previewDiv) previewDiv.style.display = 'none';
+            manualEvaluacionRowCounter = 0;
+        }
+        
+        // Mostrar resultado
+        let message = `Se crearon ${successCount} evaluación(es) correctamente.`;
+        if (errorCount > 0) {
+            message += `\n\nHubo ${errorCount} error(es):\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...' : ''}`;
+        }
+        
+        if (typeof showNotification === 'function') {
+            showNotification(message, errorCount > 0 ? 'warning' : 'success');
+        } else {
+            alert(message);
+        }
+        
+    } catch (err) {
+        alert('Error al procesar la carga masiva: ' + (err.message || 'Error desconocido'));
+    } finally {
+        // Restaurar botón
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText || 'Cargar Evaluaciones';
+        }
+    }
+};
+
+// Initialize bulk evaluaciones upload handlers when modal is opened
+document.addEventListener('DOMContentLoaded', function() {
+    // Setup CSV upload handlers when import evaluaciones modal is shown
+    const importEvaluacionesModal = document.getElementById('importEvaluacionesModal');
+    if (importEvaluacionesModal) {
+        // Setup handlers when modal opens
+        const setupHandlers = () => {
+            setupBulkEvaluacionesCsvUploadHandlers();
+            
+            // Setup Enter key handlers for manual table inputs
+            const evaluacionInputs = document.querySelectorAll('.manual-evaluacion-input');
+            evaluacionInputs.forEach(input => {
+                if (!input.dataset.enterHandler) {
+                    input.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const isTipo = input.tagName === 'SELECT' || input.id.includes('manualTipo_');
+                            if (isTipo) {
+                                addManualEvaluacionRow();
+                            } else {
+                                // Focus next field based on current field
+                                const row = input.closest('tr');
+                                let nextInput = null;
+                                
+                                if (input.id.includes('manualTitulo_')) {
+                                    // From Título, go to Descripción (same row)
+                                    nextInput = row.querySelector('input[id^="manualDescripcionEval_"]');
+                                } else if (input.id.includes('manualDescripcionEval_')) {
+                                    // From Descripción, go to Fecha (next row)
+                                    const nextRow = row.nextElementSibling;
+                                    if (nextRow) {
+                                        nextInput = nextRow.querySelector('input[id^="manualFecha_"]');
+                                    }
+                                } else if (input.id.includes('manualFecha_')) {
+                                    // From Fecha, go to Tipo (same row)
+                                    nextInput = row.querySelector('select[id^="manualTipo_"]');
+                                }
+                                
+                                if (nextInput) {
+                                    nextInput.focus();
+                                } else {
+                                    addManualEvaluacionRow();
+                                }
+                            }
+                        }
+                    });
+                    input.dataset.enterHandler = 'true';
+                }
+            });
+        };
+        
+        // Use MutationObserver to detect when modal becomes active
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const modal = mutation.target;
+                    if (modal.classList.contains('active') && modal.id === 'importEvaluacionesModal') {
+                        setTimeout(setupHandlers, 100);
+                    }
+                }
+            });
+        });
+        
+        observer.observe(importEvaluacionesModal, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+        
+        // Also setup on initial load if modal is already active
+        if (importEvaluacionesModal.classList.contains('active')) {
+            setTimeout(setupHandlers, 100);
+        }
+    }
+});

@@ -45,7 +45,7 @@
         }
         
         /* CSV Upload Area Styles */
-        #bulkCsvUploadArea {
+        #bulkCsvUploadArea, #bulkTemasCsvUploadArea, #bulkEvaluacionesCsvUploadArea {
             min-height: 180px;
             display: flex;
             flex-direction: column;
@@ -53,16 +53,16 @@
             justify-content: center;
         }
         
-        #bulkCsvUploadArea:hover {
+        #bulkCsvUploadArea:hover, #bulkTemasCsvUploadArea:hover, #bulkEvaluacionesCsvUploadArea:hover {
             opacity: 0.8;
         }
         
-        #bulkCsvUploadArea.drag-over {
+        #bulkCsvUploadArea.drag-over, #bulkTemasCsvUploadArea.drag-over, #bulkEvaluacionesCsvUploadArea.drag-over {
             opacity: 0.9;
             transform: scale(1.02);
         }
         
-        #bulkCsvFileInfo {
+        #bulkCsvFileInfo, #bulkTemasCsvFileInfo, #bulkEvaluacionesCsvFileInfo {
             width: 100%;
         }
         
@@ -1350,8 +1350,7 @@
                         </small>
                     </div>
                     <div id="bulkTableMode" style="display:none;">
-                        <div style="background: #f9f9f9; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
-                            <table class="data-table" style="width: 100%; margin-bottom: 10px;">
+                        <table class="data-table" style="width: 100%; margin-bottom: 10px;">
                                 <thead>
                                     <tr>
                                         <th>Apellido</th>
@@ -1377,7 +1376,6 @@
                                     <i class="fas fa-trash"></i> Eliminar Último
                                 </button>
                             </div>
-                        </div>
                         <small style="display: block; margin-top: 5px; color: #666;">
                             Ingresa los alumnos uno por uno. Usa el botón + o Enter para agregar el siguiente.
                         </small>
@@ -1840,74 +1838,236 @@
     </div>
 
     <!-- Import Excel Modals -->
-    <!-- Import Temas Excel Modal -->
+    <!-- Bulk Upload Temas Modal -->
     <div id="importTemasModal" class="modal-overlay">
         <div class="modal-dialog">
             <div class="modal-dialog-content">
                 <div class="modal-dialog-header">
-                    <h3>Importar Temas desde Excel</h3>
+                    <h3>Cargar Temas</h3>
                     <button class="modal-dialog-close close-modal">&times;</button>
                 </div>
-                <div class="modal-dialog-body">
+                <form id="bulkTemasForm" class="modal-dialog-body">
                 <div class="form-group">
-                    <label style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Seleccionar archivo Excel (.csv o .xlsx)</span>
-                        <button type="button" id="downloadTemasExampleBtn" class="btn-secondary" style="padding: 6px 12px; font-size: 0.85em;">
-                            <i class="fas fa-file-excel"></i> Descargar Ejemplo
+                    <label for="bulkTemasList">Lista de Temas</label>
+                    <div style="display:flex; gap:8px; margin-bottom:8px;">
+                        <button type="button" class="btn-secondary" id="toggleTemasInputModeBtn" onclick="toggleBulkTemasInputMode(); return false;">
+                            <i class="fas fa-table"></i> Modo Tabla Manual
                         </button>
-                    </label>
-                    <input type="file" id="importTemasFile" accept=".csv,.xlsx" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%; margin-top: 8px;">
-                    <small style="display: block; margin-top: 8px; color: #666;">
-                        Formato esperado: Tema, Descripción, Estado<br>
-                        Ejemplo: Introducción a la Programación, Conceptos básicos de programación, PENDIENTE<br>
-                        <strong>Nota:</strong> Puedes usar archivos CSV exportados desde Excel
-                    </small>
-                </div>
-                    <div id="importTemasPreview" class="mt-4 p-4 bg-light rounded" style="display: none;">
-                        <h4 class="mb-2">Vista Previa:</h4>
-                        <div id="importTemasPreviewContent" class="max-h-50 overflow-y-auto"></div>
                     </div>
+                    <div id="bulkTemasTextareaMode">
+                        <div id="bulkTemasCsvUploadArea" style="border: none; border-radius: 8px; padding: 40px; text-align: center; background: transparent; transition: all 0.3s ease; cursor: pointer; position: relative;">
+                            <input type="file" id="bulkTemasFileInput" accept=".csv" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; z-index: 1;">
+                            <div id="bulkTemasCsvUploadContent">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #667eea; margin-bottom: 16px;"></i>
+                                <p style="margin: 0; font-size: 16px; color: #333; font-weight: 500;">
+                                    Arrastra y suelta tu archivo CSV aquí
+                                </p>
+                                <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">
+                                    o haz clic para seleccionar
+                                </p>
+                                <small style="display: block; margin-top: 12px; color: #999;">
+                                    Formato: .csv (exporta desde Excel como CSV)
+                                </small>
+                            </div>
+                            <div id="bulkTemasCsvFileInfo" style="display: none; padding: 16px; background: transparent; border-radius: 6px; margin-top: 16px; text-align: left;">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <i class="fas fa-file-csv" style="font-size: 24px; color: #667eea;"></i>
+                                        <div>
+                                            <p style="margin: 0; font-weight: 500; color: #333;" id="bulkTemasCsvFileName">archivo.csv</p>
+                                            <small style="color: #666;" id="bulkTemasCsvFileSize">0 KB</small>
+                                        </div>
+                                    </div>
+                                    <button type="button" id="bulkTemasCsvRemoveFile" class="btn-icon btn-secondary" style="padding: 6px;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="bulkTemasCsvPreview" style="display: none; margin-top: 16px; padding: 16px; background: transparent; border-radius: 6px; border: none;">
+                            <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #333;">Vista Previa:</h4>
+                            <div id="bulkTemasCsvPreviewContent" style="max-height: 200px; overflow-y: auto;"></div>
+                            <p style="margin: 12px 0 0 0; color: #666; font-weight: 600; font-size: 14px;" id="bulkTemasCsvPreviewTotal">Total: 0 tema(s)</p>
+                        </div>
+                        <small style="display: block; margin-top: 8px; color: #666;">
+                            Formato esperado: Tema, Descripción (opcional). El archivo debe tener encabezados en la primera fila.
+                        </small>
+                    </div>
+                    <div id="bulkTemasTableMode" style="display:none;">
+                        <table class="data-table" style="width: 100%; margin-bottom: 10px;">
+                                <thead>
+                                    <tr>
+                                        <th>Tema</th>
+                                        <th>Descripción</th>
+                                        <th style="width: 80px;">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bulkManualTemasTableBody">
+                                    <tr>
+                                        <td><input type="text" id="manualTema_0" class="manual-tema-input" placeholder="Tema" style="width: 100%; padding: 6px;"></td>
+                                        <td><input type="text" id="manualDescripcion_0" class="manual-tema-input" placeholder="Descripción (opcional)" style="width: 100%; padding: 6px;"></td>
+                                        <td>
+                                            <button type="button" class="btn-icon btn-primary" onclick="addManualTemaRow(); return false;" title="Agregar siguiente tema">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <small style="color: #666;">Presiona Enter en el campo Descripción para agregar el siguiente tema.</small>
+                                <button type="button" class="btn-secondary" onclick="removeLastManualTemaRow(); return false;">
+                                    <i class="fas fa-trash"></i> Eliminar Último
+                                </button>
+                            </div>
+                        <small style="display: block; margin-top: 5px; color: #666;">
+                            Ingresa los temas uno por uno. Usa el botón + o Enter para agregar el siguiente.
+                        </small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="bulkTemaStatus">Estado por Defecto</label>
+                    <select id="bulkTemaStatus">
+                        <option value="PENDIENTE">Pendiente</option>
+                        <option value="EN_PROGRESO">En Progreso</option>
+                        <option value="COMPLETADO">Completado</option>
+                        <option value="CANCELADO">Cancelado</option>
+                    </select>
+                    <small style="display: block; margin-top: 5px; color: #666;">Estado que se asignará a todos los temas cargados.</small>
                 </div>
                 <div class="modal-dialog-footer">
                     <button type="button" class="btn-secondary close-modal">Cancelar</button>
-                    <button type="button" id="confirmImportTemasBtn" class="btn-primary">Importar</button>
+                    <button type="button" class="btn-primary" onclick="processBulkTemas(); return false;">Cargar Temas</button>
                 </div>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- Import Evaluaciones CSV Modal -->
+    <!-- Bulk Upload Evaluaciones Modal -->
     <div id="importEvaluacionesModal" class="modal-overlay">
         <div class="modal-dialog">
             <div class="modal-dialog-content">
                 <div class="modal-dialog-header">
-                    <h3>Importar Evaluaciones desde Excel</h3>
+                    <h3>Cargar Evaluaciones</h3>
                     <button class="modal-dialog-close close-modal">&times;</button>
                 </div>
-                <div class="modal-dialog-body">
+                <form id="bulkEvaluacionesForm" class="modal-dialog-body">
                 <div class="form-group">
-                    <label style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Seleccionar archivo Excel</span>
-                        <button type="button" id="downloadEvaluacionesExampleBtn" class="btn-secondary" style="padding: 6px 12px; font-size: 0.85em;">
-                            <i class="fas fa-file-excel"></i> Descargar Ejemplo
+                    <label for="bulkEvaluacionesList">Lista de Evaluaciones</label>
+                    <div style="display:flex; gap:8px; margin-bottom:8px;">
+                        <button type="button" class="btn-secondary" id="toggleEvaluacionesInputModeBtn" onclick="toggleBulkEvaluacionesInputMode(); return false;">
+                            <i class="fas fa-table"></i> Modo Tabla Manual
                         </button>
-                    </label>
-                    <input type="file" id="importEvaluacionesFile" accept=".csv,.xlsx" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%; margin-top: 8px;">
-                    <small style="display: block; margin-top: 8px; color: #666;">
-                        Formato esperado: Título, Descripción, Fecha (YYYY-MM-DD), Tipo, Peso, Estado<br>
-                        Ejemplo: Parcial 1, Primer parcial del año, 2024-03-15, PARCIAL, 1.0, PROGRAMADA<br>
-                        <strong>Nota:</strong> Puedes usar archivos CSV exportados desde Excel
-                    </small>
-                </div>
-                    <div id="importEvaluacionesPreview" class="mt-4 p-4 bg-light rounded" style="display: none;">
-                        <h4 class="mb-2">Vista Previa:</h4>
-                        <div id="importEvaluacionesPreviewContent" class="max-h-50 overflow-y-auto"></div>
                     </div>
+                    <div id="bulkEvaluacionesTextareaMode">
+                        <div id="bulkEvaluacionesCsvUploadArea" style="border: none; border-radius: 8px; padding: 40px; text-align: center; background: transparent; transition: all 0.3s ease; cursor: pointer; position: relative;">
+                            <input type="file" id="bulkEvaluacionesFileInput" accept=".csv" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; z-index: 1;">
+                            <div id="bulkEvaluacionesCsvUploadContent">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #667eea; margin-bottom: 16px;"></i>
+                                <p style="margin: 0; font-size: 16px; color: #333; font-weight: 500;">
+                                    Arrastra y suelta tu archivo CSV aquí
+                                </p>
+                                <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">
+                                    o haz clic para seleccionar
+                                </p>
+                                <small style="display: block; margin-top: 12px; color: #999;">
+                                    Formato: .csv (exporta desde Excel como CSV)
+                                </small>
+                            </div>
+                            <div id="bulkEvaluacionesCsvFileInfo" style="display: none; padding: 16px; background: transparent; border-radius: 6px; margin-top: 16px; text-align: left;">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <i class="fas fa-file-csv" style="font-size: 24px; color: #667eea;"></i>
+                                        <div>
+                                            <p style="margin: 0; font-weight: 500; color: #333;" id="bulkEvaluacionesCsvFileName">archivo.csv</p>
+                                            <small style="color: #666;" id="bulkEvaluacionesCsvFileSize">0 KB</small>
+                                        </div>
+                                    </div>
+                                    <button type="button" id="bulkEvaluacionesCsvRemoveFile" class="btn-icon btn-secondary" style="padding: 6px;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="bulkEvaluacionesCsvPreview" style="display: none; margin-top: 16px; padding: 16px; background: transparent; border-radius: 6px; border: none;">
+                            <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #333;">Vista Previa:</h4>
+                            <div id="bulkEvaluacionesCsvPreviewContent" style="max-height: 200px; overflow-y: auto;"></div>
+                            <p style="margin: 12px 0 0 0; color: #666; font-weight: 600; font-size: 14px;" id="bulkEvaluacionesCsvPreviewTotal">Total: 0 evaluación(es)</p>
+                        </div>
+                        <small style="display: block; margin-top: 8px; color: #666;">
+                            Formato esperado: Título, Descripción (opcional), Fecha (YYYY-MM-DD), Tipo, Peso (opcional), Estado (opcional). El archivo debe tener encabezados en la primera fila.
+                        </small>
+                    </div>
+                    <div id="bulkEvaluacionesTableMode" style="display:none;">
+                        <table class="data-table" style="width: 100%; margin-bottom: 10px;">
+                                <thead>
+                                    <tr>
+                                        <th>Título</th>
+                                        <th>Descripción</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Tipo</th>
+                                        <th style="width: 80px;">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bulkManualEvaluacionesTableBody">
+                                    <tr>
+                                        <td style="width: 50%;"><input type="text" id="manualTitulo_0" class="manual-evaluacion-input" placeholder="Título" style="width: 100%; padding: 6px;"></td>
+                                        <td style="width: 50%;"><input type="text" id="manualDescripcionEval_0" class="manual-evaluacion-input" placeholder="Descripción (opcional)" style="width: 100%; padding: 6px;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width: 50%;"><input type="date" id="manualFecha_0" class="manual-evaluacion-input" style="width: 100%; padding: 6px;"></td>
+                                        <td style="width: 50%;">
+                                            <select id="manualTipo_0" class="manual-evaluacion-input" style="width: 100%; padding: 6px;">
+                                                <option value="EXAMEN">Examen</option>
+                                                <option value="PARCIAL">Parcial</option>
+                                                <option value="TRABAJO_PRACTICO">Trabajo Práctico</option>
+                                                <option value="PROYECTO">Proyecto</option>
+                                                <option value="ORAL">Oral</option>
+                                                <option value="PRACTICO">Práctico</option>
+                                            </select>
+                                        </td>
+                                        <td style="width: 80px;">
+                                            <button type="button" class="btn-icon btn-primary" onclick="addManualEvaluacionRow(); return false;" title="Agregar siguiente evaluación">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <small style="color: #666;">Presiona Enter en el campo Tipo para agregar la siguiente evaluación.</small>
+                                <button type="button" class="btn-secondary" onclick="removeLastManualEvaluacionRow(); return false;">
+                                    <i class="fas fa-trash"></i> Eliminar Último
+                                </button>
+                            </div>
+                        <small style="display: block; margin-top: 5px; color: #666;">
+                            Ingresa las evaluaciones una por una. Usa el botón + o Enter para agregar la siguiente.
+                        </small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="bulkEvaluacionPeso">Peso por Defecto</label>
+                    <input type="number" id="bulkEvaluacionPeso" step="0.1" min="0" max="10" value="1.0" style="width: 100%; padding: 8px;">
+                    <small style="display: block; margin-top: 5px; color: #666;">Peso que se asignará a todas las evaluaciones cargadas (por defecto: 1.0).</small>
+                </div>
+                <div class="form-group">
+                    <label for="bulkEvaluacionEstado">Estado por Defecto</label>
+                    <select id="bulkEvaluacionEstado">
+                        <option value="PROGRAMADA">Programada</option>
+                        <option value="EN_CURSO">En Curso</option>
+                        <option value="FINALIZADA">Finalizada</option>
+                        <option value="CANCELADA">Cancelada</option>
+                    </select>
+                    <small style="display: block; margin-top: 5px; color: #666;">Estado que se asignará a todas las evaluaciones cargadas.</small>
                 </div>
                 <div class="modal-dialog-footer">
                     <button type="button" class="btn-secondary close-modal">Cancelar</button>
-                    <button type="button" id="confirmImportEvaluacionesBtn" class="btn-primary">Importar</button>
+                    <button type="button" class="btn-primary" onclick="processBulkEvaluaciones(); return false;">Cargar Evaluaciones</button>
                 </div>
+                </form>
             </div>
         </div>
     </div>
