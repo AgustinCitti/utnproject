@@ -1434,57 +1434,202 @@ function loadExams() {
     }
 }
 
-function showExamModal() {
-    const modal = document.createElement('div');
-    modal.className = 'modal active';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Create Exam</h3>
-                <button class="close-modal">&times;</button>
+async function showExamModal(examId = null) {
+    // Ensure appData is loaded
+    if (!appData || !appData.materia || !Array.isArray(appData.materia)) {
+        if (typeof loadData === 'function') {
+            await loadData();
+        }
+    }
+    
+    // Get current user ID
+    const currentUserId = localStorage.getItem('userId');
+    
+    // Remove existing modal if present
+    const existingModal = document.getElementById('examModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Get teacher's subjects
+    let teacherSubjects = [];
+    if (appData && appData.materia && Array.isArray(appData.materia)) {
+        if (currentUserId) {
+            teacherSubjects = appData.materia.filter(subject => 
+                subject && 
+                subject.Usuarios_docente_ID_docente && 
+                parseInt(subject.Usuarios_docente_ID_docente) === parseInt(currentUserId) &&
+                (!subject.Estado || subject.Estado === 'ACTIVA')
+            );
+        } else {
+            teacherSubjects = appData.materia.filter(m => 
+                !m.Estado || m.Estado === 'ACTIVA'
+            );
+        }
+    }
+    
+    const exam = examId ? (appData.evaluacion || []).find(e => {
+        const evalId = parseInt(e.ID_evaluacion);
+        const searchId = parseInt(examId);
+        return evalId === searchId || e.ID_evaluacion == examId;
+    }) : null;
+    const isEdit = !!exam;
+    
+    // Build subject options HTML
+    let subjectOptionsHTML = '<option value="">Seleccione una materia</option>';
+    if (teacherSubjects.length === 0) {
+        subjectOptionsHTML += '<option value="" disabled>No hay materias disponibles. Cree una materia primero.</option>';
+    } else {
+        teacherSubjects.forEach(s => {
+            const selected = exam && exam.Materia_ID_materia === s.ID_materia ? 'selected' : '';
+            const displayText = s.Curso_division ? `${s.Nombre} - ${s.Curso_division}` : s.Nombre;
+            subjectOptionsHTML += `<option value="${s.ID_materia}" ${selected}>${displayText}</option>`;
+        });
+    }
+    
+    // Escape HTML for form values
+    const escapeHtml = (text) => {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
+    
+    const modalHTML = `
+        <div class="modal-overlay" id="examModal">
+            <div class="modal-dialog">
+                <div class="modal-dialog-content">
+                    <div class="modal-dialog-header">
+                        <h3>${isEdit ? 'Editar Evaluación' : 'Crear Evaluación'}</h3>
+                        <button class="modal-dialog-close close-modal">&times;</button>
+                    </div>
+                    <div class="modal-dialog-body">
+                        <form id="examForm" onsubmit="saveExam(event); return false;">
+                            <div class="form-group">
+                                <label for="examTitle" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Título *</label>
+                                <input type="text" id="examTitle" name="examTitle" required value="${escapeHtml(exam ? exam.Titulo : '')}" autocomplete="off" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label for="examSubject" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Materia *</label>
+                                <select id="examSubject" name="examSubject" required style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                                    ${subjectOptionsHTML}
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label for="examDate" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Fecha *</label>
+                                <input type="date" id="examDate" name="examDate" required value="${exam ? exam.Fecha : ''}" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label for="examType" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Tipo *</label>
+                                <select id="examType" name="examType" required style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                                    <option value="">Seleccione un tipo</option>
+                                    <option value="EXAMEN" ${exam && exam.Tipo === 'EXAMEN' ? 'selected' : ''}>Examen</option>
+                                    <option value="PARCIAL" ${exam && exam.Tipo === 'PARCIAL' ? 'selected' : ''}>Parcial</option>
+                                    <option value="TRABAJO_PRACTICO" ${exam && exam.Tipo === 'TRABAJO_PRACTICO' ? 'selected' : ''}>Trabajo Práctico</option>
+                                    <option value="PROYECTO" ${exam && exam.Tipo === 'PROYECTO' ? 'selected' : ''}>Proyecto</option>
+                                    <option value="ORAL" ${exam && exam.Tipo === 'ORAL' ? 'selected' : ''}>Oral</option>
+                                    <option value="PRACTICO" ${exam && exam.Tipo === 'PRACTICO' ? 'selected' : ''}>Práctico</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label for="examPeso" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Peso (0.00 - 9.99)</label>
+                                <input type="number" id="examPeso" name="examPeso" step="0.01" min="0" max="9.99" value="${exam ? exam.Peso || 1.00 : 1.00}" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label for="examEstado" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Estado</label>
+                                <select id="examEstado" name="examEstado" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                                    <option value="PROGRAMADA" ${exam && exam.Estado === 'PROGRAMADA' ? 'selected' : ''}>Programada</option>
+                                    <option value="EN_CURSO" ${exam && exam.Estado === 'EN_CURSO' ? 'selected' : ''}>En Curso</option>
+                                    <option value="FINALIZADA" ${exam && exam.Estado === 'FINALIZADA' ? 'selected' : ''}>Finalizada</option>
+                                    <option value="CANCELADA" ${exam && exam.Estado === 'CANCELADA' ? 'selected' : ''}>Cancelada</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label for="examDescription" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Descripción</label>
+                                <textarea id="examDescription" name="examDescription" rows="3" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; resize: vertical; font-family: inherit; background: var(--card-bg); color: var(--text-primary);">${escapeHtml(exam ? exam.Descripcion : '')}</textarea>
+                            </div>
+                            ${examId ? `<input type="hidden" id="examId" value="${examId}">` : ''}
+                        </form>
+                    </div>
+                    <div class="modal-dialog-footer">
+                        <button type="button" class="btn-secondary close-modal">Cancelar</button>
+                        <button type="submit" form="examForm" class="btn-primary">${isEdit ? 'Actualizar' : 'Crear'} Evaluación</button>
+                    </div>
+                </div>
             </div>
-            <form class="modal-form" onsubmit="saveExam(event)">
-                <div class="form-group">
-                    <label for="examTitle">Title</label>
-                    <input type="text" id="examTitle" required>
-                </div>
-                <div class="form-group">
-                    <label for="examSubject">Subject</label>
-                    <select id="examSubject" required>
-                        ${appData.materia.map(s => `<option value="${s.ID_materia}">${s.Nombre}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="examDate">Date</label>
-                    <input type="date" id="examDate" required>
-                </div>
-                <div class="form-group">
-                    <label for="examDuration">Duration (minutes)</label>
-                    <input type="number" id="examDuration" required>
-                </div>
-                <div class="form-group">
-                    <label for="examType">Type</label>
-                    <select id="examType" required>
-                        <option value="written">Written</option>
-                        <option value="practical">Practical</option>
-                        <option value="oral">Oral</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="examDescription">Description</label>
-                    <textarea id="examDescription"></textarea>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary close-modal">Cancel</button>
-                    <button type="submit" class="btn-primary">Save Exam</button>
-                </div>
-            </form>
         </div>
     `;
     
-    document.body.appendChild(modal);
-    setupModalHandlers(modal);
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Get modal element
+    const modal = document.getElementById('examModal');
+    if (!modal) {
+        console.error('Error: No se pudo crear el modal');
+        return;
+    }
+    
+    // Set examId in dataset if editing
+    if (examId) {
+        modal.dataset.examId = examId;
+    }
+    
+    // Setup close handlers
+    const closeButtons = modal.querySelectorAll('.close-modal');
+    closeButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof closeModal === 'function') {
+                closeModal('examModal');
+            } else {
+                modal.classList.remove('active');
+            }
+            // Remove modal after animation
+            setTimeout(() => {
+                if (modal && modal.parentNode) {
+                    modal.remove();
+                }
+            }, 300);
+        });
+    });
+    
+    // Close on overlay click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            if (typeof closeModal === 'function') {
+                closeModal('examModal');
+            } else {
+                modal.classList.remove('active');
+            }
+            // Remove modal after animation
+            setTimeout(() => {
+                if (modal && modal.parentNode) {
+                    modal.remove();
+                }
+            }, 300);
+        }
+    });
+    
+    // Setup modal handlers if function exists
+    if (typeof setupModalHandlers === 'function') {
+        setupModalHandlers('examModal');
+    }
+    
+    // Show modal
+    if (typeof showModal === 'function') {
+        showModal('examModal');
+    } else {
+        modal.classList.add('active');
+    }
 }
+
+// Make showExamModal globally available
+window.showExamModal = showExamModal;
 
 function saveExam(event) {
     event.preventDefault();
@@ -1505,18 +1650,14 @@ function saveExam(event) {
     loadExams();
 }
 
-function editExam(id) {
-    const exam = appData.evaluacion.find(e => e.ID_evaluacion === id);
-    if (!exam) return;
-
-    showExamModal();
+async function editExam(id) {
+    const exam = (appData.evaluacion || []).find(e => e.ID_evaluacion === id);
+    if (!exam) {
+        alert('Evaluación no encontrada.');
+        return;
+    }
     
-    // Populate form with existing data
-    document.getElementById('examTitle').value = exam.Titulo;
-    document.getElementById('examSubject').value = exam.Materia_ID_materia;
-    document.getElementById('examDate').value = exam.Fecha;
-    document.getElementById('examType').value = exam.Tipo;
-    document.getElementById('examDescription').value = exam.Descripcion || '';
+    await showExamModal(id);
 }
 
 function deleteExam(id) {
@@ -2234,38 +2375,14 @@ function saveExam(event) {
     }
 }
 
-function editExam(id) {
-    const exam = appData.evaluacion.find(e => e.ID_evaluacion === id);
-    if (!exam) return;
-    
-    showExamModal();
-    document.getElementById('examTitle').value = exam.Titulo;
-    document.getElementById('examSubject').value = exam.Materia_ID_materia;
-    document.getElementById('examDate').value = exam.Fecha;
-    document.getElementById('examType').value = exam.Tipo;
-    document.getElementById('examDescription').value = exam.Descripcion || '';
-    
-    const form = document.querySelector('.modal form');
-    if (form) {
-        form.onsubmit = (e) => {
-            e.preventDefault();
-            const payload = {
-                Titulo: document.getElementById('examTitle').value,
-                Materia_ID_materia: parseInt(document.getElementById('examSubject').value),
-                Fecha: document.getElementById('examDate').value,
-                Tipo: document.getElementById('examType').value,
-                Descripcion: document.getElementById('examDescription').value || '',
-                Estado: exam.Estado || 'PROGRAMADA'
-            };
-            if (typeof API !== 'undefined' && typeof API.updateEvaluacion === 'function') {
-                API.updateEvaluacion(id, payload).then(async () => {
-                    closeModal(document.querySelector('.modal'));
-                    if (typeof hydrateAppData === 'function') await hydrateAppData();
-                    loadExams();
-                }).catch(err => alert(err.message || 'No se pudo actualizar la evaluación.'));
-            }
-        };
+async function editExam(id) {
+    const exam = (appData.evaluacion || []).find(e => e.ID_evaluacion === id);
+    if (!exam) {
+        alert('Evaluación no encontrada.');
+        return;
     }
+    
+    await showExamModal(id);
 }
 
 function deleteExam(id) {

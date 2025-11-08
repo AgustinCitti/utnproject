@@ -2552,24 +2552,182 @@ window.editEvaluacion = async function(evaluacionId) {
     }
     
     try {
-        // Fetch evaluacion data
-        const response = await fetch(`../api/evaluacion.php?id=${evaluacionId}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
-        });
+        // Normalize ID for comparison
+        const normalizedId = parseInt(evaluacionId);
         
-        if (!response.ok) {
-            throw new Error('Error al cargar la evaluación');
+        // Get appData references
+        const data = window.appData || window.data || {};
+        let globalAppData = null;
+        
+        // Try to get global appData variable
+        try {
+            if (typeof appData !== 'undefined' && appData) {
+                globalAppData = appData;
+            }
+        } catch (e) {
+            // appData might not be in scope
         }
         
-        const evaluacion = await response.json();
+        let evaluacion = null;
         
-        // Use existing editExam function if available
-        if (typeof editExam === 'function') {
-            editExam(evaluacionId);
-        } else if (typeof window.editExam === 'function') {
-            window.editExam(evaluacionId);
+        // First try to find in appData (check both window.appData and global appData)
+        const checkData = (dataSource) => {
+            if (dataSource && dataSource.evaluacion && Array.isArray(dataSource.evaluacion)) {
+                return dataSource.evaluacion.find(e => {
+                    // Try both string and number comparison
+                    const evalId = parseInt(e.ID_evaluacion);
+                    return evalId === normalizedId || e.ID_evaluacion == normalizedId || e.ID_evaluacion === normalizedId;
+                });
+            }
+            return null;
+        };
+        
+        evaluacion = checkData(data) || checkData(globalAppData);
+        
+        // If not found in appData, fetch from API
+        if (!evaluacion) {
+            const response = await fetch(`../api/evaluacion.php?id=${normalizedId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Error al cargar la evaluación');
+            }
+            
+            evaluacion = await response.json();
+            
+            // Ensure ID is consistent (use the normalized ID)
+            evaluacion.ID_evaluacion = normalizedId;
+            
+            // Add to window.appData
+            if (!data.evaluacion) {
+                data.evaluacion = [];
+            }
+            if (!Array.isArray(data.evaluacion)) {
+                data.evaluacion = [];
+            }
+            
+            const existingIndex = data.evaluacion.findIndex(e => {
+                const evalId = parseInt(e.ID_evaluacion);
+                return evalId === normalizedId || e.ID_evaluacion == normalizedId;
+            });
+            
+            if (existingIndex >= 0) {
+                data.evaluacion[existingIndex] = evaluacion;
+            } else {
+                data.evaluacion.push(evaluacion);
+            }
+            
+            // Update window.appData
+            window.appData = data;
+            
+            // Also update global appData if it exists
+            if (globalAppData) {
+                if (!globalAppData.evaluacion) {
+                    globalAppData.evaluacion = [];
+                }
+                if (!Array.isArray(globalAppData.evaluacion)) {
+                    globalAppData.evaluacion = [];
+                }
+                
+                const globalIndex = globalAppData.evaluacion.findIndex(e => {
+                    const evalId = parseInt(e.ID_evaluacion);
+                    return evalId === normalizedId || e.ID_evaluacion == normalizedId;
+                });
+                
+                if (globalIndex >= 0) {
+                    globalAppData.evaluacion[globalIndex] = evaluacion;
+                } else {
+                    globalAppData.evaluacion.push(evaluacion);
+                }
+            }
+        }
+        
+        if (!evaluacion) {
+            throw new Error('Evaluación no encontrada');
+        }
+        
+        // Ensure appData is set globally for editExam to access
+        window.appData = data;
+        
+        // Try to set global appData variable if it exists in this scope
+        try {
+            if (typeof appData !== 'undefined') {
+                // If appData is a variable in scope, update it
+                if (typeof window !== 'undefined' && window.appData) {
+                    // Try to update via eval in a safe way - actually, better to just ensure window.appData is correct
+                }
+            }
+        } catch (e) {
+            // Can't access global appData, that's okay
+        }
+        
+        // Ensure the evaluacion is definitely in appData with the correct ID format
+        // Use the ID format that exists in the evaluacion object
+        const evaluacionIdToUse = evaluacion.ID_evaluacion;
+        
+        // Double-check the evaluacion is in appData before calling editExam
+        const checkInAppData = (dataSource) => {
+            if (dataSource && dataSource.evaluacion && Array.isArray(dataSource.evaluacion)) {
+                return dataSource.evaluacion.find(e => {
+                    return e.ID_evaluacion == evaluacionIdToUse || 
+                           parseInt(e.ID_evaluacion) === parseInt(evaluacionIdToUse) ||
+                           e.ID_evaluacion === evaluacionIdToUse;
+                });
+            }
+            return null;
+        };
+        
+        const foundInData = checkInAppData(data);
+        const foundInGlobal = globalAppData ? checkInAppData(globalAppData) : null;
+        
+        if (!foundInData && !foundInGlobal) {
+            // Force add to data
+            if (!data.evaluacion) {
+                data.evaluacion = [];
+            }
+            if (!Array.isArray(data.evaluacion)) {
+                data.evaluacion = [];
+            }
+            data.evaluacion.push(evaluacion);
+            window.appData = data;
+        }
+        
+        // Try to reload appData if loadAppData function exists, to ensure editExam has the latest data
+        if (typeof loadAppData === 'function') {
+            try {
+                await loadAppData();
+                // Re-check after reload
+                const reloadedData = window.appData || window.data || {};
+                if (reloadedData.evaluacion && Array.isArray(reloadedData.evaluacion)) {
+                    const foundAfterReload = checkInAppData(reloadedData);
+                    if (!foundAfterReload) {
+                        // Still not found, add it
+                        if (!reloadedData.evaluacion) {
+                            reloadedData.evaluacion = [];
+                        }
+                        reloadedData.evaluacion.push(evaluacion);
+                        window.appData = reloadedData;
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not reload appData:', e);
+            }
+        }
+        
+        // Debug: Log what we're about to pass to editExam
+        console.log('editEvaluacion: About to call editExam with ID:', evaluacionIdToUse);
+        console.log('editEvaluacion: Evaluacion in window.appData:', checkInAppData(window.appData || window.data || {}));
+        
+        // Use window.editExam explicitly to ensure we use the correct one from exams.js
+        // Pass the ID in the format that matches what's in appData
+        if (typeof window.editExam === 'function') {
+            await window.editExam(evaluacionIdToUse);
+        } else if (typeof editExam === 'function') {
+            await editExam(evaluacionIdToUse);
         } else {
             alert('Error: Función de edición no disponible');
         }

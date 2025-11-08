@@ -223,11 +223,10 @@ async function showExamModal(examId = null) {
     // Get current user ID
     const currentUserId = localStorage.getItem('userId');
     
-    const modal = document.createElement('div');
-    modal.className = 'modal active';
-    modal.id = 'examModal';
-    if (examId) {
-        modal.dataset.examId = examId;
+    // Remove existing modal if present
+    const existingModal = document.getElementById('examModal');
+    if (existingModal) {
+        existingModal.remove();
     }
     
     // Obtener materias del docente actual
@@ -250,7 +249,11 @@ async function showExamModal(examId = null) {
         }
     }
     
-    const exam = examId ? appData.evaluacion.find(e => e.ID_evaluacion === examId) : null;
+    const exam = examId ? appData.evaluacion.find(e => {
+        const evalId = parseInt(e.ID_evaluacion);
+        const searchId = parseInt(examId);
+        return evalId === searchId || e.ID_evaluacion == examId;
+    }) : null;
     const isEdit = !!exam;
     
     // Build subject options HTML
@@ -265,79 +268,156 @@ async function showExamModal(examId = null) {
         });
     }
     
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>${isEdit ? 'Editar Evaluación' : 'Crear Evaluación'}</h3>
-                <button class="close-modal">&times;</button>
+    // Escape HTML for form values
+    const escapeHtml = (text) => {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
+    
+    const modalHTML = `
+        <div class="modal-overlay" id="examModal">
+            <div class="modal-dialog">
+                <div class="modal-dialog-content">
+                    <div class="modal-dialog-header">
+                        <h3>${isEdit ? 'Editar Evaluación' : 'Crear Evaluación'}</h3>
+                        <button class="modal-dialog-close close-modal">&times;</button>
+                    </div>
+                    <div class="modal-dialog-body">
+                        <form id="examForm" onsubmit="saveExam(event); return false;">
+                            <div class="form-group">
+                                <label for="examTitle" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Título *</label>
+                                <input type="text" id="examTitle" name="examTitle" required value="${escapeHtml(exam ? exam.Titulo : '')}" autocomplete="off" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label for="examSubject" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Materia *</label>
+                                <select id="examSubject" name="examSubject" required style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                                    ${subjectOptionsHTML}
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label for="examDate" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Fecha *</label>
+                                <input type="date" id="examDate" name="examDate" required value="${exam ? exam.Fecha : ''}" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label for="examType" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Tipo *</label>
+                                <select id="examType" name="examType" required style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                                    <option value="">Seleccione un tipo</option>
+                                    <option value="EXAMEN" ${exam && exam.Tipo === 'EXAMEN' ? 'selected' : ''}>Examen</option>
+                                    <option value="PARCIAL" ${exam && exam.Tipo === 'PARCIAL' ? 'selected' : ''}>Parcial</option>
+                                    <option value="TRABAJO_PRACTICO" ${exam && exam.Tipo === 'TRABAJO_PRACTICO' ? 'selected' : ''}>Trabajo Práctico</option>
+                                    <option value="PROYECTO" ${exam && exam.Tipo === 'PROYECTO' ? 'selected' : ''}>Proyecto</option>
+                                    <option value="ORAL" ${exam && exam.Tipo === 'ORAL' ? 'selected' : ''}>Oral</option>
+                                    <option value="PRACTICO" ${exam && exam.Tipo === 'PRACTICO' ? 'selected' : ''}>Práctico</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label for="examPeso" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Peso (0.00 - 9.99)</label>
+                                <input type="number" id="examPeso" name="examPeso" step="0.01" min="0" max="9.99" value="${exam ? exam.Peso || 1.00 : 1.00}" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label for="examEstado" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Estado</label>
+                                <select id="examEstado" name="examEstado" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                                    <option value="PROGRAMADA" ${exam && exam.Estado === 'PROGRAMADA' ? 'selected' : ''}>Programada</option>
+                                    <option value="EN_CURSO" ${exam && exam.Estado === 'EN_CURSO' ? 'selected' : ''}>En Curso</option>
+                                    <option value="FINALIZADA" ${exam && exam.Estado === 'FINALIZADA' ? 'selected' : ''}>Finalizada</option>
+                                    <option value="CANCELADA" ${exam && exam.Estado === 'CANCELADA' ? 'selected' : ''}>Cancelada</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label for="examDescription" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Descripción</label>
+                                <textarea id="examDescription" name="examDescription" rows="3" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; resize: vertical; font-family: inherit; background: var(--card-bg); color: var(--text-primary);">${escapeHtml(exam ? exam.Descripcion : '')}</textarea>
+                            </div>
+                            ${examId ? `<input type="hidden" id="examId" value="${examId}">` : ''}
+                        </form>
+                    </div>
+                    <div class="modal-dialog-footer">
+                        <button type="button" class="btn-secondary close-modal">Cancelar</button>
+                        <button type="submit" form="examForm" class="btn-primary">${isEdit ? 'Actualizar' : 'Crear'} Evaluación</button>
+                    </div>
+                </div>
             </div>
-            <form class="modal-form" id="examForm" onsubmit="saveExam(event); return false;">
-                <div class="form-group">
-                    <label for="examTitle">Título *</label>
-                    <input type="text" id="examTitle" name="examTitle" required value="${exam ? exam.Titulo : ''}" autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <label for="examSubject">Materia *</label>
-                    <select id="examSubject" name="examSubject" required>
-                        ${subjectOptionsHTML}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="examDate">Fecha *</label>
-                    <input type="date" id="examDate" name="examDate" required value="${exam ? exam.Fecha : ''}">
-                </div>
-                <div class="form-group">
-                    <label for="examType">Tipo *</label>
-                    <select id="examType" name="examType" required>
-                        <option value="">Seleccione un tipo</option>
-                        <option value="EXAMEN" ${exam && exam.Tipo === 'EXAMEN' ? 'selected' : ''}>Examen</option>
-                        <option value="PARCIAL" ${exam && exam.Tipo === 'PARCIAL' ? 'selected' : ''}>Parcial</option>
-                        <option value="TRABAJO_PRACTICO" ${exam && exam.Tipo === 'TRABAJO_PRACTICO' ? 'selected' : ''}>Trabajo Práctico</option>
-                        <option value="PROYECTO" ${exam && exam.Tipo === 'PROYECTO' ? 'selected' : ''}>Proyecto</option>
-                        <option value="ORAL" ${exam && exam.Tipo === 'ORAL' ? 'selected' : ''}>Oral</option>
-                        <option value="PRACTICO" ${exam && exam.Tipo === 'PRACTICO' ? 'selected' : ''}>Práctico</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="examPeso">Peso (0.00 - 9.99)</label>
-                    <input type="number" id="examPeso" name="examPeso" step="0.01" min="0" max="9.99" value="${exam ? exam.Peso || 1.00 : 1.00}">
-                </div>
-                <div class="form-group">
-                    <label for="examEstado">Estado</label>
-                    <select id="examEstado" name="examEstado">
-                        <option value="PROGRAMADA" ${exam && exam.Estado === 'PROGRAMADA' ? 'selected' : ''}>Programada</option>
-                        <option value="EN_CURSO" ${exam && exam.Estado === 'EN_CURSO' ? 'selected' : ''}>En Curso</option>
-                        <option value="FINALIZADA" ${exam && exam.Estado === 'FINALIZADA' ? 'selected' : ''}>Finalizada</option>
-                        <option value="CANCELADA" ${exam && exam.Estado === 'CANCELADA' ? 'selected' : ''}>Cancelada</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="examDescription">Descripción</label>
-                    <textarea id="examDescription" name="examDescription">${exam ? (exam.Descripcion || '') : ''}</textarea>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary close-modal">Cancelar</button>
-                    <button type="submit" class="btn-primary">${isEdit ? 'Actualizar' : 'Crear'} Evaluación</button>
-                </div>
-            </form>
         </div>
     `;
     
-    document.body.appendChild(modal);
+    // Remove existing modal if present
+    const existingModal = document.getElementById('examModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Get modal element
+    const modal = document.getElementById('examModal');
+    if (!modal) {
+        console.error('Error: No se pudo crear el modal');
+        return;
+    }
+    
+    // Set examId in dataset if editing
+    if (examId) {
+        modal.dataset.examId = examId;
+    }
+    
+    // Setup modal handlers - use the same pattern as working dialogs
     if (typeof setupModalHandlers === 'function') {
-    setupModalHandlers(modal);
+        setupModalHandlers('examModal');
     } else {
-        // Fallback si no existe setupModalHandlers
-        modal.querySelector('.close-modal').addEventListener('click', () => {
-            modal.remove();
+        // Fallback modal handlers
+        const closeButtons = modal.querySelectorAll('.close-modal');
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof closeModal === 'function') {
+                    closeModal('examModal');
+                } else {
+                    modal.classList.remove('active');
+                }
+                // Remove modal after animation
+                setTimeout(() => {
+                    if (modal && modal.parentNode) {
+                        modal.remove();
+                    }
+                }, 300);
+            });
         });
-        modal.addEventListener('click', (e) => {
+        
+        // Close on overlay click
+        modal.addEventListener('click', function(e) {
             if (e.target === modal) {
-                modal.remove();
+                if (typeof closeModal === 'function') {
+                    closeModal('examModal');
+                } else {
+                    modal.classList.remove('active');
+                }
+                // Remove modal after animation
+                setTimeout(() => {
+                    if (modal && modal.parentNode) {
+                        modal.remove();
+                    }
+                }, 300);
             }
         });
     }
+    
+    // Show modal - use showModal function if available
+    if (typeof showModal === 'function') {
+        showModal('examModal');
+    } else {
+        // Fallback: manually add active class
+        modal.classList.add('active');
+    }
 }
+
+// Make showExamModal globally available to prevent conflicts
+window.showExamModal = showExamModal;
 
 async function saveExam(event) {
     event.preventDefault();
@@ -417,7 +497,8 @@ async function saveExam(event) {
     };
     
     // Determinar si es crear o actualizar
-    const existingExamId = document.getElementById('examModal').dataset.examId;
+    const examModal = document.getElementById('examModal');
+    const existingExamId = examModal ? (examModal.dataset.examId || document.getElementById('examId')?.value) : null;
     const isEdit = existingExamId && !isNaN(parseInt(existingExamId));
     const url = isEdit ? `${baseUrl}/evaluacion.php?id=${existingExamId}` : `${baseUrl}/evaluacion.php`;
     const method = isEdit ? 'PUT' : 'POST';
@@ -471,6 +552,9 @@ async function editExam(id) {
     
     await showExamModal(id);
 }
+
+// Make editExam globally available and ensure it uses the correct showExamModal
+window.editExam = editExam;
 
 async function deleteExam(id) {
     const exam = appData.evaluacion.find(e => e.ID_evaluacion === id);
