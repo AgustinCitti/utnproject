@@ -261,9 +261,6 @@ function renderDaysHeader() {
     // TEMPORARILY FORCE SPANISH FOR TESTING - remove this after verification
     const days = dayNames['es']; // Always use Spanish for now
     
-    // Debug: log what we're using
-    console.log('Calendar language:', lang, 'Using days:', days);
-    
     for (let i = 0; i < 7; i++) {
         const date = new Date(calendarWeekStart);
         date.setDate(date.getDate() + i);
@@ -400,9 +397,17 @@ function renderEvents() {
             eventElement.appendChild(eventTitle);
             eventElement.appendChild(eventMeta);
             
-            // Add click handler
-            eventElement.addEventListener('click', () => {
-                showEventDetails(event);
+            // Add click handler with proper event handling
+            eventElement.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                    showEventDetails(event);
+                } catch (error) {
+                    console.error('Error showing event details:', error);
+                    // Fallback to alert if modal fails
+                    alert(`Event: ${event.title}\nDate: ${event.date ? new Date(event.date).toLocaleString() : 'N/A'}`);
+                }
             });
             
             cell.appendChild(eventElement);
@@ -894,7 +899,7 @@ function showEventDetails(event) {
     const modal = document.getElementById('eventDetailsModal');
     if (!modal) {
         // Fallback to alert if modal doesn't exist
-        alert(`Event: ${event.title}\nDate: ${event.date.toLocaleString()}`);
+        alert(`Event: ${event.title}\nDate: ${event.date ? new Date(event.date).toLocaleString() : 'N/A'}`);
         return;
     }
     
@@ -1048,15 +1053,97 @@ function showEventDetails(event) {
     
     bodyElement.innerHTML = bodyHTML || '<p>No hay información adicional disponible.</p>';
     
-    // Show modal
-    if (typeof showModal === 'function') {
-        showModal('eventDetailsModal');
-    } else if (typeof setupModalHandlers === 'function') {
-        modal.classList.add('active');
-        setupModalHandlers('eventDetailsModal');
-    } else {
-        modal.classList.add('active');
+    // Get the dialog element inside the modal
+    const dialog = modal.querySelector('.modal-dialog');
+    
+    // Ensure modal is at body level (not inside a clipped container)
+    if (modal.parentElement !== document.body) {
+        document.body.appendChild(modal);
     }
+    
+    // Show modal - handle directly without calling showModal to avoid conflicts
+    // First remove any inline display styles that might interfere
+    modal.style.display = '';
+    modal.style.opacity = '';
+    modal.style.visibility = '';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.zIndex = '2000';
+    
+    // Ensure dialog is properly positioned
+    if (dialog) {
+        dialog.style.position = 'fixed';
+        dialog.style.top = '0';
+        dialog.style.right = '-30%'; // Start off-screen
+        dialog.style.width = '30%';
+        dialog.style.height = '100%';
+        dialog.style.zIndex = '2001';
+    }
+    
+    // Add active class - CSS will handle display: block and opacity: 1
+    modal.classList.add('active');
+    
+    // Force a reflow to ensure CSS changes take effect
+    void modal.offsetHeight;
+    
+    // Force dialog to slide in
+    if (dialog) {
+        // Use setTimeout to ensure the transition works
+        setTimeout(() => {
+            dialog.style.right = '0px';
+        }, 10);
+    }
+    
+    // Double-check and force if needed
+    setTimeout(() => {
+        const computedStyle = window.getComputedStyle(modal);
+        const dialogComputed = dialog ? window.getComputedStyle(dialog) : null;
+        
+        if (computedStyle.display === 'none') {
+            modal.style.display = 'block';
+        }
+        if (computedStyle.opacity === '0') {
+            modal.style.opacity = '1';
+        }
+        
+        // Check if dialog is sliding in
+        if (dialog && dialogComputed) {
+            if (dialogComputed.right !== '0px' && dialogComputed.right !== '0') {
+                dialog.style.right = '0px';
+            }
+        }
+    }, 50);
+    
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+    
+    // Set up close handlers using the standard modal helper if available
+    if (typeof setupModalHandlers === 'function') {
+        setupModalHandlers('eventDetailsModal');
+    }
+    
+    // Also ensure close buttons work (fallback)
+    const closeButtons = modal.querySelectorAll('.close-modal');
+    closeButtons.forEach(button => {
+        // Remove any existing handler and add a fresh one
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+        newButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            modal.classList.remove('active');
+            if (dialog) {
+                dialog.style.right = '-30%';
+            }
+            document.body.style.overflow = '';
+            if (typeof closeModal === 'function') {
+                closeModal('eventDetailsModal');
+            }
+        });
+    });
 }
 
 // Helper function to convert hex to RGB
