@@ -116,7 +116,8 @@
 /* Dashboard Responsive Styles */
 @media (max-width: 1024px) {
     .dashboard-content-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
     }
     
     .dashboard-sidebar {
@@ -191,7 +192,59 @@
     }
     
     .quick-actions-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+    
+    /* Dashboard content grid mobile adjustments */
+    .dashboard-content-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+    }
+    
+    .dashboard-main-column {
+        gap: 1.5rem !important;
+    }
+    
+    .dashboard-sidebar {
+        order: -1; /* Show calendar first on mobile */
+    }
+    
+    /* Reduce padding on mobile for dashboard cards */
+    .dashboard-card {
+        padding: 1.5rem !important;
+    }
+    
+    .quick-actions-card {
+        padding: 1.5rem !important;
+    }
+    
+    .next-classes-card {
+        padding: 1.5rem !important;
+    }
+    
+    .calendar-widget {
+        padding: 1.5rem !important;
+    }
+    
+    /* Adjust card title size on mobile */
+    .card-title {
+        font-size: 1.25rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    /* Quick action buttons mobile adjustments */
+    .quick-action-btn {
+        padding: 1rem !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .quick-action-btn i {
+        font-size: 1.1rem !important;
+    }
+    
+    .quick-action-btn span {
+        font-size: 0.85rem !important;
     }
     
     .calendar-widget-grid {
@@ -1624,6 +1677,92 @@
         font-size: 0.6rem;
         line-height: 1.1;
         letter-spacing: 0.03em;
+    }
+    
+    /* Extra mobile optimizations for dashboard content */
+    .dashboard-content-grid {
+        gap: 1rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .dashboard-main-column {
+        gap: 1rem !important;
+    }
+    
+    .dashboard-card {
+        padding: 1rem !important;
+        border-radius: 16px !important;
+    }
+    
+    .quick-actions-card,
+    .next-classes-card,
+    .calendar-widget {
+        padding: 1rem !important;
+    }
+    
+    .card-title {
+        font-size: 1.1rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .quick-actions-grid {
+        gap: 0.5rem !important;
+    }
+    
+    .quick-action-btn {
+        padding: 0.875rem !important;
+        font-size: 0.85rem !important;
+        min-height: 48px !important;
+    }
+    
+    .quick-action-btn i {
+        font-size: 1rem !important;
+    }
+    
+    .quick-action-btn span {
+        font-size: 0.8rem !important;
+    }
+    
+    /* Calendar widget mobile adjustments */
+    .calendar-widget-header {
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .widget-title {
+        font-size: 1rem !important;
+    }
+    
+    .calendar-widget-month {
+        font-size: 0.9rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .calendar-widget-grid .calendar-day {
+        min-height: 28px !important;
+        font-size: 0.7rem !important;
+    }
+    
+    .calendar-view-full-btn {
+        padding: 0.75rem !important;
+        font-size: 0.85rem !important;
+    }
+    
+    /* Class items and notifications mobile adjustments */
+    .class-item {
+        padding: 0.75rem !important;
+    }
+    
+    .class-header {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .class-details h4 {
+        font-size: 1rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .class-info {
+        font-size: 0.8rem !important;
     }
     
     .stats-grid {
