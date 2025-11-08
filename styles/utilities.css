@@ -552,9 +552,12 @@
    ========================================================================== */
 
 .active\:bg-primary:active,
-.active.active { background-color: #667eea; }
+.active.active { 
+    background-color: transparent !important; 
+    color: #000000 !important; 
+}
 .active\:text-white:active,
-.active.active { color: #ffffff; }
+.active.active { color: #000000 !important; }
 
 /* ==========================================================================
    FOCUS UTILITIES

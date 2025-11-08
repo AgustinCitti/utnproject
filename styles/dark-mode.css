@@ -2859,4 +2859,16 @@
     color: var(--text-primary) !important;
 }
 
+/* Active state - Dark mode */
+[data-theme="dark"] .active\:bg-primary:active,
+[data-theme="dark"] .active.active {
+    background-color: transparent !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .active\:text-white:active,
+[data-theme="dark"] .active.active {
+    color: #ffffff !important;
+}
+
 
