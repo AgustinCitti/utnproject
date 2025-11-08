@@ -811,6 +811,8 @@ function initializeSubjects() {
             const contentSubject = document.getElementById('contentSubject');
             if (contentSubject) {
                 contentSubject.style.display = '';
+                // Restore required attribute when showing the field
+                contentSubject.setAttribute('required', 'required');
                 const contentSubjectGroup = contentSubject.closest('.form-group');
                 if (contentSubjectGroup) {
                     contentSubjectGroup.style.display = '';
@@ -1533,18 +1535,20 @@ window.editContent = async function(contenidoId) {
             contentForm.parentNode.replaceChild(newForm, contentForm);
             
             // Get form fields
-            const contentTema = document.getElementById('contentTema');
-            const contentDescripcion = document.getElementById('contentDescripcion');
+            const contentTopic = document.getElementById('contentTopic');
+            const contentDescription = document.getElementById('contentDescription');
             const contentStatus = document.getElementById('contentStatus');
             const contentSubject = document.getElementById('contentSubject');
             
             // Populate fields
-            if (contentTema) contentTema.value = tema.Tema || '';
-            if (contentDescripcion) contentDescripcion.value = tema.Descripcion || '';
+            if (contentTopic) contentTopic.value = tema.Tema || '';
+            if (contentDescription) contentDescription.value = tema.Descripcion || '';
             if (contentStatus) contentStatus.value = tema.Estado || 'PENDIENTE';
             if (contentSubject) {
                 contentSubject.value = subjectId;
                 // Hide the subject field since we already know which subject
+                // Remove required attribute to prevent validation errors when hidden
+                contentSubject.removeAttribute('required');
                 contentSubject.style.display = 'none';
                 const subjectGroup = contentSubject.closest('.form-group');
                 if (subjectGroup) {
@@ -1583,6 +1587,192 @@ window.editContent = async function(contenidoId) {
     } catch (error) {
         console.error('Error editing content:', error);
         alert(`Error al editar el tema: ${error.message}`);
+    }
+};
+
+/**
+ * Save content from modal (create or update)
+ * @param {number} contenidoId - Optional content ID for update mode
+ */
+window.saveContentFromModal = async function(contenidoId = null) {
+    try {
+        // Get form fields
+        const contentForm = document.getElementById('contentForm');
+        const contentSubject = document.getElementById('contentSubject');
+        const contentTopic = document.getElementById('contentTopic');
+        const contentDescription = document.getElementById('contentDescription');
+        const contentStatus = document.getElementById('contentStatus');
+        
+        if (!contentForm) {
+            alert('Error: Formulario no encontrado');
+            return;
+        }
+        
+        // Determine if we're in edit mode
+        const editId = contenidoId || contentForm.dataset.editId || null;
+        const isEditMode = !!editId;
+        
+        // Get subject ID - check if field is visible or use hidden value
+        let subjectId = null;
+        const isSubjectFieldHidden = contentSubject && contentSubject.style.display === 'none';
+        
+        if (contentSubject) {
+            subjectId = contentSubject.value;
+        }
+        
+        // If field is hidden but no value, try to get from current themes subject ID
+        if ((!subjectId || subjectId === '') && isSubjectFieldHidden) {
+            if (typeof getCurrentThemesSubjectId === 'function') {
+                const currentId = getCurrentThemesSubjectId();
+                if (currentId) {
+                    subjectId = currentId;
+                    // Also set it in the hidden field for consistency
+                    if (contentSubject) {
+                        contentSubject.value = currentId;
+                    }
+                }
+            }
+        }
+        
+        // Get topic (required)
+        const topic = contentTopic ? contentTopic.value.trim() : '';
+        if (!topic) {
+            alert('El tema es obligatorio');
+            if (contentTopic) contentTopic.focus();
+            return;
+        }
+        
+        // Get description (optional)
+        const description = contentDescription ? contentDescription.value.trim() : '';
+        
+        // Get status
+        const status = contentStatus ? (contentStatus.value || 'PENDIENTE') : 'PENDIENTE';
+        
+        // Validate subject ID
+        if (!subjectId || subjectId === '' || subjectId === '0') {
+            if (isSubjectFieldHidden) {
+                // If field is hidden, this shouldn't happen, but provide helpful error
+                console.error('Error: Campo de materia oculto pero sin valor. SubjectId esperado no encontrado.');
+                alert('Error: No se pudo determinar la materia. Por favor, recarga la página e intenta nuevamente.');
+            } else {
+                alert('Por favor, selecciona una materia');
+                if (contentSubject) {
+                    contentSubject.focus();
+                }
+            }
+            return;
+        }
+        
+        // Convert to integer
+        subjectId = parseInt(subjectId, 10);
+        if (isNaN(subjectId) || subjectId <= 0) {
+            alert('ID de materia inválido');
+            return;
+        }
+        
+        // Prepare payload
+        const payload = {
+            Tema: topic,
+            Descripcion: description || null,
+            Estado: status
+        };
+        
+        // For create mode, add Materia_ID_materia
+        if (!isEditMode) {
+            payload.Materia_ID_materia = subjectId;
+        }
+        
+        // Determine API endpoint
+        const isInPages = window.location.pathname.includes('/pages/');
+        const baseUrl = isInPages ? '../api' : 'api';
+        
+        // Make API call
+        let res;
+        if (isEditMode) {
+            // UPDATE with PUT
+            res = await fetch(`${baseUrl}/contenido.php?id=${editId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(payload)
+            });
+        } else {
+            // CREATE with POST
+            res = await fetch(`${baseUrl}/contenido.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(payload)
+            });
+        }
+        
+        // Parse response
+        let data = {};
+        const text = await res.text();
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            throw new Error(`Error del servidor (${res.status})`);
+        }
+        
+        if (!res.ok) {
+            throw new Error(data.message || (isEditMode ? 'No se pudo actualizar el tema' : 'No se pudo crear el tema'));
+        }
+        
+        // Reload data
+        if (typeof loadData === 'function') {
+            await loadData();
+        }
+        
+        // Close modal
+        if (typeof closeModal === 'function') {
+            closeModal('contentModal');
+        } else {
+            const modal = document.getElementById('contentModal');
+            if (modal) {
+                modal.style.display = 'none';
+                modal.classList.remove('active');
+            }
+        }
+        
+        // Reload themes list if we're in a subject context
+        if (typeof getCurrentThemesSubjectId === 'function') {
+            const currentId = getCurrentThemesSubjectId();
+            if (currentId && typeof loadSubjectThemesList === 'function') {
+                loadSubjectThemesList(currentId);
+            }
+        }
+        
+        // Reload subject content tab if available
+        if (typeof loadSubjectContentTab === 'function') {
+            const currentSubjectId = getCurrentThemesSubjectId ? getCurrentThemesSubjectId() : null;
+            if (currentSubjectId) {
+                loadSubjectContentTab(currentSubjectId);
+            }
+        }
+        
+        // Reset form
+        if (contentForm) {
+            contentForm.reset();
+            delete contentForm.dataset.editId;
+        }
+        
+        // Restore contentSubject field visibility and required attribute
+        if (contentSubject) {
+            contentSubject.style.display = '';
+            contentSubject.setAttribute('required', 'required');
+            const subjectGroup = contentSubject.closest('.form-group');
+            if (subjectGroup) {
+                subjectGroup.style.display = '';
+            }
+        }
+        
+        // Show success message
+        alert(isEditMode ? 'Tema actualizado correctamente' : 'Tema creado correctamente');
+        
+    } catch (err) {
+        console.error('Error saving content:', err);
+        alert('Error: ' + (err.message || 'No se pudo guardar el tema'));
     }
 };
 
@@ -2500,16 +2690,42 @@ window.createThemeForSubject = function(subjectId) {
     }
     
     // Set subject in dropdown (hide it and pre-select)
+    // IMPORTANT: Set value AFTER reset to ensure it's not cleared
     const contentSubject = document.getElementById('contentSubject');
     if (contentSubject) {
+        // Ensure the select is populated first
+        if (typeof populateSubjectSelect === 'function') {
+            populateSubjectSelect();
+        }
+        
+        // Check if the option exists, if not create it
+        const subjectIdStr = String(subjectId);
+        const optionExists = Array.from(contentSubject.options).some(opt => opt.value === subjectIdStr);
+        
+        if (!optionExists && subject) {
+            // Create option for this subject
+            const option = document.createElement('option');
+            option.value = subjectIdStr;
+            option.textContent = subject.Nombre || `Materia ${subjectId}`;
+            contentSubject.appendChild(option);
+        }
+        
+        // Set the value (as string to match select option values)
+        contentSubject.value = subjectIdStr;
+        
         // Hide the subject field since we already know which subject
+        // Remove required attribute to prevent validation errors when hidden
+        contentSubject.removeAttribute('required');
         contentSubject.style.display = 'none';
         const subjectGroup = contentSubject.closest('.form-group');
         if (subjectGroup) {
             subjectGroup.style.display = 'none';
         }
-        // Set the value
-        contentSubject.value = subjectId;
+        
+        // Double-check value is set (in case reset cleared it)
+        if (!contentSubject.value || contentSubject.value === '') {
+            contentSubject.value = subjectIdStr;
+        }
     }
     
     // Set default status
