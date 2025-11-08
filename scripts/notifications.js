@@ -391,7 +391,6 @@ function deleteNotification(id) {
 }
 
 // Helper functions for recordatorios
-let appDataWarningShown = false;
 function getCurrentUser() {
     // Get current user from localStorage and match with docente data
     const username = localStorage.getItem('username');
@@ -400,11 +399,6 @@ function getCurrentUser() {
     // Ensure appData is loaded (check both local and global)
     const data = appData || window.appData;
     if (!data || !data.usuarios_docente || !Array.isArray(data.usuarios_docente)) {
-        // Only warn once to avoid console spam
-        if (!appDataWarningShown) {
-            console.warn('appData not loaded yet in getCurrentUser - will retry when data is available');
-            appDataWarningShown = true;
-        }
         return null;
     }
     

@@ -194,8 +194,6 @@ function loadReports() {
             const globalFilter = document.getElementById('globalSubjectFilter');
             if (!globalFilter) {
                 console.error('Reports: globalSubjectFilter not found in DOM');
-            } else {
-                console.log('Reports: globalSubjectFilter found and ready');
             }
             
             // CRITICAL: Remove any filters that might have been added to chart headers

@@ -35,9 +35,7 @@ async function initializeApp() {
         }
         // Redirect ADMIN users to admin dashboard (case-insensitive check)
         const userRole = (localStorage.getItem('userRole') || '').toUpperCase().trim();
-        console.log('Checking user role on home.html:', userRole);
         if (userRole === 'ADMIN') {
-            console.log('ADMIN user detected on home.html, redirecting to admin dashboard');
             window.location.href = 'admindashboard.html';
             return;
         }
@@ -236,7 +234,6 @@ async function syncSession() {
         }
     } catch (error) {
         // If session sync fails, continue with existing localStorage check
-        console.log('Session sync failed, using localStorage:', error);
     }
 }
 

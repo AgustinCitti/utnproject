@@ -409,21 +409,19 @@
      */
     async function editSubject(id) {
         try {
-            // Ensure appData is loaded
-            if (!window.appData || !window.appData.materia || !Array.isArray(window.appData.materia)) {
-                console.log('appData not loaded, loading data...');
-                if (typeof loadData === 'function') {
-                    await loadData();
-                }
+        // Ensure appData is loaded
+        if (!window.appData || !window.appData.materia || !Array.isArray(window.appData.materia)) {
+            if (typeof loadData === 'function') {
+                await loadData();
             }
+        }
 
-            // Use getSubjectById helper which handles type conversion properly
-            let subject = getSubjectById(id);
+        // Use getSubjectById helper which handles type conversion properly
+        let subject = getSubjectById(id);
 
-            // If still not found, try fetching from API as fallback
-            if (!subject) {
-                console.log('Subject not found in appData, fetching from API...');
-                try {
+        // If still not found, try fetching from API as fallback
+        if (!subject) {
+            try {
                     const isInPages = window.location.pathname.includes('/pages/');
                     const baseUrl = isInPages ? '../api' : 'api';
                     const response = await fetch(`${baseUrl}/materia.php?id=${id}`, {
@@ -606,6 +604,4 @@
     window.deleteSubject = deleteSubject;
     window.resetSubjectForm = resetSubjectForm;
     window.clearSubjectForm = clearSubjectForm;
-    
-    console.log('SubjectCRUD module functions exported to window');
 })();

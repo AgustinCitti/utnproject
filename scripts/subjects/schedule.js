@@ -52,7 +52,6 @@ function setupScheduleSelector() {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Add schedule entry button clicked');
                 // Call the function directly
                 if (typeof addScheduleEntry === 'function') {
                     addScheduleEntry();
@@ -63,7 +62,6 @@ function setupScheduleSelector() {
                 }
             });
             btn._hasListener = true;
-            console.log('Schedule entry button listener attached');
         } else {
             console.warn('addScheduleEntryBtn not found');
         }
@@ -82,9 +80,6 @@ function addScheduleEntry(entry = null) {
         console.warn('scheduleEntriesContainer not found - schedule entry cannot be added');
         return;
     }
-
-    console.log('Adding schedule entry, container found:', container);
-    console.log('Container innerHTML before:', container.innerHTML.substring(0, 100));
     
     const entryId = scheduleEntryCounter++;
     const entryData = entry || { day: '', startHour: '', endHour: '' };
@@ -92,7 +87,6 @@ function addScheduleEntry(entry = null) {
     scheduleEntries.push({ id: entryId, ...entryData });
 
     const timeOptions = generateTimeOptions();
-    console.log('Time options generated:', timeOptions ? timeOptions.length : 0, 'options');
     
     const entryHTML = `
         <div class="schedule-entry" data-entry-id="${entryId}">
@@ -132,15 +126,11 @@ function addScheduleEntry(entry = null) {
     `;
 
     container.insertAdjacentHTML('beforeend', entryHTML);
-    console.log('Schedule entry HTML inserted, entryId:', entryId);
-    console.log('Container innerHTML after:', container.innerHTML.substring(0, 200));
     
     // Verify the entry was actually added
     const addedEntry = container.querySelector(`.schedule-entry[data-entry-id="${entryId}"]`);
     if (!addedEntry) {
         console.error('Schedule entry was not added to DOM!');
-    } else {
-        console.log('Schedule entry verified in DOM:', addedEntry);
     }
     
     // Set selected values for time selects (need to wait for DOM to update)
@@ -159,7 +149,6 @@ function addScheduleEntry(entry = null) {
     setTimeout(() => {
         attachScheduleEntryListeners(entryId);
         updateScheduleHiddenField();
-        console.log('Schedule entry listeners attached for entryId:', entryId);
     }, 0);
 }
 
@@ -407,7 +396,5 @@ function populateScheduleSelector(scheduleString) {
         window.updateScheduleHiddenField = updateScheduleHiddenField;
         window.resetScheduleSelector = resetScheduleSelector;
         window.populateScheduleSelector = populateScheduleSelector;
-        
-        console.log('Schedule module functions exported to window');
     }
 })();

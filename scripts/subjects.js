@@ -1014,8 +1014,6 @@ function loadSubjectThemesList(subjectId) {
             return dateB - dateA;
         });
     
-    console.log(`Loading themes for subject ${subjectId}: Found ${themes.length} themes`);
-    
     if (themes.length > 0) {
         // Ensure tema_estudiante array exists
         const temaEstudiante = (data.tema_estudiante || []);
@@ -1895,8 +1893,6 @@ function setupMateriaDetailsTabs(subjectId) {
             e.preventDefault();
             e.stopPropagation();
             
-            console.log('Import Temas button clicked, subjectId:', subjectId);
-            
             // Store current subject ID for the import function
             const modal = document.getElementById('importTemasModal');
             if (!modal) {
@@ -1904,7 +1900,6 @@ function setupMateriaDetailsTabs(subjectId) {
                 return;
             }
             
-            console.log('Opening importTemasModal');
             // Set subject ID in modal data attribute
             modal.dataset.subjectId = subjectId;
             
@@ -1940,16 +1935,11 @@ function setupMateriaDetailsTabs(subjectId) {
             // Ensure body scroll is disabled
             document.body.style.overflow = 'hidden';
             
-            // Double-check it's visible after a brief delay and log detailed state
+            // Double-check it's visible after a brief delay
             setTimeout(() => {
                 const computed = window.getComputedStyle(modal);
                 const dialog = modal.querySelector('.modal-dialog');
                 const dialogComputed = dialog ? window.getComputedStyle(dialog) : null;
-                
-                console.log('Modal state - display:', computed.display, 'opacity:', computed.opacity, 'visibility:', computed.visibility, 'z-index:', computed.zIndex, 'has active class:', modal.classList.contains('active'));
-                if (dialogComputed) {
-                    console.log('Dialog state - right:', dialogComputed.right, 'display:', dialogComputed.display, 'z-index:', dialogComputed.zIndex);
-                }
                 
                 // Force visibility if needed
                 if (computed.display === 'none') {
@@ -2067,7 +2057,6 @@ function setupMateriaDetailsTabs(subjectId) {
                 e.preventDefault();
                 e.stopPropagation();
                 const id = btn.dataset.subjectId || subjectId || window.currentSubjectId;
-                console.log('Mark attendance clicked (event delegation), subjectId:', id);
                 if (id && window.openAttendanceModal) {
                     window.openAttendanceModal(id);
                 } else {
@@ -2110,8 +2099,6 @@ function setupMateriaDetailsTabs(subjectId) {
         importEvaluacionesBtn.onclick = function(e) {
             e.preventDefault();
             e.stopPropagation();
-            
-            console.log('Import Evaluaciones button clicked (from setupMateriaDetailsTabs), subjectId:', subjectId);
             
             // Store current subject ID for the import function
             const modal = document.getElementById('importEvaluacionesModal');
@@ -2161,11 +2148,6 @@ function setupMateriaDetailsTabs(subjectId) {
                 const computed = window.getComputedStyle(modal);
                 const dialog = modal.querySelector('.modal-dialog');
                 const dialogComputed = dialog ? window.getComputedStyle(dialog) : null;
-                
-                console.log('Evaluaciones Modal state - display:', computed.display, 'opacity:', computed.opacity, 'has active class:', modal.classList.contains('active'));
-                if (dialogComputed) {
-                    console.log('Dialog state - right:', dialogComputed.right, 'display:', dialogComputed.display);
-                }
                 
                 // Force visibility if needed
                 if (computed.display === 'none') {
@@ -2261,8 +2243,6 @@ function switchToTemasTab() {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                console.log('Import Temas button clicked (from switchToTemasTab), subjectId:', subjectId);
-                
                 const modal = document.getElementById('importTemasModal');
                 if (modal) {
                     modal.dataset.subjectId = subjectId;
@@ -2303,11 +2283,6 @@ function switchToTemasTab() {
                         const computed = window.getComputedStyle(modal);
                         const dialog = modal.querySelector('.modal-dialog');
                         const dialogComputed = dialog ? window.getComputedStyle(dialog) : null;
-                        
-                        console.log('Modal state (from switchToTemasTab) - display:', computed.display, 'opacity:', computed.opacity, 'has active class:', modal.classList.contains('active'));
-                        if (dialogComputed) {
-                            console.log('Dialog state - right:', dialogComputed.right, 'display:', dialogComputed.display);
-                        }
                         
                         // Force visibility if needed
                         if (computed.display === 'none') {
@@ -2392,8 +2367,6 @@ function switchToEvaluacionesTab(subjectId) {
             e.preventDefault();
             e.stopPropagation();
             
-            console.log('Import Evaluaciones button clicked, subjectId:', subjectId);
-            
             // Store current subject ID for the import function
             const modal = document.getElementById('importEvaluacionesModal');
             if (!modal) {
@@ -2442,11 +2415,6 @@ function switchToEvaluacionesTab(subjectId) {
                 const computed = window.getComputedStyle(modal);
                 const dialog = modal.querySelector('.modal-dialog');
                 const dialogComputed = dialog ? window.getComputedStyle(dialog) : null;
-                
-                console.log('Evaluaciones Modal state - display:', computed.display, 'opacity:', computed.opacity, 'has active class:', modal.classList.contains('active'));
-                if (dialogComputed) {
-                    console.log('Dialog state - right:', dialogComputed.right, 'display:', dialogComputed.display);
-                }
                 
                 // Force visibility if needed
                 if (computed.display === 'none') {
@@ -2557,7 +2525,6 @@ function switchToEstudiantesTab(subjectId) {
             e.stopPropagation();
             // Mark as handled to prevent global handler from also firing
             btn._clickHandled = true;
-            console.log('Direct handler: Mark attendance clicked, subjectId:', subjectId);
             if (window.openAttendanceModal) {
                 window.openAttendanceModal(subjectId);
             } else {
@@ -2865,8 +2832,6 @@ window.loadSubjectEvaluaciones = async function(subjectId) {
                 return dateB - dateA;
             });
     }
-    
-    console.log(`Loading evaluaciones for subject ${subjectId}: Found ${evaluaciones.length} evaluaciones`);
     
     // Display evaluaciones
     if (evaluaciones.length > 0) {
@@ -3190,10 +3155,6 @@ window.editEvaluacion = async function(evaluacionId) {
                 console.warn('Could not reload appData:', e);
             }
         }
-        
-        // Debug: Log what we're about to pass to editExam
-        console.log('editEvaluacion: About to call editExam with ID:', evaluacionIdToUse);
-        console.log('editEvaluacion: Evaluacion in window.appData:', checkInAppData(window.appData || window.data || {}));
         
         // Use window.editExam explicitly to ensure we use the correct one from exams.js
         // Pass the ID in the format that matches what's in appData
@@ -3753,8 +3714,6 @@ window.loadMateriaStudents = function(subjectId) {
                 return (a.Nombre || '').toLowerCase().localeCompare((b.Nombre || '').toLowerCase());
             });
     }
-    
-    console.log(`Loading students for subject ${subjectId}: Found ${enrolledStudents.length} students`);
     
     // Get all evaluaciones for this materia to filter notas
     const subjectIdNum = parseInt(subjectId);
@@ -6064,7 +6023,6 @@ if (!window._attendanceGlobalHandlerAdded) {
             e.preventDefault();
             e.stopPropagation();
             const subjectId = btn.dataset.subjectId || window.currentSubjectId;
-            console.log('Global fallback handler: Mark attendance clicked, subjectId:', subjectId);
             if (subjectId && window.openAttendanceModal) {
                 window.openAttendanceModal(subjectId);
             }
@@ -6082,12 +6040,10 @@ window.openAttendanceModal = function(subjectId) {
     // Prevent multiple simultaneous calls - use a more robust guard
     const callKey = 'attendance_' + subjectId;
     if (window._openingAttendanceModal === callKey) {
-        console.log('Modal already opening for subject', subjectId, '- ignoring duplicate call');
         return;
     }
     
     window._openingAttendanceModal = callKey;
-    console.log('Opening attendance modal for subject:', subjectId);
     
     if (!subjectId) {
         console.error('openAttendanceModal: No subjectId provided');
@@ -6106,11 +6062,8 @@ window.openAttendanceModal = function(subjectId) {
     
     // Ensure modal is in body (not inside a hidden container)
     if (modal.parentElement !== document.body) {
-        console.log('Moving modal to body...');
         document.body.appendChild(modal);
     }
-    
-    console.log('Modal element found, showing...');
     
     // Get subject name
     const data = window.appData || window.data || {};
@@ -6140,10 +6093,8 @@ window.openAttendanceModal = function(subjectId) {
     modal.dataset.subjectId = subjectId;
     
     // Show modal using the same pattern as other modals
-    console.log('Calling showModal function...');
     if (typeof showModal === 'function') {
         showModal('markAttendanceMateriaModal');
-        console.log('showModal called, checking modal state...');
         
         // Verify it worked
         setTimeout(() => {
@@ -6151,11 +6102,6 @@ window.openAttendanceModal = function(subjectId) {
             const computed = window.getComputedStyle(modal);
             const dialog = modal.querySelector('.modal-dialog');
             const dialogComputed = dialog ? window.getComputedStyle(dialog) : null;
-            
-            console.log('Modal state - has active class:', hasActive, 'display:', computed.display, 'opacity:', computed.opacity, 'z-index:', computed.zIndex);
-            if (dialogComputed) {
-                console.log('Dialog state - right:', dialogComputed.right, 'width:', dialogComputed.width, 'display:', dialogComputed.display);
-            }
             
             if (!hasActive) {
                 console.warn('Modal did not get active class, adding manually...');
@@ -6169,20 +6115,6 @@ window.openAttendanceModal = function(subjectId) {
                 dialog.style.right = '0px';
             }
             
-            // Check if modal is actually visible
-            const rect = modal.getBoundingClientRect();
-            console.log('Modal bounding rect:', {
-                top: rect.top,
-                left: rect.left,
-                width: rect.width,
-                height: rect.height,
-                visible: rect.width > 0 && rect.height > 0
-            });
-            
-            // Check for elements that might be covering it
-            const elementAtCenter = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
-            console.log('Element at screen center:', elementAtCenter?.id || elementAtCenter?.className || elementAtCenter?.tagName);
-            
             // Force visibility and dimensions just to be sure
             modal.style.visibility = 'visible';
             modal.style.pointerEvents = 'auto';
@@ -6195,16 +6127,6 @@ window.openAttendanceModal = function(subjectId) {
                 dialog.style.visibility = 'visible';
                 dialog.style.pointerEvents = 'auto';
             }
-            
-            // Re-check bounding rect after forcing styles
-            const rect2 = modal.getBoundingClientRect();
-            console.log('Modal bounding rect after fix:', {
-                top: rect2.top,
-                left: rect2.left,
-                width: rect2.width,
-                height: rect2.height,
-                visible: rect2.width > 0 && rect2.height > 0
-            });
         }, 50);
     } else {
         console.warn('showModal function not found, using fallback...');
