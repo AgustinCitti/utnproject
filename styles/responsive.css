@@ -135,6 +135,11 @@
 }
 
 @media (max-width: 768px) {
+    /* Main container mobile padding */
+    .app-main {
+        padding: 1rem !important;
+    }
+    
     /* Can use utilities: px-6 py-10 rounded-2xl */
     .dashboard-hero {
         padding: 2.5rem 1.5rem;
@@ -154,6 +159,8 @@
     /* Can use utilities: flex-column */
     .hero-actions {
         flex-direction: column;
+        width: 100%;
+        gap: 0.75rem;
     }
     
     /* Can use utilities: w-full justify-center */
@@ -166,6 +173,104 @@
     .dashboard-kpis {
         grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
+    }
+    
+    /* Section headers mobile */
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .section-header h2 {
+        font-size: 1.5rem;
+        width: 100%;
+    }
+    
+    .section-actions {
+        width: 100%;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .section-actions .filters {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .section-actions .filters .filter-select {
+        width: 100%;
+    }
+    
+    .section-actions .action-buttons {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .section-actions .action-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .section-actions .view-toggle {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Charts grid tablet */
+    .charts-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+    }
+    
+    /* Reports section tablet */
+    .report-actions .d-flex {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    
+    .report-actions .btn {
+        flex: 1 1 auto;
+        min-width: 150px;
+    }
+    
+    /* Tables mobile scroll */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+    
+    .data-table {
+        min-width: 600px;
+    }
+    
+    /* Calendar week view mobile */
+    .calendar-week-view {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .calendar-days-container {
+        min-width: 600px;
+    }
+    
+    /* Materia details section mobile */
+    #materia-details > div[style*="padding"] {
+        padding: 1rem !important;
+    }
+    
+    /* Subject details tabs mobile */
+    .subject-details-tabs {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .subject-details-tabs .tab-btn {
+        flex: 1 1 auto;
+        min-width: 100px;
     }
     
     /* Can use utilities: p-4 gap-4 */
@@ -1673,8 +1778,13 @@
 }
 
 @media (max-width: 480px) {
+    /* Main container extra small screens */
+    .app-main {
+        padding: 0.75rem !important;
+    }
+    
     .dashboard-kpis {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr !important;
         gap: 0.75rem;
     }
     
@@ -1851,16 +1961,352 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
+        width: 100%;
+    }
+    
+    .section-actions .filters {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .section-actions .filters .filter-select {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .section-actions .action-buttons {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .section-actions .action-buttons .btn-primary,
+    .section-actions .action-buttons .btn-secondary {
+        width: 100%;
+        justify-content: center;
     }
     
     .view-toggle {
         order: 2;
+        width: 100%;
+        justify-content: center;
     }
     
     .btn-primary {
         order: 1;
         width: 100%;
         justify-content: center;
+    }
+    
+    /* Hero section mobile adjustments */
+    .hero-actions {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.75rem;
+    }
+    
+    .hero-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* KPI cards - single column on very small screens */
+    .dashboard-kpis {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem;
+    }
+    
+    /* Charts grid mobile */
+    .charts-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    .chart-card {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .chart-container {
+        height: 250px !important;
+    }
+    
+    /* Reports section mobile */
+    .reports-container {
+        padding: 1rem !important;
+    }
+    
+    .reports-dashboard {
+        padding: 1rem !important;
+    }
+    
+    .report-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .report-actions .d-flex {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.75rem;
+    }
+    
+    .report-actions .filter-select,
+    .report-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .detailed-reports {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    /* Calendar section mobile */
+    .calendar-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .calendar-controls {
+        width: 100%;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .calendar-controls .view-toggle,
+    .calendar-controls .date-navigation,
+    .calendar-controls .calendar-actions {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Attendance and grade forms mobile */
+    .attendance-form,
+    .grade-form {
+        padding: 1rem;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .form-group {
+        width: 100%;
+    }
+    
+    .form-group label {
+        font-size: 0.9rem;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        font-size: 0.9rem;
+    }
+    
+    .attendance-actions,
+    .grade-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+        width: 100%;
+    }
+    
+    .attendance-actions .btn,
+    .grade-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Student management section mobile */
+    .unified-student-cards {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .unified-student-card {
+        width: 100%;
+    }
+    
+    /* Exams container mobile */
+    .exams-container {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Subjects container mobile */
+    .subjects-container {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Materia details mobile */
+    .subject-details-tabs {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .subject-details-tabs .tab-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Notifications section mobile */
+    .notifications-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .notifications-controls {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .notifications-controls .view-toggle {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .notifications-controls .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .notifications-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Tab navigation mobile */
+    .tab-navigation {
+        flex-direction: row;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+    
+    .tab-navigation .tab-btn {
+        flex-shrink: 0;
+        min-width: 120px;
+    }
+    
+    /* Class items mobile */
+    .class-item {
+        padding: 0.75rem !important;
+        margin-bottom: 0.75rem;
+    }
+    
+    .class-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+    
+    .class-time,
+    .class-schedule {
+        font-size: 0.85rem;
+    }
+    
+    .priority-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    /* Student detail panel mobile */
+    .student-detail-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+        border-radius: 0 !important;
+    }
+    
+    /* Exam info summary mobile */
+    .exam-info-summary {
+        padding: 1rem;
+    }
+    
+    /* Subject info summary mobile */
+    .subject-info-summary {
+        padding: 1rem;
+    }
+    
+    /* Content management mobile */
+    .content-management {
+        padding: 1rem;
+    }
+    
+    .content-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .content-header h3 {
+        font-size: 1.1rem;
+    }
+    
+    .content-header .btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Ensure proper box-sizing on mobile */
+    .app-main,
+    .dashboard-card,
+    .card,
+    .kpi-card {
+        box-sizing: border-box;
+    }
+    
+    /* Better touch targets for mobile */
+    .btn,
+    .btn-primary,
+    .btn-secondary,
+    .btn-icon,
+    .hero-btn,
+    .quick-action-btn,
+    .tab-btn {
+        min-height: 44px;
+        touch-action: manipulation;
+    }
+    
+    /* Improved spacing for mobile lists */
+    .classes-list {
+        gap: 0.75rem !important;
+    }
+    
+    .unified-student-list,
+    .exams-list,
+    .subjects-list {
+        margin-top: 1rem;
+    }
+    
+    /* Materia details buttons mobile */
+    #materia-details .btn-primary,
+    #materia-details .btn-secondary {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Form groups mobile spacing */
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    /* Calendar widget mobile full width */
+    .calendar-widget {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Reports KPI cards mobile */
+    .reports-container .dashboard-kpis {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem;
     }
     
     .data-table {
