@@ -627,6 +627,14 @@
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
+    /* Hide scrollbar */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for webkit browsers (Chrome, Safari, etc.) */
+.modal-dialog-content::-webkit-scrollbar {
+    display: none;
 }
 
 /* Modal Header */
@@ -674,6 +682,14 @@
     padding: 2rem;
     flex: 1;
     overflow-y: auto;
+    /* Hide scrollbar */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for webkit browsers (Chrome, Safari, etc.) */
+.modal-dialog-body::-webkit-scrollbar {
+    display: none;
 }
 
 /* Modal Footer */
