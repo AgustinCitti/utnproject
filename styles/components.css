@@ -1298,6 +1298,15 @@
     background: rgba(255, 152, 0, 0.1);
 }
 
+.btn-grade {
+    color: #28a745;
+}
+
+.btn-grade:hover {
+    background: rgba(40, 167, 69, 0.1);
+    color: #218838;
+}
+
 /* Modals */
 .modal {
     display: none;

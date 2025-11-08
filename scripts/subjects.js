@@ -2418,9 +2418,19 @@ window.loadSubjectEvaluaciones = async function(subjectId) {
         
         evaluacionesList.innerHTML = evaluaciones.map(eval => {
             const fecha = eval.Fecha ? formatDate(eval.Fecha) : 'Sin fecha';
+            const estado = eval.Estado || 'PROGRAMADA';
+            
+            // Border colors based on evaluacion estado
+            const evaluacionBorderColors = {
+                'PROGRAMADA': '#ffc107',      // Yellow
+                'EN_CURSO': '#17a2b8',        // Blue
+                'FINALIZADA': '#28a745',      // Green
+                'CANCELADA': '#dc3545'        // Red
+            };
+            const evaluacionBorderColor = evaluacionBorderColors[estado] || '#ddd';
             
             return `
-                <div style="margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); padding: 14px 16px;">
+                <div class="evaluacion-card" data-evaluacion-id="${eval.ID_evaluacion}" data-estado="${estado}" style="margin-bottom: 12px; border: 2px solid ${evaluacionBorderColor}; border-radius: 8px; background: var(--card-bg); padding: 14px 16px;">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                         <div style="flex: 1;">
                             <strong style="display: block; margin-bottom: 6px; color: var(--text-primary); font-size: 1em;">${eval.Titulo || 'Sin título'}</strong>
@@ -2429,32 +2439,646 @@ window.loadSubjectEvaluaciones = async function(subjectId) {
                                 <span class="status-badge" style="font-size: 0.8em; padding: 3px 8px; border-radius: 10px; background: #667eea; color: white;">
                                     ${tipoLabels[eval.Tipo] || eval.Tipo}
                                 </span>
-                                <span class="status-badge status-${(eval.Estado || 'PROGRAMADA').toLowerCase()}" style="font-size: 0.8em; padding: 3px 8px; border-radius: 10px;">
-                                    ${estadoLabels[eval.Estado] || eval.Estado}
-                                </span>
+                                <select class="evaluacion-estado-selector" data-evaluacion-id="${eval.ID_evaluacion}" 
+                                        style="padding: 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.85em; background: var(--card-bg); color: var(--text-primary); cursor: pointer; font-weight: 500;">
+                                    <option value="PROGRAMADA" ${estado === 'PROGRAMADA' ? 'selected' : ''}>PROGRAMADA</option>
+                                    <option value="EN_CURSO" ${estado === 'EN_CURSO' ? 'selected' : ''}>EN_CURSO</option>
+                                    <option value="FINALIZADA" ${estado === 'FINALIZADA' ? 'selected' : ''}>FINALIZADA</option>
+                                    <option value="CANCELADA" ${estado === 'CANCELADA' ? 'selected' : ''}>CANCELADA</option>
+                                </select>
                                 <span style="font-size: 0.85em; color: var(--text-secondary);">
                                     <i class="fas fa-calendar" style="margin-right: 4px;"></i>${fecha}
                                 </span>
                             </div>
                         </div>
                         <div style="display: flex; gap: 5px;" onclick="event.stopPropagation();">
-                            ${typeof editEvaluacion === 'function' ? `
-                            <button class="btn-icon btn-edit" onclick="editEvaluacion(${eval.ID_evaluacion})" title="Editar" style="padding: 6px 8px;">
-                                <i class="fas fa-edit"></i>
-                            </button>` : ''}
-                            ${typeof deleteEvaluacion === 'function' ? `
-                            <button class="btn-icon btn-delete" onclick="deleteEvaluacion(${eval.ID_evaluacion})" title="Eliminar" style="padding: 6px 8px;">
-                                <i class="fas fa-trash"></i>
-                            </button>` : ''}
+                            <button class="btn-icon btn-grade" onclick="showGradeStudentsDialog(${eval.ID_evaluacion}, ${subjectId})" title="Calificar Estudiantes" style="padding: 6px 8px;">
+                                <i class="fas fa-clipboard-check" style="font-size: 0.9em;"></i>
+                            </button>
+                            <button class="btn-icon btn-edit" onclick="window.editEvaluacion(${eval.ID_evaluacion})" title="Editar Evaluación" style="padding: 6px 8px;">
+                                <i class="fas fa-edit" style="font-size: 0.9em;"></i>
+                            </button>
+                            <button class="btn-icon btn-delete" onclick="window.deleteEvaluacion(${eval.ID_evaluacion})" title="Eliminar Evaluación" style="padding: 6px 8px;">
+                                <i class="fas fa-trash" style="font-size: 0.9em;"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
             `;
         }).join('');
+        
+        // Setup real-time evaluacion estado selectors
+        const evaluacionEstadoSelectors = evaluacionesList.querySelectorAll('.evaluacion-estado-selector');
+        evaluacionEstadoSelectors.forEach(selector => {
+            selector.addEventListener('change', async function() {
+                const evaluacionId = parseInt(this.dataset.evaluacionId);
+                const newEstado = this.value;
+                
+                if (!evaluacionId) {
+                    console.error('Error: evaluacionId no válido');
+                    return;
+                }
+                
+                try {
+                    // Update evaluacion estado in real-time
+                    const response = await fetch(`../api/evaluacion.php?id=${evaluacionId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            Estado: newEstado
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.message || 'Error al actualizar el estado');
+                    }
+                    
+                    // Update border color based on new estado
+                    const borderColors = {
+                        'PROGRAMADA': '#ffc107',      // Yellow
+                        'EN_CURSO': '#17a2b8',        // Blue
+                        'FINALIZADA': '#28a745',      // Green
+                        'CANCELADA': '#dc3545'        // Red
+                    };
+                    const newBorderColor = borderColors[newEstado] || '#ddd';
+                    
+                    const evaluacionCard = this.closest('.evaluacion-card');
+                    if (evaluacionCard) {
+                        evaluacionCard.style.borderColor = newBorderColor;
+                        evaluacionCard.setAttribute('data-estado', newEstado);
+                    }
+                    
+                    // Show success feedback
+                    const originalBorderColor = this.style.borderColor || 'var(--border-color)';
+                    this.style.borderColor = '#28a745';
+                    setTimeout(() => {
+                        this.style.borderColor = originalBorderColor;
+                    }, 1000);
+                    
+                    // Reload app data to reflect changes
+                    if (typeof loadAppData === 'function') {
+                        await loadAppData();
+                    } else if (typeof refreshAppData === 'function') {
+                        await refreshAppData();
+                    } else if (typeof loadData === 'function') {
+                        await loadData();
+                    }
+                } catch (error) {
+                    console.error('Error updating evaluacion estado:', error);
+                    // Revert selection on error
+                    this.value = this.dataset.originalValue || 'PROGRAMADA';
+                    alert(`Error al actualizar el estado: ${error.message}`);
+                }
+            });
+            
+            // Store original value for error recovery
+            selector.dataset.originalValue = selector.value;
+        });
     } else {
         evaluacionesList.innerHTML = '<div style="text-align: center; padding: 40px 20px; color: var(--text-secondary, #999);">No hay evaluaciones registradas</div>';
     }
 };
+
+/**
+ * Edit evaluacion
+ * @param {number} evaluacionId - Evaluacion ID
+ */
+window.editEvaluacion = async function(evaluacionId) {
+    if (!evaluacionId) {
+        alert('Error: ID de evaluación no válido');
+        return;
+    }
+    
+    try {
+        // Fetch evaluacion data
+        const response = await fetch(`../api/evaluacion.php?id=${evaluacionId}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Error al cargar la evaluación');
+        }
+        
+        const evaluacion = await response.json();
+        
+        // Use existing editExam function if available
+        if (typeof editExam === 'function') {
+            editExam(evaluacionId);
+        } else if (typeof window.editExam === 'function') {
+            window.editExam(evaluacionId);
+        } else {
+            alert('Error: Función de edición no disponible');
+        }
+    } catch (error) {
+        console.error('Error editing evaluacion:', error);
+        alert(`Error al editar la evaluación: ${error.message}`);
+    }
+};
+
+/**
+ * Delete evaluacion
+ * @param {number} evaluacionId - Evaluacion ID
+ */
+window.deleteEvaluacion = async function(evaluacionId) {
+    if (!evaluacionId) {
+        alert('Error: ID de evaluación no válido');
+        return;
+    }
+    
+    try {
+        // Fetch evaluacion data for confirmation
+        const response = await fetch(`../api/evaluacion.php?id=${evaluacionId}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Error al cargar la evaluación');
+        }
+        
+        const evaluacion = await response.json();
+        
+        if (!confirm(`¿Está seguro de que desea eliminar la evaluación "${evaluacion.Titulo}"?`)) {
+            return;
+        }
+        
+        // Delete evaluacion
+        const deleteResponse = await fetch(`../api/evaluacion.php?id=${evaluacionId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+        
+        if (!deleteResponse.ok) {
+            const errorData = await deleteResponse.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Error al eliminar la evaluación');
+        }
+        
+        // Reload app data and evaluaciones list
+        if (typeof loadAppData === 'function') {
+            await loadAppData();
+        } else if (typeof refreshAppData === 'function') {
+            await refreshAppData();
+        } else if (typeof loadData === 'function') {
+            await loadData();
+        }
+        
+        // Reload evaluaciones list
+        const subjectId = getCurrentThemesSubjectId();
+        if (subjectId) {
+            loadMateriaEvaluaciones(subjectId);
+        }
+        
+        alert('Evaluación eliminada exitosamente');
+    } catch (error) {
+        console.error('Error deleting evaluacion:', error);
+        alert(`Error al eliminar la evaluación: ${error.message}`);
+    }
+};
+
+/**
+ * Show dialog to grade students for an evaluacion
+ * @param {number} evaluacionId - Evaluacion ID
+ * @param {number} materiaId - Materia ID
+ */
+window.showGradeStudentsDialog = async function(evaluacionId, materiaId) {
+    if (!evaluacionId || !materiaId) {
+        alert('Error: ID de evaluación o materia no válido');
+        return;
+    }
+    
+    try {
+        // Get data
+        const data = window.appData || window.data || {};
+        
+        // Get evaluacion
+        const evaluacion = data.evaluacion?.find(e => parseInt(e.ID_evaluacion) === parseInt(evaluacionId));
+        if (!evaluacion) {
+            alert('Error: Evaluación no encontrada');
+            return;
+        }
+        
+        // Get materia
+        const materia = data.materia?.find(m => parseInt(m.ID_materia) === parseInt(materiaId));
+        if (!materia) {
+            alert('Error: Materia no encontrada');
+            return;
+        }
+        
+        // Get students enrolled in this materia
+        const alumnosXMateria = data.alumnos_x_materia || [];
+        const estudiantesIds = alumnosXMateria
+            .filter(axm => parseInt(axm.Materia_ID_materia) === parseInt(materiaId))
+            .map(axm => parseInt(axm.Estudiante_ID_Estudiante));
+        
+        const estudiantes = (data.estudiante || [])
+            .filter(e => estudiantesIds.includes(parseInt(e.ID_Estudiante)))
+            .sort((a, b) => {
+                const lastNameA = (a.Apellido || '').toLowerCase();
+                const lastNameB = (b.Apellido || '').toLowerCase();
+                if (lastNameA !== lastNameB) {
+                    return lastNameA.localeCompare(lastNameB);
+                }
+                return (a.Nombre || '').toLowerCase().localeCompare((b.Nombre || '').toLowerCase());
+            });
+        
+        // Get existing notas for this evaluacion
+        const notas = (data.notas || [])
+            .filter(n => parseInt(n.Evaluacion_ID_evaluacion) === parseInt(evaluacionId));
+        
+        const notasMap = {};
+        notas.forEach(nota => {
+            notasMap[parseInt(nota.Estudiante_ID_Estudiante)] = nota;
+        });
+        
+        // Create modal HTML
+        const modalHTML = `
+            <div class="modal-overlay" id="gradeStudentsModal">
+                <div class="modal-dialog" style="max-width: 900px;">
+                    <div class="modal-dialog-content">
+                        <div class="modal-dialog-header">
+                            <h3>Calificar Estudiantes - ${evaluacion.Titulo || 'Sin título'}</h3>
+                            <button class="modal-dialog-close close-modal">&times;</button>
+                        </div>
+                        <div class="modal-dialog-body">
+                            <div style="margin-bottom: 15px;">
+                                <p><strong>Materia:</strong> ${materia.Nombre}</p>
+                                <p><strong>Fecha:</strong> ${evaluacion.Fecha ? formatDate(evaluacion.Fecha) : 'Sin fecha'}</p>
+                                <p><strong>Tipo:</strong> ${evaluacion.Tipo || 'N/A'}</p>
+                            </div>
+                            ${estudiantes.length > 0 ? `
+                                <div style="max-height: 500px; overflow-y: auto;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background: var(--bg-secondary); border-bottom: 2px solid var(--border-color); position: sticky; top: 0; z-index: 10;">
+                                                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 0.85em;">Estudiante</th>
+                                                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 0.85em;">Calificación</th>
+                                                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 0.85em;">Observaciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${estudiantes.map((estudiante) => {
+                                                const nota = notasMap[parseInt(estudiante.ID_Estudiante)];
+                                                const notaId = nota ? nota.ID_Nota : null;
+                                                const calificacion = nota ? (nota.Calificacion === 0 && nota.Observacion === 'AUSENTE' ? '' : nota.Calificacion) : '';
+                                                const observacion = nota ? (nota.Observacion || '') : '';
+                                                const esAusente = nota && (nota.Calificacion === 0 || nota.Calificacion === 'AUSENTE') && nota.Observacion === 'AUSENTE';
+                                                
+                                                return `
+                                                    <tr style="border-bottom: 1px solid var(--border-color);">
+                                                        <td style="padding: 12px; color: var(--text-primary);">
+                                                            <strong>${estudiante.Nombre} ${estudiante.Apellido}</strong>
+                                                        </td>
+                                                        <td style="padding: 12px;">
+                                                            <div style="display: flex; gap: 8px; align-items: center;">
+                                                                <input type="number" 
+                                                                       class="nota-calificacion" 
+                                                                       data-estudiante-id="${estudiante.ID_Estudiante}" 
+                                                                       data-nota-id="${notaId || ''}"
+                                                                       data-evaluacion-id="${evaluacionId}"
+                                                                       min="1" 
+                                                                       max="10" 
+                                                                       step="0.01"
+                                                                       value="${calificacion}"
+                                                                       placeholder="1-10"
+                                                                       style="width: 80px; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);"
+                                                                       ${esAusente ? 'disabled' : ''}>
+                                                                <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85em; color: var(--text-secondary); cursor: pointer;">
+                                                                    <input type="checkbox" 
+                                                                           class="nota-ausente" 
+                                                                           data-estudiante-id="${estudiante.ID_Estudiante}"
+                                                                           ${esAusente ? 'checked' : ''}>
+                                                                    Ausente
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td style="padding: 12px;">
+                                                            <input type="text" 
+                                                                   class="nota-observacion" 
+                                                                   data-estudiante-id="${estudiante.ID_Estudiante}"
+                                                                   value="${observacion && !esAusente ? observacion : ''}"
+                                                                   placeholder="Observaciones..."
+                                                                   style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);"
+                                                                   ${esAusente ? 'disabled' : ''}>
+                                                        </td>
+                                                    </tr>
+                                                `;
+                                            }).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ` : `
+                                <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                                    <i class="fas fa-user-slash" style="font-size: 2.5em; margin-bottom: 15px; opacity: 0.3; display: block;"></i>
+                                    <p>No hay estudiantes inscritos en esta materia</p>
+                                </div>
+                            `}
+                        </div>
+                        <div class="modal-dialog-footer">
+                            <button type="button" class="btn-secondary close-modal">Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if present
+        const existingModal = document.getElementById('gradeStudentsModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Setup modal handlers
+        const modal = document.getElementById('gradeStudentsModal');
+        if (typeof setupModalHandlers === 'function') {
+            setupModalHandlers('gradeStudentsModal');
+        } else {
+            const closeButtons = modal.querySelectorAll('.close-modal');
+            closeButtons.forEach(btn => {
+                btn.onclick = () => modal.remove();
+            });
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.remove();
+            };
+        }
+        
+        // Setup real-time nota editors
+        if (estudiantes.length > 0) {
+            setupGradeStudentsRealTimeEditors(modal, evaluacionId);
+        }
+        
+        // Show modal
+        if (typeof showModal === 'function') {
+            showModal('gradeStudentsModal');
+        } else {
+            modal.classList.add('active');
+        }
+    } catch (error) {
+        console.error('Error showing grade students dialog:', error);
+        alert(`Error al abrir el diálogo de calificación: ${error.message}`);
+    }
+};
+
+/**
+ * Setup real-time editors for grade students dialog
+ * @param {HTMLElement} modal - Modal element
+ * @param {number} evaluacionId - Evaluacion ID
+ */
+function setupGradeStudentsRealTimeEditors(modal, evaluacionId) {
+    // Setup calificacion inputs
+    const calificacionInputs = modal.querySelectorAll('.nota-calificacion');
+    calificacionInputs.forEach(input => {
+        let updateTimeout = null;
+        const originalValue = input.value;
+        
+        input.addEventListener('blur', async function() {
+            clearTimeout(updateTimeout);
+            const estudianteId = parseInt(this.dataset.estudianteId);
+            const notaId = this.dataset.notaId || null;
+            const calificacion = this.value.trim();
+            const ausenteCheckbox = modal.querySelector(`.nota-ausente[data-estudiante-id="${estudianteId}"]`);
+            const esAusente = ausenteCheckbox ? ausenteCheckbox.checked : false;
+            
+            if (!estudianteId) return;
+            
+            // Skip if ausente is checked
+            if (esAusente) return;
+            
+            // Only update if value changed and is valid
+            if (calificacion === originalValue && !calificacion) return;
+            
+            if (calificacion && (parseFloat(calificacion) < 1 || parseFloat(calificacion) > 10)) {
+                alert('La calificación debe estar entre 1 y 10');
+                this.value = originalValue;
+                return;
+            }
+            
+            try {
+                const payload = {
+                    Evaluacion_ID_evaluacion: parseInt(evaluacionId),
+                    Estudiante_ID_Estudiante: estudianteId,
+                    Calificacion: calificacion ? parseFloat(calificacion) : null,
+                    Observacion: null,
+                    Estado: 'DEFINITIVA'
+                };
+                
+                let response;
+                if (notaId) {
+                    // Update existing nota
+                    response = await fetch(`../api/notas.php?id=${notaId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    // Create new nota
+                    response = await fetch(`../api/notas.php`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify(payload)
+                    });
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || 'Error al guardar la calificación');
+                }
+                
+                const result = await response.json();
+                if (result.id) {
+                    this.dataset.notaId = result.id;
+                }
+                
+                // Show success feedback
+                this.style.borderColor = '#28a745';
+                setTimeout(() => {
+                    this.style.borderColor = '';
+                }, 1000);
+                
+                // Reload app data
+                if (typeof loadAppData === 'function') {
+                    await loadAppData();
+                } else if (typeof refreshAppData === 'function') {
+                    await refreshAppData();
+                } else if (typeof loadData === 'function') {
+                    await loadData();
+                }
+            } catch (error) {
+                console.error('Error saving calificacion:', error);
+                this.value = originalValue;
+                alert(`Error al guardar la calificación: ${error.message}`);
+            }
+        });
+    });
+    
+    // Setup ausente checkboxes
+    const ausenteCheckboxes = modal.querySelectorAll('.nota-ausente');
+    ausenteCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', async function() {
+            const estudianteId = parseInt(this.dataset.estudianteId);
+            const calificacionInput = modal.querySelector(`.nota-calificacion[data-estudiante-id="${estudianteId}"]`);
+            const observacionInput = modal.querySelector(`.nota-observacion[data-estudiante-id="${estudianteId}"]`);
+            const notaId = calificacionInput ? calificacionInput.dataset.notaId : null;
+            const esAusente = this.checked;
+            
+            if (!estudianteId) return;
+            
+            // Enable/disable inputs
+            if (calificacionInput) {
+                calificacionInput.disabled = esAusente;
+                if (esAusente) calificacionInput.value = '';
+            }
+            if (observacionInput) {
+                observacionInput.disabled = esAusente;
+                if (esAusente) observacionInput.value = '';
+            }
+            
+            try {
+                const payload = {
+                    Evaluacion_ID_evaluacion: parseInt(evaluacionId),
+                    Estudiante_ID_Estudiante: estudianteId,
+                    Calificacion: esAusente ? 0 : null,
+                    Observacion: esAusente ? 'AUSENTE' : null,
+                    Estado: 'DEFINITIVA'
+                };
+                
+                let response;
+                if (notaId) {
+                    // Update existing nota
+                    response = await fetch(`../api/notas.php?id=${notaId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    // Create new nota
+                    response = await fetch(`../api/notas.php`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify(payload)
+                    });
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || 'Error al guardar el estado de ausente');
+                }
+                
+                const result = await response.json();
+                if (result.id && calificacionInput) {
+                    calificacionInput.dataset.notaId = result.id;
+                }
+                
+                // Reload app data
+                if (typeof loadAppData === 'function') {
+                    await loadAppData();
+                } else if (typeof refreshAppData === 'function') {
+                    await refreshAppData();
+                } else if (typeof loadData === 'function') {
+                    await loadData();
+                }
+            } catch (error) {
+                console.error('Error saving ausente:', error);
+                this.checked = !esAusente;
+                alert(`Error al guardar el estado: ${error.message}`);
+            }
+        });
+    });
+    
+    // Setup observacion inputs
+    const observacionInputs = modal.querySelectorAll('.nota-observacion');
+    observacionInputs.forEach(input => {
+        let updateTimeout = null;
+        const originalValue = input.value;
+        
+        input.addEventListener('blur', async function() {
+            clearTimeout(updateTimeout);
+            const estudianteId = parseInt(this.dataset.estudianteId);
+            const calificacionInput = modal.querySelector(`.nota-calificacion[data-estudiante-id="${estudianteId}"]`);
+            const notaId = calificacionInput ? calificacionInput.dataset.notaId : null;
+            const observacion = this.value.trim();
+            const ausenteCheckbox = modal.querySelector(`.nota-ausente[data-estudiante-id="${estudianteId}"]`);
+            const esAusente = ausenteCheckbox ? ausenteCheckbox.checked : false;
+            
+            if (!estudianteId || esAusente) return;
+            
+            // Only update if value changed
+            if (observacion === originalValue) return;
+            
+            try {
+                const calificacion = calificacionInput ? parseFloat(calificacionInput.value) : null;
+                
+                const payload = {
+                    Evaluacion_ID_evaluacion: parseInt(evaluacionId),
+                    Estudiante_ID_Estudiante: estudianteId,
+                    Calificacion: calificacion || null,
+                    Observacion: observacion || null,
+                    Estado: 'DEFINITIVA'
+                };
+                
+                let response;
+                if (notaId) {
+                    // Update existing nota
+                    response = await fetch(`../api/notas.php?id=${notaId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    // Create new nota
+                    response = await fetch(`../api/notas.php`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify(payload)
+                    });
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || 'Error al guardar las observaciones');
+                }
+                
+                const result = await response.json();
+                if (result.id && calificacionInput) {
+                    calificacionInput.dataset.notaId = result.id;
+                }
+                
+                // Show success feedback
+                this.style.borderColor = '#28a745';
+                setTimeout(() => {
+                    this.style.borderColor = '';
+                }, 1000);
+                
+                // Reload app data
+                if (typeof loadAppData === 'function') {
+                    await loadAppData();
+                } else if (typeof refreshAppData === 'function') {
+                    await refreshAppData();
+                } else if (typeof loadData === 'function') {
+                    await loadData();
+                }
+            } catch (error) {
+                console.error('Error saving observacion:', error);
+                this.value = originalValue;
+                alert(`Error al guardar las observaciones: ${error.message}`);
+            }
+        });
+    });
+}
 
 /**
  * Load students for a materia
