@@ -3756,6 +3756,13 @@ window.loadMateriaStudents = function(subjectId) {
     
     console.log(`Loading students for subject ${subjectId}: Found ${enrolledStudents.length} students`);
     
+    // Get all evaluaciones for this materia to filter notas
+    const subjectIdNum = parseInt(subjectId);
+    const materiaEvaluaciones = (data.evaluacion || []).filter(eval => 
+        parseInt(eval.Materia_ID_materia) === subjectIdNum
+    );
+    const evaluacionIds = materiaEvaluaciones.map(eval => parseInt(eval.ID_evaluacion));
+    
     // Display students
     if (enrolledStudents.length > 0) {
         studentsList.innerHTML = `
@@ -3765,6 +3772,10 @@ window.loadMateriaStudents = function(subjectId) {
                         <th style="padding: 12px; text-align: left; font-weight: 600;">Estudiante</th>
                         <th style="padding: 12px; text-align: left; font-weight: 600;">ID</th>
                         <th style="padding: 12px; text-align: left; font-weight: 600;">Estado</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 600;">Promedio</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 600;">Asistencia</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 600;">Calificaciones</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 600;">Última Actividad</th>
                         <th style="padding: 12px; text-align: center; font-weight: 600;">Acciones</th>
                     </tr>
                 </thead>
@@ -3773,6 +3784,83 @@ window.loadMateriaStudents = function(subjectId) {
                         const displayEstado = typeof getStudentDisplayEstado === 'function' 
                             ? getStudentDisplayEstado(student) 
                             : (student.Estado || 'ACTIVO');
+                        
+                        const studentIdNum = parseInt(student.ID_Estudiante);
+                        
+                        // Get notas for this student in this materia
+                        const studentNotas = (data.notas || []).filter(nota => {
+                            const notaStudentId = parseInt(nota.Estudiante_ID_Estudiante);
+                            const notaEvaluacionId = parseInt(nota.Evaluacion_ID_evaluacion);
+                            return notaStudentId === studentIdNum && evaluacionIds.includes(notaEvaluacionId);
+                        });
+                        
+                        // Calculate promedio (average grade) - exclude zeros/empty
+                        const gradesForAverage = studentNotas.filter(n => {
+                            const grade = parseFloat(n.Calificacion);
+                            return !isNaN(grade) && grade > 0;
+                        });
+                        const promedio = gradesForAverage.length > 0
+                            ? parseFloat((gradesForAverage.reduce((sum, n) => sum + parseFloat(n.Calificacion), 0) / gradesForAverage.length).toFixed(1))
+                            : 0;
+                        
+                        // Get asistencia for this student in this materia
+                        const studentAsistencia = (data.asistencia || []).filter(att => {
+                            const attStudentId = parseInt(att.Estudiante_ID_Estudiante);
+                            const attMateriaId = parseInt(att.Materia_ID_materia);
+                            return attStudentId === studentIdNum && attMateriaId === subjectIdNum;
+                        });
+                        
+                        // Calculate attendance percentage - support both 'P'/'Y' (present) and 'A'/'N' (absent)
+                        const attendanceRate = studentAsistencia.length > 0
+                            ? Math.round((studentAsistencia.filter(a => a.Presente === 'P' || a.Presente === 'Y').length / studentAsistencia.length) * 100)
+                            : 0;
+                        
+                        // Count of calificaciones (grades)
+                        const calificacionesCount = studentNotas.length;
+                        
+                        // Find last activity (most recent date from notas or asistencia)
+                        let lastActivity = 'Sin actividad';
+                        let lastActivityDate = '';
+                        
+                        // Get most recent nota date
+                        const notasWithDates = studentNotas
+                            .map(n => ({
+                                date: n.Fecha_calificacion || n.Fecha_registro || null,
+                                type: 'Calificación'
+                            }))
+                            .filter(n => n.date);
+                        
+                        // Get most recent asistencia date
+                        const asistenciaWithDates = studentAsistencia
+                            .map(a => ({
+                                date: a.Fecha || null,
+                                type: 'Asistencia'
+                            }))
+                            .filter(a => a.date);
+                        
+                        // Combine and find most recent
+                        const allActivities = [...notasWithDates, ...asistenciaWithDates];
+                        if (allActivities.length > 0) {
+                            allActivities.sort((a, b) => new Date(b.date) - new Date(a.date));
+                            const mostRecent = allActivities[0];
+                            lastActivity = mostRecent.type;
+                            lastActivityDate = mostRecent.date;
+                        }
+                        
+                        // Format last activity date
+                        let formattedLastActivity = lastActivity;
+                        if (lastActivityDate) {
+                            try {
+                                const date = new Date(lastActivityDate);
+                                formattedLastActivity = `${lastActivity}<br><small style="color: var(--text-secondary, #666);">${date.toLocaleDateString('es-AR')}</small>`;
+                            } catch (e) {
+                                formattedLastActivity = `${lastActivity}<br><small style="color: var(--text-secondary, #666);">${lastActivityDate}</small>`;
+                            }
+                        }
+                        
+                        // Determine color classes for promedio and asistencia
+                        const promedioClass = promedio >= 8.0 ? 'excellent' : promedio >= 6.0 ? 'good' : 'poor';
+                        const asistenciaClass = attendanceRate >= 80 ? 'good' : attendanceRate >= 60 ? 'warning' : 'poor';
                         
                         return `
                             <tr>
@@ -3786,6 +3874,22 @@ window.loadMateriaStudents = function(subjectId) {
                                     <span class="status-badge status-${displayEstado.toLowerCase()}" style="font-size: 0.8em; padding: 3px 8px; border-radius: 10px;">
                                         ${displayEstado}
                                     </span>
+                                </td>
+                                <td style="padding: 12px; border-bottom: 1px solid var(--border-color, #ddd); text-align: center;">
+                                    <span class="table-status grade-${promedioClass}" style="display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 0.9em; ${promedioClass === 'excellent' ? 'background-color: #d4edda; color: #155724;' : promedioClass === 'good' ? 'background-color: #d1ecf1; color: #0c5460;' : 'background-color: #f8d7da; color: #721c24;'}">
+                                        ${promedio > 0 ? promedio.toFixed(1) : '-'}
+                                    </span>
+                                </td>
+                                <td style="padding: 12px; border-bottom: 1px solid var(--border-color, #ddd); text-align: center;">
+                                    <span class="table-status attendance-${asistenciaClass}" style="display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 0.9em; ${asistenciaClass === 'good' ? 'background-color: #d4edda; color: #155724;' : asistenciaClass === 'warning' ? 'background-color: #fff3cd; color: #856404;' : 'background-color: #f8d7da; color: #721c24;'}">
+                                        ${attendanceRate}%
+                                    </span>
+                                </td>
+                                <td style="padding: 12px; border-bottom: 1px solid var(--border-color, #ddd); text-align: center;">
+                                    ${calificacionesCount}
+                                </td>
+                                <td style="padding: 12px; border-bottom: 1px solid var(--border-color, #ddd); text-align: center; font-size: 0.9em;">
+                                    ${formattedLastActivity}
                                 </td>
                                 <td style="padding: 12px; border-bottom: 1px solid var(--border-color, #ddd); text-align: center;">
                                     <div style="display: flex; gap: 5px; justify-content: center; align-items: center;" onclick="event.stopPropagation();">
