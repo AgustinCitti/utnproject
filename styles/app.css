@@ -500,11 +500,17 @@
     top: 0;
     left: 0;
     width: 280px;
+    max-width: 85vw;
     height: 100%;
     background: white;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
     transform: translateX(-100%);
     animation: slideIn 0.3s ease forwards;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    z-index: 1001;
 }
 
 /* Mobile navigation header - Brand and close button area */
@@ -515,6 +521,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
 }
 
 /* Mobile navigation header title - App name display */
@@ -535,6 +542,9 @@
 /* Mobile navigation menu - Container for navigation items */
 .mobile-nav {
     padding: 20px 0;
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Mobile navigation item - Individual menu link */
@@ -632,6 +642,29 @@
 
 /* Mobile language dropdown hover state - Border color change */
 .nav-language-dropdown:hover {
+    border-color: #667eea;
+}
+
+/* Mobile language select (#languageSelect) - Base styles for language selector in mobile nav */
+#languageSelect {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#languageSelect:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+#languageSelect:hover {
     border-color: #667eea;
 }
 

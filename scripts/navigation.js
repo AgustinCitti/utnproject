@@ -42,6 +42,19 @@ function initializeNavigation() {
         });
     });
 
+    // Handle mobile nav links (links inside .mobile-nav with data-section)
+    const mobileNavLinks = document.querySelectorAll('.mobile-nav a[data-section]');
+    mobileNavLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const section = link.dataset.section;
+            showSection(section);
+            if (navOverlay) {
+                navOverlay.classList.remove('active');
+            }
+        });
+    });
+
     // Handle desktop navigation
     desktopNavItems.forEach(item => {
         item.addEventListener('click', (e) => {

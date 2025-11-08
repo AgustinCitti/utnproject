@@ -395,6 +395,145 @@
     border-color: #667eea;
 }
 
+/* ==========================================================================
+   MOBILE NAVIGATION DARK MODE - COMPLETE OVERRIDES
+   ========================================================================== */
+
+/* Override bg-white in nav-content */
+[data-theme="dark"] .nav-content.bg-white {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* Override bg-white in mobile search bar */
+[data-theme="dark"] .mobile-nav .bg-white {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* Override border-gray in mobile nav */
+[data-theme="dark"] .mobile-nav .border-gray {
+    border-color: var(--border-color) !important;
+}
+
+/* Override text-dark in mobile nav links */
+[data-theme="dark"] .mobile-nav a.text-dark {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .mobile-nav a.text-dark:hover {
+    color: #667eea !important;
+}
+
+/* Override hover:bg-light in mobile nav */
+[data-theme="dark"] .mobile-nav .hover\:bg-light:hover,
+[data-theme="dark"] .mobile-nav a:hover {
+    background-color: var(--bg-primary) !important;
+}
+
+/* Override text-dark in mobile nav text elements */
+[data-theme="dark"] .mobile-nav .text-dark {
+    color: var(--text-primary) !important;
+}
+
+/* Override text-secondary in mobile nav */
+[data-theme="dark"] .mobile-nav .text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+/* Mobile search input dark mode */
+[data-theme="dark"] #mobileSearchInput {
+    color: var(--text-primary) !important;
+    background-color: transparent !important;
+}
+
+[data-theme="dark"] #mobileSearchInput::placeholder {
+    color: var(--text-secondary) !important;
+}
+
+/* Mobile search icon dark mode */
+[data-theme="dark"] .mobile-nav .fa-search {
+    color: var(--text-secondary) !important;
+}
+
+/* Mobile filters button dark mode */
+[data-theme="dark"] #mobileFiltersBtn {
+    color: var(--text-secondary) !important;
+    background-color: transparent !important;
+}
+
+[data-theme="dark"] #mobileFiltersBtn:hover {
+    background-color: var(--bg-primary) !important;
+    color: #667eea !important;
+}
+
+/* Mobile nav header title dark mode */
+[data-theme="dark"] .nav-header h2.text-primary {
+    color: white !important;
+}
+
+/* Language selector section in mobile nav */
+[data-theme="dark"] .mobile-nav .border-t.border-gray {
+    border-top-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .mobile-nav .text-sm.font-medium.text-dark {
+    color: var(--text-primary) !important;
+}
+
+/* Language select dropdown in mobile nav - Must be more specific than general select styles */
+[data-theme="dark"] #languageSelect,
+[data-theme="dark"] #languageSelect.bg-white,
+[data-theme="dark"] .mobile-nav #languageSelect,
+[data-theme="dark"] .mobile-nav select#languageSelect {
+    background-color: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+    border-style: solid !important;
+    border-width: 1px !important;
+    color: var(--text-primary) !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23b0b0b0' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.5rem center !important;
+    background-size: 1.5em 1.5em !important;
+    padding-right: 2.5rem !important;
+}
+
+[data-theme="dark"] #languageSelect.text-dark,
+[data-theme="dark"] .mobile-nav #languageSelect.text-dark {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] #languageSelect:focus {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+    outline: none !important;
+}
+
+[data-theme="dark"] #languageSelect:hover {
+    border-color: #667eea !important;
+}
+
+[data-theme="dark"] #languageSelect option {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Mobile nav focus-within states */
+[data-theme="dark"] .mobile-nav .focus-within\:border-primary:focus-within {
+    border-color: #667eea !important;
+}
+
+[data-theme="dark"] .mobile-nav .focus-within\:shadow-md:focus-within {
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+}
+
+/* Notification badge in mobile nav */
+[data-theme="dark"] .mobile-nav .notification-badge {
+    background-color: #ff4444 !important;
+    color: white !important;
+}
+
 [data-theme="dark"] .btn-primary {
     background-color: #667eea;
     color: white;
