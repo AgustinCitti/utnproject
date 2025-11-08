@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     checkAdminAuth();
     loadUsers();
+    loadStats();
     setupEventListeners();
     
     // Set admin name
@@ -189,7 +190,8 @@ function filterUsers() {
 // Refresh users
 function refreshUsers() {
     loadUsers();
-    showMessage('Usuarios actualizados', 'success');
+    loadStats();
+    showMessage('Datos actualizados', 'success');
 }
 
 // Open add user modal
@@ -383,6 +385,513 @@ function showMessage(message, type) {
         }
     }, 5000);
 }
+
+// Chart instances storage
+let adminCharts = {};
+
+// Switch between main tabs (Users/Stats)
+function switchMainTab(tabName, buttonElement) {
+    // Update tab buttons
+    document.querySelectorAll('.main-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    if (buttonElement) {
+        buttonElement.classList.add('active');
+    } else {
+        // Fallback: find by data attribute
+        const tab = document.querySelector(`.main-tab[data-tab="${tabName}"]`);
+        if (tab) tab.classList.add('active');
+    }
+    
+    // Update tab content
+    document.querySelectorAll('.main-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    const targetTab = document.getElementById(tabName + 'Tab');
+    if (targetTab) {
+        targetTab.classList.add('active');
+    }
+    
+    // If switching to stats tab, load stats if not already loaded
+    if (tabName === 'stats') {
+        const containerEl = document.getElementById('statsContainer');
+        if (containerEl && containerEl.style.display === 'none') {
+            loadStats();
+        }
+    }
+}
+
+// Load and display statistics
+async function loadStats() {
+    const loadingEl = document.getElementById('statsLoading');
+    const containerEl = document.getElementById('statsContainer');
+    
+    try {
+        loadingEl.style.display = 'block';
+        containerEl.style.display = 'none';
+        
+        const response = await fetch('../api/admin_stats.php');
+        const result = await response.json();
+        
+        if (response.ok && result.success && result.stats) {
+            // Destroy existing charts
+            destroyAllCharts();
+            
+            // Create all charts
+            createAllCharts(result.stats);
+            
+            loadingEl.style.display = 'none';
+            containerEl.style.display = 'block';
+        } else {
+            showMessage('Error al cargar estadísticas: ' + (result.message || 'Error desconocido'), 'error');
+            loadingEl.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
+        loadingEl.style.display = 'none';
+        // Don't show error message for stats, just log it
+    }
+}
+
+// Destroy all charts
+function destroyAllCharts() {
+    Object.keys(adminCharts).forEach(chartId => {
+        if (adminCharts[chartId]) {
+            adminCharts[chartId].destroy();
+            delete adminCharts[chartId];
+        }
+    });
+}
+
+// Create all charts
+function createAllCharts(stats) {
+    createUsersStudentsChart(stats);
+    createUsersByTypeChart(stats);
+    createSubjectsChart(stats);
+    createEnrollmentsChart(stats);
+    createGradesPerformanceChart(stats);
+    createEvaluationsChart(stats);
+    createAttendanceChart(stats);
+    createContentChart(stats);
+    createStudentTopicsChart(stats);
+    createNotificationsChart(stats);
+}
+
+// Chart creation functions
+function createUsersStudentsChart(stats) {
+    const ctx = document.getElementById('usersStudentsChart');
+    if (!ctx) return;
+    
+    if (adminCharts.usersStudents) {
+        adminCharts.usersStudents.destroy();
+    }
+    
+    adminCharts.usersStudents = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Usuarios', 'Estudiantes'],
+            datasets: [
+                {
+                    label: 'Activos',
+                    data: [stats.active_users || 0, stats.active_students || 0],
+                    backgroundColor: '#4bc0c0',
+                    borderColor: '#4bc0c0',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Inactivos',
+                    data: [stats.inactive_users || 0, stats.inactive_students || 0],
+                    backgroundColor: '#ff6384',
+                    borderColor: '#ff6384',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Total',
+                    data: [stats.total_users || 0, stats.total_students || 0],
+                    backgroundColor: '#667eea',
+                    borderColor: '#667eea',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                title: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createUsersByTypeChart(stats) {
+    const ctx = document.getElementById('usersByTypeChart');
+    if (!ctx) return;
+    
+    if (adminCharts.usersByType) {
+        adminCharts.usersByType.destroy();
+    }
+    
+    const usersByType = stats.users_by_type || {};
+    const labels = Object.keys(usersByType);
+    const data = Object.values(usersByType);
+    
+    adminCharts.usersByType = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels.length > 0 ? labels : ['Sin datos'],
+            datasets: [{
+                data: data.length > 0 ? data : [0],
+                backgroundColor: [
+                    '#667eea',
+                    '#4bc0c0',
+                    '#ffce56',
+                    '#ff6384',
+                    '#36a2eb',
+                    '#9966ff'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function createSubjectsChart(stats) {
+    const ctx = document.getElementById('subjectsChart');
+    if (!ctx) return;
+    
+    if (adminCharts.subjects) {
+        adminCharts.subjects.destroy();
+    }
+    
+    adminCharts.subjects = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Activas', 'Inactivas'],
+            datasets: [{
+                data: [stats.active_subjects || 0, stats.inactive_subjects || 0],
+                backgroundColor: ['#4bc0c0', '#ff6384'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function createEnrollmentsChart(stats) {
+    const ctx = document.getElementById('enrollmentsChart');
+    if (!ctx) return;
+    
+    if (adminCharts.enrollments) {
+        adminCharts.enrollments.destroy();
+    }
+    
+    adminCharts.enrollments = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Inscripciones Totales'],
+            datasets: [{
+                label: 'Total de Inscripciones',
+                data: [stats.total_enrollments || 0],
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function createGradesPerformanceChart(stats) {
+    const ctx = document.getElementById('gradesPerformanceChart');
+    if (!ctx) return;
+    
+    if (adminCharts.gradesPerformance) {
+        adminCharts.gradesPerformance.destroy();
+    }
+    
+    const passed = stats.passed_grades || 0;
+    const failed = stats.failed_grades || 0;
+    const total = passed + failed;
+    const passRate = total > 0 ? ((passed / total) * 100).toFixed(1) : 0;
+    
+    adminCharts.gradesPerformance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Aprobadas', 'Desaprobadas', 'Promedio General'],
+            datasets: [{
+                label: 'Cantidad',
+                data: [passed, failed, stats.average_grade || 0],
+                backgroundColor: ['#4bc0c0', '#ff6384', '#ffce56'],
+                borderColor: ['#4bc0c0', '#ff6384', '#ffce56'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            if (context.label === 'Promedio General') {
+                                return 'Promedio: ' + context.parsed.y.toFixed(2);
+                            }
+                            return context.label + ': ' + context.parsed.y;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function createEvaluationsChart(stats) {
+    const ctx = document.getElementById('evaluationsChart');
+    if (!ctx) return;
+    
+    if (adminCharts.evaluations) {
+        adminCharts.evaluations.destroy();
+    }
+    
+    adminCharts.evaluations = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completadas', 'Programadas'],
+            datasets: [{
+                data: [stats.completed_evaluations || 0, stats.scheduled_evaluations || 0],
+                backgroundColor: ['#4bc0c0', '#ffce56'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function createAttendanceChart(stats) {
+    const ctx = document.getElementById('attendanceChart');
+    if (!ctx) return;
+    
+    if (adminCharts.attendance) {
+        adminCharts.attendance.destroy();
+    }
+    
+    adminCharts.attendance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Presentes', 'Ausentes', 'Hoy'],
+            datasets: [{
+                label: 'Registros',
+                data: [
+                    stats.present_records || 0,
+                    stats.absent_records || 0,
+                    stats.attendance_today || 0
+                ],
+                backgroundColor: ['#4bc0c0', '#ff6384', '#ffce56'],
+                borderColor: ['#4bc0c0', '#ff6384', '#ffce56'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createContentChart(stats) {
+    const ctx = document.getElementById('contentChart');
+    if (!ctx) return;
+    
+    if (adminCharts.content) {
+        adminCharts.content.destroy();
+    }
+    
+    adminCharts.content = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Completados', 'Pendientes'],
+            datasets: [{
+                data: [stats.completed_content || 0, stats.pending_content || 0],
+                backgroundColor: ['#4bc0c0', '#ffce56'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function createStudentTopicsChart(stats) {
+    const ctx = document.getElementById('studentTopicsChart');
+    if (!ctx) return;
+    
+    if (adminCharts.studentTopics) {
+        adminCharts.studentTopics.destroy();
+    }
+    
+    adminCharts.studentTopics = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Aprobados', 'Desaprobados', 'Pendientes'],
+            datasets: [{
+                data: [
+                    stats.approved_topics || 0,
+                    stats.failed_topics || 0,
+                    stats.pending_topics || 0
+                ],
+                backgroundColor: ['#4bc0c0', '#ff6384', '#ffce56'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function createNotificationsChart(stats) {
+    const ctx = document.getElementById('notificationsChart');
+    if (!ctx) return;
+    
+    if (adminCharts.notifications) {
+        adminCharts.notifications.destroy();
+    }
+    
+    adminCharts.notifications = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Leídas', 'No Leídas', 'Total'],
+            datasets: [{
+                label: 'Notificaciones',
+                data: [
+                    stats.read_notifications || 0,
+                    stats.unread_notifications || 0,
+                    stats.total_notifications || 0
+                ],
+                backgroundColor: ['#4bc0c0', '#ff6384', '#667eea'],
+                borderColor: ['#4bc0c0', '#ff6384', '#667eea'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
 
 // Logout function
 function logout() {

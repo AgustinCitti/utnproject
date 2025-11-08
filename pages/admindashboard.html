@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="../styles/dark-mode.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" href="../styles/assets/icon.ico" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Set language immediately before page renders
         (function() {
@@ -145,6 +146,176 @@
             color: #004085;
         }
         
+        /* Main Tabs */
+        .main-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .main-tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.2s;
+            position: relative;
+            top: 2px;
+        }
+        
+        .main-tab:hover {
+            color: #667eea;
+            background: #f8f9fa;
+        }
+        
+        .main-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: transparent;
+        }
+        
+        .main-tab-content {
+            display: none;
+        }
+        
+        .main-tab-content.active {
+            display: block;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-card-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card-icon {
+            font-size: 1.5rem;
+            color: #667eea;
+        }
+        
+        .stat-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card-subtitle {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+        
+        .stats-section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .stats-section-title i {
+            color: #667eea;
+        }
+        
+        .stats-loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+        
+        /* Chart Cards */
+        .chart-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .chart-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .chart-card-title i {
+            color: #667eea;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 1rem;
+        }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .chart-grid-full {
+            grid-column: 1 / -1;
+        }
+        
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+            
+            .main-tabs {
+                flex-direction: column;
+            }
+            
+            .main-tab {
+                width: 100%;
+                text-align: center;
+            }
+        }
         
         .form-group {
             margin-bottom: 1rem;
@@ -416,6 +587,58 @@
             color: #667eea !important;
             font-weight: 600 !important;
         }
+        
+        /* Dark Mode - Stats Section */
+        [data-theme="dark"] .stat-card {
+            background: #2d2d2d !important;
+            color: #e0e0e0 !important;
+        }
+        
+        [data-theme="dark"] .stat-card-title {
+            color: #b0b0b0 !important;
+        }
+        
+        [data-theme="dark"] .stat-card-value {
+            color: #e0e0e0 !important;
+        }
+        
+        [data-theme="dark"] .stat-card-subtitle {
+            color: #b0b0b0 !important;
+        }
+        
+        [data-theme="dark"] .stats-section-title {
+            color: #e0e0e0 !important;
+        }
+        
+        [data-theme="dark"] .stats-loading {
+            color: #b0b0b0 !important;
+        }
+        
+        [data-theme="dark"] .main-tabs {
+            border-bottom-color: #404040 !important;
+        }
+        
+        [data-theme="dark"] .main-tab {
+            color: #b0b0b0 !important;
+        }
+        
+        [data-theme="dark"] .main-tab:hover {
+            color: #667eea !important;
+            background: #3a3a3a !important;
+        }
+        
+        [data-theme="dark"] .main-tab.active {
+            color: #667eea !important;
+        }
+        
+        [data-theme="dark"] .chart-card {
+            background: #2d2d2d !important;
+            color: #e0e0e0 !important;
+        }
+        
+        [data-theme="dark"] .chart-card-title {
+            color: #e0e0e0 !important;
+        }
     </style>
 </head>
 <body>
@@ -469,46 +692,160 @@
         <!-- Messages -->
         <div id="messageContainer"></div>
 
-        <!-- Admin Actions -->
-        <div class="admin-actions">
-            <button class="btn-primary" onclick="openAddUserModal()">
-                <i class="fas fa-user-plus"></i> <span data-translate="add_new_user">Add New User</span>
+        <!-- Main Tabs -->
+        <div class="main-tabs">
+            <button class="main-tab active" data-tab="users" onclick="switchMainTab('users', this)">
+                <i class="fas fa-users"></i> Gestión de Usuarios
             </button>
-            <button class="btn-secondary" onclick="refreshUsers()">
-                <i class="fas fa-sync-alt"></i> <span data-translate="refresh">Refresh</span>
+            <button class="main-tab" data-tab="stats" onclick="switchMainTab('stats', this)">
+                <i class="fas fa-chart-bar"></i> Estadísticas Generales
             </button>
         </div>
 
-        <!-- Search Bar -->
-        <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="" data-translate-placeholder="search_users_placeholder" onkeyup="filterUsers()">
-        </div>
-
-        <!-- Users Table -->
-        <div class="users-table-container">
-            <div id="usersTableLoading" class="loading">
-                <i class="fas fa-spinner fa-spin"></i> <span data-translate="loading_users">Loading users...</span>
+        <!-- Tab Content: Users Management -->
+        <div id="usersTab" class="main-tab-content active">
+            <!-- Admin Actions -->
+            <div class="admin-actions">
+                <button class="btn-primary" onclick="openAddUserModal()">
+                    <i class="fas fa-user-plus"></i> <span data-translate="add_new_user">Agregar Usuario</span>
+                </button>
+                <button class="btn-secondary" onclick="refreshUsers()">
+                    <i class="fas fa-sync-alt"></i> <span data-translate="refresh">Actualizar</span>
+                </button>
             </div>
-            <table class="users-table" id="usersTable" style="display: none;">
-                <thead>
-                    <tr>
-                        <th data-translate="id">ID</th>
-                        <th data-translate="name">Name</th>
-                        <th data-translate="last_name">Last Name</th>
-                        <th data-translate="email">Email</th>
-                        <th data-translate="dni">DNI</th>
-                        <th data-translate="phone">Phone</th>
-                        <th data-translate="specialty">Specialty</th>
-                        <th data-translate="academic_title">Academic Title</th>
-                        <th data-translate="user_type">User Type</th>
-                        <th data-translate="status">Status</th>
-                        <th data-translate="last_access">Last Access</th>
-                        <th data-translate="actions">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="usersTableBody">
-                </tbody>
-            </table>
+
+            <!-- Search Bar -->
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Buscar usuarios..." onkeyup="filterUsers()">
+            </div>
+
+            <!-- Users Table -->
+            <div class="users-table-container">
+                <div id="usersTableLoading" class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> <span>Cargando usuarios...</span>
+                </div>
+                <table class="users-table" id="usersTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th>Email</th>
+                            <th>DNI</th>
+                            <th>Teléfono</th>
+                            <th>Especialidad</th>
+                            <th>Título Académico</th>
+                            <th>Tipo de Usuario</th>
+                            <th>Estado</th>
+                            <th>Último Acceso</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab Content: Statistics -->
+        <div id="statsTab" class="main-tab-content">
+            <div id="statsLoading" class="stats-loading">
+                <i class="fas fa-spinner fa-spin"></i> <span>Cargando estadísticas...</span>
+            </div>
+            
+            <div id="statsContainer" style="display: none;">
+                <div class="chart-grid">
+                    <div class="chart-card chart-grid-full">
+                        <div class="chart-card-title">
+                            <i class="fas fa-users"></i> Usuarios y Estudiantes
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="usersStudentsChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-card-title">
+                            <i class="fas fa-user-tag"></i> Usuarios por Tipo
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="usersByTypeChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-card-title">
+                            <i class="fas fa-book"></i> Materias
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="subjectsChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card chart-grid-full">
+                        <div class="chart-card-title">
+                            <i class="fas fa-link"></i> Inscripciones
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="enrollmentsChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card chart-grid-full">
+                        <div class="chart-card-title">
+                            <i class="fas fa-star"></i> Rendimiento de Calificaciones
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="gradesPerformanceChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-card-title">
+                            <i class="fas fa-clipboard-list"></i> Evaluaciones
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="evaluationsChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-card-title">
+                            <i class="fas fa-calendar-check"></i> Asistencia
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="attendanceChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-card-title">
+                            <i class="fas fa-file-alt"></i> Contenido
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="contentChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-card-title">
+                            <i class="fas fa-tasks"></i> Temas de Estudiantes
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="studentTopicsChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-card-title">
+                            <i class="fas fa-envelope"></i> Notificaciones
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="notificationsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
