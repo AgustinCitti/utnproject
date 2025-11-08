@@ -1950,6 +1950,7 @@ window.loadMateriaStudents = function(subjectId) {
                         <th style="padding: 12px; text-align: left; font-weight: 600;">Estudiante</th>
                         <th style="padding: 12px; text-align: left; font-weight: 600;">ID</th>
                         <th style="padding: 12px; text-align: left; font-weight: 600;">Estado</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 600;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1971,6 +1972,31 @@ window.loadMateriaStudents = function(subjectId) {
                                         ${displayEstado}
                                     </span>
                                 </td>
+                                <td style="padding: 12px; border-bottom: 1px solid var(--border-color, #ddd); text-align: center;">
+                                    <div style="display: flex; gap: 5px; justify-content: center; align-items: center;" onclick="event.stopPropagation();">
+                                        <button 
+                                            class="btn-icon btn-edit" 
+                                            onclick="window.editStudent(${student.ID_Estudiante})" 
+                                            title="Editar Estudiante"
+                                            style="padding: 6px 8px;">
+                                            <i class="fas fa-edit" style="font-size: 0.9em;"></i>
+                                        </button>
+                                        <button 
+                                            class="btn-icon btn-assign" 
+                                            onclick="window.showAssignTemaDialog(${student.ID_Estudiante}, ${subjectId})" 
+                                            title="Asignar Temas"
+                                            style="padding: 6px 8px;">
+                                            <i class="fas fa-book" style="font-size: 0.9em;"></i>
+                                        </button>
+                                        <button 
+                                            class="btn-icon btn-delete" 
+                                            onclick="window.removeStudentFromMateria(${student.ID_Estudiante}, ${subjectId})" 
+                                            title="Eliminar de esta Materia"
+                                            style="padding: 6px 8px;">
+                                            <i class="fas fa-trash" style="font-size: 0.9em;"></i>
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         `;
                     }).join('')}
@@ -1979,6 +2005,442 @@ window.loadMateriaStudents = function(subjectId) {
         `;
     } else {
         studentsList.innerHTML = '<div style="text-align: center; padding: 40px 20px; color: var(--text-secondary, #999);">No hay estudiantes inscritos en esta materia</div>';
+    }
+};
+
+/**
+ * Remove a student from a materia (subject)
+ * @param {number} studentId - Student ID
+ * @param {number} subjectId - Subject ID
+ */
+window.removeStudentFromMateria = async function(studentId, subjectId) {
+    if (!studentId || !subjectId) {
+        console.error('removeStudentFromMateria: IDs no válidos', { studentId, subjectId });
+        alert('Error: IDs no válidos');
+        return;
+    }
+
+    // Get student name for confirmation message
+    const data = window.appData || window.data || {};
+    const student = data.estudiante && Array.isArray(data.estudiante) 
+        ? data.estudiante.find(s => parseInt(s.ID_Estudiante) === parseInt(studentId))
+        : null;
+    
+    const studentName = student ? `${student.Nombre} ${student.Apellido}` : 'este estudiante';
+    
+    // Confirm deletion
+    if (!confirm(`¿Estás seguro de que deseas eliminar a ${studentName} de esta materia?\n\nEsta acción solo eliminará la inscripción del estudiante en esta materia, no eliminará al estudiante del sistema.`)) {
+        return;
+    }
+
+    try {
+        // Call API to remove student from subject
+        const response = await fetch(`../api/alumnos_x_materia.php?estudianteId=${studentId}&materiaId=${subjectId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        // Check if response is JSON
+        let result;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            result = await response.json();
+        } else {
+            const text = await response.text();
+            console.error('Respuesta no JSON:', text);
+            throw new Error('Respuesta del servidor no válida');
+        }
+
+        if (response.ok && result.success) {
+            // Show success message
+            alert(`Estudiante eliminado de la materia exitosamente.`);
+            
+            // Reload app data to reflect changes
+            if (typeof loadAppData === 'function') {
+                await loadAppData();
+            } else if (typeof refreshAppData === 'function') {
+                await refreshAppData();
+            }
+            
+            // Reload the student list for this subject
+            if (typeof window.loadMateriaStudents === 'function') {
+                window.loadMateriaStudents(subjectId);
+            }
+        } else {
+            throw new Error(result.message || 'Error al eliminar el estudiante de la materia');
+        }
+    } catch (error) {
+        console.error('Error removing student from materia:', error);
+        alert(`Error al eliminar el estudiante de la materia: ${error.message}`);
+    }
+};
+
+/**
+ * Show dialog to assign temas to a student for a specific materia
+ * @param {number} studentId - Student ID
+ * @param {number} subjectId - Subject ID
+ */
+window.showAssignTemaDialog = function(studentId, subjectId) {
+    if (!studentId || !subjectId) {
+        console.error('showAssignTemaDialog: IDs no válidos', { studentId, subjectId });
+        alert('Error: IDs no válidos');
+        return;
+    }
+
+    // Get data
+    const data = window.appData || window.data || {};
+    
+    // Get student info
+    const student = data.estudiante && Array.isArray(data.estudiante) 
+        ? data.estudiante.find(s => parseInt(s.ID_Estudiante) === parseInt(studentId))
+        : null;
+    
+    if (!student) {
+        alert('Estudiante no encontrado');
+        return;
+    }
+    
+    // Get materia info
+    const materia = data.materia && Array.isArray(data.materia)
+        ? data.materia.find(m => parseInt(m.ID_materia) === parseInt(subjectId))
+        : null;
+    
+    if (!materia) {
+        alert('Materia no encontrada');
+        return;
+    }
+    
+    // Get temas from this materia
+    const temas = data.contenido && Array.isArray(data.contenido)
+        ? data.contenido.filter(c => parseInt(c.Materia_ID_materia) === parseInt(subjectId))
+        : [];
+    
+    // Get tema_estudiante records for this student
+    const temaEstudianteRecords = data.tema_estudiante && Array.isArray(data.tema_estudiante)
+        ? data.tema_estudiante.filter(te => parseInt(te.Estudiante_ID_Estudiante) === parseInt(studentId))
+        : [];
+    
+    // Create a map of contenido_id => tema_estudiante record
+    const temaEstudianteMap = {};
+    temaEstudianteRecords.forEach(te => {
+        const contenidoId = parseInt(te.Contenido_ID_contenido);
+        temaEstudianteMap[contenidoId] = te;
+    });
+    
+    // Create modal HTML
+    const modalHTML = `
+        <div class="modal-overlay" id="assignTemaModal">
+            <div class="modal-dialog" style="max-width: 800px;">
+                <div class="modal-dialog-content">
+                    <div class="modal-dialog-header">
+                        <h3>Gestionar Temas de ${student.Nombre} ${student.Apellido}</h3>
+                        <button class="modal-dialog-close close-modal">&times;</button>
+                    </div>
+                    <div class="modal-dialog-body">
+                        <div style="margin-bottom: 15px;">
+                            <p><strong>Materia:</strong> ${materia.Nombre}</p>
+                            <p style="color: #666; font-size: 0.9em; margin-top: 5px;">
+                                Asigna temas y gestiona su estado, observaciones y fecha de actualización.
+                            </p>
+                        </div>
+                        ${temas.length > 0 ? `
+                            <div style="max-height: 500px; overflow-y: auto; border: 1px solid var(--border-color, #ddd); border-radius: 4px; padding: 15px;">
+                                ${temas.map((tema, index) => {
+                                    const contenidoId = parseInt(tema.ID_contenido);
+                                    const temaEstudiante = temaEstudianteMap[contenidoId];
+                                    const isAssigned = !!temaEstudiante;
+                                    const temaEstId = temaEstudiante ? temaEstudiante.ID_Tema_estudiante : null;
+                                    const estado = temaEstudiante ? (temaEstudiante.Estado || 'PENDIENTE') : 'PENDIENTE';
+                                    const observaciones = temaEstudiante ? (temaEstudiante.Observaciones || '') : '';
+                                    const fechaActualizacion = temaEstudiante ? (temaEstudiante.Fecha_actualizacion || '') : '';
+                                    
+                                    return `
+                                        <div class="tema-item" data-contenido-id="${contenidoId}" data-tema-est-id="${temaEstId || ''}" 
+                                             style="padding: 15px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color, #ddd);">
+                                            <div style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 0;" 
+                                                 onclick="toggleTemaCollapse(${contenidoId})">
+                                                <div style="flex: 1;">
+                                                    <div style="font-weight: 600; color: var(--text-primary, #333); font-size: 1.05em; margin-bottom: 5px;">
+                                                        ${tema.Tema || 'Sin título'}
+                                                    </div>
+                                                    ${tema.Descripcion ? `<div style="font-size: 0.9em; color: var(--text-secondary, #666); margin-bottom: 10px;">${tema.Descripcion}</div>` : ''}
+                                                </div>
+                                                <button type="button" 
+                                                        class="tema-toggle-btn" 
+                                                        data-contenido-id="${contenidoId}"
+                                                        style="background: none; border: none; cursor: pointer; padding: 5px; color: var(--text-primary, #333); font-size: 1.2em; transition: transform 0.3s ease;"
+                                                        onclick="event.stopPropagation(); toggleTemaCollapse(${contenidoId})">
+                                                    <i class="fas fa-chevron-down tema-chevron" data-contenido-id="${contenidoId}" style="transition: transform 0.3s ease;"></i>
+                                                </button>
+                                            </div>
+                                            <div class="tema-fields" data-contenido-id="${contenidoId}" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color, #ddd);">
+                                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                                    <div class="form-group">
+                                                        <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary, #333); font-size: 0.9em;">
+                                                            Estado
+                                                        </label>
+                                                        <select class="tema-estado" data-contenido-id="${contenidoId}" 
+                                                                style="width: 100%; padding: 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 0.9em; background: var(--card-bg, #fff); color: var(--text-primary, #333);">
+                                                            <option value="PENDIENTE" ${estado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
+                                                            <option value="EN_PROGRESO" ${estado === 'EN_PROGRESO' ? 'selected' : ''}>EN_PROGRESO</option>
+                                                            <option value="COMPLETADO" ${estado === 'COMPLETADO' ? 'selected' : ''}>COMPLETADO</option>
+                                                            <option value="CANCELADO" ${estado === 'CANCELADO' ? 'selected' : ''}>CANCELADO</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary, #333); font-size: 0.9em;">
+                                                            Fecha de Actualización
+                                                        </label>
+                                                        <input type="date" 
+                                                               class="tema-fecha" 
+                                                               data-contenido-id="${contenidoId}"
+                                                               value="${fechaActualizacion}"
+                                                               readonly
+                                                               style="width: 100%; padding: 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 0.9em; background: var(--bg-secondary, #f5f5f5); color: var(--text-primary, #333); cursor: not-allowed;"
+                                                               title="La fecha se actualiza automáticamente al guardar">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary, #333); font-size: 0.9em;">
+                                                        Observaciones
+                                                    </label>
+                                                    <textarea class="tema-observaciones" 
+                                                              data-contenido-id="${contenidoId}"
+                                                              rows="3"
+                                                              placeholder="Ingresa observaciones sobre este tema..."
+                                                              style="width: 100%; padding: 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 0.9em; resize: vertical; font-family: inherit; background: var(--card-bg, #fff); color: var(--text-primary, #333);">${observaciones}</textarea>
+                                                </div>
+                                                ${temaEstId ? `<input type="hidden" class="tema-est-id" data-contenido-id="${contenidoId}" value="${temaEstId}">` : ''}
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        ` : `
+                            <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary, #999);">
+                                <i class="fas fa-book" style="font-size: 2em; margin-bottom: 10px; display: block; color: var(--text-secondary, #999);"></i>
+                                <p style="color: var(--text-secondary, #999);">Esta materia no tiene temas disponibles.</p>
+                                <p style="font-size: 0.9em; margin-top: 5px; color: var(--text-secondary, #999);">Agrega temas a la materia primero.</p>
+                            </div>
+                        `}
+                    </div>
+                    <div class="modal-dialog-footer">
+                        <button type="button" class="btn-secondary close-modal">Cancelar</button>
+                        <button type="button" class="btn-primary" id="saveTemaAssignmentsBtn" ${temas.length === 0 ? 'disabled' : ''}>Guardar Cambios</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if present
+    const existingModal = document.getElementById('assignTemaModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Setup modal handlers
+    const modal = document.getElementById('assignTemaModal');
+    if (typeof setupModalHandlers === 'function') {
+        setupModalHandlers('assignTemaModal');
+    } else {
+        // Fallback modal handlers
+        const closeButtons = modal.querySelectorAll('.close-modal');
+        closeButtons.forEach(btn => {
+            btn.onclick = () => {
+                modal.remove();
+            };
+        });
+        
+        // Close on overlay click
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        };
+    }
+    
+    // Add collapse/expand function for tema items
+    window.toggleTemaCollapse = function(contenidoId) {
+        const fieldsContainer = modal.querySelector(`.tema-fields[data-contenido-id="${contenidoId}"]`);
+        const chevron = modal.querySelector(`.tema-chevron[data-contenido-id="${contenidoId}"]`);
+        
+        if (fieldsContainer && chevron) {
+            const isVisible = fieldsContainer.style.display !== 'none';
+            
+            if (isVisible) {
+                fieldsContainer.style.display = 'none';
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                fieldsContainer.style.display = 'block';
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+    };
+    
+    // Setup save button
+    const saveBtn = document.getElementById('saveTemaAssignmentsBtn');
+    if (saveBtn) {
+        saveBtn.onclick = async () => {
+            try {
+                // Get all temas (all are assigned since student is in materia)
+                const allTemaItems = modal.querySelectorAll('.tema-item');
+                const allContenidoIds = Array.from(allTemaItems).map(item => parseInt(item.dataset.contenidoId));
+                
+                // Get previously assigned tema_estudiante records for this student
+                const currentData = window.appData || window.data || {};
+                const previousTemaEstudiante = currentData.tema_estudiante && Array.isArray(currentData.tema_estudiante)
+                    ? currentData.tema_estudiante.filter(te => parseInt(te.Estudiante_ID_Estudiante) === parseInt(studentId))
+                    : [];
+                
+                // Process each tema
+                for (const contenidoId of allContenidoIds) {
+                    // Get form values
+                    const estadoSelect = modal.querySelector(`.tema-estado[data-contenido-id="${contenidoId}"]`);
+                    const observacionesTextarea = modal.querySelector(`.tema-observaciones[data-contenido-id="${contenidoId}"]`);
+                    const temaEstIdInput = modal.querySelector(`.tema-est-id[data-contenido-id="${contenidoId}"]`);
+                    
+                    const estado = estadoSelect ? estadoSelect.value : 'PENDIENTE';
+                    const observaciones = observacionesTextarea ? observacionesTextarea.value.trim() : '';
+                    const temaEstId = temaEstIdInput ? parseInt(temaEstIdInput.value) : null;
+                    // Note: Fecha_actualizacion is automatically set to CURRENT_DATE by the API on update
+                    
+                    // Check if tema_estudiante record already exists
+                    const existingRecord = previousTemaEstudiante.find(te => parseInt(te.Contenido_ID_contenido) === contenidoId);
+                    
+                    if (existingRecord && temaEstId) {
+                        // Update existing record
+                        try {
+                            const updatePayload = {
+                                Estado: estado,
+                                Observaciones: observaciones || null
+                            };
+                            
+                            const res = await fetch(`../api/tema_estudiante.php?id=${temaEstId}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify(updatePayload)
+                            });
+                            
+                            if (!res.ok) {
+                                const errorData = await res.json().catch(() => ({}));
+                                console.error(`Error updating tema_estudiante ${temaEstId}:`, errorData.message);
+                                throw new Error(`Error actualizando tema: ${errorData.message || 'Error desconocido'}`);
+                            }
+                        } catch (err) {
+                            console.error(`Error updating tema_estudiante ${temaEstId}:`, err);
+                            throw err;
+                        }
+                    } else {
+                        // Create new record
+                        try {
+                            const createPayload = {
+                                Contenido_ID_contenido: contenidoId,
+                                Estudiante_ID_Estudiante: studentId,
+                                Estado: estado,
+                                Observaciones: observaciones || null
+                            };
+                            
+                            const res = await fetch('../api/tema_estudiante.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify(createPayload)
+                            });
+                            
+                            if (!res.ok && res.status !== 409) {
+                                const errorData = await res.json().catch(() => ({}));
+                                console.error(`Error creating tema_estudiante for contenido ${contenidoId}:`, errorData.message);
+                                throw new Error(`Error creando tema: ${errorData.message || 'Error desconocido'}`);
+                            }
+                        } catch (err) {
+                            console.error(`Error creating tema_estudiante for contenido ${contenidoId}:`, err);
+                            throw err;
+                        }
+                    }
+                }
+                
+                // Ensure all temas from this materia have tema_estudiante records
+                // If any tema doesn't have a record yet, create it with default values
+                for (const contenidoId of allContenidoIds) {
+                    const existingRecord = previousTemaEstudiante.find(te => parseInt(te.Contenido_ID_contenido) === contenidoId);
+                    const temaEstIdInput = modal.querySelector(`.tema-est-id[data-contenido-id="${contenidoId}"]`);
+                    
+                    // If no record exists and wasn't created above, create it now
+                    if (!existingRecord && !temaEstIdInput) {
+                        try {
+                            const estadoSelect = modal.querySelector(`.tema-estado[data-contenido-id="${contenidoId}"]`);
+                            const observacionesTextarea = modal.querySelector(`.tema-observaciones[data-contenido-id="${contenidoId}"]`);
+                            
+                            const estado = estadoSelect ? estadoSelect.value : 'PENDIENTE';
+                            const observaciones = observacionesTextarea ? observacionesTextarea.value.trim() : '';
+                            
+                            const createPayload = {
+                                Contenido_ID_contenido: contenidoId,
+                                Estudiante_ID_Estudiante: studentId,
+                                Estado: estado,
+                                Observaciones: observaciones || null
+                            };
+                            
+                            const res = await fetch('../api/tema_estudiante.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify(createPayload)
+                            });
+                            
+                            if (!res.ok && res.status !== 409) {
+                                const errorData = await res.json().catch(() => ({}));
+                                console.error(`Error creating tema_estudiante for contenido ${contenidoId}:`, errorData.message);
+                            }
+                        } catch (err) {
+                            console.error(`Error creating tema_estudiante for contenido ${contenidoId}:`, err);
+                        }
+                    }
+                }
+                
+                // Reload data
+                if (typeof loadAppData === 'function') {
+                    await loadAppData();
+                } else if (typeof refreshAppData === 'function') {
+                    await refreshAppData();
+                } else if (typeof loadData === 'function') {
+                    await loadData();
+                }
+                
+                // Close modal
+                modal.remove();
+                
+                // Show success message
+                if (typeof showNotification === 'function') {
+                    showNotification(`Temas gestionados correctamente`, 'success');
+                } else {
+                    alert('Temas gestionados correctamente');
+                }
+                
+                // Reload student list if function exists
+                if (typeof window.loadMateriaStudents === 'function') {
+                    window.loadMateriaStudents(subjectId);
+                }
+            } catch (error) {
+                console.error('Error saving tema assignments:', error);
+                alert(`Error al guardar las asignaciones: ${error.message}`);
+            }
+        };
+    }
+    
+    // Show modal
+    if (typeof showModal === 'function') {
+        showModal('assignTemaModal');
+    } else {
+        modal.classList.add('active');
     }
 };
 
