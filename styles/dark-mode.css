@@ -2279,6 +2279,40 @@
     color: var(--text-secondary, #b0b0c0) !important;
 }
 
+/* Search Results Dark Mode */
+[data-theme="dark"] .search-results-container {
+    background-color: var(--card-bg, #1e1e2e) !important;
+    border-color: var(--border-color, #3a3a4a) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .search-result-item {
+    background-color: var(--card-bg, #1e1e2e) !important;
+    border-bottom-color: var(--border-color, #3a3a4a) !important;
+}
+
+[data-theme="dark"] .search-result-item:hover {
+    background-color: var(--bg-secondary, #2a2a3a) !important;
+}
+
+[data-theme="dark"] .search-result-item-title {
+    color: var(--text-primary, #e0e0e0) !important;
+}
+
+[data-theme="dark"] .search-result-item-description {
+    color: var(--text-secondary, #b0b0c0) !important;
+}
+
+[data-theme="dark"] .search-result-item-type {
+    background-color: var(--bg-secondary, #2a2a3a) !important;
+    color: var(--text-secondary, #b0b0c0) !important;
+}
+
+[data-theme="dark"] .search-result-item-section {
+    background-color: #667eea !important;
+    color: white !important;
+}
+
 /* Dark mode styles for exam summary */
 [data-theme="dark"] .exam-info-summary {
     background-color: var(--card-bg);
