@@ -20,6 +20,8 @@ $email = $data['email'] ?? '';
 $password = $data['password'] ?? '';
 $confirmPassword = $data['confirmPassword'] ?? '';
 
+
+
 // --- validaciones básicas ---
 if (empty($firstName) || empty($lastName) || empty($email) || empty($password)) {
     http_response_code(400); // error de solicitud

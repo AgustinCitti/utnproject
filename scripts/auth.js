@@ -236,6 +236,9 @@ async function handleRegistration() {
             }, 2000);
         } else {
             showRegisterMessage(result.message || 'Ocurrió un error durante el registro.');
+            if (result.google_login_required) {
+                highlightGoogleButton();
+            }
         }
     } catch (error) {
         showRegisterMessage('No se pudo conectar con el servidor. Intente más tarde.');
@@ -320,6 +323,9 @@ function handleLogin() {
             window.location.href = '../pages/home.html';
         } else {
             showLoginError(result.message);
+            if (result.google_login_required) {
+                highlightGoogleButton();
+            }
         }
     }).catch(error => {
         showLoginError('An error occurred during login. Please try again.');
@@ -375,11 +381,7 @@ function initializeLoginPage() {
     const googleBtn = document.querySelector('.google-btn');
     const microsoftBtn = document.querySelector('.microsoft-btn');
     
-    if (googleBtn) {
-        googleBtn.addEventListener('click', () => {
-            alert('Google login integration would be implemented here');
-        });
-    }
+
     
     if (microsoftBtn) {
         microsoftBtn.addEventListener('click', () => {
@@ -423,11 +425,7 @@ function initializeRegisterPage() {
     const googleBtn = document.querySelector('.google-btn');
     const microsoftBtn = document.querySelector('.microsoft-btn');
     
-    if (googleBtn) {
-        googleBtn.addEventListener('click', () => {
-            alert('Google registration integration would be implemented here');
-        });
-    }
+
     
     if (microsoftBtn) {
         microsoftBtn.addEventListener('click', () => {
@@ -483,11 +481,7 @@ function initializeAuthPage() {
     const googleBtns = document.querySelectorAll('.google-btn');
     const microsoftBtns = document.querySelectorAll('.microsoft-btn');
     
-    googleBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            alert('Google login integration would be implemented here');
-        });
-    });
+
     
     microsoftBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -786,4 +780,14 @@ function switchToRegister() {
 
 function switchToLogin() {
     // This function is now handled by the swipe form functionality
+}
+
+function highlightGoogleButton() {
+    const googleBtn = document.querySelector('.google-btn');
+    if (googleBtn) {
+        googleBtn.classList.add('google-btn-highlight');
+        setTimeout(() => {
+            googleBtn.classList.remove('google-btn-highlight');
+        }, 5000); // Remove highlight after 5 seconds
+    }
 }
