@@ -898,46 +898,139 @@ function loadSubjectThemesList(subjectId) {
             const studentsCount = temaEstudianteRecords.length;
             const uniqueId = `theme-${theme.ID_contenido}`;
             
+            // Get student information for each tema_estudiante record
+            const estudiantes = (data.estudiante || []);
+            const studentStates = temaEstudianteRecords.map(te => {
+                const student = estudiantes.find(e => parseInt(e.ID_Estudiante) === parseInt(te.Estudiante_ID_Estudiante));
+                return {
+                    temaEstudiante: te,
+                    student: student
+                };
+            }).sort((a, b) => {
+                // Sort by student last name
+                const lastNameA = (a.student?.Apellido || '').toLowerCase();
+                const lastNameB = (b.student?.Apellido || '').toLowerCase();
+                if (lastNameA !== lastNameB) {
+                    return lastNameA.localeCompare(lastNameB);
+                }
+                return (a.student?.Nombre || '').toLowerCase().localeCompare((b.student?.Nombre || '').toLowerCase());
+            });
+            
+            // Border colors based on tema estado
+            const temaEstado = theme.Estado || 'PENDIENTE';
+            const temaBorderColors = {
+                'PENDIENTE': '#ffc107',      // Yellow
+                'EN_PROGRESO': '#17a2b8',    // Blue
+                'COMPLETADO': '#28a745',     // Green
+                'CANCELADO': '#dc3545'       // Red
+            };
+            const temaBorderColor = temaBorderColors[temaEstado] || '#ddd';
+            
             return `
-                <div class="theme-card-collapsible" style="margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); overflow: hidden;">
-                    <div class="theme-card-header" onclick="toggleThemeCard('${uniqueId}')" style="padding: 14px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary);">
-                        <div style="flex: 1; display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-chevron-down theme-chevron" id="chevron-${uniqueId}" style="font-size: 0.85em; color: var(--text-secondary); transition: transform 0.3s ease; transform: rotate(-90deg);"></i>
-                            <div style="flex: 1;">
-                                <strong style="display: block; margin-bottom: 4px; color: var(--text-primary); font-size: 1em;">${theme.Tema || 'Sin título'}</strong>
-                                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                                    <span class="status-badge status-${(theme.Estado || 'PENDIENTE').toLowerCase()}" style="font-size: 0.8em; padding: 3px 8px; border-radius: 10px;">
-                                        ${getStatusText(theme.Estado || 'PENDIENTE')}
-                                    </span>
-                                    <span style="font-size: 0.85em; color: var(--text-secondary);">
-                                        <i class="fas fa-users" style="margin-right: 4px;"></i>${studentsCount} estudiante${studentsCount !== 1 ? 's' : ''}
-                                    </span>
-                                    ${theme.Fecha_creacion ? `<small style="color: var(--text-secondary); font-size: 0.8em;">Creado: ${formatDate(theme.Fecha_creacion)}</small>` : ''}
-                                </div>
+                <div class="theme-card" data-tema-id="${theme.ID_contenido}" data-estado="${temaEstado}" style="margin-bottom: 12px; border: 2px solid ${temaBorderColor}; border-radius: 8px; background: var(--card-bg); overflow: hidden;">
+                    <div class="theme-card-header" style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary);">
+                        <div style="flex: 1;">
+                            <strong style="display: block; margin-bottom: 4px; color: var(--text-primary); font-size: 1em;">${theme.Tema || 'Sin título'}</strong>
+                            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                                <select class="tema-estado-selector" data-tema-id="${theme.ID_contenido}" 
+                                        style="padding: 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.85em; background: var(--card-bg); color: var(--text-primary); cursor: pointer; font-weight: 500;">
+                                    <option value="PENDIENTE" ${temaEstado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
+                                    <option value="EN_PROGRESO" ${temaEstado === 'EN_PROGRESO' ? 'selected' : ''}>EN_PROGRESO</option>
+                                    <option value="COMPLETADO" ${temaEstado === 'COMPLETADO' ? 'selected' : ''}>COMPLETADO</option>
+                                    <option value="CANCELADO" ${temaEstado === 'CANCELADO' ? 'selected' : ''}>CANCELADO</option>
+                                </select>
+                                <span style="font-size: 0.85em; color: var(--text-secondary);">
+                                    <i class="fas fa-users" style="margin-right: 4px;"></i>${studentsCount} estudiante${studentsCount !== 1 ? 's' : ''}
+                                </span>
+                                ${theme.Fecha_creacion ? `<small style="color: var(--text-secondary); font-size: 0.8em;">Creado: ${formatDate(theme.Fecha_creacion)}</small>` : ''}
                             </div>
+                            ${theme.Descripcion ? `<div style="font-size: 0.9em; color: var(--text-secondary); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-color);">${theme.Descripcion}</div>` : ''}
                         </div>
-                        <div style="display: flex; gap: 5px;" onclick="event.stopPropagation();">
-                            ${typeof editContent === 'function' ? `
-                            <button class="btn-icon btn-edit" onclick="editContent(${theme.ID_contenido})" title="Editar Tema" style="padding: 6px 8px;">
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn-icon btn-view" onclick="showTemaStudentStatesDialog(${theme.ID_contenido}, '${theme.Tema || 'Sin título'}')" title="Ver Estados de Estudiantes" style="padding: 6px 8px;">
+                                <i class="fas fa-eye" style="font-size: 0.9em;"></i>
+                            </button>
+                            <button class="btn-icon btn-edit" onclick="window.editContent(${theme.ID_contenido})" title="Editar Tema" style="padding: 6px 8px;">
                                 <i class="fas fa-edit" style="font-size: 0.9em;"></i>
-                            </button>` : ''}
-                            ${typeof deleteContent === 'function' ? `
-                            <button class="btn-icon btn-delete" onclick="deleteContent(${theme.ID_contenido})" title="Eliminar Tema" style="padding: 6px 8px;">
+                            </button>
+                            <button class="btn-icon btn-delete" onclick="window.deleteContent(${theme.ID_contenido})" title="Eliminar Tema" style="padding: 6px 8px;">
                                 <i class="fas fa-trash" style="font-size: 0.9em;"></i>
-                            </button>` : ''}
-                        </div>
-                    </div>
-                    <div class="theme-card-content" id="${uniqueId}" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
-                        <div style="padding: 16px; border-top: 1px solid var(--border-color); background: var(--card-bg);">
-                            ${theme.Descripcion ? `<div style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">${theme.Descripcion}</div>` : ''}
+                            </button>
                         </div>
                     </div>
                 </div>
             `;
         }).join('');
         
-        // Setup collapsible cards
-        setupCollapsibleThemeCards();
+        // Setup real-time tema estado selectors
+        const temaEstadoSelectors = themesList.querySelectorAll('.tema-estado-selector');
+        temaEstadoSelectors.forEach(selector => {
+            selector.addEventListener('change', async function() {
+                const temaId = parseInt(this.dataset.temaId);
+                const newEstado = this.value;
+                
+                if (!temaId) {
+                    console.error('Error: temaId no válido');
+                    return;
+                }
+                
+                try {
+                    // Update tema estado in real-time
+                    const response = await fetch(`../api/contenido.php?id=${temaId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            Estado: newEstado
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.message || 'Error al actualizar el estado');
+                    }
+                    
+                    // Update border color based on new estado
+                    const borderColors = {
+                        'PENDIENTE': '#ffc107',      // Yellow
+                        'EN_PROGRESO': '#17a2b8',    // Blue
+                        'COMPLETADO': '#28a745',     // Green
+                        'CANCELADO': '#dc3545'       // Red
+                    };
+                    const newBorderColor = borderColors[newEstado] || '#ddd';
+                    
+                    const themeCard = this.closest('.theme-card');
+                    if (themeCard) {
+                        themeCard.style.borderColor = newBorderColor;
+                        themeCard.setAttribute('data-estado', newEstado);
+                    }
+                    
+                    // Show success feedback
+                    const originalBorderColor = this.style.borderColor || 'var(--border-color)';
+                    this.style.borderColor = '#28a745';
+                    setTimeout(() => {
+                        this.style.borderColor = originalBorderColor;
+                    }, 1000);
+                    
+                    // Reload app data to reflect changes
+                    if (typeof loadAppData === 'function') {
+                        await loadAppData();
+                    } else if (typeof refreshAppData === 'function') {
+                        await refreshAppData();
+                    } else if (typeof loadData === 'function') {
+                        await loadData();
+                    }
+                } catch (error) {
+                    console.error('Error updating tema estado:', error);
+                    // Revert selection on error
+                    this.value = this.dataset.originalValue || 'PENDIENTE';
+                    alert(`Error al actualizar el estado: ${error.message}`);
+                }
+            });
+            
+            // Store original value for error recovery
+            selector.dataset.originalValue = selector.value;
+        });
     } else {
         themesList.innerHTML = `
             <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary, #999);">
@@ -950,6 +1043,473 @@ function loadSubjectThemesList(subjectId) {
         `;
     }
 }
+
+/**
+ * Show dialog with student states for a tema
+ * @param {number} contenidoId - Contenido ID
+ * @param {string} temaNombre - Tema name
+ */
+window.showTemaStudentStatesDialog = function(contenidoId, temaNombre) {
+    if (!contenidoId) {
+        console.error('showTemaStudentStatesDialog: contenidoId no válido');
+        return;
+    }
+    
+    // Get data
+    const data = window.appData || window.data || {};
+    
+    // Get tema_estudiante records for this tema
+    const temaEstudianteRecords = (data.tema_estudiante || []).filter(
+        te => parseInt(te.Contenido_ID_contenido) === parseInt(contenidoId)
+    );
+    
+    // Get student information
+    const estudiantes = (data.estudiante || []);
+    const studentStates = temaEstudianteRecords.map(te => {
+        const student = estudiantes.find(e => parseInt(e.ID_Estudiante) === parseInt(te.Estudiante_ID_Estudiante));
+        return {
+            temaEstudiante: te,
+            student: student
+        };
+    }).sort((a, b) => {
+        // Sort by student last name
+        const lastNameA = (a.student?.Apellido || '').toLowerCase();
+        const lastNameB = (b.student?.Apellido || '').toLowerCase();
+        if (lastNameA !== lastNameB) {
+            return lastNameA.localeCompare(lastNameB);
+        }
+        return (a.student?.Nombre || '').toLowerCase().localeCompare((b.student?.Nombre || '').toLowerCase());
+    });
+    
+    // Create modal HTML
+    const modalHTML = `
+        <div class="modal-overlay" id="temaStudentStatesModal">
+            <div class="modal-dialog" style="max-width: 900px;">
+                <div class="modal-dialog-content">
+                    <div class="modal-dialog-header">
+                        <h3>Estados de Estudiantes - ${temaNombre}</h3>
+                        <button class="modal-dialog-close close-modal">&times;</button>
+                    </div>
+                    <div class="modal-dialog-body">
+                        ${studentStates.length > 0 ? `
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                ${studentStates.map(({ temaEstudiante: te, student }) => {
+                                    const estado = te.Estado || 'PENDIENTE';
+                                    const fechaActualizacion = te.Fecha_actualizacion || '';
+                                    const observaciones = te.Observaciones || '';
+                                    const studentName = student ? `${student.Nombre} ${student.Apellido}` : `ID: ${te.Estudiante_ID_Estudiante}`;
+                                    const temaEstId = te.ID_Tema_estudiante;
+                                    
+                                    // Border colors based on estado
+                                    const borderColors = {
+                                        'PENDIENTE': '#ffc107',      // Yellow
+                                        'EN_PROGRESO': '#17a2b8',    // Blue
+                                        'COMPLETADO': '#28a745',     // Green
+                                        'CANCELADO': '#dc3545'       // Red
+                                    };
+                                    const borderColor = borderColors[estado] || '#ddd';
+                                    
+                                    return `
+                                        <div class="student-state-item" data-tema-est-id="${temaEstId}" data-estado="${estado}" style="border: 2px solid ${borderColor}; border-radius: 6px; padding: 12px; background: var(--card-bg);">
+                                            <div style="display: grid; grid-template-columns: 2fr 1.5fr 1fr; gap: 12px; align-items: center; margin-bottom: 10px;">
+                                                <div style="color: var(--text-primary);">
+                                                    <strong style="font-size: 0.95em;">${studentName}</strong>
+                                                </div>
+                                                <div>
+                                                    <select class="estado-selector" data-tema-est-id="${temaEstId}" 
+                                                            style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary); cursor: pointer;">
+                                                        <option value="PENDIENTE" ${estado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
+                                                        <option value="EN_PROGRESO" ${estado === 'EN_PROGRESO' ? 'selected' : ''}>EN_PROGRESO</option>
+                                                        <option value="COMPLETADO" ${estado === 'COMPLETADO' ? 'selected' : ''}>COMPLETADO</option>
+                                                        <option value="CANCELADO" ${estado === 'CANCELADO' ? 'selected' : ''}>CANCELADO</option>
+                                                    </select>
+                                                </div>
+                                                <div data-fecha-display style="color: var(--text-secondary); font-size: 0.85em;">
+                                                    ${fechaActualizacion ? formatDate(fechaActualizacion) : '-'}
+                                                </div>
+                                            </div>
+                                            <div style="padding-top: 10px; border-top: 1px solid var(--border-color);">
+                                                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary); font-size: 0.85em;">Observaciones</label>
+                                                <textarea class="observaciones-editor" data-tema-est-id="${temaEstId}" 
+                                                          rows="2"
+                                                          placeholder="Ingresa observaciones..."
+                                                          style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; resize: vertical; font-family: inherit; background: var(--card-bg); color: var(--text-primary); min-height: 50px;">${observaciones || ''}</textarea>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        ` : `
+                            <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                                <i class="fas fa-user-slash" style="font-size: 2.5em; margin-bottom: 15px; opacity: 0.3; display: block;"></i>
+                                <p>No hay estudiantes asignados a este tema</p>
+                            </div>
+                        `}
+                    </div>
+                    <div class="modal-dialog-footer">
+                        <button type="button" class="btn-secondary close-modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if present
+    const existingModal = document.getElementById('temaStudentStatesModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Setup modal handlers
+    const modal = document.getElementById('temaStudentStatesModal');
+    if (typeof setupModalHandlers === 'function') {
+        setupModalHandlers('temaStudentStatesModal');
+    } else {
+        // Fallback modal handlers
+        const closeButtons = modal.querySelectorAll('.close-modal');
+        closeButtons.forEach(btn => {
+            btn.onclick = () => {
+                modal.remove();
+            };
+        });
+        
+        // Close on overlay click
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        };
+    }
+    
+    // Setup real-time estado selectors
+    const estadoSelectors = modal.querySelectorAll('.estado-selector');
+    estadoSelectors.forEach(selector => {
+        selector.addEventListener('change', async function() {
+            const temaEstId = parseInt(this.dataset.temaEstId);
+            const newEstado = this.value;
+            
+            if (!temaEstId) {
+                console.error('Error: temaEstId no válido');
+                return;
+            }
+            
+            try {
+                // Update estado in real-time
+                const response = await fetch(`../api/tema_estudiante.php?id=${temaEstId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        Estado: newEstado
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || 'Error al actualizar el estado');
+                }
+                
+                // Update fecha actualización display (API sets it to CURRENT_DATE automatically)
+                const studentItem = this.closest('.student-state-item');
+                const fechaDisplay = studentItem.querySelector('[data-fecha-display]');
+                if (fechaDisplay) {
+                    const today = new Date();
+                    const todayStr = today.toISOString().split('T')[0];
+                    fechaDisplay.textContent = formatDate(todayStr);
+                }
+                
+                // Update border color based on new estado
+                const borderColors = {
+                    'PENDIENTE': '#ffc107',      // Yellow
+                    'EN_PROGRESO': '#17a2b8',    // Blue
+                    'COMPLETADO': '#28a745',     // Green
+                    'CANCELADO': '#dc3545'       // Red
+                };
+                const newBorderColor = borderColors[newEstado] || '#ddd';
+                if (studentItem) {
+                    studentItem.style.borderColor = newBorderColor;
+                    studentItem.setAttribute('data-estado', newEstado);
+                }
+                
+                // Show success feedback on selector
+                this.style.borderColor = '#28a745';
+                setTimeout(() => {
+                    this.style.borderColor = '';
+                }, 1000);
+                
+                // Reload app data to reflect changes
+                if (typeof loadAppData === 'function') {
+                    await loadAppData();
+                } else if (typeof refreshAppData === 'function') {
+                    await refreshAppData();
+                } else if (typeof loadData === 'function') {
+                    await loadData();
+                }
+            } catch (error) {
+                console.error('Error updating estado:', error);
+                // Revert selection on error
+                this.value = this.dataset.originalValue || 'PENDIENTE';
+                alert(`Error al actualizar el estado: ${error.message}`);
+            }
+        });
+        
+        // Store original value for error recovery
+        selector.dataset.originalValue = selector.value;
+    });
+    
+    // Setup real-time observaciones editors
+    const observacionesEditors = modal.querySelectorAll('.observaciones-editor');
+    observacionesEditors.forEach(textarea => {
+        const originalValue = textarea.value;
+        textarea.dataset.originalValue = originalValue;
+        
+        // Update on blur (when user leaves the field)
+        textarea.addEventListener('blur', async function() {
+            const temaEstId = parseInt(this.dataset.temaEstId);
+            const newObservaciones = this.value.trim();
+            const currentOriginalValue = this.dataset.originalValue || '';
+            
+            if (!temaEstId) {
+                console.error('Error: temaEstId no válido');
+                return;
+            }
+            
+            // Only update if value changed
+            if (newObservaciones === currentOriginalValue) {
+                return;
+            }
+            
+            try {
+                // Update observaciones
+                const response = await fetch(`../api/tema_estudiante.php?id=${temaEstId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        Observaciones: newObservaciones || null
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || 'Error al actualizar las observaciones');
+                }
+                
+                // Update fecha actualización display
+                const studentItem = this.closest('.student-state-item');
+                const fechaDisplay = studentItem.querySelector('[data-fecha-display]');
+                if (fechaDisplay) {
+                    const today = new Date();
+                    const todayStr = today.toISOString().split('T')[0];
+                    fechaDisplay.textContent = formatDate(todayStr);
+                }
+                
+                // Show success feedback
+                this.style.borderColor = '#28a745';
+                setTimeout(() => {
+                    this.style.borderColor = '';
+                }, 1000);
+                
+                // Update original value
+                this.dataset.originalValue = newObservaciones;
+                
+                // Reload app data to reflect changes
+                if (typeof loadAppData === 'function') {
+                    await loadAppData();
+                } else if (typeof refreshAppData === 'function') {
+                    await refreshAppData();
+                } else if (typeof loadData === 'function') {
+                    await loadData();
+                }
+            } catch (error) {
+                console.error('Error updating observaciones:', error);
+                // Revert on error
+                this.value = this.dataset.originalValue || '';
+                alert(`Error al actualizar las observaciones: ${error.message}`);
+            }
+        });
+        
+        // Optional: Update on Enter key (Ctrl+Enter or Shift+Enter to save)
+        textarea.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                this.blur(); // Trigger blur event to save
+            }
+        });
+    });
+    
+    // Show modal
+    if (typeof showModal === 'function') {
+        showModal('temaStudentStatesModal');
+    } else {
+        modal.classList.add('active');
+    }
+};
+
+/**
+ * Edit contenido (tema)
+ * @param {number} contenidoId - Contenido ID
+ */
+window.editContent = async function(contenidoId) {
+    if (!contenidoId) {
+        alert('Error: ID de tema no válido');
+        return;
+    }
+    
+    try {
+        // Fetch tema data
+        const response = await fetch(`../api/contenido.php?id=${contenidoId}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Error al cargar el tema');
+        }
+        
+        const tema = await response.json();
+        
+        // Get current subject ID from the detail view
+        const subjectId = getCurrentThemesSubjectId() || tema.Materia_ID_materia;
+        if (!subjectId) {
+            alert('Error: No se pudo determinar la materia');
+            return;
+        }
+        
+        // Store current subject ID
+        setCurrentThemesSubjectId(subjectId);
+        
+        // Open content modal
+        const modal = document.getElementById('contentModal');
+        if (!modal) {
+            alert('Error: Modal de contenido no encontrado');
+            return;
+        }
+        
+        // Update modal title
+        const modalTitle = modal.querySelector('.modal-dialog-header h3');
+        if (modalTitle) {
+            modalTitle.textContent = 'Editar Tema';
+        }
+        
+        // Populate form with tema data
+        const contentForm = document.getElementById('contentForm');
+        if (contentForm) {
+            // Remove previous handler
+            const newForm = contentForm.cloneNode(true);
+            contentForm.parentNode.replaceChild(newForm, contentForm);
+            
+            // Get form fields
+            const contentTema = document.getElementById('contentTema');
+            const contentDescripcion = document.getElementById('contentDescripcion');
+            const contentStatus = document.getElementById('contentStatus');
+            const contentSubject = document.getElementById('contentSubject');
+            
+            // Populate fields
+            if (contentTema) contentTema.value = tema.Tema || '';
+            if (contentDescripcion) contentDescripcion.value = tema.Descripcion || '';
+            if (contentStatus) contentStatus.value = tema.Estado || 'PENDIENTE';
+            if (contentSubject) {
+                contentSubject.value = subjectId;
+                // Hide the subject field since we already know which subject
+                contentSubject.style.display = 'none';
+                const subjectGroup = contentSubject.closest('.form-group');
+                if (subjectGroup) {
+                    subjectGroup.style.display = 'none';
+                }
+            }
+            
+            // Store tema ID for update
+            if (contentForm) {
+                contentForm.dataset.editId = contenidoId;
+            }
+            
+            // Add new submit handler
+            const newContentForm = document.getElementById('contentForm');
+            newContentForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (typeof saveContentFromModal === 'function') {
+                    await saveContentFromModal(contenidoId);
+                    // Reload themes list after saving
+                    const currentId = getCurrentThemesSubjectId();
+                    if (currentId) {
+                        loadSubjectThemesList(currentId);
+                    }
+                } else {
+                    alert('Función saveContentFromModal no está disponible');
+                }
+            });
+        }
+        
+        // Show modal
+        if (typeof showModal === 'function') {
+            showModal('contentModal');
+        } else {
+            modal.classList.add('active');
+        }
+    } catch (error) {
+        console.error('Error editing content:', error);
+        alert(`Error al editar el tema: ${error.message}`);
+    }
+};
+
+/**
+ * Delete contenido (tema)
+ * @param {number} contenidoId - Contenido ID
+ */
+window.deleteContent = async function(contenidoId) {
+    if (!contenidoId) {
+        alert('Error: ID de tema no válido');
+        return;
+    }
+    
+    if (!confirm('¿Estás seguro de que deseas eliminar este tema?\n\nEsta acción eliminará el tema y todas sus relaciones con estudiantes.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`../api/contenido.php?id=${contenidoId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+        
+        const result = await response.json().catch(() => ({}));
+        
+        if (response.ok && result.success) {
+            // Show success message
+            if (typeof showNotification === 'function') {
+                showNotification('Tema eliminado exitosamente', 'success');
+            } else {
+                alert('Tema eliminado exitosamente');
+            }
+            
+            // Reload app data
+            if (typeof loadAppData === 'function') {
+                await loadAppData();
+            } else if (typeof refreshAppData === 'function') {
+                await refreshAppData();
+            } else if (typeof loadData === 'function') {
+                await loadData();
+            }
+            
+            // Reload themes list
+            const subjectId = getCurrentThemesSubjectId();
+            if (subjectId && typeof loadSubjectThemesList === 'function') {
+                loadSubjectThemesList(subjectId);
+            }
+        } else {
+            throw new Error(result.message || 'Error al eliminar el tema');
+        }
+    } catch (error) {
+        console.error('Error deleting content:', error);
+        alert(`Error al eliminar el tema: ${error.message}`);
+    }
+};
 
 /**
  * Setup materia details tab handlers
