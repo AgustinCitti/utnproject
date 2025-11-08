@@ -326,6 +326,35 @@
     color: #667eea;
 }
 
+/* ==========================================================================
+   NAVIGATION LOGOUT BUTTON DARK MODE
+   ========================================================================== */
+
+/* Logout button - Button colors */
+[data-theme="dark"] .desktop-nav .logout-btn,
+[data-theme="dark"] .logout-btn {
+    color: var(--text-primary);
+    background: transparent;
+}
+
+[data-theme="dark"] .desktop-nav .logout-btn:hover,
+[data-theme="dark"] .logout-btn:hover {
+    background: var(--bg-primary);
+    color: #dc3545;
+}
+
+/* Logout button icon - Icon color */
+[data-theme="dark"] .desktop-nav .logout-btn i,
+[data-theme="dark"] .logout-btn i {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .desktop-nav .logout-btn:hover i,
+[data-theme="dark"] .logout-btn:hover i {
+    color: #dc3545;
+    transform: scale(1.1);
+}
+
 /* Language dropdown menu - Dropdown background and border */
 [data-theme="dark"] .desktop-nav .language-dropdown-menu {
     background: var(--card-bg);
