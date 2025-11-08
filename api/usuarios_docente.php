@@ -27,7 +27,9 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     exit;
 }
 
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'ADMIN') {
+// Verificar rol de administrador (case-insensitive)
+$userRole = isset($_SESSION['user_role']) ? strtoupper(trim($_SESSION['user_role'])) : '';
+if ($userRole !== 'ADMIN') {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Acceso denegado. Solo administradores pueden acceder.']);
     exit;

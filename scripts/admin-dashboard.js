@@ -39,7 +39,9 @@ async function syncSession() {
 // Check if user is logged in and is ADMIN
 function checkAdminAuth() {
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const userRole = localStorage.getItem('userRole');
+    const userRole = (localStorage.getItem('userRole') || '').toUpperCase().trim();
+    
+    console.log('Admin dashboard auth check - isLoggedIn:', isLoggedIn, 'userRole:', userRole);
     
     if (!isLoggedIn || userRole !== 'ADMIN') {
         // Redirect to login

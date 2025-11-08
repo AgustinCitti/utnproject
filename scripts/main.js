@@ -33,9 +33,11 @@ async function initializeApp() {
             window.location.href = 'index.html';
             return;
         }
-        // Redirect ADMIN users to admin dashboard
-        const userRole = localStorage.getItem('userRole');
+        // Redirect ADMIN users to admin dashboard (case-insensitive check)
+        const userRole = (localStorage.getItem('userRole') || '').toUpperCase().trim();
+        console.log('Checking user role on home.html:', userRole);
         if (userRole === 'ADMIN') {
+            console.log('ADMIN user detected on home.html, redirecting to admin dashboard');
             window.location.href = 'admindashboard.html';
             return;
         }

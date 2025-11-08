@@ -106,7 +106,7 @@ CREATE TABLE Usuarios_docente (
     Fecha_registro DATE DEFAULT (CURRENT_DATE),
     Ultimo_acceso TIMESTAMP NULL COMMENT 'Última vez que accedió al sistema',
     Estado ENUM('ACTIVO', 'INACTIVO', 'SUSPENDIDO', 'VACACIONES') DEFAULT 'ACTIVO',
-    Tipo_usuario ENUM('PROFESOR', 'PROFESOR_ADJUNTO', 'JEFE_TP', 'COORDINADOR') DEFAULT 'PROFESOR',
+    Tipo_usuario ENUM('PROFESOR', 'PROFESOR_ADJUNTO', 'JEFE_TP', 'COORDINADOR', 'ADMIN') DEFAULT 'PROFESOR',
     Plan_usuario ENUM('ESTANDAR', 'PREMIUM') DEFAULT 'ESTANDAR' COMMENT 'Plan de suscripción del docente',
     Plan_actual_ID INT NULL COMMENT 'Referencia al plan activo',
     Configuracion JSON COMMENT 'Configuraciones personales del usuario',

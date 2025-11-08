@@ -26,11 +26,30 @@ function initializeLogin() {
                     localStorage.setItem('userId', result.user.id);
                     localStorage.setItem('userSpecialty', result.user.specialty);
                     
-                    // Redirect based on user role
-                    if (result.user.role === 'ADMIN') {
-                        window.location.href = '../pages/admindashboard.html';
+                    // Debug: Log the role for troubleshooting
+                    console.log('=== LOGIN REDIRECT DEBUG ===');
+                    console.log('Full result:', result);
+                    console.log('User object:', result.user);
+                    console.log('User role from login (raw):', result.user.role);
+                    console.log('User role type:', typeof result.user.role);
+                    
+                    // Redirect based on user role (case-insensitive check)
+                    const userRole = (result.user.role || '').toUpperCase().trim();
+                    console.log('User role (normalized):', userRole);
+                    console.log('Is ADMIN?', userRole === 'ADMIN');
+                    
+                    if (userRole === 'ADMIN') {
+                        console.log('✓ Redirecting ADMIN user to admin dashboard');
+                        // login.html is in pages/, so admindashboard.html is in the same directory
+                        // Use replace and add a small delay to ensure localStorage is saved
+                        setTimeout(() => {
+                            window.location.replace('admindashboard.html');
+                        }, 100);
                     } else {
-                        window.location.href = '../pages/home.html';
+                        console.log('✗ Redirecting regular user to home (role:', userRole, ')');
+                        setTimeout(() => {
+                            window.location.replace('home.html');
+                        }, 100);
                     }
                 } else {
                     showLoginError(result.message);
@@ -291,6 +310,13 @@ async function authenticateUser(email, password) {
 
         const result = await response.json();
 
+        // Debug: Log the full response
+        console.log('Login response:', result);
+        if (result.success && result.user) {
+            console.log('User data from login:', result.user);
+            console.log('User role value:', result.user.role, 'Type:', typeof result.user.role);
+        }
+
         // The backend response structure is designed to be returned directly.
         // It will contain { success: true, user: {...} } or { success: false, message: '...' }
         return result;
@@ -326,11 +352,30 @@ function handleLogin() {
             localStorage.setItem('userId', result.user.id);
             localStorage.setItem('userSpecialty', result.user.specialty);
             
-            // Redirect based on user role
-            if (result.user.role === 'ADMIN') {
-                window.location.href = '../pages/admindashboard.html';
+            // Debug: Log the role for troubleshooting
+            console.log('=== LOGIN REDIRECT DEBUG (handleLogin) ===');
+            console.log('Full result:', result);
+            console.log('User object:', result.user);
+            console.log('User role from login (raw):', result.user.role);
+            console.log('User role type:', typeof result.user.role);
+            
+            // Redirect based on user role (case-insensitive check)
+            const userRole = (result.user.role || '').toUpperCase().trim();
+            console.log('User role (normalized):', userRole);
+            console.log('Is ADMIN?', userRole === 'ADMIN');
+            
+            if (userRole === 'ADMIN') {
+                console.log('✓ Redirecting ADMIN user to admin dashboard');
+                // login.html is in pages/, so admindashboard.html is in the same directory
+                // Use replace and add a small delay to ensure localStorage is saved
+                setTimeout(() => {
+                    window.location.replace('admindashboard.html');
+                }, 100);
             } else {
-                window.location.href = '../pages/home.html';
+                console.log('✗ Redirecting regular user to home (role:', userRole, ')');
+                setTimeout(() => {
+                    window.location.replace('home.html');
+                }, 100);
             }
         } else {
             showLoginError(result.message);
