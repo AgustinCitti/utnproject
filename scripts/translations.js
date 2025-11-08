@@ -68,6 +68,7 @@ const translations = {
         about: "Acerca de",
         contact: "Contacto",
         login: "Iniciar Sesión",
+        logout: "Cerrar Sesión",
         register: "Registrarse",
         
         // Login page
@@ -461,6 +462,7 @@ const translations = {
         about: "About",
         contact: "Contact",
         login: "Login",
+        logout: "Logout",
         register: "Register",
         
         // Login page
