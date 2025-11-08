@@ -25,7 +25,13 @@ function initializeLogin() {
                     localStorage.setItem('userRole', result.user.role);
                     localStorage.setItem('userId', result.user.id);
                     localStorage.setItem('userSpecialty', result.user.specialty);
-                    window.location.href = '../pages/home.html';
+                    
+                    // Redirect based on user role
+                    if (result.user.role === 'ADMIN') {
+                        window.location.href = '../pages/admindashboard.html';
+                    } else {
+                        window.location.href = '../pages/home.html';
+                    }
                 } else {
                     showLoginError(result.message);
                 }
@@ -320,7 +326,12 @@ function handleLogin() {
             localStorage.setItem('userId', result.user.id);
             localStorage.setItem('userSpecialty', result.user.specialty);
             
-            window.location.href = '../pages/home.html';
+            // Redirect based on user role
+            if (result.user.role === 'ADMIN') {
+                window.location.href = '../pages/admindashboard.html';
+            } else {
+                window.location.href = '../pages/home.html';
+            }
         } else {
             showLoginError(result.message);
             if (result.google_login_required) {

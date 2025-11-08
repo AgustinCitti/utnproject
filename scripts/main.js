@@ -16,6 +16,11 @@ async function initializeApp() {
     // Initialize language system
     initializeLanguage();
     
+    // Sync session for OAuth users (if not already in localStorage)
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+        await syncSession();
+    }
+    
     // Check authentication
     if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
         // Allow users to stay on landing page even if logged in
@@ -26,6 +31,12 @@ async function initializeApp() {
     } else if (window.location.pathname.includes('home.html')) {
         if (localStorage.getItem('isLoggedIn') !== 'true') {
             window.location.href = 'index.html';
+            return;
+        }
+        // Redirect ADMIN users to admin dashboard
+        const userRole = localStorage.getItem('userRole');
+        if (userRole === 'ADMIN') {
+            window.location.href = 'admindashboard.html';
             return;
         }
     }
@@ -202,6 +213,28 @@ function initializeDarkMode() {
                 }
             }
         });
+    }
+}
+
+// Sync PHP session to localStorage (for OAuth users)
+async function syncSession() {
+    try {
+        const isInPages = window.location.pathname.includes('/pages/');
+        const baseUrl = isInPages ? '../api' : 'api';
+        const response = await fetch(`${baseUrl}/session_sync.php`);
+        const result = await response.json();
+        
+        if (result.success && result.isLoggedIn && result.user) {
+            // Sync session data to localStorage
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('username', result.user.name);
+            localStorage.setItem('userEmail', result.user.email);
+            localStorage.setItem('userRole', result.user.role);
+            localStorage.setItem('userId', result.user.id);
+        }
+    } catch (error) {
+        // If session sync fails, continue with existing localStorage check
+        console.log('Session sync failed, using localStorage:', error);
     }
 }
 

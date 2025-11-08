@@ -107,8 +107,12 @@ try {
     $_SESSION['user_role'] = $userRole;
     $_SESSION['logged_in'] = true;
 
-    // Redirigir al usuario a la página principal de la aplicación
-    header('Location: /utnproject/pages/');
+    // Redirigir al usuario según su rol
+    if ($userRole === 'ADMIN') {
+        header('Location: /utnproject/pages/admindashboard.html');
+    } else {
+        header('Location: /utnproject/pages/home.html');
+    }
     exit();
 
 

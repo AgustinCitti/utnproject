@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - EduSync</title>
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/utilities.css">
+    <link rel="stylesheet" href="../styles/app.css">
+    <link rel="stylesheet" href="../styles/components.css">
+    <link rel="stylesheet" href="../styles/responsive.css">
+    <link rel="stylesheet" href="../styles/dark-mode.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="../styles/assets/icon.ico" type="image/x-icon">
+    <style>
+        body {
+            background-image: url('../styles/assets/background.jpeg');
+            background-size: 200px 200px;
+            background-position: top left;
+            background-repeat: repeat;
+        }
+        
+        .admin-header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .admin-header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 1.5rem;
+        }
+        
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem 2rem;
+        }
+        
+        .admin-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .users-table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .users-table thead {
+            background: #f8f9fa;
+        }
+        
+        .users-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .users-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .users-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-icon {
+            padding: 0.5rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .btn-icon:hover {
+            background: #f0f0f0;
+        }
+        
+        .btn-edit {
+            color: #007bff;
+        }
+        
+        .btn-copy {
+            color: #6c757d;
+        }
+        
+        .btn-delete {
+            color: #dc3545;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-activo {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-inactivo {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .role-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background: #e7f3ff;
+            color: #004085;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        
+        .search-bar {
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-bar input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Admin Header -->
+    <header class="admin-header">
+        <div class="d-flex justify-between items-center">
+            <h1><i class="fas fa-shield-alt"></i> Admin Dashboard - User Management</h1>
+            <div class="d-flex items-center gap-2">
+                <span id="adminUserName">Admin</span>
+                <button class="btn-secondary" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="admin-container">
+        <!-- Messages -->
+        <div id="messageContainer"></div>
+
+        <!-- Admin Actions -->
+        <div class="admin-actions">
+            <button class="btn-primary" onclick="openAddUserModal()">
+                <i class="fas fa-user-plus"></i> Add New User
+            </button>
+            <button class="btn-secondary" onclick="refreshUsers()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search users by name, email, or DNI..." onkeyup="filterUsers()">
+        </div>
+
+        <!-- Users Table -->
+        <div class="users-table-container">
+            <div id="usersTableLoading" class="loading">
+                <i class="fas fa-spinner fa-spin"></i> Loading users...
+            </div>
+            <table class="users-table" id="usersTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Last Name</th>
+                        <th>Email</th>
+                        <th>DNI</th>
+                        <th>Phone</th>
+                        <th>Specialty</th>
+                        <th>Academic Title</th>
+                        <th>User Type</th>
+                        <th>Status</th>
+                        <th>Last Access</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add/Edit User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New User</h2>
+                <button class="close-modal" onclick="closeUserModal()">&times;</button>
+            </div>
+            <form id="userForm">
+                <input type="hidden" id="userId" name="userId">
+                
+                <div class="form-group">
+                    <label for="nombre">Name *</label>
+                    <input type="text" id="nombre" name="nombre" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="apellido">Last Name *</label>
+                    <input type="text" id="apellido" name="apellido" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password <span id="passwordRequired" style="color: red;">*</span></label>
+                    <input type="password" id="password" name="password">
+                    <small style="color: #6c757d;">Leave empty to keep current password (when editing)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dni">DNI</label>
+                    <input type="text" id="dni" name="dni">
+                </div>
+                
+                <div class="form-group">
+                    <label for="telefono">Phone</label>
+                    <input type="text" id="telefono" name="telefono">
+                </div>
+                
+                <div class="form-group">
+                    <label for="direccion">Address</label>
+                    <input type="text" id="direccion" name="direccion">
+                </div>
+                
+                <div class="form-group">
+                    <label for="fecha_nacimiento">Birth Date</label>
+                    <input type="date" id="fecha_nacimiento" name="fecha_nacimiento">
+                </div>
+                
+                <div class="form-group">
+                    <label for="especialidad">Specialty</label>
+                    <input type="text" id="especialidad" name="especialidad">
+                </div>
+                
+                <div class="form-group">
+                    <label for="titulo_academico">Academic Title</label>
+                    <input type="text" id="titulo_academico" name="titulo_academico">
+                </div>
+                
+                <div class="form-group">
+                    <label for="tipo_usuario">User Type *</label>
+                    <select id="tipo_usuario" name="tipo_usuario" required>
+                        <option value="PROFESOR">PROFESOR</option>
+                        <option value="PROFESOR_ADJUNTO">PROFESOR_ADJUNTO</option>
+                        <option value="ADMIN">ADMIN</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="estado">Status *</label>
+                    <select id="estado" name="estado" required>
+                        <option value="ACTIVO">ACTIVO</option>
+                        <option value="INACTIVO">INACTIVO</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="plan_usuario">Subscription Plan</label>
+                    <input type="text" id="plan_usuario" name="plan_usuario">
+                </div>
+                
+                <div class="form-group">
+                    <label for="configuracion">Configuration (JSON)</label>
+                    <textarea id="configuracion" name="configuracion" placeholder='{"key": "value"}'></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeUserModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../scripts/utils.js"></script>
+    <script src="../scripts/auth.js"></script>
+    <script src="../scripts/admin-dashboard.js"></script>
+</body>
+</html>
+
