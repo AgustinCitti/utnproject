@@ -142,7 +142,10 @@ function getAttendanceTrends(subjectId = 'all') {
     }
 
     if (filteredAttendance.length === 0) {
-        console.warn('getAttendanceTrends: No attendance records after filtering');
+        // Only log in debug mode to reduce console noise
+        if (window.DEBUG_MODE) {
+            console.warn('getAttendanceTrends: No attendance records after filtering');
+        }
         return { labels: [], data: [] };
     }
 

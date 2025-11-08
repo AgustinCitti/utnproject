@@ -65,7 +65,7 @@ SubjectsModule.CourseDropdown = {
         
         try {
             // Get unique courses
-            const courses = await this.getAllUniqueCourses();
+            const courses = await SubjectsModule.CourseDropdown.getAllUniqueCourses();
             
             // Add course options
             courses.forEach(course => {
@@ -103,7 +103,7 @@ SubjectsModule.CourseDropdown = {
         filter.innerHTML = '<option value="all" data-translate="all_courses">Todos los Cursos</option>';
         
         try {
-            const courses = await this.getAllUniqueCourses();
+            const courses = await SubjectsModule.CourseDropdown.getAllUniqueCourses();
             
             courses.forEach(course => {
                 const option = document.createElement('option');
