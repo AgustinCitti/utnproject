@@ -1131,6 +1131,9 @@
                                 <button id="importEstudiantesBtn" class="btn-secondary" style="padding: 8px 16px; font-size: 0.9em;">
                                     <i class="fas fa-upload"></i> Importar Excel
                                 </button>
+                                <button id="markAttendanceMateriaBtn" class="btn-secondary" style="padding: 8px 16px; font-size: 0.9em;">
+                                    <i class="fas fa-calendar-check"></i> Marcar Asistencia
+                                </button>
                                 <button id="addStudentToMateriaBtn" class="btn-primary" style="padding: 8px 16px; font-size: 0.9em;">
                                     <i class="fas fa-plus"></i> Agregar Estudiante
                                 </button>
@@ -2141,6 +2144,58 @@
                     <i class="fas fa-check"></i>
                     <span>Cerrar</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mark Attendance Modal - Side Dialog -->
+    <div id="markAttendanceMateriaModal" class="modal-overlay">
+        <div class="modal-dialog" style="width: 500px; max-width: 90vw;">
+            <div class="modal-dialog-content">
+                <div class="modal-dialog-header">
+                    <h3 id="markAttendanceMateriaModalTitle">Marcar Asistencia</h3>
+                    <button id="closeMateriaAttendanceModal" class="modal-dialog-close close-modal">&times;</button>
+                </div>
+                <div class="modal-dialog-body">
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="materiaAttendanceDate" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #333;">Fecha</label>
+                    <input type="date" id="materiaAttendanceDate" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="materiaAttendanceNotes" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #333;">Observaciones (opcional)</label>
+                    <textarea id="materiaAttendanceNotes" rows="2" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; resize: vertical; font-family: inherit;" placeholder="Notas adicionales sobre la asistencia..."></textarea>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <h4 style="margin-bottom: 1rem; color: #333; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-users"></i>
+                        Estudiantes
+                    </h4>
+                    <div style="overflow-x: auto; border: 1px solid #ddd; border-radius: 4px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f8f9fa; border-bottom: 2px solid #ddd;">
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #333;">Estudiante</th>
+                                    <th style="padding: 12px; text-align: center; width: 120px; font-weight: 600; color: #333;">Presente</th>
+                                    <th style="padding: 12px; text-align: center; width: 120px; font-weight: 600; color: #333;">Ausente</th>
+                                </tr>
+                            </thead>
+                            <tbody id="materiaAttendanceTableBody">
+                                <tr>
+                                    <td colspan="3" style="padding: 20px; text-align: center; color: #666;">
+                                        Cargando estudiantes...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                </div>
+                <div class="modal-dialog-footer">
+                    <button type="button" id="cancelMateriaAttendanceBtn" class="btn-secondary">Cancelar</button>
+                    <button type="button" id="saveMateriaAttendanceBtn" class="btn-primary">
+                        <i class="fas fa-save"></i> Guardar Asistencia
+                    </button>
+                </div>
             </div>
         </div>
     </div>

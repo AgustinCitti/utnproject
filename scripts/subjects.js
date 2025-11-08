@@ -1516,6 +1516,10 @@ window.deleteContent = async function(contenidoId) {
  * @param {number} subjectId - Subject ID
  */
 function setupMateriaDetailsTabs(subjectId) {
+    // Store current subject ID globally for button handlers
+    setCurrentSubjectId(subjectId);
+    window.currentSubjectId = subjectId;
+    
     // Temas tab button
     const temasTabBtn = document.getElementById('temasTabBtn');
     if (temasTabBtn) {
@@ -1713,6 +1717,52 @@ function setupMateriaDetailsTabs(subjectId) {
                 }
             }
         };
+    }
+    
+    // Setup mark attendance button - Use event delegation on materia-details section
+    // This works even if button is in hidden tab
+    const materiaDetailsSection = document.getElementById('materia-details');
+    if (materiaDetailsSection) {
+        // Remove old handler if exists
+        if (materiaDetailsSection._attendanceHandler) {
+            materiaDetailsSection.removeEventListener('click', materiaDetailsSection._attendanceHandler);
+        }
+        
+        // Create new handler
+        materiaDetailsSection._attendanceHandler = function(e) {
+            const btn = e.target.closest('#markAttendanceMateriaBtn');
+            if (btn && !btn._clickHandled) {
+                btn._clickHandled = true;
+                e.preventDefault();
+                e.stopPropagation();
+                const id = btn.dataset.subjectId || subjectId || window.currentSubjectId;
+                console.log('Mark attendance clicked (event delegation), subjectId:', id);
+                if (id && window.openAttendanceModal) {
+                    window.openAttendanceModal(id);
+                } else {
+                    alert('Error: No se pudo determinar la materia o la función no está disponible');
+                }
+                setTimeout(() => { btn._clickHandled = false; }, 1000);
+            }
+        };
+        
+        // Add event listener with capture to catch early
+        materiaDetailsSection.addEventListener('click', materiaDetailsSection._attendanceHandler, true);
+        
+        // Also set up direct handler if button exists
+        const markAttendanceMateriaBtn = document.getElementById('markAttendanceMateriaBtn');
+        if (markAttendanceMateriaBtn) {
+            markAttendanceMateriaBtn.dataset.subjectId = subjectId;
+            markAttendanceMateriaBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.openAttendanceModal) {
+                    window.openAttendanceModal(subjectId);
+                } else {
+                    alert('Error: Función de asistencia no disponible');
+                }
+            };
+        }
     }
     
     // Setup create evaluacion button
@@ -2121,6 +2171,34 @@ function switchToEstudiantesTab(subjectId) {
     // Load students when switching to this tab
     if (subjectId && typeof loadMateriaStudents === 'function') {
         loadMateriaStudents(subjectId);
+    }
+    
+    // Setup mark attendance button handler when tab becomes visible
+    // Use both direct handler and event delegation for reliability
+    const markAttendanceMateriaBtn = document.getElementById('markAttendanceMateriaBtn');
+    if (markAttendanceMateriaBtn) {
+        markAttendanceMateriaBtn.dataset.subjectId = subjectId;
+        
+        // Remove old handler
+        const newBtn = markAttendanceMateriaBtn.cloneNode(true);
+        markAttendanceMateriaBtn.parentNode.replaceChild(newBtn, markAttendanceMateriaBtn);
+        const btn = document.getElementById('markAttendanceMateriaBtn');
+        
+        // Set new handler
+        btn.dataset.subjectId = subjectId;
+        btn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Mark as handled to prevent global handler from also firing
+            btn._clickHandled = true;
+            console.log('Direct handler: Mark attendance clicked, subjectId:', subjectId);
+            if (window.openAttendanceModal) {
+                window.openAttendanceModal(subjectId);
+            } else {
+                alert('Error: Función de asistencia no disponible');
+            }
+            setTimeout(() => { btn._clickHandled = false; }, 1000);
+        };
     }
     
     // Setup add student button handler
@@ -5472,3 +5550,376 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+// ============================================================================
+// MARK ATTENDANCE - NEW IMPLEMENTATION FROM SCRATCH
+// ============================================================================
+
+// Global click handler as ultimate fallback - catches ALL clicks on the button
+// Only add once to prevent duplicates
+if (!window._attendanceGlobalHandlerAdded) {
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('#markAttendanceMateriaBtn');
+        if (btn && !btn._clickHandled) {
+            btn._clickHandled = true;
+            e.preventDefault();
+            e.stopPropagation();
+            const subjectId = btn.dataset.subjectId || window.currentSubjectId;
+            console.log('Global fallback handler: Mark attendance clicked, subjectId:', subjectId);
+            if (subjectId && window.openAttendanceModal) {
+                window.openAttendanceModal(subjectId);
+            }
+            setTimeout(() => { btn._clickHandled = false; }, 1000);
+        }
+    }, true); // Use capture phase
+    window._attendanceGlobalHandlerAdded = true;
+}
+
+/**
+ * Open attendance modal - NEW SIMPLE IMPLEMENTATION
+ */
+// Make function globally available
+window.openAttendanceModal = function(subjectId) {
+    // Prevent multiple simultaneous calls - use a more robust guard
+    const callKey = 'attendance_' + subjectId;
+    if (window._openingAttendanceModal === callKey) {
+        console.log('Modal already opening for subject', subjectId, '- ignoring duplicate call');
+        return;
+    }
+    
+    window._openingAttendanceModal = callKey;
+    console.log('Opening attendance modal for subject:', subjectId);
+    
+    if (!subjectId) {
+        console.error('openAttendanceModal: No subjectId provided');
+        alert('Error: No se pudo determinar la materia');
+        window._openingAttendanceModal = false;
+        return;
+    }
+    
+    let modal = document.getElementById('markAttendanceMateriaModal');
+    if (!modal) {
+        console.error('Modal element not found!');
+        alert('Error: Modal no encontrado');
+        window._openingAttendanceModal = false;
+        return;
+    }
+    
+    // Ensure modal is in body (not inside a hidden container)
+    if (modal.parentElement !== document.body) {
+        console.log('Moving modal to body...');
+        document.body.appendChild(modal);
+    }
+    
+    console.log('Modal element found, showing...');
+    
+    // Get subject name
+    const data = window.appData || window.data || {};
+    const subject = data.materia && Array.isArray(data.materia) 
+        ? data.materia.find(m => parseInt(m.ID_materia) === parseInt(subjectId))
+        : null;
+    
+    // Update title
+    const title = document.getElementById('markAttendanceMateriaModalTitle');
+    if (title) {
+        title.textContent = subject ? `Marcar Asistencia - ${subject.Nombre}` : 'Marcar Asistencia';
+    }
+    
+    // Set date to today
+    const dateInput = document.getElementById('materiaAttendanceDate');
+    if (dateInput) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // Clear notes
+    const notesInput = document.getElementById('materiaAttendanceNotes');
+    if (notesInput) {
+        notesInput.value = '';
+    }
+    
+    // Store subject ID
+    modal.dataset.subjectId = subjectId;
+    
+    // Show modal using the same pattern as other modals
+    console.log('Calling showModal function...');
+    if (typeof showModal === 'function') {
+        showModal('markAttendanceMateriaModal');
+        console.log('showModal called, checking modal state...');
+        
+        // Verify it worked
+        setTimeout(() => {
+            const hasActive = modal.classList.contains('active');
+            const computed = window.getComputedStyle(modal);
+            const dialog = modal.querySelector('.modal-dialog');
+            const dialogComputed = dialog ? window.getComputedStyle(dialog) : null;
+            
+            console.log('Modal state - has active class:', hasActive, 'display:', computed.display, 'opacity:', computed.opacity, 'z-index:', computed.zIndex);
+            if (dialogComputed) {
+                console.log('Dialog state - right:', dialogComputed.right, 'width:', dialogComputed.width, 'display:', dialogComputed.display);
+            }
+            
+            if (!hasActive) {
+                console.warn('Modal did not get active class, adding manually...');
+                modal.style.display = '';
+                modal.classList.add('active');
+            }
+            
+            // Force dialog to slide in if it's not
+            if (dialog && dialogComputed && dialogComputed.right !== '0px' && dialogComputed.right !== '0') {
+                console.warn('Dialog not at right:0, forcing position...');
+                dialog.style.right = '0px';
+            }
+            
+            // Check if modal is actually visible
+            const rect = modal.getBoundingClientRect();
+            console.log('Modal bounding rect:', {
+                top: rect.top,
+                left: rect.left,
+                width: rect.width,
+                height: rect.height,
+                visible: rect.width > 0 && rect.height > 0
+            });
+            
+            // Check for elements that might be covering it
+            const elementAtCenter = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+            console.log('Element at screen center:', elementAtCenter?.id || elementAtCenter?.className || elementAtCenter?.tagName);
+            
+            // Force visibility and dimensions just to be sure
+            modal.style.visibility = 'visible';
+            modal.style.pointerEvents = 'auto';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            if (dialog) {
+                dialog.style.visibility = 'visible';
+                dialog.style.pointerEvents = 'auto';
+            }
+            
+            // Re-check bounding rect after forcing styles
+            const rect2 = modal.getBoundingClientRect();
+            console.log('Modal bounding rect after fix:', {
+                top: rect2.top,
+                left: rect2.left,
+                width: rect2.width,
+                height: rect2.height,
+                visible: rect2.width > 0 && rect2.height > 0
+            });
+        }, 50);
+    } else {
+        console.warn('showModal function not found, using fallback...');
+        // Fallback: use class-based approach
+        modal.style.display = '';
+        modal.classList.add('active');
+    }
+    
+    // Setup modal handlers if available
+    if (typeof setupModalHandlers === 'function') {
+        setupModalHandlers('markAttendanceMateriaModal');
+    }
+    
+    // Setup buttons
+    setupAttendanceModalButtons(subjectId);
+    
+    // Load students
+    loadAttendanceStudents(subjectId);
+    
+    // Reset guard after a delay to allow modal to fully open
+    setTimeout(() => {
+        window._openingAttendanceModal = false;
+    }, 500);
+}
+
+/**
+ * Setup modal button handlers
+ */
+function setupAttendanceModalButtons(subjectId) {
+    // Close button
+    const closeBtn = document.getElementById('closeMateriaAttendanceModal');
+    if (closeBtn) {
+        closeBtn.onclick = closeAttendanceModal;
+    }
+    
+    // Cancel button
+    const cancelBtn = document.getElementById('cancelMateriaAttendanceBtn');
+    if (cancelBtn) {
+        cancelBtn.onclick = closeAttendanceModal;
+    }
+    
+    // Save button
+    const saveBtn = document.getElementById('saveMateriaAttendanceBtn');
+    if (saveBtn) {
+        saveBtn.onclick = function() {
+            saveAttendance(subjectId);
+        };
+    }
+    
+    // Backdrop click
+    const modal = document.getElementById('markAttendanceMateriaModal');
+    if (modal) {
+        modal.onclick = function(e) {
+            if (e.target === modal) {
+                closeAttendanceModal();
+            }
+        };
+    }
+}
+
+/**
+ * Close attendance modal
+ */
+function closeAttendanceModal() {
+    const modal = document.getElementById('markAttendanceMateriaModal');
+    if (!modal) return;
+    
+    // Use the same pattern as other modals
+    if (typeof closeModal === 'function') {
+        closeModal('markAttendanceMateriaModal');
+    } else {
+        // Fallback: remove active class
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+    
+    document.body.style.overflow = '';
+    window._openingAttendanceModal = false;
+}
+
+/**
+ * Load students for attendance
+ */
+function loadAttendanceStudents(subjectId) {
+    const tableBody = document.getElementById('materiaAttendanceTableBody');
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = '<tr><td colspan="3" style="padding: 20px; text-align: center;">Cargando...</td></tr>';
+    
+    const data = window.appData || window.data || {};
+    let students = [];
+    
+    if (data.alumnos_x_materia && data.estudiante) {
+        const enrolledIds = data.alumnos_x_materia
+            .filter(axm => parseInt(axm.Materia_ID_materia) === parseInt(subjectId))
+            .map(axm => parseInt(axm.Estudiante_ID_Estudiante));
+        
+        students = data.estudiante
+            .filter(s => enrolledIds.includes(parseInt(s.ID_Estudiante)))
+            .sort((a, b) => {
+                const nameA = `${a.Apellido || ''} ${a.Nombre || ''}`.toLowerCase();
+                const nameB = `${b.Apellido || ''} ${b.Nombre || ''}`.toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
+    }
+    
+    if (students.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="3" style="padding: 20px; text-align: center;">No hay estudiantes</td></tr>';
+        return;
+    }
+    
+    tableBody.innerHTML = students.map(s => {
+        const name = `${s.Nombre || ''} ${s.Apellido || ''}`.trim();
+        const id = s.ID_Estudiante;
+        return `
+            <tr data-student-id="${id}">
+                <td style="padding: 12px;"><strong>${name}</strong></td>
+                <td style="padding: 12px; text-align: center;">
+                    <button class="att-btn present" data-student-id="${id}" data-status="P" style="padding: 8px 16px; border: 2px solid #28a745; background: transparent; color: #28a745; border-radius: 4px; cursor: pointer;">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                    <button class="att-btn absent" data-student-id="${id}" data-status="A" style="padding: 8px 16px; border: 2px solid #dc3545; background: transparent; color: #dc3545; border-radius: 4px; cursor: pointer;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    // Setup button clicks
+    tableBody.querySelectorAll('.att-btn').forEach(btn => {
+        btn.onclick = function() {
+            const row = this.closest('tr');
+            row.querySelectorAll('.att-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'transparent';
+                b.style.color = b.classList.contains('present') ? '#28a745' : '#dc3545';
+            });
+            this.classList.add('active');
+            this.style.background = this.classList.contains('present') ? '#28a745' : '#dc3545';
+            this.style.color = 'white';
+        };
+    });
+}
+
+/**
+ * Save attendance
+ */
+async function saveAttendance(subjectId) {
+    const dateInput = document.getElementById('materiaAttendanceDate');
+    const notesInput = document.getElementById('materiaAttendanceNotes');
+    const tableBody = document.getElementById('materiaAttendanceTableBody');
+    
+    if (!dateInput || !dateInput.value) {
+        alert('Seleccione una fecha');
+        return;
+    }
+    
+    const date = dateInput.value;
+    const notes = notesInput ? notesInput.value : '';
+    const rows = tableBody.querySelectorAll('tr[data-student-id]');
+    const records = [];
+    
+    rows.forEach(row => {
+        const studentId = parseInt(row.dataset.studentId);
+        const activeBtn = row.querySelector('.att-btn.active');
+        if (activeBtn) {
+            records.push({
+                Estudiante_ID_Estudiante: studentId,
+                Materia_ID_materia: parseInt(subjectId),
+                Fecha: date,
+                Presente: activeBtn.dataset.status,
+                Observaciones: notes || null
+            });
+        }
+    });
+    
+    if (records.length === 0) {
+        alert('Marque al menos un estudiante');
+        return;
+    }
+    
+    const baseUrl = window.location.pathname.includes('/pages/') ? '../api' : 'api';
+    let saved = 0;
+    let failed = 0;
+    
+    for (const record of records) {
+        try {
+            const res = await fetch(`${baseUrl}/asistencia.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(record)
+            });
+            const result = await res.json();
+            if (result.success) saved++;
+            else failed++;
+        } catch (e) {
+            console.error('Error:', e);
+            failed++;
+        }
+    }
+    
+    if (saved > 0) {
+        alert(`Guardado: ${saved} estudiante(s)${failed > 0 ? `. Fallaron: ${failed}` : ''}`);
+        closeAttendanceModal();
+        if (typeof loadAppData === 'function') {
+            await loadAppData();
+        }
+    } else {
+        alert('Error al guardar');
+    }
+}

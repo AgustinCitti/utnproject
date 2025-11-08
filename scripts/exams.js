@@ -344,13 +344,7 @@ async function showExamModal(examId = null) {
         </div>
     `;
     
-    // Remove existing modal if present
-    const existingModal = document.getElementById('examModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-    
-    // Add modal to body
+    // Add modal to body (existing modal already removed above)
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
     // Get modal element
