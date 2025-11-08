@@ -1477,52 +1477,39 @@
                     <label for="subjectName" data-translate="subject_name">Nombre de la Materia</label>
                     <input type="text" id="subjectName" required>
                 </div>
-                <div class="form-group">
-                    <label for="subjectCourseDivision" data-translate="course_division">Curso</label>
-                    <select id="subjectCourseDivision" required>
-                        <option value="" data-translate="select_course">- Seleccionar Curso -</option>
-                        <!-- Se poblará dinámicamente con cursos existentes -->
-                    </select>
-                    <small style="display: block; margin-top: 5px; color: #666;">
-                        Selecciona un curso existente o crea uno nuevo. Los cursos se cargan desde las materias creadas.
-                    </small>
-                </div>
-                <!-- Sección para crear nuevo curso (oculta por defecto) -->
-                <div id="createNewCourseSection" style="display: none; padding: 15px; border-radius: 6px; margin-top: 10px;border:none;">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="subjectCourse" data-translate="course">Curso</label>
-                            <select id="subjectCourse">
-                                <option value="" data-translate="select_course">- Seleccionar Curso -</option>
-                                <option value="1">1º Curso</option>
-                                <option value="2">2º Curso</option>
-                                <option value="3">3º Curso</option>
-                                <option value="4">4º Curso</option>
-                                <option value="5">5º Curso</option>
-                                <option value="6">6º Curso</option>
-                                <option value="7">7º Curso</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="subjectDivision" data-translate="division">División</label>
-                            <select id="subjectDivision">
-                                <option value="" data-translate="select_division">- Seleccionar División -</option>
-                                <option value="A">División A</option>
-                                <option value="B">División B</option>
-                                <option value="C">División C</option>
-                                <option value="D">División D</option>
-                                <option value="E">División E</option>
-                                <option value="F">División F</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="subjectInstitucion">Institución</label>
-                            <input type="text" id="subjectInstitucion" placeholder="Ej: Escuela Secundaria N°1">
-                            <small style="display: block; margin-top: 5px; color: #666;">
-                                El mismo curso puede repetirse en distintas instituciones.
-                            </small>
-                        </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="subjectCourse" data-translate="course">Curso</label>
+                        <select id="subjectCourse" required>
+                            <option value="" data-translate="select_course">- Seleccionar Curso -</option>
+                            <option value="1">1º</option>
+                            <option value="2">2º</option>
+                            <option value="3">3º</option>
+                            <option value="4">4º</option>
+                            <option value="5">5º</option>
+                            <option value="6">6º</option>
+                            <option value="7">7º</option>
+                        </select>
                     </div>
+                    <div class="form-group">
+                        <label for="subjectDivision" data-translate="division">División</label>
+                        <select id="subjectDivision" required>
+                            <option value="" data-translate="select_division">- Seleccionar División -</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="subjectInstitucion">Institución</label>
+                    <input type="text" id="subjectInstitucion" placeholder="Ej: Escuela Secundaria N°1">
+                    <small style="display: block; margin-top: 5px; color: #666;">
+                        El mismo curso puede repetirse en distintas instituciones.
+                    </small>
                 </div>
                 <div class="form-group">
                     <label for="subjectDescription" data-translate="description">Descripción</label>
@@ -2158,15 +2145,15 @@
                 </div>
                 <div class="modal-dialog-body">
                 <div style="margin-bottom: 1.5rem;">
-                    <label for="materiaAttendanceDate" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #333;">Fecha</label>
+                    <label for="materiaAttendanceDate" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Fecha</label>
                     <input type="date" id="materiaAttendanceDate" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
                 </div>
                 <div style="margin-bottom: 1.5rem;">
-                    <label for="materiaAttendanceNotes" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #333;">Observaciones (opcional)</label>
+                    <label for="materiaAttendanceNotes" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Observaciones (opcional)</label>
                     <textarea id="materiaAttendanceNotes" rows="2" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; resize: vertical; font-family: inherit;" placeholder="Notas adicionales sobre la asistencia..."></textarea>
                 </div>
                 <div style="margin-bottom: 1rem;">
-                    <h4 style="margin-bottom: 1rem; color: #333; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <h4 style="margin-bottom: 1rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fas fa-users"></i>
                         Estudiantes
                     </h4>
@@ -2174,14 +2161,14 @@
                         <table style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr style="background: #f8f9fa; border-bottom: 2px solid #ddd;">
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #333;">Estudiante</th>
-                                    <th style="padding: 12px; text-align: center; width: 120px; font-weight: 600; color: #333;">Presente</th>
-                                    <th style="padding: 12px; text-align: center; width: 120px; font-weight: 600; color: #333;">Ausente</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Estudiante</th>
+                                    <th style="padding: 12px; text-align: center; width: 120px; font-weight: 600;">Presente</th>
+                                    <th style="padding: 12px; text-align: center; width: 120px; font-weight: 600;">Ausente</th>
                                 </tr>
                             </thead>
                             <tbody id="materiaAttendanceTableBody">
                                 <tr>
-                                    <td colspan="3" style="padding: 20px; text-align: center; color: #666;">
+                                    <td colspan="3" style="padding: 20px; text-align: center;">
                                         Cargando estudiantes...
                                     </td>
                                 </tr>
@@ -2223,6 +2210,12 @@
     <script src="../scripts/students/index.js"></script>
     <script src="../scripts/students.js"></script>
     <script src="../scripts/courses.js"></script>
+    <!-- Load subjects utility modules, then schedule and CRUD modules before subjects.js -->
+    <script src="../scripts/subjects/utils/state.js"></script>
+    <script src="../scripts/subjects/utils/helpers.js"></script>
+    <script src="../scripts/subjects/utils/course-dropdown.js"></script>
+    <script src="../scripts/subjects/schedule.js"></script>
+    <script src="../scripts/subjects/subject-crud.js"></script>
     <script src="../scripts/subjects.js"></script>
     <script src="../scripts/grades.js"></script>
     <script src="../scripts/attendance.js"></script>

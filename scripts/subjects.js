@@ -244,30 +244,159 @@ const populateSubjectSelect = CourseDropdown.populateSubjectSelect || function()
     }
 };
 
-// Schedule functions
-const setupScheduleSelector = Schedule.setupScheduleSelector || function() {
-    const addScheduleEntryBtn = document.getElementById('addScheduleEntryBtn');
-    if (addScheduleEntryBtn) {
-        addScheduleEntryBtn.addEventListener('click', addScheduleEntry);
+// Schedule functions - lazy loading to check window functions each time
+// These will be available after schedule.js loads
+// Store reference to the actual schedule.js function to avoid recursion
+// IMPORTANT: Capture the original function BEFORE defining our wrapper
+let _scheduleSetupScheduleSelector = null;
+
+// Capture the original function from schedule.js if it exists (before we overwrite it)
+if (window.ScheduleModule && window.ScheduleModule.setupScheduleSelector) {
+    _scheduleSetupScheduleSelector = window.ScheduleModule.setupScheduleSelector;
+} else if (window.setupScheduleSelector && typeof window.setupScheduleSelector === 'function') {
+    // Fallback: check window directly, but only if it's not our own function
+    // We can identify it by checking if it's the schedule.js version
+    const funcStr = window.setupScheduleSelector.toString();
+    // schedule.js version doesn't check for _scheduleSetupScheduleSelector
+    if (!funcStr.includes('_scheduleSetupScheduleSelector')) {
+        _scheduleSetupScheduleSelector = window.setupScheduleSelector;
     }
-};
+}
 
-const addScheduleEntry = Schedule.addScheduleEntry || function(entry = null) {
-    // Implementation would go here - this is a placeholder
+function setupScheduleSelector() {
+    // If we have the real function from schedule.js, use it
+    if (_scheduleSetupScheduleSelector) {
+        return _scheduleSetupScheduleSelector.apply(this, arguments);
+    }
+    
+    // Try to get it from ScheduleModule (if schedule.js loaded after this file)
+    if (window.ScheduleModule && window.ScheduleModule.setupScheduleSelector) {
+        _scheduleSetupScheduleSelector = window.ScheduleModule.setupScheduleSelector;
+        return _scheduleSetupScheduleSelector.apply(this, arguments);
+    }
+    
+    // Fallback: basic setup if schedule.js hasn't loaded yet
+    const addScheduleEntryBtn = document.getElementById('addScheduleEntryBtn');
+    if (addScheduleEntryBtn && !addScheduleEntryBtn._hasListener) {
+        addScheduleEntryBtn.addEventListener('click', function() {
+            if (window.addScheduleEntry) {
+                window.addScheduleEntry();
+            } else {
+                console.warn('addScheduleEntry not available yet');
+            }
+        });
+        addScheduleEntryBtn._hasListener = true;
+    }
+}
+
+// Store references to avoid recursion
+// IMPORTANT: Capture original functions BEFORE defining wrappers
+let _scheduleAddScheduleEntry = null;
+let _scheduleUpdateScheduleHiddenField = null;
+let _scheduleResetScheduleSelector = null;
+let _schedulePopulateScheduleSelector = null;
+
+// Capture original functions from schedule.js if they exist (before we overwrite them)
+if (window.ScheduleModule) {
+    if (window.ScheduleModule.addScheduleEntry) {
+        _scheduleAddScheduleEntry = window.ScheduleModule.addScheduleEntry;
+    }
+    if (window.ScheduleModule.updateScheduleHiddenField) {
+        _scheduleUpdateScheduleHiddenField = window.ScheduleModule.updateScheduleHiddenField;
+    }
+    if (window.ScheduleModule.resetScheduleSelector) {
+        _scheduleResetScheduleSelector = window.ScheduleModule.resetScheduleSelector;
+    }
+    if (window.ScheduleModule.populateScheduleSelector) {
+        _schedulePopulateScheduleSelector = window.ScheduleModule.populateScheduleSelector;
+    }
+} else {
+    // Fallback: check window directly, but only if they're not our own functions
+    if (window.addScheduleEntry && typeof window.addScheduleEntry === 'function') {
+        const funcStr = window.addScheduleEntry.toString();
+        if (!funcStr.includes('_scheduleAddScheduleEntry')) {
+            _scheduleAddScheduleEntry = window.addScheduleEntry;
+        }
+    }
+    if (window.updateScheduleHiddenField && typeof window.updateScheduleHiddenField === 'function') {
+        const funcStr = window.updateScheduleHiddenField.toString();
+        if (!funcStr.includes('_scheduleUpdateScheduleHiddenField')) {
+            _scheduleUpdateScheduleHiddenField = window.updateScheduleHiddenField;
+        }
+    }
+    if (window.resetScheduleSelector && typeof window.resetScheduleSelector === 'function') {
+        const funcStr = window.resetScheduleSelector.toString();
+        if (!funcStr.includes('_scheduleResetScheduleSelector')) {
+            _scheduleResetScheduleSelector = window.resetScheduleSelector;
+        }
+    }
+    if (window.populateScheduleSelector && typeof window.populateScheduleSelector === 'function') {
+        const funcStr = window.populateScheduleSelector.toString();
+        if (!funcStr.includes('_schedulePopulateScheduleSelector')) {
+            _schedulePopulateScheduleSelector = window.populateScheduleSelector;
+        }
+    }
+}
+
+function addScheduleEntry(entry = null) {
+    // If we have the real function from schedule.js, use it
+    if (_scheduleAddScheduleEntry) {
+        return _scheduleAddScheduleEntry.apply(this, arguments);
+    }
+    
+    // Try to get it from ScheduleModule (if schedule.js loaded after this file)
+    if (window.ScheduleModule && window.ScheduleModule.addScheduleEntry) {
+        _scheduleAddScheduleEntry = window.ScheduleModule.addScheduleEntry;
+        return _scheduleAddScheduleEntry.apply(this, arguments);
+    }
+    
     console.warn('addScheduleEntry: Schedule module not loaded, using fallback');
-};
+}
 
-const updateScheduleHiddenField = Schedule.updateScheduleHiddenField || function() {
+function updateScheduleHiddenField() {
+    // If we have the real function from schedule.js, use it
+    if (_scheduleUpdateScheduleHiddenField) {
+        return _scheduleUpdateScheduleHiddenField.apply(this, arguments);
+    }
+    
+    // Try to get it from ScheduleModule (if schedule.js loaded after this file)
+    if (window.ScheduleModule && window.ScheduleModule.updateScheduleHiddenField) {
+        _scheduleUpdateScheduleHiddenField = window.ScheduleModule.updateScheduleHiddenField;
+        return _scheduleUpdateScheduleHiddenField.apply(this, arguments);
+    }
+    
     console.warn('updateScheduleHiddenField: Schedule module not loaded, using fallback');
-};
+}
 
-const resetScheduleSelector = Schedule.resetScheduleSelector || function() {
+function resetScheduleSelector() {
+    // If we have the real function from schedule.js, use it
+    if (_scheduleResetScheduleSelector) {
+        return _scheduleResetScheduleSelector.apply(this, arguments);
+    }
+    
+    // Try to get it from ScheduleModule (if schedule.js loaded after this file)
+    if (window.ScheduleModule && window.ScheduleModule.resetScheduleSelector) {
+        _scheduleResetScheduleSelector = window.ScheduleModule.resetScheduleSelector;
+        return _scheduleResetScheduleSelector.apply(this, arguments);
+    }
+    
     console.warn('resetScheduleSelector: Schedule module not loaded, using fallback');
-};
+}
 
-const populateScheduleSelector = Schedule.populateScheduleSelector || function(scheduleString) {
+function populateScheduleSelector(scheduleString) {
+    // If we have the real function from schedule.js, use it
+    if (_schedulePopulateScheduleSelector) {
+        return _schedulePopulateScheduleSelector.apply(this, arguments);
+    }
+    
+    // Try to get it from ScheduleModule (if schedule.js loaded after this file)
+    if (window.ScheduleModule && window.ScheduleModule.populateScheduleSelector) {
+        _schedulePopulateScheduleSelector = window.ScheduleModule.populateScheduleSelector;
+        return _schedulePopulateScheduleSelector.apply(this, arguments);
+    }
+    
     console.warn('populateScheduleSelector: Schedule module not loaded, using fallback');
-};
+}
 
 // Subject CRUD functions - these are critical, so we'll include full implementations
 // Import from module if available, otherwise use inline fallbacks
@@ -5838,6 +5967,15 @@ function loadAttendanceStudents(subjectId) {
             </tr>
         `;
     }).join('');
+    
+    // Apply dark mode styles to table if needed
+    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDarkMode) {
+        const table = tableBody.closest('table');
+        if (table) {
+            table.style.color = 'var(--text-primary, #e0e0e0)';
+        }
+    }
     
     // Setup button clicks
     tableBody.querySelectorAll('.att-btn').forEach(btn => {

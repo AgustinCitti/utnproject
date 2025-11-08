@@ -7,11 +7,18 @@
  * - Schedule entry addition/removal
  */
 
-import { capitalizeFirst } from './utils/helpers.js';
+(function() {
+    'use strict';
+    
+    // Helper function (inline to avoid import issues)
+    function capitalizeFirst(str) {
+        if (!str) return '';
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    }
 
-// Schedule entries state: [{day: 'lunes', startHour: '12:00', endHour: '14:00'}, ...]
-let scheduleEntries = [];
-let scheduleEntryCounter = 0; // Counter for unique IDs
+    // Schedule entries state: [{day: 'lunes', startHour: '12:00', endHour: '14:00'}, ...]
+    let scheduleEntries = [];
+    let scheduleEntryCounter = 0; // Counter for unique IDs
 
 /**
  * Generate time options HTML (used for both start and end time selects)
@@ -29,11 +36,37 @@ function generateTimeOptions() {
 /**
  * Setup schedule selector event listeners
  */
-export function setupScheduleSelector() {
+function setupScheduleSelector() {
     // Add schedule entry button event listener
     const addScheduleEntryBtn = document.getElementById('addScheduleEntryBtn');
     if (addScheduleEntryBtn) {
-        addScheduleEntryBtn.addEventListener('click', addScheduleEntry);
+        // Remove old listener if exists (by removing the flag and re-adding)
+        if (addScheduleEntryBtn._hasListener) {
+            // Clone to remove all listeners
+            const newBtn = addScheduleEntryBtn.cloneNode(true);
+            addScheduleEntryBtn.parentNode.replaceChild(newBtn, addScheduleEntryBtn);
+        }
+        // Get button reference (might be new after clone)
+        const btn = document.getElementById('addScheduleEntryBtn');
+        if (btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Add schedule entry button clicked');
+                // Call the function directly
+                if (typeof addScheduleEntry === 'function') {
+                    addScheduleEntry();
+                } else if (typeof window.addScheduleEntry === 'function') {
+                    window.addScheduleEntry();
+                } else {
+                    console.error('addScheduleEntry function not available');
+                }
+            });
+            btn._hasListener = true;
+            console.log('Schedule entry button listener attached');
+        } else {
+            console.warn('addScheduleEntryBtn not found');
+        }
     }
     
     // Don't add entries here - they will be added when modal opens (via resetSubjectForm or populateScheduleSelector)
@@ -43,16 +76,23 @@ export function setupScheduleSelector() {
  * Add a new schedule entry to the selector
  * @param {Object|null} entry - Entry data {day, startHour, endHour} or null for empty entry
  */
-export function addScheduleEntry(entry = null) {
+function addScheduleEntry(entry = null) {
     const container = document.getElementById('scheduleEntriesContainer');
-    if (!container) return;
+    if (!container) {
+        console.warn('scheduleEntriesContainer not found - schedule entry cannot be added');
+        return;
+    }
 
+    console.log('Adding schedule entry, container found:', container);
+    console.log('Container innerHTML before:', container.innerHTML.substring(0, 100));
+    
     const entryId = scheduleEntryCounter++;
     const entryData = entry || { day: '', startHour: '', endHour: '' };
     
     scheduleEntries.push({ id: entryId, ...entryData });
 
     const timeOptions = generateTimeOptions();
+    console.log('Time options generated:', timeOptions ? timeOptions.length : 0, 'options');
     
     const entryHTML = `
         <div class="schedule-entry" data-entry-id="${entryId}">
@@ -92,20 +132,35 @@ export function addScheduleEntry(entry = null) {
     `;
 
     container.insertAdjacentHTML('beforeend', entryHTML);
+    console.log('Schedule entry HTML inserted, entryId:', entryId);
+    console.log('Container innerHTML after:', container.innerHTML.substring(0, 200));
     
-    // Set selected values for time selects
-    if (entryData.startHour) {
-        const startSelect = container.querySelector(`.schedule-start-select[data-entry-id="${entryId}"]`);
-        if (startSelect) startSelect.value = entryData.startHour;
+    // Verify the entry was actually added
+    const addedEntry = container.querySelector(`.schedule-entry[data-entry-id="${entryId}"]`);
+    if (!addedEntry) {
+        console.error('Schedule entry was not added to DOM!');
+    } else {
+        console.log('Schedule entry verified in DOM:', addedEntry);
     }
-    if (entryData.endHour) {
-        const endSelect = container.querySelector(`.schedule-end-select[data-entry-id="${entryId}"]`);
-        if (endSelect) endSelect.value = entryData.endHour;
-    }
+    
+    // Set selected values for time selects (need to wait for DOM to update)
+    setTimeout(() => {
+        if (entryData.startHour) {
+            const startSelect = container.querySelector(`.schedule-start-select[data-entry-id="${entryId}"]`);
+            if (startSelect) startSelect.value = entryData.startHour;
+        }
+        if (entryData.endHour) {
+            const endSelect = container.querySelector(`.schedule-end-select[data-entry-id="${entryId}"]`);
+            if (endSelect) endSelect.value = entryData.endHour;
+        }
+    }, 0);
 
-    // Attach event listeners
-    attachScheduleEntryListeners(entryId);
-    updateScheduleHiddenField();
+    // Attach event listeners (need to wait for DOM to update)
+    setTimeout(() => {
+        attachScheduleEntryListeners(entryId);
+        updateScheduleHiddenField();
+        console.log('Schedule entry listeners attached for entryId:', entryId);
+    }, 0);
 }
 
 /**
@@ -184,7 +239,7 @@ function removeScheduleEntry(entryId) {
 /**
  * Update the hidden schedule field with current entries
  */
-export function updateScheduleHiddenField() {
+function updateScheduleHiddenField() {
     // Build schedule string in format: "Lunes 12:00-14:00|Viernes 14:00-16:00"
     const scheduleParts = scheduleEntries
         .filter(entry => entry.day && entry.startHour && entry.endHour)
@@ -205,7 +260,7 @@ export function updateScheduleHiddenField() {
 /**
  * Reset schedule selector to empty state
  */
-export function resetScheduleSelector() {
+function resetScheduleSelector() {
     // Clear schedule entries
     scheduleEntries = [];
     scheduleEntryCounter = 0;
@@ -231,7 +286,7 @@ export function resetScheduleSelector() {
  * @param {string} scheduleString - Schedule string to parse
  * @returns {Array} Array of entry objects {day, startHour, endHour}
  */
-export function parseScheduleString(scheduleString) {
+function parseScheduleString(scheduleString) {
     if (!scheduleString) {
         return [];
     }
@@ -313,7 +368,7 @@ export function parseScheduleString(scheduleString) {
  * Populate schedule selector with entries from a schedule string
  * @param {string} scheduleString - Schedule string to parse and populate
  */
-export function populateScheduleSelector(scheduleString) {
+function populateScheduleSelector(scheduleString) {
     const entries = parseScheduleString(scheduleString);
     
     // Clear current entries
@@ -337,3 +392,22 @@ export function populateScheduleSelector(scheduleString) {
     updateScheduleHiddenField();
 }
 
+    // Export functions to global namespace for non-module usage
+    if (typeof window !== 'undefined') {
+        window.ScheduleModule = window.ScheduleModule || {};
+        window.ScheduleModule.setupScheduleSelector = setupScheduleSelector;
+        window.ScheduleModule.addScheduleEntry = addScheduleEntry;
+        window.ScheduleModule.updateScheduleHiddenField = updateScheduleHiddenField;
+        window.ScheduleModule.resetScheduleSelector = resetScheduleSelector;
+        window.ScheduleModule.populateScheduleSelector = populateScheduleSelector;
+        
+        // Also make available on window for direct access
+        window.setupScheduleSelector = setupScheduleSelector;
+        window.addScheduleEntry = addScheduleEntry;
+        window.updateScheduleHiddenField = updateScheduleHiddenField;
+        window.resetScheduleSelector = resetScheduleSelector;
+        window.populateScheduleSelector = populateScheduleSelector;
+        
+        console.log('Schedule module functions exported to window');
+    }
+})();

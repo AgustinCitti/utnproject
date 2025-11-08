@@ -772,11 +772,60 @@
     border-color: var(--border-color, #404040);
 }
 
+/* Dark mode labels in modal */
+[data-theme="dark"] .modal-dialog-body label {
+    color: var(--text-primary, #e0e0e0) !important;
+}
+
+/* Dark mode headings in modal */
+[data-theme="dark"] .modal-dialog-body h4 {
+    color: var(--text-primary, #e0e0e0) !important;
+}
+
+/* Dark mode tables in modal */
+[data-theme="dark"] .modal-dialog-body table {
+    color: var(--text-primary, #e0e0e0);
+}
+
+[data-theme="dark"] .modal-dialog-body table thead tr {
+    background: var(--bg-secondary, #2d2d2d) !important;
+    border-bottom-color: var(--border-color, #404040) !important;
+}
+
+[data-theme="dark"] .modal-dialog-body table th {
+    color: var(--text-primary, #e0e0e0) !important;
+}
+
+[data-theme="dark"] .modal-dialog-body table td {
+    color: var(--text-primary, #e0e0e0) !important;
+}
+
+[data-theme="dark"] .modal-dialog-body table tbody tr {
+    border-bottom-color: var(--border-color, #404040);
+}
+
+/* Dark mode table borders */
+[data-theme="dark"] .modal-dialog-body table {
+    border-color: var(--border-color, #404040) !important;
+}
+
 [data-theme="dark"] .modal-dialog-body input:focus,
 [data-theme="dark"] .modal-dialog-body textarea:focus,
 [data-theme="dark"] .modal-dialog-body select:focus {
     border-color: #667eea;
     outline: none;
+}
+
+/* Dark mode table wrapper border */
+[data-theme="dark"] .modal-dialog-body div[style*="border"] {
+    border-color: var(--border-color, #404040) !important;
+}
+
+/* Dark mode placeholder text */
+[data-theme="dark"] .modal-dialog-body input::placeholder,
+[data-theme="dark"] .modal-dialog-body textarea::placeholder {
+    color: var(--text-secondary, #b0b0b0);
+    opacity: 0.7;
 }
 
 [data-theme="dark"] .modal-dialog-body label {
