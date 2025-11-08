@@ -993,20 +993,20 @@
 
                     <!-- Temas Tab Content -->
                     <div id="temasTabContent" class="tab-content active">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; background: transparent;">
-                            <h3 style="margin: 0; color: var(--text-primary, #333); font-size: 1.2rem;">
+                        <div class="temas-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; background: transparent;">
+                            <h3 class="temas-title" style="margin: 0; color: var(--text-primary, #333); font-size: 1.2rem;">
                                 <i class="fas fa-book-open" style="margin-right: 8px;"></i>
                                 Temas de la Materia
                             </h3>
-                            <div style="display: flex; gap: 8px;">
-                                <button id="exportTemasBtn" class="btn-secondary" style="padding: 8px 16px; font-size: 0.9em;">
-                                    <i class="fas fa-download"></i> Exportar Lista
+                            <div class="temas-actions" style="display: flex; gap: 8px;">
+                                <button id="exportTemasBtn" class="btn-secondary temas-action-btn" style="padding: 8px 16px; font-size: 0.9em;">
+                                    <i class="fas fa-download"></i> <span class="btn-text">Exportar Lista</span>
                                 </button>
-                                <button id="importTemasBtn" class="btn-secondary" style="padding: 8px 16px; font-size: 0.9em;">
-                                    <i class="fas fa-upload"></i> Importar Excel
+                                <button id="importTemasBtn" class="btn-secondary temas-action-btn" style="padding: 8px 16px; font-size: 0.9em;">
+                                    <i class="fas fa-upload"></i> <span class="btn-text">Importar Excel</span>
                                 </button>
-                                <button id="showCreateThemeFormBtn" class="btn-primary" style="padding: 8px 16px; font-size: 0.9em;">
-                                    <i class="fas fa-plus"></i> Crear Tema
+                                <button id="showCreateThemeFormBtn" class="btn-primary temas-action-btn" style="padding: 8px 16px; font-size: 0.9em;">
+                                    <i class="fas fa-plus"></i> <span class="btn-text">Crear Tema</span>
                                 </button>
                             </div>
                         </div>

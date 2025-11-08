@@ -214,6 +214,30 @@
         justify-content: center;
     }
     
+    /* Temas header mobile responsiveness */
+    .temas-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+    
+    .temas-title {
+        font-size: 1.1rem !important;
+        width: 100%;
+    }
+    
+    .temas-actions {
+        width: 100%;
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+    
+    .temas-action-btn {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 10px 16px !important;
+    }
+    
     .section-actions .view-toggle {
         width: 100%;
         justify-content: center;
@@ -1856,6 +1880,24 @@
     
     .quick-action-btn span {
         font-size: 0.8rem !important;
+    }
+    
+    /* Temas header extra small screens */
+    .temas-title {
+        font-size: 1rem !important;
+    }
+    
+    .temas-title i {
+        margin-right: 6px !important;
+    }
+    
+    .temas-action-btn {
+        padding: 10px 12px !important;
+        font-size: 0.85em !important;
+    }
+    
+    .temas-action-btn .btn-text {
+        font-size: 0.85em;
     }
     
     /* Calendar widget mobile adjustments */
