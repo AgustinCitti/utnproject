@@ -189,51 +189,189 @@ function showCloseGradesConfirmation() {
     return window.confirm(message);
 }
 
-function selectSubjectForClosure() {
+let closeGradesMenu = null;
+let closeGradesMenuHandlerAttached = false;
+
+function createCloseGradesMenu() {
+    const menu = document.createElement('div');
+    menu.id = 'closeGradesMenuPanel';
+    menu.style.position = 'absolute';
+    menu.style.minWidth = '280px';
+    menu.style.maxHeight = '320px';
+    menu.style.overflowY = 'auto';
+    menu.style.background = '#ffffff';
+    menu.style.border = '1px solid rgba(0,0,0,0.1)';
+    menu.style.boxShadow = '0 6px 24px rgba(15, 23, 42, 0.15)';
+    menu.style.borderRadius = '10px';
+    menu.style.padding = '12px';
+    menu.style.zIndex = '9999';
+    menu.style.display = 'none';
+    menu.dataset.open = 'false';
+
+    const title = document.createElement('div');
+    title.textContent = 'Selecciona una materia';
+    title.style.fontWeight = '600';
+    title.style.marginBottom = '8px';
+    menu.appendChild(title);
+
+    const list = document.createElement('div');
+    list.className = 'close-grades-menu-list';
+    menu.appendChild(list);
+
+    document.body.appendChild(menu);
+    return menu;
+}
+
+function hideCloseGradesMenu() {
+    if (closeGradesMenu) {
+        closeGradesMenu.style.display = 'none';
+        closeGradesMenu.dataset.open = 'false';
+    }
+}
+
+function handleCloseGradesOutsideClick(event) {
+    const btn = document.getElementById('closeGradesBtn');
+    if (!btn || !closeGradesMenu || closeGradesMenu.dataset.open !== 'true') {
+        return;
+    }
+
+    if (closeGradesMenu.contains(event.target) || btn.contains(event.target)) {
+        return;
+    }
+
+    hideCloseGradesMenu();
+}
+
+function onCloseGradesSubjectSelected(subjectId) {
+    hideCloseGradesMenu();
+
     const data = window.appData || window.data || {};
     const subjects = Array.isArray(data.materia) ? data.materia : [];
-    
+    const selected = subjects.find(
+        subject => parseInt(subject.ID_materia, 10) === parseInt(subjectId, 10)
+    );
+
+    if (!selected) {
+        alert('No se pudo determinar la materia seleccionada.');
+        return;
+    }
+
+    if (!showCloseGradesConfirmation()) {
+        return;
+    }
+
+    const generateExcel = confirm('¿Deseas generar un archivo Excel con los datos de la materia seleccionada?');
+    if (generateExcel) {
+        generateClosureExcelForSubject(selected);
+    }
+
+    alert(`Procesamiento de cierre de notas para "${selected.Nombre}" iniciado.`);
+}
+
+function populateCloseGradesMenu() {
+    const data = window.appData || window.data || {};
+    const subjects = Array.isArray(data.materia) ? data.materia : [];
+    const list = closeGradesMenu.querySelector('.close-grades-menu-list');
+    list.innerHTML = '';
+
     if (!subjects.length) {
         alert('No hay materias disponibles para cerrar.');
-        return null;
+        return false;
     }
 
-    const options = subjects
-        .map(subject => `[${subject.ID_materia}] ${subject.Nombre}`)
-        .join('\n');
+    subjects
+        .sort((a, b) => (a.Nombre || '').localeCompare(b.Nombre || ''))
+        .forEach(subject => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'close-grades-menu-item';
+            item.style.width = '100%';
+            item.style.display = 'flex';
+            item.style.flexDirection = 'column';
+            item.style.alignItems = 'flex-start';
+            item.style.gap = '2px';
+            item.style.padding = '10px 12px';
+            item.style.marginBottom = '6px';
+            item.style.border = '1px solid rgba(148, 163, 184, 0.4)';
+            item.style.borderRadius = '8px';
+            item.style.background = '#f8fafc';
+            item.style.cursor = 'pointer';
+            item.style.transition = 'background 0.2s ease, transform 0.2s ease';
+            item.addEventListener('mouseenter', () => {
+                item.style.background = '#e2e8f0';
+                item.style.transform = 'translateY(-1px)';
+            });
+            item.addEventListener('mouseleave', () => {
+                item.style.background = '#f8fafc';
+                item.style.transform = 'translateY(0)';
+            });
 
-    const selection = prompt(
-        `Selecciona la materia ingresando el ID correspondiente:\n\n${options}\n\nIngresa el ID:`
-    );
+            const title = document.createElement('span');
+            title.textContent = subject.Nombre || 'Sin nombre';
+            title.style.fontWeight = '600';
+            title.style.color = '#0f172a';
 
-    if (!selection) {
-        return null;
+            const subtitle = document.createElement('span');
+            subtitle.textContent = subject.Curso_division
+                ? `Curso: ${subject.Curso_division}`
+                : 'Sin curso asignado';
+            subtitle.style.fontSize = '0.85rem';
+            subtitle.style.color = '#475569';
+
+            item.appendChild(title);
+            item.appendChild(subtitle);
+
+            item.addEventListener('click', () => {
+                onCloseGradesSubjectSelected(subject.ID_materia);
+            });
+
+            list.appendChild(item);
+        });
+
+    return true;
+}
+
+function toggleCloseGradesMenu() {
+    const btn = document.getElementById('closeGradesBtn');
+    if (!btn) {
+        return;
     }
 
-    const subjectId = parseInt(selection, 10);
-    if (Number.isNaN(subjectId)) {
-        alert('El ID ingresado no es válido.');
-        return null;
+    if (!closeGradesMenu) {
+        closeGradesMenu = createCloseGradesMenu();
     }
 
-    const subject = subjects.find(
-        item => parseInt(item.ID_materia, 10) === subjectId
-    );
-
-    if (!subject) {
-        alert('No se encontró una materia con ese ID.');
-        return null;
+    const isOpen = closeGradesMenu.dataset.open === 'true';
+    if (isOpen) {
+        hideCloseGradesMenu();
+        return;
     }
 
-    return subject;
+    const hasSubjects = populateCloseGradesMenu();
+    if (!hasSubjects) {
+        closeGradesMenu.style.display = 'none';
+        closeGradesMenu.dataset.open = 'false';
+        return;
+    }
+
+    const rect = btn.getBoundingClientRect();
+    closeGradesMenu.style.top = `${rect.bottom + window.scrollY + 8}px`;
+    closeGradesMenu.style.left = `${rect.left + window.scrollX}px`;
+    closeGradesMenu.style.display = 'block';
+    closeGradesMenu.dataset.open = 'true';
+
+    if (!closeGradesMenuHandlerAttached) {
+        document.addEventListener('click', handleCloseGradesOutsideClick, true);
+        closeGradesMenuHandlerAttached = true;
+    }
 }
 
 function generateClosureExcelForSubject(subject) {
     const data = window.appData || window.data || {};
     const subjectId = parseInt(subject.ID_materia, 10);
 
-    const enrollments = (data.alumnos_x_materia || []).filter(
-        enrollment => parseInt(enrollment.Materia_ID_materia, 10) === subjectId
+    const enrollments = (data.alumnos_x_materia || []).filter(enrollment =>
+        parseInt(enrollment.Materia_ID_materia, 10) === subjectId
     );
 
     if (!enrollments.length) {
@@ -246,19 +384,72 @@ function generateClosureExcelForSubject(subject) {
         students.set(parseInt(student.ID_Estudiante, 10), student);
     });
 
-    const rows = enrollments.map(enrollment => {
-        const student = students.get(parseInt(enrollment.Estudiante_ID_Estudiante, 10)) || {};
-        const apellido = student.Apellido || '';
-        const nombre = student.Nombre || '';
-        const email = student.Email || '';
-        const estado = enrollment.Estado || '';
-        const condicion = enrollment.Condicion || '';
+    const evaluations = (data.evaluacion || [])
+        .filter(evaluation => parseInt(evaluation.Materia_ID_materia, 10) === subjectId)
+        .sort((a, b) => {
+            const dateA = a.Fecha ? new Date(a.Fecha) : null;
+            const dateB = b.Fecha ? new Date(b.Fecha) : null;
+            if (dateA && dateB) return dateA - dateB;
+            return (a.Titulo || '').localeCompare(b.Titulo || '');
+        });
 
-        return `"${apellido}","${nombre}","${email}","${estado}","${condicion}","${subject.Nombre}"`;
+    const evaluationIds = evaluations.map(evaluation => parseInt(evaluation.ID_evaluacion, 10));
+    const evaluationTitles = evaluations.map(evaluation => evaluation.Titulo || `Evaluación ${evaluation.ID_evaluacion}`);
+
+    const notesByKey = new Map();
+    (data.notas || []).forEach(note => {
+        const evaluationId = parseInt(note.Evaluacion_ID_evaluacion, 10);
+        const studentId = parseInt(note.Estudiante_ID_Estudiante, 10);
+        if (!evaluationIds.includes(evaluationId)) return;
+
+        const key = `${studentId}:${evaluationId}`;
+        notesByKey.set(key, note.Calificacion);
     });
 
-    const header = '"Apellido","Nombre","Email","Estado","Condición","Materia"';
-    const csvContent = [header].concat(rows).join('\n');
+    const delimiter = ';';
+    const headers = [
+        sanitizeForCsv('Nombre'),
+        sanitizeForCsv('Apellido'),
+        ...evaluationTitles.map(title => sanitizeForCsv(title)),
+        sanitizeForCsv('Nota Final')
+    ];
+
+    const rows = enrollments.map(enrollment => {
+        const studentId = parseInt(enrollment.Estudiante_ID_Estudiante, 10);
+        const student = students.get(studentId) || {};
+        const nombre = student.Nombre || '';
+        const apellido = student.Apellido || '';
+
+        const gradeValues = [];
+        const gradeStrings = evaluationIds.map(evaluationId => {
+            const key = `${studentId}:${evaluationId}`;
+            const rawGrade = notesByKey.get(key);
+            if (rawGrade === undefined || rawGrade === null || rawGrade === '') {
+                return sanitizeForCsv('');
+            }
+
+            const numericGrade = parseFloat(rawGrade);
+            if (!Number.isFinite(numericGrade)) {
+                return sanitizeForCsv('');
+            }
+
+            gradeValues.push(numericGrade);
+            return sanitizeForCsv(numericGrade.toFixed(2));
+        });
+
+        const finalAverage = gradeValues.length
+            ? (gradeValues.reduce((acc, value) => acc + value, 0) / gradeValues.length).toFixed(2)
+            : '';
+
+        return [
+            sanitizeForCsv(nombre),
+            sanitizeForCsv(apellido),
+            ...gradeStrings,
+            sanitizeForCsv(finalAverage)
+        ].join(delimiter);
+    });
+
+    const csvContent = [headers.join(delimiter)].concat(rows).join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const subjectNameSafe = subject.Nombre
@@ -278,21 +469,7 @@ function generateClosureExcelForSubject(subject) {
 }
 
 function handleCloseGradesClick() {
-    if (!showCloseGradesConfirmation()) {
-        return;
-    }
-
-    const subject = selectSubjectForClosure();
-    if (!subject) {
-        return;
-    }
-
-    const generateExcel = confirm('¿Deseas generar un archivo Excel con los datos de la materia seleccionada?');
-    if (generateExcel) {
-        generateClosureExcelForSubject(subject);
-    }
-
-    alert(`Procesamiento de cierre de notas para "${subject.Nombre}" iniciado.`);
+    toggleCloseGradesMenu();
 }
 
 // Course dropdown functions
