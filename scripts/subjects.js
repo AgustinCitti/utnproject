@@ -184,6 +184,117 @@ const filterSubjects = Filters.filterSubjects || function() {
 }
 };
 
+function showCloseGradesConfirmation() {
+    const message = '¿Estás seguro de que deseas cerrar las notas?';
+    return window.confirm(message);
+}
+
+function selectSubjectForClosure() {
+    const data = window.appData || window.data || {};
+    const subjects = Array.isArray(data.materia) ? data.materia : [];
+    
+    if (!subjects.length) {
+        alert('No hay materias disponibles para cerrar.');
+        return null;
+    }
+
+    const options = subjects
+        .map(subject => `[${subject.ID_materia}] ${subject.Nombre}`)
+        .join('\n');
+
+    const selection = prompt(
+        `Selecciona la materia ingresando el ID correspondiente:\n\n${options}\n\nIngresa el ID:`
+    );
+
+    if (!selection) {
+        return null;
+    }
+
+    const subjectId = parseInt(selection, 10);
+    if (Number.isNaN(subjectId)) {
+        alert('El ID ingresado no es válido.');
+        return null;
+    }
+
+    const subject = subjects.find(
+        item => parseInt(item.ID_materia, 10) === subjectId
+    );
+
+    if (!subject) {
+        alert('No se encontró una materia con ese ID.');
+        return null;
+    }
+
+    return subject;
+}
+
+function generateClosureExcelForSubject(subject) {
+    const data = window.appData || window.data || {};
+    const subjectId = parseInt(subject.ID_materia, 10);
+
+    const enrollments = (data.alumnos_x_materia || []).filter(
+        enrollment => parseInt(enrollment.Materia_ID_materia, 10) === subjectId
+    );
+
+    if (!enrollments.length) {
+        alert('No hay estudiantes asociados a esta materia.');
+        return;
+    }
+
+    const students = new Map();
+    (data.estudiante || []).forEach(student => {
+        students.set(parseInt(student.ID_Estudiante, 10), student);
+    });
+
+    const rows = enrollments.map(enrollment => {
+        const student = students.get(parseInt(enrollment.Estudiante_ID_Estudiante, 10)) || {};
+        const apellido = student.Apellido || '';
+        const nombre = student.Nombre || '';
+        const email = student.Email || '';
+        const estado = enrollment.Estado || '';
+        const condicion = enrollment.Condicion || '';
+
+        return `"${apellido}","${nombre}","${email}","${estado}","${condicion}","${subject.Nombre}"`;
+    });
+
+    const header = '"Apellido","Nombre","Email","Estado","Condición","Materia"';
+    const csvContent = [header].concat(rows).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const subjectNameSafe = subject.Nombre
+        ? subject.Nombre.replace(/[^a-z0-9_\-]+/gi, '_')
+        : 'materia';
+    const fileName = `cierre_notas_${subjectNameSafe}.csv`;
+
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function handleCloseGradesClick() {
+    if (!showCloseGradesConfirmation()) {
+        return;
+    }
+
+    const subject = selectSubjectForClosure();
+    if (!subject) {
+        return;
+    }
+
+    const generateExcel = confirm('¿Deseas generar un archivo Excel con los datos de la materia seleccionada?');
+    if (generateExcel) {
+        generateClosureExcelForSubject(subject);
+    }
+
+    alert(`Procesamiento de cierre de notas para "${subject.Nombre}" iniciado.`);
+}
+
 // Course dropdown functions
 const populateCourseDivisionDropdown = CourseDropdown.populateCourseDivisionDropdown || async function() {
     const dropdown = document.getElementById('subjectCourseDivision');
@@ -670,6 +781,7 @@ function initializeSubjects() {
     }
     
     const addSubjectBtn = document.getElementById('addSubjectBtn');
+    const closeGradesBtn = document.getElementById('closeGradesBtn');
     const subjectModal = document.getElementById('subjectModal');
     const subjectForm = document.getElementById('subjectForm');
     const courseFilter = document.getElementById('subjectsCourseFilter');
@@ -751,6 +863,14 @@ function initializeSubjects() {
                 alert('Error al abrir el formulario de materia: ' + e.message);
             }
         });
+    }
+
+    if (closeGradesBtn && !closeGradesBtn.dataset.listenerAttached) {
+        closeGradesBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            handleCloseGradesClick();
+        });
+        closeGradesBtn.dataset.listenerAttached = 'true';
     }
 
     if (subjectForm) {
