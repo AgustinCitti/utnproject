@@ -205,6 +205,10 @@ function handleSearchInput(query, type) {
         clearTimeout(searchTimeout);
     }
 
+    if (typeof clearSelectedStudentFilter === 'function') {
+        clearSelectedStudentFilter();
+    }
+
     // Reset selected suggestion index
     selectedSuggestionIndex = -1;
 
@@ -695,6 +699,19 @@ function selectSuggestion(suggestion, type) {
     if (otherInput) {
         otherInput.value = '';
         otherInput.blur();
+    }
+
+    if (typeof clearSelectedStudentFilter === 'function') {
+        if (!suggestion.metadata || !suggestion.metadata.studentId) {
+            clearSelectedStudentFilter({ suppressReload: true });
+        }
+    }
+
+    if (suggestion.metadata && suggestion.metadata.studentId && typeof window !== 'undefined') {
+        const parsedStudentId = parseInt(suggestion.metadata.studentId, 10);
+        if (!Number.isNaN(parsedStudentId)) {
+            window.selectedStudentIdFilter = parsedStudentId;
+        }
     }
 
     clearSearchSuggestions();
@@ -1461,6 +1478,9 @@ function scrollAndHighlightElement(element) {
 
 function focusUsingMetadata(metadata, type) {
     if (!metadata || typeof metadata !== 'object') {
+        if (typeof clearSelectedStudentFilter === 'function') {
+            clearSelectedStudentFilter();
+        }
         return false;
     }
 
@@ -1472,19 +1492,38 @@ function focusUsingMetadata(metadata, type) {
     if (Number.isNaN(subjectId)) subjectId = null;
     if (Number.isNaN(examId)) examId = null;
 
-    if (studentId && typeof showStudentDetail === 'function') {
-        showStudentDetail(studentId);
+    if (studentId) {
+        if (typeof window.selectedStudentIdFilter !== 'undefined') {
+            const alreadySelected = window.selectedStudentIdFilter === studentId;
+            window.selectedStudentIdFilter = studentId;
+            if (!alreadySelected && typeof loadUnifiedStudentData === 'function') {
+                loadUnifiedStudentData();
+            }
+        }
+        if (typeof showStudentDetail === 'function') {
+            setTimeout(() => showStudentDetail(studentId), 200);
+        }
         return true;
     }
 
     if (examId && typeof showExamModal === 'function') {
+        if (typeof clearSelectedStudentFilter === 'function') {
+            clearSelectedStudentFilter({ suppressReload: true });
+        }
         showExamModal(examId);
         return true;
     }
 
     if (subjectId && typeof showSubjectThemesPanel === 'function') {
+        if (typeof clearSelectedStudentFilter === 'function') {
+            clearSelectedStudentFilter();
+        }
         showSubjectThemesPanel(subjectId);
         return true;
+    }
+
+    if (typeof clearSelectedStudentFilter === 'function') {
+        clearSelectedStudentFilter();
     }
 
     if (metadata.elementId) {

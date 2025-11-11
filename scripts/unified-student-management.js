@@ -26,6 +26,21 @@ function isStudentIntensificador(student) {
     return student.INTENSIFICA === true || student.INTENSIFICA === 1 || student.INTENSIFICA === '1';
 }
 
+if (typeof window.selectedStudentIdFilter === 'undefined') {
+    window.selectedStudentIdFilter = null;
+}
+
+function clearSelectedStudentFilter(options = {}) {
+    const { suppressReload = false } = options || {};
+    if (window.selectedStudentIdFilter !== null) {
+        window.selectedStudentIdFilter = null;
+        if (!suppressReload && typeof loadUnifiedStudentData === 'function') {
+            loadUnifiedStudentData();
+        }
+    }
+}
+window.clearSelectedStudentFilter = clearSelectedStudentFilter;
+
 function initializeUnifiedStudentManagement() {
     const addStudentBtn = document.getElementById('addStudentBtn');
     const markAttendanceBtn = document.getElementById('markAttendanceBtn');
@@ -336,7 +351,20 @@ function loadUnifiedStudentData() {
     if (!Array.isArray(appData.evaluacion)) appData.evaluacion = [];
     if (!Array.isArray(appData.materia)) appData.materia = [];
 
-    const filteredStudents = getFilteredUnifiedStudents();
+    let filteredStudents = getFilteredUnifiedStudents();
+    
+    if (window.selectedStudentIdFilter !== null) {
+        const idFilter = parseInt(window.selectedStudentIdFilter, 10);
+        if (!Number.isNaN(idFilter)) {
+            const filteredById = filteredStudents.filter(student => {
+                const studentIdValue = parseInt(student.ID_Estudiante, 10);
+                return !Number.isNaN(studentIdValue) && studentIdValue === idFilter;
+            });
+            if (filteredById.length > 0) {
+                filteredStudents = filteredById;
+            }
+        }
+    }
     
     // Grid view - Student cards with integrated data
     if (!filteredStudents || filteredStudents.length === 0) {
@@ -711,6 +739,7 @@ function getFilteredUnifiedStudents() {
  
 
 function filterUnifiedData() {
+    clearSelectedStudentFilter({ suppressReload: true });
     loadUnifiedStudentData();
     // También actualizar la matriz si está visible
     const studentMatrix = document.getElementById('unifiedStudentMatrix');
