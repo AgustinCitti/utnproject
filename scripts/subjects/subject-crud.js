@@ -200,6 +200,27 @@
         console.warn('setupScheduleSelector not available');
     };
 
+    function normalizeSubjectName(value) {
+        if (value === undefined || value === null) return '';
+        try {
+            return String(value)
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .trim();
+        } catch (error) {
+            return String(value || '')
+                .toLowerCase()
+                .trim();
+        }
+    }
+
+    function isApprovedSubjectNameValue(name) {
+        const normalized = normalizeSubjectName(name);
+        if (!normalized) return false;
+        return normalized.includes('aprobado');
+    }
+
     /**
      * Save subject (create or update)
      */
@@ -281,6 +302,14 @@
             Aula: aulaNumber ? aulaNumber.toString() : null,
             Descripcion: (document.getElementById('subjectDescription').value || '').trim() || null
         };
+
+        if (isApprovedSubjectNameValue(payload.Nombre)) {
+            payload.Estado = 'FINALIZADA';
+            const statusSelect = document.getElementById('subjectStatus');
+            if (statusSelect) {
+                statusSelect.value = 'FINALIZADA';
+            }
+        }
 
         // Improved validation - allow creating subject with only name
         if (!payload.Nombre) {
@@ -592,7 +621,11 @@
             // Note: Teacher is always the logged-in user, so we don't set it in edit mode
             const subjectStatusEl = document.getElementById('subjectStatus');
             if (subjectStatusEl) {
-                subjectStatusEl.value = subject.Estado || '';
+                const estado = subject.Estado || '';
+                subjectStatusEl.value = estado;
+                if (subject.Nombre && isApprovedSubjectNameValue(subject.Nombre)) {
+                    subjectStatusEl.value = 'FINALIZADA';
+                }
             }
 
             // Populate schedule selector

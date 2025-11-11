@@ -97,9 +97,20 @@ export function loadSubjects() {
 
     // Get filtered subjects
     const filteredSubjects = getFilteredSubjects();
+    const visibleSubjects = filteredSubjects.filter(subject => {
+        const intensificationSubject = isIntensificationSubject(subject);
+        if (!intensificationSubject) return true;
+        const studentCount = getStudentCountBySubject(subject.ID_materia);
+        return studentCount > 0;
+    });
+    if (!visibleSubjects.length) {
+        subjectsContainer.innerHTML = '<div class="empty-state">No hay materias disponibles</div>';
+        subjectsList.innerHTML = '<div class="empty-state">No hay materias disponibles</div>';
+        return;
+    }
 
     // Grid view
-    subjectsContainer.innerHTML = filteredSubjects.map(subject => {
+    subjectsContainer.innerHTML = visibleSubjects.map(subject => {
         const teacher = getTeacherById(subject.Usuarios_docente_ID_docente);
         const studentCount = getStudentCountBySubject(subject.ID_materia);
         const evaluationCount = getEvaluationCountBySubject(subject.ID_materia);
@@ -172,7 +183,7 @@ export function loadSubjects() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${filteredSubjects.map(subject => {
+                    ${visibleSubjects.map(subject => {
                         const teacher = getTeacherById(subject.Usuarios_docente_ID_docente);
                         const studentCount = getStudentCountBySubject(subject.ID_materia);
                         const approvedSubject = isApprovedSubject(subject);

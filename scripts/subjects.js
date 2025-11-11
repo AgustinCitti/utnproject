@@ -481,6 +481,27 @@ async function handleIntensificationSubjectClosure(subject, report) {
     }
 
     const baseUrl = getApiBaseUrl();
+    if ((approvedSubject.Estado || '').toUpperCase() !== 'FINALIZADA') {
+        try {
+            const response = await fetch(`${baseUrl}/materia.php?id=${targetSubjectId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ Estado: 'FINALIZADA' })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (response.ok && result.success !== false) {
+                approvedSubject.Estado = 'FINALIZADA';
+            } else {
+                console.warn(result.message || 'No se pudo marcar la materia de aprobados como finalizada.');
+            }
+        } catch (error) {
+            console.warn('Error al marcar la materia de aprobados como finalizada:', error);
+        }
+    }
     const removalErrors = [];
     let removedCount = 0;
 
@@ -805,11 +826,13 @@ async function createIntensificationSubjectForClosure(subject, report) {
                         'Accept': 'application/json'
                     },
                     credentials: 'include',
-                    body: JSON.stringify({ Nombre: approvedName })
+                    body: JSON.stringify({ Nombre: approvedName, Estado: 'FINALIZADA' })
                 });
                 const result = await response.json().catch(() => ({}));
                 if (response.ok && result.success !== false) {
                     renamedApprovedSubject = approvedName;
+                    subject.Nombre = approvedName;
+                    subject.Estado = 'FINALIZADA';
                 } else {
                     renameError = result.message || `No se pudo renombrar la materia original a "${approvedName}".`;
                 }
@@ -1519,15 +1542,21 @@ const loadSubjects = SubjectViews.loadSubjects || function() {
 
     // Get filtered subjects
     const filteredSubjects = getFilteredSubjects();
+    const visibleSubjects = filteredSubjects.filter(subject => {
+        const intensificationSubject = isIntensificationSubjectName(subject);
+        if (!intensificationSubject) return true;
+        const studentCount = getStudentCountBySubject(subject.ID_materia);
+        return studentCount > 0;
+    });
 
-    if (!filteredSubjects || filteredSubjects.length === 0) {
+    if (!visibleSubjects || visibleSubjects.length === 0) {
         subjectsContainer.innerHTML = '<div class="empty-state">No hay materias disponibles</div>';
         subjectsList.innerHTML = '<div class="empty-state">No hay materias disponibles</div>';
         return;
     }
 
     // Grid view
-    subjectsContainer.innerHTML = filteredSubjects.map(subject => {
+    subjectsContainer.innerHTML = visibleSubjects.map(subject => {
         const teacher = getTeacherById(subject.Usuarios_docente_ID_docente);
         const studentCount = getStudentCountBySubject(subject.ID_materia);
         const evaluationCount = getEvaluationCountBySubject(subject.ID_materia);
@@ -1600,7 +1629,7 @@ const loadSubjects = SubjectViews.loadSubjects || function() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${filteredSubjects.map(subject => {
+                    ${visibleSubjects.map(subject => {
                         const teacher = getTeacherById(subject.Usuarios_docente_ID_docente);
                         const studentCount = getStudentCountBySubject(subject.ID_materia);
                         const approvedSubject = isApprovedSubjectName(subject);
