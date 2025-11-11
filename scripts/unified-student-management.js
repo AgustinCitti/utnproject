@@ -413,16 +413,19 @@ function loadUnifiedStudentData() {
         // Verificar si el estudiante es intensificador
         const isIntensificador = isStudentIntensificador(student);
         const cardClass = isIntensificador ? 'unified-student-card intensificador-card' : 'unified-student-card';
+        const intensificadorLabel = isIntensificador
+            ? ' <span class="student-intensificador-label">(Intensificador)</span>'
+            : '';
         const displayEstado = getStudentDisplayEstado(student);
         
         return `
-            <div class="${cardClass}" onclick="showStudentDetail(${parseInt(student.ID_Estudiante)})" style="${isIntensificador ? 'background-color: #fff3e0; border-left: 4px solid #ff9800; cursor: pointer;' : 'cursor: pointer;'}">
+            <div class="${cardClass}" onclick="showStudentDetail(${parseInt(student.ID_Estudiante)})" style="cursor: pointer;">
                 <div class="card-header">
                     <div class="student-avatar">
                         <i class="fas fa-user"></i>
                     </div>
                     <div class="student-info">
-                        <h3 class="student-name">${student.Nombre} ${student.Apellido}${isIntensificador ? ' <span style="color: #ff9800; font-size: 0.8em;">(Intensificador)</span>' : ''}</h3>
+                        <h3 class="student-name">${student.Nombre} ${student.Apellido}${intensificadorLabel}</h3>
                         <p class="student-id">ID: ${student.ID_Estudiante}</p>
                         <p class="student-course">Estudiante</p>
                     </div>

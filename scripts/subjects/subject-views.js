@@ -16,6 +16,76 @@ import {
 } from './utils/helpers.js';
 import { getFilteredSubjects } from './utils/filters.js';
 
+const normalizeString = (value) => {
+    if (value === undefined || value === null) return '';
+    try {
+        return String(value)
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+    } catch (error) {
+        return String(value || '')
+            .toLowerCase()
+            .trim();
+    }
+};
+
+const stripSuffixPatterns = (name, patterns = []) => {
+    if (!name) return '';
+    let result = String(name).trim();
+    patterns.forEach(pattern => {
+        result = result.replace(pattern, '');
+    });
+    return result.trim();
+};
+
+const getApprovedBaseName = (name) => {
+    const patterns = [
+        /\s*[-–]\s*aprobados$/i,
+        /\s+aprobados$/i,
+        /\s*\(aprobados\)$/i
+    ];
+    return stripSuffixPatterns(name, patterns);
+};
+
+const getIntensificationBaseName = (name) => {
+    const patterns = [
+        /\s*[-–]\s*intensificacion(?:es)?$/i,
+        /\s*[-–]\s*intensificación(?:es)?$/i,
+        /\s*[-–]\s*intensificados$/i,
+        /\s+intensificacion(?:es)?$/i,
+        /\s+intensificación(?:es)?$/i,
+        /\s+intensificados$/i,
+        /\s*\(intensificacion(?:es)?\)$/i,
+        /\s*\(intensificación(?:es)?\)$/i,
+        /\s*\(intensificados\)$/i
+    ];
+    return stripSuffixPatterns(name, patterns);
+};
+
+const isApprovedSubject = (subject) => {
+    if (!subject || !subject.Nombre) return false;
+    const normalizedName = normalizeString(subject.Nombre);
+    if (!normalizedName) return false;
+    if (normalizedName.includes('aprobado')) return true;
+    const baseName = getApprovedBaseName(subject.Nombre);
+    return baseName && normalizeString(baseName) !== normalizeString(subject.Nombre)
+        ? true
+        : false;
+};
+
+const isIntensificationSubject = (subject) => {
+    if (!subject || !subject.Nombre) return false;
+    const normalizedName = normalizeString(subject.Nombre);
+    if (!normalizedName) return false;
+    if (normalizedName.includes('intensifica')) return true;
+    const baseName = getIntensificationBaseName(subject.Nombre);
+    return baseName && normalizeString(baseName) !== normalizeString(subject.Nombre)
+        ? true
+        : false;
+};
+
 /**
  * Load and render subjects in both grid and list views
  */
@@ -34,9 +104,18 @@ export function loadSubjects() {
         const studentCount = getStudentCountBySubject(subject.ID_materia);
         const evaluationCount = getEvaluationCountBySubject(subject.ID_materia);
         const contentCount = getContentCountBySubject(subject.ID_materia);
+        const approvedSubject = isApprovedSubject(subject);
+        const intensificationSubject = !approvedSubject && isIntensificationSubject(subject);
+        const subjectCardClasses = [
+            'card',
+            'clickable-card',
+            'subject-card'
+        ];
+        if (approvedSubject) subjectCardClasses.push('subject-card-approved');
+        if (intensificationSubject) subjectCardClasses.push('subject-card-intensificacion');
 
         return `
-            <div class="card clickable-card" onclick="showSubjectThemesPanel(${subject.ID_materia})" style="cursor: pointer;">
+            <div class="${subjectCardClasses.join(' ')}" onclick="showSubjectThemesPanel(${subject.ID_materia})" style="cursor: pointer;">
                 <div class="card-header">
                     <h3 class="card-title">${subject.Nombre}</h3>
                     <div class="card-actions" onclick="event.stopPropagation();">
@@ -96,9 +175,14 @@ export function loadSubjects() {
                     ${filteredSubjects.map(subject => {
                         const teacher = getTeacherById(subject.Usuarios_docente_ID_docente);
                         const studentCount = getStudentCountBySubject(subject.ID_materia);
+                        const approvedSubject = isApprovedSubject(subject);
+                        const intensificationSubject = !approvedSubject && isIntensificationSubject(subject);
+                        const rowClasses = ['clickable-row'];
+                        if (approvedSubject) rowClasses.push('subject-approved-row');
+                        if (intensificationSubject) rowClasses.push('subject-intensificacion-row');
                         
                         return `
-                            <tr onclick="showSubjectThemesPanel(${subject.ID_materia})" class="clickable-row">
+                            <tr onclick="showSubjectThemesPanel(${subject.ID_materia})" class="${rowClasses.join(' ')}">
                                 <td>
                                     <strong>${subject.Nombre}</strong>
                                     <br>

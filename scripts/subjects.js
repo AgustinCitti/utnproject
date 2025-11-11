@@ -1422,6 +1422,74 @@ window.deleteSubject = deleteSubject;
 window.resetSubjectForm = resetSubjectForm;
 window.clearSubjectForm = clearSubjectForm;
 
+function normalizeSubjectName(value) {
+    if (value === undefined || value === null) return '';
+    try {
+        return String(value)
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+    } catch (error) {
+        return String(value || '')
+            .toLowerCase()
+            .trim();
+    }
+}
+
+function stripSubjectSuffixes(name, patterns) {
+    if (!name) return '';
+    let result = String(name).trim();
+    patterns.forEach(pattern => {
+        result = result.replace(pattern, '');
+    });
+    return result.trim();
+}
+
+function getApprovedSubjectBaseName(name) {
+    const patterns = [
+        /\s*[-–]\s*aprobados$/i,
+        /\s+aprobados$/i,
+        /\s*\(aprobados\)$/i
+    ];
+    return stripSubjectSuffixes(name, patterns);
+}
+
+function getIntensificationSubjectBaseName(name) {
+    const patterns = [
+        /\s*[-–]\s*intensificacion(?:es)?$/i,
+        /\s*[-–]\s*intensificación(?:es)?$/i,
+        /\s*[-–]\s*intensificados$/i,
+        /\s+intensificacion(?:es)?$/i,
+        /\s+intensificación(?:es)?$/i,
+        /\s+intensificados$/i,
+        /\s*\(intensificacion(?:es)?\)$/i,
+        /\s*\(intensificación(?:es)?\)$/i,
+        /\s*\(intensificados\)$/i
+    ];
+    return stripSubjectSuffixes(name, patterns);
+}
+
+function isApprovedSubjectName(subject) {
+    if (!subject || !subject.Nombre) return false;
+    const normalizedName = normalizeSubjectName(subject.Nombre);
+    if (!normalizedName) return false;
+    if (normalizedName.includes('aprobado')) return true;
+    const baseName = getApprovedSubjectBaseName(subject.Nombre);
+    if (!baseName) return false;
+    return normalizeSubjectName(baseName) !== normalizedName;
+}
+
+function isIntensificationSubjectName(subject) {
+    if (!subject || !subject.Nombre) return false;
+    const normalizedName = normalizeSubjectName(subject.Nombre);
+    if (!normalizedName) return false;
+    if (normalizedName.includes('intensifica')) return true;
+    const baseName = getIntensificationSubjectBaseName(subject.Nombre);
+    if (!baseName) return false;
+    return normalizeSubjectName(baseName) !== normalizedName;
+}
+
 // Subject Views - Full implementation
 const loadSubjects = SubjectViews.loadSubjects || function() {
     const subjectsContainer = document.getElementById('subjectsContainer');
@@ -1464,9 +1532,18 @@ const loadSubjects = SubjectViews.loadSubjects || function() {
         const studentCount = getStudentCountBySubject(subject.ID_materia);
         const evaluationCount = getEvaluationCountBySubject(subject.ID_materia);
         const contentCount = getContentCountBySubject(subject.ID_materia);
+        const approvedSubject = isApprovedSubjectName(subject);
+        const intensificationSubject = !approvedSubject && isIntensificationSubjectName(subject);
+        const subjectCardClasses = [
+            'card',
+            'clickable-card',
+            'subject-card'
+        ];
+        if (approvedSubject) subjectCardClasses.push('subject-card-approved');
+        if (intensificationSubject) subjectCardClasses.push('subject-card-intensificacion');
 
         return `
-            <div class="card clickable-card" onclick="showSubjectThemesPanel(${subject.ID_materia})" style="cursor: pointer;">
+            <div class="${subjectCardClasses.join(' ')}" onclick="showSubjectThemesPanel(${subject.ID_materia})" style="cursor: pointer;">
                 <div class="card-header">
                     <h3 class="card-title">${subject.Nombre}</h3>
                     <div class="card-actions" onclick="event.stopPropagation();">
@@ -1526,9 +1603,14 @@ const loadSubjects = SubjectViews.loadSubjects || function() {
                     ${filteredSubjects.map(subject => {
                         const teacher = getTeacherById(subject.Usuarios_docente_ID_docente);
                         const studentCount = getStudentCountBySubject(subject.ID_materia);
+                        const approvedSubject = isApprovedSubjectName(subject);
+                        const intensificationSubject = !approvedSubject && isIntensificationSubjectName(subject);
+                        const rowClasses = ['clickable-row'];
+                        if (approvedSubject) rowClasses.push('subject-approved-row');
+                        if (intensificationSubject) rowClasses.push('subject-intensificacion-row');
                         
                         return `
-                            <tr onclick="showSubjectThemesPanel(${subject.ID_materia})" class="clickable-row">
+                            <tr onclick="showSubjectThemesPanel(${subject.ID_materia})" class="${rowClasses.join(' ')}">
                                 <td>
                                     <strong>${subject.Nombre}</strong>
                                     <br>

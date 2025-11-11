@@ -1947,13 +1947,44 @@
 }
 
 [data-theme="dark"] .status-badge.status-intensifica {
-    background: transparent !important;
-    color: #ffb74d !important;
+    background: rgba(255, 152, 0, 0.25) !important;
+    color: #ffcc80 !important;
+    border-color: rgba(255, 152, 0, 0.45) !important;
 }
 
-[data-theme="dark"] .status-badge.status-activo {
-    background: transparent !important;
-    color: #4ade80 !important;
+[data-theme="dark"] .status-badge.status-activo,
+[data-theme="dark"] .status-badge.status-aprobado {
+    background: rgba(46, 204, 113, 0.25) !important;
+    color: #8df4b8 !important;
+    border-color: rgba(46, 204, 113, 0.45) !important;
+}
+
+[data-theme="dark"] .card.subject-card.subject-card-approved {
+    border-color: rgba(46, 204, 113, 0.6) !important;
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.32), rgba(46, 204, 113, 0.18)) !important;
+    box-shadow: 0 12px 28px rgba(46, 204, 113, 0.28) !important;
+}
+
+[data-theme="dark"] .card.subject-card.subject-card-intensificacion {
+    border-color: rgba(255, 152, 0, 0.6) !important;
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.34), rgba(255, 152, 0, 0.18)) !important;
+    box-shadow: 0 12px 28px rgba(255, 152, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .clickable-row.subject-approved-row {
+    background: rgba(46, 204, 113, 0.2) !important;
+}
+
+[data-theme="dark"] .clickable-row.subject-approved-row:hover {
+    background: rgba(46, 204, 113, 0.3) !important;
+}
+
+[data-theme="dark"] .clickable-row.subject-intensificacion-row {
+    background: rgba(255, 152, 0, 0.2) !important;
+}
+
+[data-theme="dark"] .clickable-row.subject-intensificacion-row:hover {
+    background: rgba(255, 152, 0, 0.32) !important;
 }
 
 /* Dark mode tema estudiante status badges - text only */
@@ -2747,16 +2778,21 @@
 
 /* Tarjetas de estudiantes intensificadores */
 [data-theme="dark"] .unified-student-card.intensificador-card {
-    background-color: rgba(255, 152, 0, 0.1) !important;
-    border-left-color: #ff9800 !important;
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.32), rgba(255, 152, 0, 0.15)) !important;
+    border-color: rgba(255, 152, 0, 0.55) !important;
+    box-shadow: 0 10px 26px rgba(255, 152, 0, 0.28) !important;
 }
 
 [data-theme="dark"] .unified-student-card.intensificador-card .student-name {
     color: var(--text-primary);
 }
 
-[data-theme="dark"] .unified-student-card.intensificador-card .student-name span {
-    color: #ffb74d !important;
+[data-theme="dark"] .unified-student-card.intensificador-card .student-avatar {
+    background: linear-gradient(135deg, rgba(255, 168, 38, 0.9), rgba(255, 208, 128, 0.65)) !important;
+}
+
+[data-theme="dark"] .student-intensificador-label {
+    color: #ffcc80 !important;
 }
 
 /* Panel de detalles del estudiante - elementos dinámicos */

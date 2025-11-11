@@ -903,6 +903,60 @@
     box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
 }
 
+.unified-student-card.intensificador-card {
+    border-color: rgba(255, 152, 0, 0.45);
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.18), rgba(255, 152, 0, 0.05));
+    box-shadow: 0 10px 24px rgba(255, 152, 0, 0.18);
+}
+
+.unified-student-card.intensificador-card:hover {
+    border-color: rgba(255, 152, 0, 0.65);
+    box-shadow: 0 12px 28px rgba(255, 152, 0, 0.24);
+    transform: translateY(-3px);
+}
+
+.unified-student-card.intensificador-card .student-avatar {
+    background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
+}
+
+.unified-student-card.intensificador-card .student-name {
+    color: #b46900;
+}
+
+.card.subject-card {
+    position: relative;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, background 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.card.subject-card.subject-card-approved {
+    border-color: rgba(46, 204, 113, 0.45);
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.15), rgba(46, 204, 113, 0.05));
+    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.18);
+}
+
+.card.subject-card.subject-card-intensificacion {
+    border-color: rgba(255, 152, 0, 0.45);
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.18), rgba(255, 152, 0, 0.06));
+    box-shadow: 0 6px 20px rgba(255, 152, 0, 0.2);
+}
+
+.clickable-row.subject-approved-row {
+    background: rgba(46, 204, 113, 0.12);
+}
+
+.clickable-row.subject-approved-row:hover {
+    background: rgba(46, 204, 113, 0.2);
+}
+
+.clickable-row.subject-intensificacion-row {
+    background: rgba(255, 152, 0, 0.12);
+}
+
+.clickable-row.subject-intensificacion-row:hover {
+    background: rgba(255, 152, 0, 0.2);
+}
+
 .card-header {
     display: flex;
     align-items: center;
@@ -931,6 +985,13 @@
     font-size: 1.1rem;
     font-weight: 600;
     color: #333;
+}
+
+.student-intensificador-label {
+    color: #b46900;
+    font-size: 0.8em;
+    font-weight: 600;
+    margin-left: 6px;
 }
 
 .student-id, .student-course {
@@ -1818,16 +1879,25 @@
     font-weight: 600;
     display: inline-block;
     background: transparent;
+    border: 1px solid transparent;
 }
 
 .status-badge.status-intensifica {
-    background: transparent;
-    color: #ff9800;
+    background: rgba(255, 152, 0, 0.2);
+    color: #d97900;
+    border: 1px solid rgba(255, 152, 0, 0.3);
 }
 
 .status-badge.status-activo {
-    background: transparent;
-    color: #28a745;
+    background: rgba(46, 204, 113, 0.2);
+    color: #1e8a4c;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.status-badge.status-aprobado {
+    background: rgba(46, 204, 113, 0.2);
+    color: #1e8a4c;
+    border: 1px solid rgba(46, 204, 113, 0.3);
 }
 
 /* Tema estudiante status badges - text only */
