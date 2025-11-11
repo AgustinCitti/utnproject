@@ -159,3 +159,4 @@ This requires all modules to use ES6 import/export syntax.
 - The namespace pattern (`SubjectsModule`) allows for clean module organization
 - Fallback implementations ensure functionality even if modules aren't loaded
 
+

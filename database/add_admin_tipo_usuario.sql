@@ -34,3 +34,4 @@ SELECT
     'ADMIN agregado exitosamente como tipo de usuario' AS Mensaje,
     'Tipo_usuario ahora incluye: PROFESOR, PROFESOR_ADJUNTO, JEFE_TP, COORDINADOR, ADMIN' AS Valores_Disponibles;
 
+

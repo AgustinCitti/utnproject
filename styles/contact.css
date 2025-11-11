@@ -1,13 +1,19 @@
 /* Contact Page Styles - EduSync Brand Colors */
 
 .contact-section {
-    padding: 60px 0;
+    padding: 120px 0 60px;
+    margin-top: 80px;
     background: #ffffff;
     min-height: 100vh;
 }
 
+.contact-section .container {
+    padding-top: 40px;
+}
+
 .contact-header {
     text-align: center;
+    margin-top: 80px;
     margin-bottom: 60px;
 }
 
@@ -562,7 +568,16 @@
 
 @media (max-width: 768px) {
     .contact-section {
-        padding: 40px 0;
+        padding: 100px 0 40px;
+        margin-top: 70px;
+    }
+    
+    .contact-section .container {
+        padding-top: 30px;
+    }
+    
+    .contact-header {
+        margin-top: 60px;
     }
     
     .contact-header h1 {

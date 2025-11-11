@@ -174,3 +174,4 @@ export function setupViewToggle(gridBtnId, listBtnId, gridContainerId, listConta
     });
 }
 
+
