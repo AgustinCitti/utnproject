@@ -2152,19 +2152,66 @@ function setupGradeInputListeners() {
     const gradeInputs = document.querySelectorAll('.grade-input');
     
     gradeInputs.forEach(input => {
-        input.addEventListener('input', function() {
-            const grade = parseFloat(this.value);
-            this.classList.remove('excellent', 'good', 'poor');
-            
-            // Grade scale is 1-10, not 0-100
+        const applyStyles = () => {
+            const grade = parseFloat(input.value);
+            input.classList.remove('excellent', 'good', 'poor');
+            if (isNaN(grade)) return;
             if (grade >= 8) {
-                this.classList.add('excellent');
+                input.classList.add('excellent');
             } else if (grade >= 6) {
-                this.classList.add('good');
+                input.classList.add('good');
             } else if (grade >= 1) {
-                this.classList.add('poor');
+                input.classList.add('poor');
             }
+        };
+
+        const clampValue = () => {
+            if (input.disabled) return;
+            let value = input.value;
+            if (value === '' || value === null) {
+                input.classList.remove('excellent', 'good', 'poor');
+                return;
+            }
+
+            let numericValue = parseFloat(value);
+            if (isNaN(numericValue)) {
+                input.value = '';
+                input.classList.remove('excellent', 'good', 'poor');
+                return;
+            }
+
+            const minAttr = input.getAttribute('min');
+            const maxAttr = input.getAttribute('max');
+            const min = minAttr !== null ? parseFloat(minAttr) : null;
+            const max = maxAttr !== null ? parseFloat(maxAttr) : null;
+
+            if (max !== null && numericValue > max) {
+                numericValue = max;
+            }
+            if (min !== null && numericValue < min) {
+                numericValue = min;
+            }
+
+            // Maintain decimals if step allows
+            const stepAttr = input.getAttribute('step');
+            if (stepAttr && stepAttr.indexOf('.') >= 0) {
+                const decimals = stepAttr.split('.')[1].length;
+                input.value = numericValue.toFixed(decimals);
+            } else {
+                input.value = String(numericValue);
+            }
+
+            applyStyles();
+        };
+
+        input.addEventListener('input', function() {
+            clampValue();
         });
+
+        input.addEventListener('blur', clampValue);
+
+        // Apply initial styles
+        applyStyles();
     });
 }
 

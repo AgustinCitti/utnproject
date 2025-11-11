@@ -437,6 +437,8 @@ function loadStudentsForGradeMarking() {
             </tr>
         `;
     }).join('');
+
+    enforceGradeInputLimits(tableBody.querySelectorAll('.grade-input'));
 }
 
 function saveGradeMarkingBulk() {
@@ -503,6 +505,40 @@ function saveGradeMarkingBulk() {
     } else {
         alert('No se guardaron calificaciones. Verifique que haya ingresado al menos una calificación válida.');
     }
+}
+
+function enforceGradeInputLimits(inputs) {
+    if (!inputs) return;
+    const clamp = (input) => {
+        if (!input || input.disabled) return;
+        const raw = input.value;
+        if (raw === '' || raw === null) {
+            return;
+        }
+        let value = parseFloat(raw);
+        if (isNaN(value)) {
+            input.value = '';
+            return;
+        }
+        const minAttr = input.getAttribute('min');
+        const maxAttr = input.getAttribute('max');
+        const min = minAttr !== null ? parseFloat(minAttr) : null;
+        const max = maxAttr !== null ? parseFloat(maxAttr) : null;
+        if (max !== null && value > max) value = max;
+        if (min !== null && value < min) value = min;
+        const stepAttr = input.getAttribute('step');
+        if (stepAttr && stepAttr.indexOf('.') >= 0) {
+            const decimals = stepAttr.split('.')[1].length;
+            input.value = value.toFixed(decimals);
+        } else {
+            input.value = String(value);
+        }
+    };
+
+    inputs.forEach(input => {
+        input.addEventListener('input', () => clamp(input));
+        input.addEventListener('blur', () => clamp(input));
+    });
 }
 
 function loadGradeMarkingRecords() {
