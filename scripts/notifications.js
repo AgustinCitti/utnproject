@@ -100,18 +100,42 @@ async function loadNotifications() {
         }));
     
     // Combine regular notifications with recordatorios
-    const allNotifications = [
-        ...formattedNotifications,
-        ...recordatorios.map(r => ({
-            id: `recordatorio_${r.ID_recordatorio}`,
-            title: getRecordatorioTitle(r),
-            message: r.Descripcion,
-            date: formatRecordatorioDate(r.Fecha),
+    const now = new Date();
+    const upcomingRecordatorios = recordatorios
+        .map(r => ({
+            raw: r,
+            dateObj: r.Fecha ? new Date(r.Fecha) : null
+        }))
+        .filter(item => item.dateObj && item.dateObj >= now)
+        .sort((a, b) => a.dateObj - b.dateObj)
+        .slice(0, 5)
+        .map(item => ({
+            id: `recordatorio_${item.raw.ID_recordatorio}`,
+            title: getRecordatorioTitle(item.raw),
+            message: item.raw.Descripcion,
+            date: formatRecordatorioDate(item.raw.Fecha),
             read: false,
             type: 'recordatorio',
-            recordatorio: r
+            recordatorio: item.raw,
+            dateObj: item.dateObj
+        }));
+
+    const upcomingNotifications = formattedNotifications
+        .map(n => ({
+            ...n,
+            dateObj: n.notification && n.notification.Fecha_creacion ? new Date(n.notification.Fecha_creacion) : new Date()
         }))
-    ];
+        .filter(item => item.dateObj && item.dateObj >= now)
+        .sort((a, b) => b.dateObj - a.dateObj);
+
+    const combinedNotifications = [
+        ...upcomingNotifications,
+        ...upcomingRecordatorios
+    ].sort((a, b) => a.dateObj - b.dateObj)
+     .slice(0, 5)
+     .map(({ dateObj, ...rest }) => rest);
+
+    const allNotifications = combinedNotifications;
 
     // Grid view - Modern design
     if (allNotifications.length === 0) {

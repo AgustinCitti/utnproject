@@ -986,14 +986,12 @@ function getNextTwoClasses() {
     const allClasses = [];
     const inProgressClasses = [];
 
-    // Get current user ID to filter subjects
     const currentUserId = localStorage.getItem('userId');
     if (!currentUserId) {
         return [];
     }
 
     subjects.forEach(subject => {
-        // Check if subject belongs to user
         const subjectTeacherId = parseInt(subject.Usuarios_docente_ID_docente);
         const userId = parseInt(currentUserId);
         const matches = subjectTeacherId === userId;
@@ -1010,15 +1008,12 @@ function getNextTwoClasses() {
         const teacher = teachers.find(t => t.ID_docente === subject.Usuarios_docente_ID_docente);
         const teacherName = teacher ? `${teacher.Nombre_docente} ${teacher.Apellido_docente}` : 'Profesor no asignado';
 
-        // Buscar clases "en curso" (hoy, dentro del rango horario)
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         if (schedule.days.includes(today.getDay())) {
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
             const dateStr = `${year}-${month}-${day}`;
-            
-            // Verificar si la clase está en curso
             if (isClassInProgress(dateStr, schedule.startTime, schedule.endTime)) {
                 const [hours, minutes] = schedule.startTime.split(':');
                 const classDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), parseInt(hours), parseInt(minutes), 0);
@@ -1037,14 +1032,11 @@ function getNextTwoClasses() {
             }
         }
 
-        // Look ahead for next 8 weeks to find upcoming classes
         for (let daysAhead = 0; daysAhead < 56; daysAhead++) {
             const checkDate = new Date(now);
             checkDate.setDate(now.getDate() + daysAhead);
             
-            // Check if this day matches the schedule
             if (schedule.days.includes(checkDate.getDay())) {
-                // Format date as YYYY-MM-DD using local timezone
                 const year = checkDate.getFullYear();
                 const month = String(checkDate.getMonth() + 1).padStart(2, '0');
                 const day = String(checkDate.getDate()).padStart(2, '0');
@@ -1053,9 +1045,7 @@ function getNextTwoClasses() {
                 const [hours, minutes] = schedule.startTime.split(':');
                 const classDateTime = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate(), parseInt(hours), parseInt(minutes), 0);
                 
-                // Incluir clases futuras o que aún no han comenzado hoy
                 if (classDateTime > now) {
-                    // Verificar que no esté en curso (ya la agregamos arriba)
                     const isToday = checkDate.getTime() === today.getTime();
                     const isInProgress = isToday && isClassInProgress(dateStr, schedule.startTime, schedule.endTime);
                     
@@ -1077,17 +1067,20 @@ function getNextTwoClasses() {
         }
     });
 
-    // Combinar clases en curso (prioritarias) con clases próximas
-    // Las clases en curso van primero, luego las próximas ordenadas por fecha
     const combined = [
         ...inProgressClasses,
-        ...allClasses.sort((a, b) => a.dateTime - b.dateTime).slice(0, 2 - inProgressClasses.length)
-    ].slice(0, 2); // Limitar a 2 clases totales
+        ...allClasses
+    ]
+    .sort((a, b) => {
+        const aInProgress = a.status === 'en_curso';
+        const bInProgress = b.status === 'en_curso';
+        if (aInProgress && !bInProgress) return -1;
+        if (!aInProgress && bInProgress) return 1;
+        return a.dateTime - b.dateTime;
+    })
+    .slice(0, 5);
     
-    // Remover dateTime pero mantener todos los demás campos incluyendo endTime
-    const result = combined.map(({ dateTime, ...rest }) => rest);
-
-    return result;
+    return combined.map(({ dateTime, ...rest }) => rest);
 }
 
 function parseSchedule(horario) {
