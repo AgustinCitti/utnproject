@@ -155,6 +155,442 @@ const capitalizeFirst = Helpers.capitalizeFirst || function(str) {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
+function sanitizeForCsv(value) {
+    if (value === undefined || value === null) {
+        return '';
+    }
+    const stringValue = String(value).replace(/\r?\n|\r/g, ' ').trim();
+    if (stringValue === '') {
+        return '';
+    }
+    const needsQuoting = /[",;\t]/.test(stringValue);
+    const escaped = stringValue.replace(/"/g, '""');
+    return needsQuoting ? `"${escaped}"` : escaped;
+}
+
+const PASSING_GRADE_THRESHOLD = 6;
+
+function getApiBaseUrl() {
+    return window.location.pathname.includes('/pages/') ? '../api' : 'api';
+}
+
+function generateIntensificationSubjectName(originalName, existingSubjects = []) {
+    const baseName = `${originalName} - Intensificación`;
+    const existingNames = new Set(
+        existingSubjects
+            .filter(s => s && typeof s.Nombre === 'string')
+            .map(s => s.Nombre.trim())
+    );
+
+    if (!existingNames.has(baseName)) {
+        return baseName;
+    }
+
+    let counter = 2;
+    let candidate = `${baseName} (${counter})`;
+    while (existingNames.has(candidate)) {
+        counter += 1;
+        candidate = `${baseName} (${counter})`;
+    }
+    return candidate;
+}
+
+function generateApprovedSubjectName(originalName, existingSubjects = [], excludeSubjectId = null) {
+    const trimmedOriginal = (originalName || '').trim();
+    const baseName = trimmedOriginal.endsWith(' Aprobados') || trimmedOriginal.endsWith(' - Aprobados')
+        ? trimmedOriginal
+        : `${trimmedOriginal} - Aprobados`;
+
+    const existingNames = new Set(
+        existingSubjects
+            .filter(s => s && typeof s.Nombre === 'string' && (excludeSubjectId === null || parseInt(s.ID_materia, 10) !== excludeSubjectId))
+            .map(s => s.Nombre.trim())
+    );
+
+    if (!existingNames.has(baseName)) {
+        return baseName;
+    }
+
+    let counter = 2;
+    let candidate = `${baseName} (${counter})`;
+    while (existingNames.has(candidate)) {
+        counter += 1;
+        candidate = `${baseName} (${counter})`;
+    }
+    return candidate;
+}
+
+function buildSubjectClosureReport(subject) {
+    const data = window.appData || window.data || {};
+    const subjectId = parseInt(subject?.ID_materia, 10);
+
+    if (!subject || !subjectId || Number.isNaN(subjectId)) {
+        alert('Materia no válida para generar el cierre.');
+        return null;
+    }
+
+    const enrollments = (data.alumnos_x_materia || []).filter(enrollment =>
+        parseInt(enrollment.Materia_ID_materia, 10) === subjectId
+    );
+
+    if (!enrollments.length) {
+        alert('No hay estudiantes asociados a esta materia.');
+        return null;
+    }
+
+    const students = new Map();
+    (data.estudiante || []).forEach(student => {
+        const id = parseInt(student.ID_Estudiante, 10);
+        if (!Number.isNaN(id)) {
+            students.set(id, student);
+        }
+    });
+
+    const evaluations = (data.evaluacion || [])
+        .filter(evaluation => parseInt(evaluation.Materia_ID_materia, 10) === subjectId)
+        .sort((a, b) => {
+            const dateA = a.Fecha ? new Date(a.Fecha) : null;
+            const dateB = b.Fecha ? new Date(b.Fecha) : null;
+            if (dateA && dateB) return dateA - dateB;
+            return (a.Titulo || '').localeCompare(b.Titulo || '');
+        });
+
+    const evaluationIds = evaluations.map(evaluation => parseInt(evaluation.ID_evaluacion, 10));
+    const evaluationTitles = evaluations.map(evaluation => evaluation.Titulo || `Evaluación ${evaluation.ID_evaluacion}`);
+
+    const notesByKey = new Map();
+    (data.notas || []).forEach(note => {
+        const evaluationId = parseInt(note.Evaluacion_ID_evaluacion, 10);
+        const studentId = parseInt(note.Estudiante_ID_Estudiante, 10);
+        if (Number.isNaN(evaluationId) || Number.isNaN(studentId)) return;
+        if (!evaluationIds.includes(evaluationId)) return;
+        const key = `${studentId}:${evaluationId}`;
+        notesByKey.set(key, note.Calificacion);
+    });
+
+    const delimiter = ';';
+    const headers = [
+        sanitizeForCsv('Nombre'),
+        sanitizeForCsv('Apellido'),
+        sanitizeForCsv('Faltas'),
+        ...evaluationTitles.map(title => sanitizeForCsv(title)),
+        sanitizeForCsv('Nota Final')
+    ];
+
+    const failingStudents = [];
+    const rows = enrollments.map(enrollment => {
+        const studentId = parseInt(enrollment.Estudiante_ID_Estudiante, 10);
+        const student = students.get(studentId) || {};
+        const nombre = student.Nombre || '';
+        const apellido = student.Apellido || '';
+
+        const absences = (data.asistencia || []).filter(attendance =>
+            parseInt(attendance.Estudiante_ID_Estudiante, 10) === studentId &&
+            parseInt(attendance.Materia_ID_materia, 10) === subjectId &&
+            (attendance.Presente === 'A' || attendance.Presente === 'N')
+        ).length;
+
+        const gradeValues = [];
+        const gradeStrings = evaluationIds.map(evaluationId => {
+            const key = `${studentId}:${evaluationId}`;
+            const rawGrade = notesByKey.get(key);
+            if (rawGrade === undefined || rawGrade === null || rawGrade === '') {
+                return sanitizeForCsv('');
+            }
+
+            const numericGrade = parseFloat(rawGrade);
+            if (!Number.isFinite(numericGrade)) {
+                return sanitizeForCsv('');
+            }
+
+            gradeValues.push(numericGrade);
+            return sanitizeForCsv(numericGrade.toFixed(2));
+        });
+
+        const finalAverageNumber = gradeValues.length
+            ? gradeValues.reduce((acc, value) => acc + value, 0) / gradeValues.length
+            : null;
+        const finalAverageFormatted = finalAverageNumber !== null ? finalAverageNumber.toFixed(2) : '';
+
+        const isAlreadyIntensifica = student.INTENSIFICA === true ||
+            student.INTENSIFICA === 1 ||
+            student.INTENSIFICA === '1';
+
+        if (finalAverageNumber === null || finalAverageNumber < PASSING_GRADE_THRESHOLD) {
+            failingStudents.push({
+                id: studentId,
+                nombre,
+                apellido,
+                finalAverage: finalAverageNumber,
+                absences,
+                isAlreadyIntensifica
+            });
+        }
+
+        return [
+            sanitizeForCsv(nombre),
+            sanitizeForCsv(apellido),
+            sanitizeForCsv(absences),
+            ...gradeStrings,
+            sanitizeForCsv(finalAverageFormatted)
+        ].join(delimiter);
+    });
+
+    const csvContent = [headers.join(delimiter)].concat(rows).join('\n');
+    const subjectNameSafe = subject.Nombre
+        ? subject.Nombre.replace(/[^a-z0-9_\-]+/gi, '_')
+        : 'materia';
+    const fileName = `cierre_notas_${subjectNameSafe}.csv`;
+
+    return {
+        csvContent,
+        fileName,
+        failingStudents,
+        totalStudents: enrollments.length,
+        subjectId,
+        subjectName: subject.Nombre || 'Materia',
+        existingStudents: students
+    };
+}
+
+async function createIntensificationSubjectForClosure(subject, report) {
+    if (!report) {
+        return { created: false, reason: 'NO_REPORT' };
+    }
+
+    const failingStudents = report.failingStudents || [];
+    if (!failingStudents.length) {
+        return { created: false, reason: 'NO_FAILING' };
+    }
+
+    const data = window.appData || window.data || {};
+    const baseUrl = getApiBaseUrl();
+    const existingSubjects = Array.isArray(data.materia) ? data.materia : [];
+    const originalSubjectId = parseInt(subject.ID_materia, 10);
+
+    const teacherId = parseInt(subject.Usuarios_docente_ID_docente ?? localStorage.getItem('userId'), 10);
+    if (!teacherId || Number.isNaN(teacherId)) {
+        console.error('No se pudo determinar el docente para la materia de intensificación.');
+        return { created: false, reason: 'NO_TEACHER' };
+    }
+
+    const newSubjectName = generateIntensificationSubjectName(subject.Nombre || 'Materia', existingSubjects);
+    const payload = {
+        Nombre: newSubjectName,
+        Curso_division: subject.Curso_division || 'Sin asignar',
+        Usuarios_docente_ID_docente: teacherId,
+        Estado: 'ACTIVO',
+        Horario: subject.Horario || null,
+        Aula: subject.Aula ? String(subject.Aula) : null,
+        Descripcion: subject.Descripcion || null
+    };
+
+    let newSubjectId = null;
+    let reusedExisting = false;
+    try {
+        const response = await fetch(`${baseUrl}/materia.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+
+        const text = await response.text();
+        let result = {};
+        try {
+            result = JSON.parse(text);
+        } catch (err) {
+            if (!response.ok) {
+                throw new Error(`Error del servidor (${response.status})`);
+            }
+        }
+
+        if (response.ok && result.success !== false) {
+            newSubjectId = parseInt(result.id ?? result.ID_materia ?? result.data?.ID_materia, 10);
+        } else if (result.error === 'DUPLICATE_SUBJECT_COURSE' || response.status === 409) {
+            const existing = existingSubjects.find(
+                s => (s.Nombre || '').trim() === newSubjectName &&
+                    (s.Curso_division || '') === (subject.Curso_division || '')
+            );
+            if (existing) {
+                newSubjectId = parseInt(existing.ID_materia, 10);
+                reusedExisting = true;
+            } else {
+                throw new Error(result.message || 'Ya existe una materia de intensificación con el mismo nombre y curso.');
+            }
+        } else {
+            throw new Error(result.message || `Error al crear la materia de intensificación (HTTP ${response.status})`);
+        }
+    } catch (error) {
+        console.error('Error creando materia de intensificación:', error);
+        return { created: false, reason: 'CREATE_SUBJECT_FAILED', error };
+    }
+
+    if (!newSubjectId || Number.isNaN(newSubjectId)) {
+        return { created: false, reason: 'NO_SUBJECT_ID' };
+    }
+
+    const currentEnrollments = (data.alumnos_x_materia || []).filter(axm =>
+        parseInt(axm.Materia_ID_materia, 10) === newSubjectId
+    );
+    const existingStudentIds = new Set(currentEnrollments.map(axm => parseInt(axm.Estudiante_ID_Estudiante, 10)));
+
+    const enrollmentPayload = failingStudents
+        .filter(student => !existingStudentIds.has(student.id))
+        .map(student => ({
+            Materia_ID_materia: newSubjectId,
+            Estudiante_ID_Estudiante: student.id,
+            Estado: 'INSCRITO'
+        }));
+
+    const enrollmentResult = {
+        attempted: enrollmentPayload.length,
+        enrolled: 0,
+        errors: []
+    };
+
+    if (enrollmentPayload.length) {
+        try {
+            const response = await fetch(`${baseUrl}/alumnos_x_materia.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(enrollmentPayload)
+            });
+
+            const result = await response.json().catch(() => ({}));
+            if (response.ok && result.success !== false) {
+                enrollmentResult.enrolled = enrollmentPayload.length;
+            } else {
+                enrollmentResult.errors.push(result.message || 'No se pudieron inscribir los estudiantes en la materia de intensificación.');
+            }
+        } catch (error) {
+            enrollmentResult.errors.push(error.message || 'Error de red al inscribir estudiantes en la materia de intensificación.');
+        }
+    }
+
+    let intensificaUpdates = 0;
+    const statusErrors = [];
+    for (const student of failingStudents) {
+        if (student.isAlreadyIntensifica) continue;
+        try {
+            const response = await fetch(`${baseUrl}/estudiantes.php?id=${student.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ Estado: 'INTENSIFICA' })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (response.ok && result.success !== false) {
+                intensificaUpdates += 1;
+            } else {
+                statusErrors.push(result.message || `No se pudo marcar al estudiante ${student.nombre} ${student.apellido} como intensificador.`);
+            }
+        } catch (error) {
+            statusErrors.push(error.message || `Error de red al actualizar estado del estudiante ${student.nombre} ${student.apellido}.`);
+        }
+    }
+
+    let removedCount = 0;
+    const removalErrors = [];
+    if (!Number.isNaN(originalSubjectId) && originalSubjectId > 0) {
+        for (const student of failingStudents) {
+            try {
+                const response = await fetch(`${baseUrl}/alumnos_x_materia.php?estudianteId=${student.id}&materiaId=${originalSubjectId}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                });
+                const result = await response.json().catch(() => ({}));
+                if (response.ok && result.success !== false) {
+                    const deletedCount = parseInt(result.deleted, 10);
+                    if (!Number.isNaN(deletedCount)) {
+                        removedCount += deletedCount;
+                    } else if (result.deleted) {
+                        removedCount += 1;
+                    }
+                } else {
+                    const message = result.message || `No se pudo quitar al estudiante ${student.nombre} ${student.apellido} de la materia original.`;
+                    removalErrors.push(message);
+                }
+            } catch (error) {
+                removalErrors.push(error.message || `Error de red al quitar al estudiante ${student.nombre} ${student.apellido} de la materia original.`);
+            }
+        }
+    } else {
+        removalErrors.push('No se pudo identificar la materia original para remover a los estudiantes intensificados.');
+    }
+
+    let renamedApprovedSubject = null;
+    let renameError = null;
+    if (!Number.isNaN(originalSubjectId) && originalSubjectId > 0) {
+        const currentName = subject.Nombre || '';
+        const approvedName = generateApprovedSubjectName(currentName, existingSubjects, originalSubjectId);
+        if (approvedName && approvedName !== currentName) {
+            try {
+                const response = await fetch(`${baseUrl}/materia.php?id=${originalSubjectId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ Nombre: approvedName })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (response.ok && result.success !== false) {
+                    renamedApprovedSubject = approvedName;
+                } else {
+                    renameError = result.message || `No se pudo renombrar la materia original a "${approvedName}".`;
+                }
+            } catch (error) {
+                renameError = error.message || 'Error de red al renombrar la materia original.';
+            }
+        }
+    }
+
+    if (typeof loadData === 'function') {
+        try {
+            await loadData();
+        } catch (error) {
+            console.warn('No se pudo recargar los datos después de crear la intensificación:', error);
+        }
+    }
+
+    if (typeof loadSubjects === 'function') loadSubjects();
+    if (typeof populateCourseFilter === 'function') populateCourseFilter();
+    if (typeof populateSubjectFilter === 'function') populateSubjectFilter();
+    if (typeof populateExamsSubjectFilter === 'function') populateExamsSubjectFilter();
+    if (typeof populateUnifiedCourseFilter === 'function') populateUnifiedCourseFilter();
+    if (typeof loadUnifiedStudentData === 'function') loadUnifiedStudentData();
+    if (typeof updateDashboard === 'function') updateDashboard();
+
+    return {
+        created: true,
+        reusedExisting,
+        subjectId: newSubjectId,
+        subjectName: newSubjectName,
+        failingCount: failingStudents.length,
+        enrolledCount: enrollmentResult.enrolled,
+        enrollmentErrors: enrollmentResult.errors,
+        statusUpdates: intensificaUpdates,
+        statusErrors,
+        removedCount,
+        removalErrors,
+        renamedApprovedSubject,
+        renameError
+    };
+}
+
 // formatDate is already defined in utils.js and available globally
 // Only override if Helpers module provides a different implementation
 if (Helpers.formatDate) {
@@ -242,7 +678,7 @@ function handleCloseGradesOutsideClick(event) {
     hideCloseGradesMenu();
 }
 
-function onCloseGradesSubjectSelected(subjectId) {
+async function onCloseGradesSubjectSelected(subjectId) {
     hideCloseGradesMenu();
 
     const data = window.appData || window.data || {};
@@ -260,12 +696,46 @@ function onCloseGradesSubjectSelected(subjectId) {
         return;
     }
 
-    const generateExcel = confirm('¿Deseas generar un archivo Excel con los datos de la materia seleccionada?');
-    if (generateExcel) {
-        generateClosureExcelForSubject(selected);
+    const originalSubjectName = selected.Nombre || 'Materia';
+    const report = buildSubjectClosureReport(selected);
+    if (!report) {
+        return;
     }
 
-    alert(`Procesamiento de cierre de notas para "${selected.Nombre}" iniciado.`);
+    const generateExcel = confirm('¿Deseas generar un archivo Excel con los datos de la materia seleccionada?');
+    if (generateExcel) {
+        await generateClosureExcelForSubject(selected, report);
+    }
+
+    const intensificationResult = await createIntensificationSubjectForClosure(selected, report);
+
+    let summaryMessage = `Procesamiento de cierre de notas para "${originalSubjectName}" finalizado.`;
+    if (intensificationResult.created) {
+        summaryMessage += ` ${intensificationResult.reusedExisting ? 'Se reutilizó' : 'Se creó'} la materia "${intensificationResult.subjectName}" con ${intensificationResult.enrolledCount} estudiante(s) intensificados.`;
+        if ((intensificationResult.enrollmentErrors || []).length) {
+            summaryMessage += ' Algunas inscripciones no pudieron completarse.';
+        }
+        if ((intensificationResult.statusErrors || []).length) {
+            summaryMessage += ' Algunos estudiantes no pudieron marcarse como intensificados.';
+        }
+        if (intensificationResult.removedCount > 0) {
+            summaryMessage += ` Se removieron ${intensificationResult.removedCount} inscripción(es) de la materia original.`;
+        }
+        if ((intensificationResult.removalErrors || []).length) {
+            summaryMessage += ' Algunas inscripciones originales no pudieron eliminarse.';
+        }
+        if (intensificationResult.renamedApprovedSubject) {
+            summaryMessage += ` La materia original ahora se llama "${intensificationResult.renamedApprovedSubject}".`;
+        } else if (intensificationResult.renameError) {
+            summaryMessage += ' No se pudo renombrar la materia original automáticamente.';
+        }
+    } else if (intensificationResult.reason === 'NO_FAILING') {
+        summaryMessage += ' Todos los estudiantes aprobaron; no se generó materia de intensificación.';
+    } else if (intensificationResult.reason && intensificationResult.reason !== 'NO_REPORT') {
+        summaryMessage += ' No se pudo generar la materia de intensificación automáticamente.';
+    }
+
+    alert(summaryMessage);
 }
 
 function populateCloseGradesMenu() {
@@ -366,97 +836,14 @@ function toggleCloseGradesMenu() {
     }
 }
 
-function generateClosureExcelForSubject(subject) {
-    const data = window.appData || window.data || {};
-    const subjectId = parseInt(subject.ID_materia, 10);
-
-    const enrollments = (data.alumnos_x_materia || []).filter(enrollment =>
-        parseInt(enrollment.Materia_ID_materia, 10) === subjectId
-    );
-
-    if (!enrollments.length) {
-        alert('No hay estudiantes asociados a esta materia.');
-        return;
+function generateClosureExcelForSubject(subject, precomputedReport) {
+    const report = precomputedReport || buildSubjectClosureReport(subject);
+    if (!report) {
+        return null;
     }
 
-    const students = new Map();
-    (data.estudiante || []).forEach(student => {
-        students.set(parseInt(student.ID_Estudiante, 10), student);
-    });
-
-    const evaluations = (data.evaluacion || [])
-        .filter(evaluation => parseInt(evaluation.Materia_ID_materia, 10) === subjectId)
-        .sort((a, b) => {
-            const dateA = a.Fecha ? new Date(a.Fecha) : null;
-            const dateB = b.Fecha ? new Date(b.Fecha) : null;
-            if (dateA && dateB) return dateA - dateB;
-            return (a.Titulo || '').localeCompare(b.Titulo || '');
-        });
-
-    const evaluationIds = evaluations.map(evaluation => parseInt(evaluation.ID_evaluacion, 10));
-    const evaluationTitles = evaluations.map(evaluation => evaluation.Titulo || `Evaluación ${evaluation.ID_evaluacion}`);
-
-    const notesByKey = new Map();
-    (data.notas || []).forEach(note => {
-        const evaluationId = parseInt(note.Evaluacion_ID_evaluacion, 10);
-        const studentId = parseInt(note.Estudiante_ID_Estudiante, 10);
-        if (!evaluationIds.includes(evaluationId)) return;
-
-        const key = `${studentId}:${evaluationId}`;
-        notesByKey.set(key, note.Calificacion);
-    });
-
-    const delimiter = ';';
-    const headers = [
-        sanitizeForCsv('Nombre'),
-        sanitizeForCsv('Apellido'),
-        ...evaluationTitles.map(title => sanitizeForCsv(title)),
-        sanitizeForCsv('Nota Final')
-    ];
-
-    const rows = enrollments.map(enrollment => {
-        const studentId = parseInt(enrollment.Estudiante_ID_Estudiante, 10);
-        const student = students.get(studentId) || {};
-        const nombre = student.Nombre || '';
-        const apellido = student.Apellido || '';
-
-        const gradeValues = [];
-        const gradeStrings = evaluationIds.map(evaluationId => {
-            const key = `${studentId}:${evaluationId}`;
-            const rawGrade = notesByKey.get(key);
-            if (rawGrade === undefined || rawGrade === null || rawGrade === '') {
-                return sanitizeForCsv('');
-            }
-
-            const numericGrade = parseFloat(rawGrade);
-            if (!Number.isFinite(numericGrade)) {
-                return sanitizeForCsv('');
-            }
-
-            gradeValues.push(numericGrade);
-            return sanitizeForCsv(numericGrade.toFixed(2));
-        });
-
-        const finalAverage = gradeValues.length
-            ? (gradeValues.reduce((acc, value) => acc + value, 0) / gradeValues.length).toFixed(2)
-            : '';
-
-        return [
-            sanitizeForCsv(nombre),
-            sanitizeForCsv(apellido),
-            ...gradeStrings,
-            sanitizeForCsv(finalAverage)
-        ].join(delimiter);
-    });
-
-    const csvContent = [headers.join(delimiter)].concat(rows).join('\n');
-
+    const { csvContent, fileName } = report;
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const subjectNameSafe = subject.Nombre
-        ? subject.Nombre.replace(/[^a-z0-9_\-]+/gi, '_')
-        : 'materia';
-    const fileName = `cierre_notas_${subjectNameSafe}.csv`;
-
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.href = url;
@@ -466,6 +853,8 @@ function generateClosureExcelForSubject(subject) {
     document.body.removeChild(link);
 
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    return report;
 }
 
 function handleCloseGradesClick() {
