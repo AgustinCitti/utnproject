@@ -52,6 +52,101 @@
         }
     }
     
+    /**
+     * Open the bulk student assignment modal preconfigured for a specific subject.
+     * Exposed globally so it can be triggered after crear materia.
+     */
+    async function assignStudentsToSubject(subjectId, cursoDivision) {
+        if (!subjectId) {
+            console.warn('assignStudentsToSubject: subjectId es inválido', subjectId);
+            return;
+        }
+        
+        try {
+            const modal = document.getElementById('loadCourseDivisionModal');
+            if (!modal) {
+                alert('No se encontró el asistente de carga masiva de alumnos.');
+                return;
+            }
+            
+            // Guardar el ID de la materia para que el procesador lo use
+            modal.dataset.subjectId = String(subjectId);
+            
+            // Poblar el dropdown de cursos/divisiones si la función está disponible
+            if (typeof populateBulkCourseDivisionDropdown === 'function') {
+                try {
+                    await populateBulkCourseDivisionDropdown();
+                } catch (err) {
+                    console.warn('Error al poblar el dropdown de cursos para la carga masiva:', err);
+                }
+            }
+            
+            // Preseleccionar el curso/división si lo tenemos
+            if (cursoDivision) {
+                const bulkCourseDivision = document.getElementById('bulkCourseDivision');
+                if (bulkCourseDivision) {
+                    let optionFound = false;
+                    Array.from(bulkCourseDivision.options).forEach(option => {
+                        if (option.value === cursoDivision) {
+                            optionFound = true;
+                            option.selected = true;
+                        }
+                    });
+                    
+                    if (!optionFound) {
+                        const newOption = new Option(cursoDivision, cursoDivision, true, true);
+                        bulkCourseDivision.add(newOption);
+                    }
+                    
+                    // Disparar change para cargar datos dependientes
+                    const changeEvent = new Event('change', { bubbles: true });
+                    bulkCourseDivision.dispatchEvent(changeEvent);
+                }
+            }
+            
+            // Limpiar inputs previos del CSV
+            const fileInput = document.getElementById('bulkStudentsFileInput');
+            if (fileInput) {
+                fileInput.value = '';
+                fileInput._parsedData = null;
+            }
+            const fileInfo = document.getElementById('bulkCsvFileInfo');
+            if (fileInfo) fileInfo.style.display = 'none';
+            const previewDiv = document.getElementById('bulkCsvPreview');
+            if (previewDiv) previewDiv.style.display = 'none';
+            
+            // Asegurar que el modo CSV esté visible por defecto
+            const textareaMode = document.getElementById('bulkTextareaMode');
+            const tableMode = document.getElementById('bulkTableMode');
+            const toggleBtn = document.getElementById('toggleInputModeBtn');
+            if (textareaMode && tableMode) {
+                textareaMode.style.display = 'block';
+                tableMode.style.display = 'none';
+            }
+            if (toggleBtn) {
+                toggleBtn.innerHTML = '<i class="fas fa-table"></i> Modo Tabla Manual';
+            }
+            
+            // Abrir modal
+            if (typeof showModal === 'function') {
+                showModal('loadCourseDivisionModal');
+            } else {
+                modal.classList.add('active');
+                modal.style.display = 'flex';
+            }
+            
+            if (typeof setupModalHandlers === 'function') {
+                setupModalHandlers('loadCourseDivisionModal');
+            }
+        } catch (error) {
+            console.error('Error al preparar la carga masiva de alumnos:', error);
+            alert('Ocurrió un error al preparar la carga de alumnos. Intenta nuevamente.');
+        }
+    }
+    
+    // Exponer globalmente para que otras partes de la app lo utilicen
+    window.assignStudentsToSubject = assignStudentsToSubject;
+    
     function parseCourseDivision(cursoDivision) {
         if (Helpers.parseCourseDivision) {
             return Helpers.parseCourseDivision(cursoDivision);

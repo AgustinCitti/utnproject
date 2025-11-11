@@ -3213,6 +3213,7 @@ async function processBulkStudents() {
     const courseDivisionSelect = document.getElementById('bulkCourseDivision');
     const studentsFileInput = document.getElementById('bulkStudentsFileInput');
     const statusSelect = document.getElementById('bulkStudentStatus');
+    const bulkModal = document.getElementById('loadCourseDivisionModal');
     
     if (!courseDivisionSelect || !studentsFileInput || !statusSelect) {
         alert('Error: No se encontraron los campos del formulario');
@@ -3257,13 +3258,21 @@ async function processBulkStudents() {
             return;
         }
         
-        // Usar los datos ya parseados si están disponibles
-        if (studentsFileInput._parsedData) {
-            students = studentsFileInput._parsedData;
-        } else {
-            alert('Error: No se pudo leer el archivo. Por favor, vuelve a seleccionarlo.');
+        const parsed = await new Promise((resolve) => {
+            if (!file) {
+                resolve([]);
+                return;
+            }
+            parseBulkStudentsCSV(file, resolve);
+        });
+        
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+            alert('El archivo CSV está vacío o no se pudo leer. Verifica el formato e inténtalo nuevamente.');
             return;
         }
+        
+        students = parsed;
+        studentsFileInput._parsedData = parsed;
     }
     
     if (students.length === 0) {
@@ -3295,11 +3304,21 @@ async function processBulkStudents() {
     }
     
     // Obtener todas las materias del curso seleccionado para este docente
-    const courseSubjects = (appData.materia || []).filter(m => 
+    let courseSubjects = (appData.materia || []).filter(m => 
         m.Usuarios_docente_ID_docente === teacherId &&
         m.Curso_division === courseDivision &&
         (!m.Estado || m.Estado === 'ACTIVA')
     );
+
+    const targetSubjectId = bulkModal && bulkModal.dataset.subjectId
+        ? parseInt(bulkModal.dataset.subjectId, 10)
+        : null;
+    if (targetSubjectId) {
+        const targetSubject = (appData.materia || []).find(m => parseInt(m.ID_materia, 10) === targetSubjectId);
+        if (targetSubject) {
+            courseSubjects = [targetSubject];
+        }
+    }
     
     if (courseSubjects.length === 0) {
         alert(`No hay materias activas para el curso "${courseDivision}". Por favor crea al menos una materia para este curso primero.`);
@@ -3433,6 +3452,9 @@ async function processBulkStudents() {
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.textContent = originalBtnText || 'Cargar Alumnos';
+        }
+        if (bulkModal && bulkModal.dataset) {
+            delete bulkModal.dataset.subjectId;
         }
     }
 }
