@@ -220,6 +220,76 @@ function generateApprovedSubjectName(originalName, existingSubjects = [], exclud
     return candidate;
 }
 
+function normalizeString(value) {
+    if (!value && value !== 0) return '';
+    try {
+        return String(value)
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+    } catch (error) {
+        return String(value || '')
+            .toLowerCase()
+            .trim();
+    }
+}
+
+function stripSuffixPatterns(name, patterns = []) {
+    if (!name) return '';
+    let result = String(name).trim();
+    patterns.forEach(pattern => {
+        result = result.replace(pattern, '');
+    });
+    return result.trim();
+}
+
+function getIntensificationBaseName(name) {
+    const patterns = [
+        /\s*[-–]\s*intensificacion(?:es)?$/i,
+        /\s*[-–]\s*intensificación(?:es)?$/i,
+        /\s*[-–]\s*intensificados$/i,
+        /\s+intensificacion(?:es)?$/i,
+        /\s+intensificación(?:es)?$/i,
+        /\s+intensificados$/i,
+        /\s*\(intensificacion(?:es)?\)$/i,
+        /\s*\(intensificación(?:es)?\)$/i,
+        /\s*\(intensificados\)$/i
+    ];
+    return stripSuffixPatterns(name, patterns);
+}
+
+function getApprovedBaseName(name) {
+    const patterns = [
+        /\s*[-–]\s*aprobados$/i,
+        /\s+aprobados$/i,
+        /\s*\(aprobados\)$/i
+    ];
+    return stripSuffixPatterns(name, patterns);
+}
+
+function findApprovedSubjectByBaseName(baseName, subjects = []) {
+    if (!baseName || !Array.isArray(subjects) || !subjects.length) {
+        return null;
+    }
+    const normalizedBase = normalizeString(baseName);
+    return subjects.find(subject => {
+        const subjectName = subject?.Nombre || '';
+        if (!subjectName) return false;
+        const candidateBase = getApprovedBaseName(subjectName);
+        return normalizeString(candidateBase) === normalizedBase;
+    }) || null;
+}
+
+function isIntensificationSubject(subject) {
+    const name = subject?.Nombre || '';
+    if (!name) {
+        return false;
+    }
+    const normalized = normalizeString(name);
+    return normalized.includes('intensifica');
+}
+
 function buildSubjectClosureReport(subject) {
     const data = window.appData || window.data || {};
     const subjectId = parseInt(subject?.ID_materia, 10);
@@ -278,6 +348,7 @@ function buildSubjectClosureReport(subject) {
     ];
 
     const failingStudents = [];
+    const passingStudents = [];
     const rows = enrollments.map(enrollment => {
         const studentId = parseInt(enrollment.Estudiante_ID_Estudiante, 10);
         const student = students.get(studentId) || {};
@@ -325,6 +396,15 @@ function buildSubjectClosureReport(subject) {
                 absences,
                 isAlreadyIntensifica
             });
+        } else {
+            passingStudents.push({
+                id: studentId,
+                nombre,
+                apellido,
+                finalAverage: finalAverageNumber,
+                absences,
+                isAlreadyIntensifica
+            });
         }
 
         return [
@@ -346,6 +426,7 @@ function buildSubjectClosureReport(subject) {
         csvContent,
         fileName,
         failingStudents,
+        passingStudents,
         totalStudents: enrollments.length,
         subjectId,
         subjectName: subject.Nombre || 'Materia',
@@ -353,9 +434,189 @@ function buildSubjectClosureReport(subject) {
     };
 }
 
+async function handleIntensificationSubjectClosure(subject, report) {
+    const subjectId = parseInt(subject?.ID_materia, 10);
+    if (!subjectId || Number.isNaN(subjectId)) {
+        return { created: false, reason: 'NO_SUBJECT_ID' };
+    }
+
+    const approvedCandidates = Array.isArray(report?.passingStudents) ? report.passingStudents : [];
+    const approvedStudents = approvedCandidates.filter(student =>
+        student &&
+        typeof student.finalAverage === 'number' &&
+        Number.isFinite(student.finalAverage) &&
+        student.finalAverage >= PASSING_GRADE_THRESHOLD
+    );
+
+    if (!approvedStudents.length) {
+        return {
+            created: false,
+            reason: 'INTENSIFICATION_NO_APPROVED',
+            approvedCount: 0
+        };
+    }
+
+    const data = window.appData || window.data || {};
+    const existingSubjects = Array.isArray(data.materia) ? data.materia : [];
+    const baseName = getIntensificationBaseName(subject?.Nombre || '');
+    const approvedSubject = findApprovedSubjectByBaseName(baseName, existingSubjects);
+
+    if (!approvedSubject) {
+        return {
+            created: false,
+            reason: 'INTENSIFICATION_NO_APPROVED_SUBJECT',
+            approvedCount: approvedStudents.length,
+            expectedSubjectName: generateApprovedSubjectName(baseName || (subject?.Nombre || ''), existingSubjects)
+        };
+    }
+
+    const targetSubjectId = parseInt(approvedSubject.ID_materia, 10);
+    if (!targetSubjectId || Number.isNaN(targetSubjectId)) {
+        return {
+            created: false,
+            reason: 'INTENSIFICATION_INVALID_APPROVED_SUBJECT',
+            approvedCount: approvedStudents.length,
+            targetSubjectName: approvedSubject.Nombre || null
+        };
+    }
+
+    const baseUrl = getApiBaseUrl();
+    const removalErrors = [];
+    let removedCount = 0;
+
+    for (const student of approvedStudents) {
+        try {
+            const response = await fetch(`${baseUrl}/alumnos_x_materia.php?estudianteId=${student.id}&materiaId=${subjectId}`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: { 'Accept': 'application/json' }
+            });
+            const result = await response.json().catch(() => ({}));
+            if (response.ok && result.success !== false) {
+                const deletedCount = parseInt(result.deleted, 10);
+                if (!Number.isNaN(deletedCount)) {
+                    removedCount += deletedCount;
+                } else {
+                    removedCount += 1;
+                }
+            } else {
+                removalErrors.push(result.message || `No se pudo quitar al estudiante ${student.nombre} ${student.apellido} de la materia de intensificación.`);
+            }
+        } catch (error) {
+            removalErrors.push(error.message || `Error al quitar al estudiante ${student.nombre} ${student.apellido} de la materia de intensificación.`);
+        }
+    }
+
+    const currentApprovedEnrollments = (data.alumnos_x_materia || []).filter(enrollment =>
+        parseInt(enrollment.Materia_ID_materia, 10) === targetSubjectId
+    );
+    const alreadyInApproved = new Set(
+        currentApprovedEnrollments.map(enrollment => parseInt(enrollment.Estudiante_ID_Estudiante, 10))
+    );
+
+    const enrollmentPayload = approvedStudents
+        .filter(student => !alreadyInApproved.has(student.id))
+        .map(student => ({
+            Materia_ID_materia: targetSubjectId,
+            Estudiante_ID_Estudiante: student.id,
+            Estado: 'INSCRITO'
+        }));
+
+    let movedCount = 0;
+    const enrollmentErrors = [];
+
+    if (enrollmentPayload.length) {
+        try {
+            const response = await fetch(`${baseUrl}/alumnos_x_materia.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(enrollmentPayload)
+            });
+            const result = await response.json().catch(() => ({}));
+            if (response.ok && result.success !== false) {
+                if (Array.isArray(result.inserted)) {
+                    movedCount = result.inserted.length;
+                } else if (response.status === 201) {
+                    movedCount = enrollmentPayload.length;
+                } else if (response.status === 200) {
+                    movedCount = enrollmentPayload.length;
+                }
+                if (Array.isArray(result.warnings) && result.warnings.length) {
+                    enrollmentErrors.push(...result.warnings);
+                }
+            } else {
+                enrollmentErrors.push(result.message || 'No se pudieron inscribir los estudiantes en la materia de aprobados.');
+            }
+        } catch (error) {
+            enrollmentErrors.push(error.message || 'Error de red al inscribir estudiantes en la materia de aprobados.');
+        }
+    }
+
+    let statusUpdates = 0;
+    const statusErrors = [];
+    for (const student of approvedStudents) {
+        try {
+            const response = await fetch(`${baseUrl}/estudiantes.php?id=${student.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ Estado: 'ACTIVO' })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (response.ok && result.success !== false) {
+                statusUpdates += 1;
+            } else if (result.message) {
+                statusErrors.push(result.message);
+            }
+        } catch (error) {
+            statusErrors.push(error.message || `Error al actualizar el estado del estudiante ${student.nombre} ${student.apellido}.`);
+        }
+    }
+
+    if (typeof loadData === 'function') {
+        try {
+            await loadData();
+        } catch (error) {
+            console.warn('No se pudo recargar los datos después de consolidar la intensificación:', error);
+        }
+    }
+    if (typeof loadSubjects === 'function') loadSubjects();
+    if (typeof populateCourseFilter === 'function') populateCourseFilter();
+    if (typeof populateSubjectFilter === 'function') populateSubjectFilter();
+    if (typeof populateExamsSubjectFilter === 'function') populateExamsSubjectFilter();
+    if (typeof populateUnifiedCourseFilter === 'function') populateUnifiedCourseFilter();
+    if (typeof loadUnifiedStudentData === 'function') loadUnifiedStudentData();
+    if (typeof updateDashboard === 'function') updateDashboard();
+
+    return {
+        created: false,
+        reason: 'INTENSIFICATION_CLOSURE',
+        approvedCount: approvedStudents.length,
+        targetSubjectName: approvedSubject.Nombre || null,
+        targetSubjectId,
+        removedCount,
+        removalErrors,
+        movedCount,
+        enrollmentErrors,
+        statusUpdates,
+        statusErrors
+    };
+}
+
 async function createIntensificationSubjectForClosure(subject, report) {
     if (!report) {
         return { created: false, reason: 'NO_REPORT' };
+    }
+
+    if (isIntensificationSubject(subject)) {
+        return await handleIntensificationSubjectClosure(subject, report);
     }
 
     const failingStudents = report.failingStudents || [];
@@ -729,6 +990,46 @@ async function onCloseGradesSubjectSelected(subjectId) {
         } else if (intensificationResult.renameError) {
             summaryMessage += ' No se pudo renombrar la materia original automáticamente.';
         }
+    } else if (intensificationResult.reason === 'INTENSIFICATION_CLOSURE') {
+        const movedCount = intensificationResult.movedCount || 0;
+        const removedCount = intensificationResult.removedCount || 0;
+        const approvedCount = intensificationResult.approvedCount || 0;
+        const statusUpdates = intensificationResult.statusUpdates || 0;
+        const targetName = intensificationResult.targetSubjectName || 'la materia de aprobados correspondiente';
+
+        if (approvedCount > 0) {
+            summaryMessage += ` Se procesaron ${approvedCount} estudiante(s) aprobados de la materia de intensificación.`;
+        }
+        if (removedCount > 0) {
+            summaryMessage += ` Se retiraron ${removedCount} inscripción(es) de la materia de intensificación.`;
+        }
+        if (movedCount > 0) {
+            summaryMessage += ` Se inscribieron ${movedCount} estudiante(s) en "${targetName}".`;
+        } else if (approvedCount > 0 && movedCount === 0) {
+            summaryMessage += ` No se generaron nuevas inscripciones en "${targetName}" porque todos los estudiantes ya estaban asociados.`;
+        }
+        if (statusUpdates > 0) {
+            summaryMessage += ` Se actualizaron ${statusUpdates} estado(s) de estudiante a ACTIVO.`;
+        }
+
+        if ((intensificationResult.removalErrors || []).length) {
+            summaryMessage += ' Algunas inscripciones no pudieron quitarse de la materia de intensificación.';
+        }
+        if ((intensificationResult.enrollmentErrors || []).length) {
+            summaryMessage += ' Hubo advertencias al mover estudiantes a la materia de aprobados.';
+        }
+        if ((intensificationResult.statusErrors || []).length) {
+            summaryMessage += ' Algunos estados de estudiantes no pudieron actualizarse.';
+        }
+    } else if (intensificationResult.reason === 'INTENSIFICATION_NO_APPROVED') {
+        summaryMessage += ' No se encontraron estudiantes aprobados en la materia de intensificación para mover a la materia de aprobados.';
+    } else if (intensificationResult.reason === 'INTENSIFICATION_NO_APPROVED_SUBJECT') {
+        const expectedName = intensificationResult.expectedSubjectName
+            ? `"${intensificationResult.expectedSubjectName}"`
+            : 'la materia de aprobados correspondiente';
+        summaryMessage += ` No se encontró ${expectedName}. Crea la materia de aprobados o verifica su asignación antes de mover estudiantes.`;
+    } else if (intensificationResult.reason === 'INTENSIFICATION_INVALID_APPROVED_SUBJECT') {
+        summaryMessage += ' No se pudo identificar la materia de aprobados para completar el traslado de estudiantes.';
     } else if (intensificationResult.reason === 'NO_FAILING') {
         summaryMessage += ' Todos los estudiantes aprobaron; no se generó materia de intensificación.';
     } else if (intensificationResult.reason && intensificationResult.reason !== 'NO_REPORT') {
