@@ -363,7 +363,7 @@ function generateSuggestions(query) {
     // Priority: Search subjects first (most common search)
     if (searchFilters.subjects && appData.materia) {
         appData.materia.forEach(subject => {
-            const subjectName = subject.Nombre_materia || '';
+            const subjectName = subject.Nombre_materia || subject.Nombre || '';
             if (matchesQuery(subjectName, queryLower)) {
                 suggestions.push({
                     type: 'subject',
@@ -371,6 +371,7 @@ function generateSuggestions(query) {
                     searchQuery: subjectName || '',
                     category: 'Materias',
                     section: 'subjects-management',
+                    metadata: { subjectId: subject.ID_materia ? parseInt(subject.ID_materia, 10) : null },
                     priority: 1 // High priority for subjects
                 });
             }
@@ -393,6 +394,8 @@ function generateSuggestions(query) {
                     searchQuery: fullName || '',
                     category: 'Estudiantes',
                     section: 'student-management',
+                    subsection: 'students',
+                    metadata: { studentId: student.ID_Estudiante ? parseInt(student.ID_Estudiante, 10) : null },
                     priority: 2
                 });
             }
@@ -410,6 +413,8 @@ function generateSuggestions(query) {
                     searchQuery: examTitle || '',
                     category: 'Exámenes',
                     section: 'student-management',
+                    subsection: 'exams',
+                    metadata: { examId: exam.ID_evaluacion ? parseInt(exam.ID_evaluacion, 10) : null },
                     priority: 3
                 });
             }
@@ -430,7 +435,11 @@ function generateSuggestions(query) {
                     searchQuery: topicName || '',
                     category: 'Temas',
                     section: 'subjects-management',
-                    metadata: { subjectName },
+                    metadata: {
+                        subjectName,
+                        subjectId: subject ? (subject.ID_materia ? parseInt(subject.ID_materia, 10) : null) : null,
+                        topicId: topic.ID_contenido ? parseInt(topic.ID_contenido, 10) : null
+                    },
                     priority: 4
                 });
             }
@@ -449,15 +458,21 @@ function generateSuggestions(query) {
                     // Get student name
                     const student = appData.estudiante?.find(e => parseInt(e.ID_Estudiante) === parseInt(studentTopic.Estudiante_ID_Estudiante));
                     const studentName = student ? `${student.Nombre || ''} ${student.Apellido || ''}`.trim() : '';
-                    suggestions.push({
-                        type: 'studentTopic',
-                        text: `${topicName || 'Tema'} - ${studentName}`,
-                        searchQuery: topicName || '',
-                        category: 'Progreso de Temas',
-                        section: 'student-management',
-                        metadata: { studentName, status: studentTopic.Estado },
-                        priority: 5
-                    });
+                suggestions.push({
+                    type: 'studentTopic',
+                    text: `${topicName || 'Tema'} - ${studentName}`,
+                    searchQuery: topicName || '',
+                    category: 'Progreso de Temas',
+                    section: 'student-management',
+                    subsection: 'students',
+                    metadata: {
+                        studentName,
+                        status: studentTopic.Estado,
+                        studentId: student ? (student.ID_Estudiante ? parseInt(student.ID_Estudiante, 10) : null) : null,
+                        subjectId: subject ? (subject.ID_materia ? parseInt(subject.ID_materia, 10) : null) : null
+                    },
+                    priority: 5
+                });
                 }
             }
         });
@@ -473,15 +488,20 @@ function generateSuggestions(query) {
                 const gradeValue = (grade.Calificacion || '').toString();
                 const observation = grade.Observacion || '';
                 if (matchesQuery(evalTitle, queryLower) || matchesQuery(gradeValue, queryLower) || matchesQuery(observation, queryLower)) {
-                    suggestions.push({
-                        type: 'grade',
-                        text: `${evalTitle || 'Evaluación'} - ${gradeValue || 'N/A'}`,
-                        searchQuery: evalTitle || '',
-                        category: 'Calificaciones',
-                        section: 'student-management',
-                        metadata: { grade: grade.Calificacion },
-                        priority: 6
-                    });
+                suggestions.push({
+                    type: 'grade',
+                    text: `${evalTitle || 'Evaluación'} - ${gradeValue || 'N/A'}`,
+                    searchQuery: evalTitle || '',
+                    category: 'Calificaciones',
+                    section: 'student-management',
+                    subsection: 'exams',
+                    metadata: {
+                        grade: grade.Calificacion,
+                        examId: evaluation.ID_evaluacion ? parseInt(evaluation.ID_evaluacion, 10) : null,
+                        studentId: student ? (student.ID_Estudiante ? parseInt(student.ID_Estudiante, 10) : null) : null
+                    },
+                    priority: 6
+                });
                 }
             }
         });
@@ -497,15 +517,21 @@ function generateSuggestions(query) {
                 const observation = attendance.Observaciones || '';
                 const date = attendance.Fecha || '';
                 if (matchesQuery(studentName, queryLower) || matchesQuery(observation, queryLower) || matchesQuery(date, queryLower)) {
-                    suggestions.push({
-                        type: 'attendance',
-                        text: `Asistencia - ${studentName}`,
-                        searchQuery: studentName,
-                        category: 'Asistencia',
-                        section: 'student-management',
-                        metadata: { date: attendance.Fecha, present: attendance.Presente },
-                        priority: 7
-                    });
+                suggestions.push({
+                    type: 'attendance',
+                    text: `Asistencia - ${studentName}`,
+                    searchQuery: studentName,
+                    category: 'Asistencia',
+                    section: 'student-management',
+                    subsection: 'students',
+                    metadata: {
+                        date: attendance.Fecha,
+                        present: attendance.Presente,
+                        studentId: attendance.Estudiante_ID_Estudiante ? parseInt(attendance.Estudiante_ID_Estudiante, 10) : null,
+                        subjectId: subject ? (subject.ID_materia ? parseInt(subject.ID_materia, 10) : null) : null
+                    },
+                    priority: 7
+                });
                 }
             }
         });
@@ -526,7 +552,11 @@ function generateSuggestions(query) {
                     searchQuery: fileName || '',
                     category: 'Archivos',
                     section: 'subjects-management',
-                    metadata: { subjectName, fileType: file.Tipo },
+                    metadata: {
+                        subjectName,
+                        fileType: file.Tipo,
+                        subjectId: subject ? (subject.ID_materia ? parseInt(subject.ID_materia, 10) : null) : null
+                    },
                     priority: 8
                 });
             }
@@ -549,7 +579,12 @@ function generateSuggestions(query) {
                     searchQuery: description || '',
                     category: 'Recordatorios',
                     section: 'calendar',
-                    metadata: { subjectName, date: reminder.Fecha, type: reminder.Tipo },
+                    metadata: {
+                        subjectName,
+                        date: reminder.Fecha,
+                        type: reminder.Tipo,
+                        reminderId: reminder.ID_recordatorio ? parseInt(reminder.ID_recordatorio, 10) : null
+                    },
                     priority: 9
                 });
             }
@@ -558,8 +593,9 @@ function generateSuggestions(query) {
 
     // Add common search terms
     const commonTerms = [
-        { text: 'Ver todos los estudiantes', type: 'quick', category: 'Acciones rápidas', section: 'student-management' },
+        { text: 'Ver todos los estudiantes', type: 'quick', category: 'Acciones rápidas', section: 'student-management', subsection: 'students' },
         { text: 'Ver todas las materias', type: 'quick', category: 'Acciones rápidas', section: 'subjects-management' },
+        { text: 'Ver exámenes', type: 'quick', category: 'Acciones rápidas', section: 'student-management', subsection: 'exams' },
         { text: 'Ver notificaciones', type: 'quick', category: 'Acciones rápidas', section: 'notifications' },
         { text: 'Ver reportes', type: 'quick', category: 'Acciones rápidas', section: 'reports' },
         { text: 'Ver estadísticas', type: 'quick', category: 'Acciones rápidas', section: 'reports' }
@@ -602,11 +638,11 @@ function generateSuggestions(query) {
 // Get quick search options when input is empty
 function getQuickSearchOptions() {
     return [
-        { type: 'quick', text: 'Buscar estudiantes', category: 'Búsqueda rápida', section: 'student-management', searchQuery: '' },
+        { type: 'quick', text: 'Buscar estudiantes', category: 'Búsqueda rápida', section: 'student-management', subsection: 'students', searchQuery: '' },
         { type: 'quick', text: 'Buscar materias', category: 'Búsqueda rápida', section: 'subjects-management', searchQuery: '' },
-        { type: 'quick', text: 'Buscar exámenes', category: 'Búsqueda rápida', section: 'student-management', searchQuery: '' },
+        { type: 'quick', text: 'Buscar exámenes', category: 'Búsqueda rápida', section: 'student-management', subsection: 'exams', searchQuery: '' },
         { type: 'quick', text: 'Buscar temas', category: 'Búsqueda rápida', section: 'subjects-management', searchQuery: '' },
-        { type: 'quick', text: 'Buscar calificaciones', category: 'Búsqueda rápida', section: 'student-management', searchQuery: '' },
+        { type: 'quick', text: 'Buscar calificaciones', category: 'Búsqueda rápida', section: 'student-management', subsection: 'exams', searchQuery: '' },
         { type: 'quick', text: 'Ver notificaciones', category: 'Búsqueda rápida', section: 'notifications', searchQuery: '' },
         { type: 'quick', text: 'Ver reportes', category: 'Búsqueda rápida', section: 'reports', searchQuery: '' },
         { type: 'quick', text: 'Ver estadísticas', category: 'Búsqueda rápida', section: 'reports', searchQuery: '' }
@@ -652,21 +688,27 @@ function selectSuggestion(suggestion, type) {
     const searchInput = type === 'desktop' ? desktopSearchInput : mobileSearchInput;
 
     if (searchInput) {
-        searchInput.value = suggestion.searchQuery || suggestion.text;
-        searchInput.focus();
+        searchInput.value = '';
+        searchInput.blur();
     }
-
-    // Navigate to section if it's a quick action
-    if (suggestion.section && typeof showSection === 'function') {
-        showSection(suggestion.section);
-    }
-
-    // Perform search if there's a query
-    if (suggestion.searchQuery || suggestion.text) {
-        handleSearchInput(suggestion.searchQuery || suggestion.text, type);
+    const otherInput = type === 'desktop' ? mobileSearchInput : desktopSearchInput;
+    if (otherInput) {
+        otherInput.value = '';
+        otherInput.blur();
     }
 
     clearSearchSuggestions();
+    clearSearchResults();
+
+    if (suggestion.section && typeof showSection === 'function') {
+        showSection(suggestion.section, suggestion.subsection || null);
+    }
+
+    if (suggestion.metadata) {
+        setTimeout(() => {
+            focusUsingMetadata(suggestion.metadata, suggestion.type);
+        }, 500);
+    }
 }
 
 // Clear search suggestions
@@ -1015,7 +1057,12 @@ function searchExamsData(query, results, appData) {
                 title: exam.Titulo || 'Examen',
                 description: `${subjectName ? `Materia: ${subjectName} | ` : ''}Tipo: ${exam.Tipo || 'N/A'} | Fecha: ${exam.Fecha || 'N/A'}`,
                 section: 'student-management',
-                metadata: { examId: exam.ID_evaluacion, subjectName }
+                subsection: 'exams',
+                metadata: {
+                    examId: exam.ID_evaluacion ? parseInt(exam.ID_evaluacion, 10) : null,
+                    subjectName,
+                    subjectId: subject ? (subject.ID_materia ? parseInt(subject.ID_materia, 10) : null) : null
+                }
             });
         }
     });
@@ -1039,7 +1086,12 @@ function searchTopicsData(query, results, appData) {
                 title: topic.Tema || 'Tema',
                 description: `${subjectName ? `Materia: ${subjectName} | ` : ''}Estado: ${topic.Estado || 'N/A'}`,
                 section: 'subjects-management',
-                metadata: { topicId: topic.ID_contenido, subjectName, status: topic.Estado }
+                metadata: {
+                    topicId: topic.ID_contenido ? parseInt(topic.ID_contenido, 10) : null,
+                    subjectId: subject ? (subject.ID_materia ? parseInt(subject.ID_materia, 10) : null) : null,
+                    subjectName,
+                    status: topic.Estado
+                }
             });
         }
     });
@@ -1070,7 +1122,15 @@ function searchStudentTopicsData(query, results, appData) {
                     title: `${content.Tema || 'Tema'} - ${studentName}`,
                     description: `${subjectName ? `Materia: ${subjectName} | ` : ''}Estado: ${studentTopic.Estado || 'N/A'}`,
                     section: 'student-management',
-                    metadata: { studentName, status: studentTopic.Estado, subjectName }
+                    subsection: 'students',
+                    metadata: {
+                        studentName,
+                        status: studentTopic.Estado,
+                        subjectName,
+                        studentId: student ? (student.ID_Estudiante ? parseInt(student.ID_Estudiante, 10) : null) : null,
+                        subjectId: subject ? (subject.ID_materia ? parseInt(subject.ID_materia, 10) : null) : null,
+                        topicId: content.ID_contenido ? parseInt(content.ID_contenido, 10) : null
+                    }
                 });
             }
         }
@@ -1099,7 +1159,14 @@ function searchGradesData(query, results, appData) {
                     title: `${evaluation.Titulo || 'Evaluación'} - ${studentName}`,
                     description: `Calificación: ${grade.Calificacion || 'N/A'}${grade.Observacion ? ` | ${grade.Observacion}` : ''}`,
                     section: 'student-management',
-                    metadata: { grade: grade.Calificacion, studentName, observation: grade.Observacion }
+                    subsection: 'exams',
+                    metadata: {
+                        grade: grade.Calificacion,
+                        studentName,
+                        observation: grade.Observacion,
+                        examId: evaluation.ID_evaluacion ? parseInt(evaluation.ID_evaluacion, 10) : null,
+                        studentId: student ? (student.ID_Estudiante ? parseInt(student.ID_Estudiante, 10) : null) : null
+                    }
                 });
             }
         }
@@ -1129,7 +1196,14 @@ function searchAttendanceData(query, results, appData) {
                     title: `Asistencia - ${student.Nombre || ''} ${student.Apellido || ''}`.trim(),
                     description: `${subjectName ? `Materia: ${subjectName} | ` : ''}Fecha: ${attendance.Fecha || 'N/A'} | ${(attendance.Presente === 'P' || attendance.Presente === 'Y') ? 'Presente' : 'Ausente'}`,
                     section: 'student-management',
-                    metadata: { date: attendance.Fecha, present: attendance.Presente, subjectName }
+                    subsection: 'students',
+                    metadata: {
+                        date: attendance.Fecha,
+                        present: attendance.Presente,
+                        subjectName,
+                        studentId: attendance.Estudiante_ID_Estudiante ? parseInt(attendance.Estudiante_ID_Estudiante, 10) : null,
+                        subjectId: subject ? (subject.ID_materia ? parseInt(subject.ID_materia, 10) : null) : null
+                    }
                 });
             }
         }
@@ -1154,7 +1228,12 @@ function searchFilesData(query, results, appData) {
                 title: file.Nombre || 'Archivo',
                 description: `${subjectName ? `Materia: ${subjectName} | ` : ''}Tipo: ${file.Tipo || 'N/A'}`,
                 section: 'subjects-management',
-                metadata: { subjectName, fileType: file.Tipo, filePath: file.Ruta }
+                    metadata: {
+                        subjectName,
+                        fileType: file.Tipo,
+                        filePath: file.Ruta,
+                        subjectId: subject ? (subject.ID_materia ? parseInt(subject.ID_materia, 10) : null) : null
+                    }
             });
         }
     });
@@ -1179,7 +1258,13 @@ function searchRemindersData(query, results, appData) {
                 title: reminder.Descripcion || 'Recordatorio',
                 description: `${subjectName ? `Materia: ${subjectName} | ` : ''}Tipo: ${reminder.Tipo || 'N/A'} | Fecha: ${reminder.Fecha || 'N/A'}`,
                 section: 'calendar',
-                metadata: { subjectName, date: reminder.Fecha, type: reminder.Tipo }
+                    metadata: {
+                        subjectName,
+                        date: reminder.Fecha,
+                        type: reminder.Tipo,
+                        reminderId: reminder.ID_recordatorio ? parseInt(reminder.ID_recordatorio, 10) : null,
+                        subjectId: subject ? (subject.ID_materia ? parseInt(subject.ID_materia, 10) : null) : null
+                    }
             });
         }
     });
@@ -1271,30 +1356,22 @@ function displaySearchResults(results, query) {
 
 // Navigate to search result
 function navigateToResult(result) {
-    // Navigate to the section
-    if (typeof showSection === 'function') {
-        showSection(result.section);
-    }
-
-    // Scroll to element after a short delay
-    setTimeout(() => {
-        if (result.element) {
-            result.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            // Highlight element briefly
-            result.element.style.transition = 'background-color 0.3s ease';
-            result.element.style.backgroundColor = '#fff3cd';
-            setTimeout(() => {
-                result.element.style.backgroundColor = '';
-            }, 2000);
-        }
-    }, 300);
-
-    // Clear search
     const desktopSearchInput = document.getElementById('desktopSearchInput');
     const mobileSearchInput = document.getElementById('mobileSearchInput');
     if (desktopSearchInput) desktopSearchInput.value = '';
     if (mobileSearchInput) mobileSearchInput.value = '';
     
+    if (typeof showSection === 'function' && result.section) {
+        showSection(result.section, result.subsection || null);
+    }
+
+    setTimeout(() => {
+        const handled = focusUsingMetadata(result.metadata, result.type);
+        if (!handled && result.element) {
+            scrollAndHighlightElement(result.element);
+        }
+    }, 500);
+
     clearSearchResults();
 }
 
@@ -1370,3 +1447,61 @@ function handleClickOutside(e) {
 
 // Make functions globally available
 window.initializeSearch = initializeSearch;
+
+function scrollAndHighlightElement(element) {
+    if (!element) return;
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    element.style.transition = 'background-color 0.3s ease';
+    const originalBackground = element.style.backgroundColor;
+    element.style.backgroundColor = '#fff3cd';
+    setTimeout(() => {
+        element.style.backgroundColor = originalBackground || '';
+    }, 2000);
+}
+
+function focusUsingMetadata(metadata, type) {
+    if (!metadata || typeof metadata !== 'object') {
+        return false;
+    }
+
+    let studentId = metadata.studentId ? parseInt(metadata.studentId, 10) : null;
+    let subjectId = metadata.subjectId ? parseInt(metadata.subjectId, 10) : null;
+    let examId = metadata.examId ? parseInt(metadata.examId, 10) : null;
+
+    if (Number.isNaN(studentId)) studentId = null;
+    if (Number.isNaN(subjectId)) subjectId = null;
+    if (Number.isNaN(examId)) examId = null;
+
+    if (studentId && typeof showStudentDetail === 'function') {
+        showStudentDetail(studentId);
+        return true;
+    }
+
+    if (examId && typeof showExamModal === 'function') {
+        showExamModal(examId);
+        return true;
+    }
+
+    if (subjectId && typeof showSubjectThemesPanel === 'function') {
+        showSubjectThemesPanel(subjectId);
+        return true;
+    }
+
+    if (metadata.elementId) {
+        const element = document.getElementById(metadata.elementId);
+        if (element) {
+            scrollAndHighlightElement(element);
+            return true;
+        }
+    }
+
+    if (metadata.scrollSelector) {
+        const element = document.querySelector(metadata.scrollSelector);
+        if (element) {
+            scrollAndHighlightElement(element);
+            return true;
+        }
+    }
+
+    return false;
+}
