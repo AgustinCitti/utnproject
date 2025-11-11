@@ -2559,27 +2559,88 @@ function getCurrentTab() {
 
 function openExportDialog() {
     const currentTab = getCurrentTab();
-    const exportDialogModal = document.getElementById('exportDialogModal');
-    const exportDialogText = document.getElementById('exportDialogText');
     
-    if (!exportDialogModal) return;
-    
-    // Clear context attribute (for students/exams)
-    exportDialogModal.removeAttribute('data-export-context');
-    
-    // Update dialog text based on current tab
     if (currentTab === 'exams') {
-        exportDialogText.innerHTML = '<span data-translate="select_export_format_exams">Seleccione el formato de exportación para los exámenes:</span>';
+        exportFilteredExamsAsCSV();
     } else {
-        exportDialogText.innerHTML = '<span data-translate="select_export_format">Seleccione el formato de exportación:</span>';
+        exportFilteredStudentsAsCSV();
     }
-    
-    // Show modal
-    if (typeof showModal === 'function') {
-        showModal('exportDialogModal');
-    } else {
-        exportDialogModal.classList.add('active');
-    }
+}
+
+function getCurrentStudentFilters() {
+    const courseFilter = document.getElementById('unifiedCourseFilter');
+    const subjectFilter = document.getElementById('unifiedSubjectFilter');
+    const statusFilter = document.getElementById('unifiedStatusFilter');
+    const searchInput = document.getElementById('studentSearchInput');
+
+    const courseValue = courseFilter ? courseFilter.value || '' : '';
+    const courseLabel = courseFilter && courseFilter.selectedIndex >= 0
+        ? courseFilter.options[courseFilter.selectedIndex].text || ''
+        : '';
+
+    const subjectValue = subjectFilter ? subjectFilter.value || '' : '';
+    const subjectLabel = subjectFilter && subjectFilter.selectedIndex >= 0
+        ? subjectFilter.options[subjectFilter.selectedIndex].text || ''
+        : '';
+
+    const statusValue = statusFilter ? statusFilter.value || '' : '';
+    const statusLabel = statusFilter && statusFilter.selectedIndex >= 0
+        ? statusFilter.options[statusFilter.selectedIndex].text || ''
+        : '';
+
+    const searchValue = searchInput ? searchInput.value.trim() : '';
+
+    return {
+        courseValue,
+        courseLabel,
+        subjectValue,
+        subjectLabel,
+        statusValue,
+        statusLabel,
+        search: searchValue
+    };
+}
+
+function getCurrentExamFilters() {
+    const courseFilter = document.getElementById('examCourseFilter');
+    const subjectFilter = document.getElementById('examSubjectFilter');
+    const typeFilter = document.getElementById('examTypeFilter');
+    const dateFilter = document.getElementById('examDateFilter');
+    const searchInput = document.getElementById('examSearchInput');
+
+    const courseValue = courseFilter ? courseFilter.value || '' : '';
+    const courseLabel = courseFilter && courseFilter.selectedIndex >= 0
+        ? courseFilter.options[courseFilter.selectedIndex].text || ''
+        : '';
+
+    const subjectValue = subjectFilter ? subjectFilter.value || '' : '';
+    const subjectLabel = subjectFilter && subjectFilter.selectedIndex >= 0
+        ? subjectFilter.options[subjectFilter.selectedIndex].text || ''
+        : '';
+
+    const statusValue = typeFilter ? typeFilter.value || '' : '';
+    const statusLabel = typeFilter && typeFilter.selectedIndex >= 0
+        ? typeFilter.options[typeFilter.selectedIndex].text || ''
+        : '';
+
+    const dateValue = dateFilter ? dateFilter.value || '' : '';
+    const dateLabel = dateFilter && dateFilter.selectedIndex >= 0
+        ? dateFilter.options[dateFilter.selectedIndex].text || ''
+        : '';
+
+    const searchValue = searchInput ? searchInput.value.trim() : '';
+
+    return {
+        courseValue,
+        courseLabel,
+        subjectValue,
+        subjectLabel,
+        statusValue,
+        statusLabel,
+        dateValue,
+        dateLabel,
+        search: searchValue
+    };
 }
 
 function exportStudentsAsExcel() {
@@ -2791,6 +2852,255 @@ function exportStudentsAsDOC() {
     if (exportDialogModal) {
         exportDialogModal.classList.remove('active');
     }
+}
+
+function exportFilteredStudentsAsCSV() {
+    const students = getFilteredUnifiedStudents();
+    if (!students || students.length === 0) {
+        alert('No hay estudiantes para exportar.');
+        return;
+    }
+
+    const filters = getCurrentStudentFilters();
+    const descriptor = buildFilterDescriptor({
+        courseValue: filters.courseValue,
+        courseLabel: filters.courseLabel,
+        subjectValue: filters.subjectValue,
+        subjectLabel: filters.subjectLabel,
+        statusValue: filters.statusValue,
+        statusLabel: filters.statusLabel,
+        search: filters.search
+    });
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    const fileName = `estudiantes_${descriptor}_${dateStr}.csv`;
+
+    const appDataRef = window.appData || {};
+    const materias = appDataRef.materia || [];
+    const alumnosMateria = appDataRef.alumnos_x_materia || [];
+    const notas = appDataRef.notas || [];
+    const asistencias = appDataRef.asistencia || [];
+
+    const headers = [
+        'ID',
+        'Apellido',
+        'Nombre',
+        'DNI',
+        'Cursos',
+        'Materias',
+        'Promedio',
+        'Asistencia (%)',
+        'Estado',
+        'Intensifica'
+    ];
+
+    const rows = students.map(student => {
+        const studentEnrollments = alumnosMateria.filter(axm => axm.Estudiante_ID_Estudiante === student.ID_Estudiante);
+        const subjectNames = new Set();
+        const courseNames = new Set();
+
+        studentEnrollments.forEach(enrollment => {
+            const subject = materias.find(m => m.ID_materia === enrollment.Materia_ID_materia);
+            if (subject) {
+                if (subject.Nombre) subjectNames.add(subject.Nombre);
+                if (subject.Curso_division) courseNames.add(subject.Curso_division);
+            }
+        });
+
+        const studentGrades = notas.filter(n => n.Estudiante_ID_Estudiante === student.ID_Estudiante && !isNaN(parseFloat(n.Calificacion)));
+        const average = studentGrades.length
+            ? (studentGrades.reduce((sum, nota) => sum + parseFloat(nota.Calificacion || 0), 0) / studentGrades.length).toFixed(2)
+            : '';
+
+        const studentAttendance = asistencias.filter(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante);
+        const presentCount = studentAttendance.filter(a => a.Presente === 'P' || a.Presente === 'Y').length;
+        const attendanceRate = studentAttendance.length
+            ? ((presentCount / studentAttendance.length) * 100).toFixed(2)
+            : '';
+
+        return [
+            student.ID_Estudiante || '',
+            student.Apellido || '',
+            student.Nombre || '',
+            student.DNI || student.Documento || '',
+            Array.from(courseNames).join(' | '),
+            Array.from(subjectNames).join(' | '),
+            average,
+            attendanceRate,
+            student.Estado || '',
+            student.INTENSIFICA === true || student.INTENSIFICA === 1 || student.INTENSIFICA === '1' ? 'Sí' : 'No'
+        ];
+    });
+
+    const separator = ';';
+    const csvLines = [
+        headers.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(separator),
+        ...rows.map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(separator))
+    ];
+
+    const encoder = new TextEncoder();
+    const bomBytes = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const contentBytes = encoder.encode(csvLines.join('\r\n'));
+    const finalContent = new Uint8Array(bomBytes.length + contentBytes.length);
+    finalContent.set(bomBytes, 0);
+    finalContent.set(contentBytes, bomBytes.length);
+
+    const blob = new Blob([finalContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    if (typeof showNotification === 'function') {
+        showNotification(`Exportación completada: ${fileName}`, 'success');
+    } else {
+        alert(`Exportación completada: ${fileName}`);
+    }
+}
+
+function exportFilteredExamsAsCSV() {
+    const exams = getFilteredExams();
+    if (!exams || exams.length === 0) {
+        alert('No hay evaluaciones para exportar.');
+        return;
+    }
+
+    const filters = getCurrentExamFilters();
+    const descriptor = buildFilterDescriptor({
+        courseValue: filters.courseValue,
+        courseLabel: filters.courseLabel,
+        subjectValue: filters.subjectValue,
+        subjectLabel: filters.subjectLabel,
+        statusValue: filters.statusValue,
+        statusLabel: filters.statusLabel,
+        dateValue: filters.dateValue,
+        dateLabel: filters.dateLabel,
+        search: filters.search
+    });
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    const fileName = `evaluaciones_${descriptor}_${dateStr}.csv`;
+
+    const appDataRef = window.appData || {};
+    const materias = appDataRef.materia || [];
+    const notas = appDataRef.notas || [];
+    const alumnosMateria = appDataRef.alumnos_x_materia || [];
+
+    const headers = [
+        'ID',
+        'Título',
+        'Materia',
+        'Curso',
+        'Tipo',
+        'Fecha',
+        'Descripción',
+        'Estudiantes Evaluados',
+        'Promedio'
+    ];
+
+    const rows = exams.map(exam => {
+        const subject = materias.find(m => m.ID_materia === exam.Materia_ID_materia) || {};
+        const examNotes = notas.filter(n => n.Evaluacion_ID_evaluacion === exam.ID_evaluacion && !isNaN(parseFloat(n.Calificacion)));
+        const average = examNotes.length
+            ? (examNotes.reduce((sum, nota) => sum + parseFloat(nota.Calificacion || 0), 0) / examNotes.length).toFixed(2)
+            : '';
+
+        const subjectEnrollments = alumnosMateria.filter(axm => axm.Materia_ID_materia === exam.Materia_ID_materia);
+
+        return [
+            exam.ID_evaluacion || '',
+            exam.Titulo || '',
+            subject.Nombre || '',
+            subject.Curso_division || '',
+            exam.Tipo || '',
+            exam.Fecha || '',
+            exam.Descripcion || '',
+            `${examNotes.length}/${subjectEnrollments.length || ''}`,
+            average
+        ];
+    });
+
+    const separator = ';';
+    const csvLines = [
+        headers.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(separator),
+        ...rows.map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(separator))
+    ];
+
+    const encoder = new TextEncoder();
+    const bomBytes = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const contentBytes = encoder.encode(csvLines.join('\r\n'));
+    const finalContent = new Uint8Array(bomBytes.length + contentBytes.length);
+    finalContent.set(bomBytes, 0);
+    finalContent.set(contentBytes, bomBytes.length);
+
+    const blob = new Blob([finalContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    if (typeof showNotification === 'function') {
+        showNotification(`Exportación completada: ${fileName}`, 'success');
+    } else {
+        alert(`Exportación completada: ${fileName}`);
+    }
+}
+
+function sanitizeFileToken(value) {
+    return String(value || '')
+        .toLowerCase()
+        .replace(/[áàäâ]/g, 'a')
+        .replace(/[éèëê]/g, 'e')
+        .replace(/[íìïî]/g, 'i')
+        .replace(/[óòöô]/g, 'o')
+        .replace(/[úùüû]/g, 'u')
+        .replace(/ñ/g, 'n')
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_\-]/g, '')
+        .replace(/_+/g, '_')
+        .replace(/^_+|_+$/g, '');
+}
+
+function buildFilterDescriptor(filters) {
+    if (!filters || typeof filters !== 'object') {
+        return 'sin_filtros';
+    }
+
+    const parts = [];
+    if (filters.courseValue && filters.courseValue !== 'all') {
+        const label = filters.courseLabel || filters.courseValue;
+        const token = sanitizeFileToken(label);
+        if (token) parts.push(`curso-${token}`);
+    }
+    if (filters.subjectValue && filters.subjectValue !== 'all') {
+        const label = filters.subjectLabel || filters.subjectValue;
+        const token = sanitizeFileToken(label);
+        if (token) parts.push(`materia-${token}`);
+    }
+    if (filters.statusValue && filters.statusValue !== 'all') {
+        const label = filters.statusLabel || filters.statusValue;
+        const token = sanitizeFileToken(label);
+        if (token) parts.push(`estado-${token}`);
+    }
+    if (filters.dateValue && filters.dateValue !== 'all') {
+        const label = filters.dateLabel || filters.dateValue;
+        const token = sanitizeFileToken(label);
+        if (token) parts.push(`fecha-${token}`);
+    }
+    if (filters.search && filters.search.trim() !== '') {
+        const token = sanitizeFileToken(filters.search).slice(0, 40);
+        if (token) parts.push(`busqueda-${token}`);
+    }
+
+    return parts.length > 0 ? parts.join('__') : 'sin_filtros';
 }
 
 function exportExamsAsExcel() {
