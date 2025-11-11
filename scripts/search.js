@@ -1127,7 +1127,7 @@ function searchAttendanceData(query, results, appData) {
                 results.push({
                     type: 'attendance',
                     title: `Asistencia - ${student.Nombre || ''} ${student.Apellido || ''}`.trim(),
-                    description: `${subjectName ? `Materia: ${subjectName} | ` : ''}Fecha: ${attendance.Fecha || 'N/A'} | ${attendance.Presente === 'Y' ? 'Presente' : 'Ausente'}`,
+                    description: `${subjectName ? `Materia: ${subjectName} | ` : ''}Fecha: ${attendance.Fecha || 'N/A'} | ${(attendance.Presente === 'P' || attendance.Presente === 'Y') ? 'Presente' : 'Ausente'}`,
                     section: 'student-management',
                     metadata: { date: attendance.Fecha, present: attendance.Presente, subjectName }
                 });

@@ -534,7 +534,7 @@ function loadUnifiedStudentData() {
                             : 0;
                         
                         const attendanceRate = studentAttendance.length > 0
-                            ? Math.round((studentAttendance.filter(a => a.Presente === 'Y').length / studentAttendance.length) * 100)
+                            ? Math.round((studentAttendance.filter(a => a.Presente === 'P' || a.Presente === 'Y').length / studentAttendance.length) * 100)
                             : 0;
 
                         const lastGrade = studentGrades[0]; // Ya está ordenado, tomar el primero
@@ -1096,7 +1096,7 @@ function showStudentDetail(studentId) {
         return attendanceStudentId === studentIdNum;
     });
     const attendanceRate = studentAttendance.length > 0
-        ? Math.round((studentAttendance.filter(a => a.Presente === 'Y').length / studentAttendance.length) * 100)
+        ? Math.round((studentAttendance.filter(a => a.Presente === 'P' || a.Presente === 'Y').length / studentAttendance.length) * 100)
         : 0;
 
     // Get student grades

@@ -395,7 +395,7 @@ function loadStudentsForAttendanceView() {
             att &&
             att.Estudiante_ID_Estudiante === student.ID_Estudiante && 
             att.Materia_ID_materia === selectedSubjectId && 
-            att.Presente === 'N'
+            (att.Presente === 'A' || att.Presente === 'N')
         ).length;
         
         // Calculate total attendance records for this student in this materia
