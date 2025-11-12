@@ -422,6 +422,25 @@
             }
             
             if (typeof loadData === 'function') await loadData(); // reload from backend
+
+            if (!currentSubjectId && newSubjectId && window.SubscriptionModule && typeof window.SubscriptionModule.enforceCourseLimit === 'function') {
+                const limitExceeded = await window.SubscriptionModule.enforceCourseLimit({
+                    subjectId: newSubjectId,
+                    baseUrl,
+                    showModalOnLimit: true
+                });
+                if (limitExceeded) {
+                    if (typeof loadData === 'function') {
+                        try {
+                            await loadData();
+                        } catch (error) {
+                            console.warn('No se pudo recargar datos después de revertir la materia por límite:', error);
+                        }
+                    }
+                    alert('Has alcanzado el límite de materias del plan gratuito. Actualiza para agregar más materias.');
+                    return;
+                }
+            }
             
             if (typeof closeModal === 'function') {
                 closeModal('subjectModal');

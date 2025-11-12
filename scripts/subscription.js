@@ -84,6 +84,80 @@
         });
     }
 
+    let isRunningIntensificationCleanup = false;
+
+    async function cleanupEmptyIntensificationSubjects(options = {}) {
+        const { baseUrl = '', reloadAfterDelete = true } = options || {};
+
+        if (isRunningIntensificationCleanup) {
+            return false;
+        }
+
+        isRunningIntensificationCleanup = true;
+
+        const data = window.appData || window.data || {};
+        const subjects = Array.isArray(data.materia) ? data.materia : [];
+        const enrollments = Array.isArray(data.alumnos_x_materia) ? data.alumnos_x_materia : [];
+
+        if (!subjects.length) {
+            isRunningIntensificationCleanup = false;
+            return false;
+        }
+
+        const intensificationSubjects = subjects.filter(subject => isIntensificationSubject(subject));
+        if (!intensificationSubjects.length) {
+            isRunningIntensificationCleanup = false;
+            return false;
+        }
+
+        const subjectsToDelete = intensificationSubjects.filter(subject => {
+            const subjectId = parseInt(subject.ID_materia, 10);
+            if (!subjectId || Number.isNaN(subjectId)) return false;
+            const hasStudents = enrollments.some(enrollment => parseInt(enrollment.Materia_ID_materia, 10) === subjectId);
+            return !hasStudents;
+        });
+
+        if (!subjectsToDelete.length) {
+            isRunningIntensificationCleanup = false;
+            return false;
+        }
+
+        const isInPages = window.location.pathname.includes('/pages/');
+        const resolvedBaseUrl = baseUrl || (isInPages ? '../api' : 'api');
+        let deletedAny = false;
+
+        for (const subject of subjectsToDelete) {
+            const subjectId = parseInt(subject.ID_materia, 10);
+            if (!subjectId || Number.isNaN(subjectId)) continue;
+            try {
+                const response = await fetch(`${resolvedBaseUrl}/materia.php?id=${subjectId}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (response.ok) {
+                    deletedAny = true;
+                }
+            } catch (error) {
+                console.error('Error deleting empty intensification subject:', error);
+            }
+        }
+
+        if (deletedAny && reloadAfterDelete && typeof loadData === 'function') {
+            try {
+                isRunningIntensificationCleanup = false;
+                await loadData();
+            } catch (error) {
+                console.warn('No se pudo recargar los datos después de eliminar materias de intensificación vacías:', error);
+            }
+            return true;
+        }
+
+        isRunningIntensificationCleanup = false;
+
+        return deletedAny;
+    }
+
     function createUpgradeModal() {
         if (document.getElementById('upgradeSubscriptionModal')) {
             return document.getElementById('upgradeSubscriptionModal');
@@ -186,10 +260,40 @@
         showUpgradeModal,
         getCourseUsage: calculateCourseUsage,
         listCountedSubjects,
+        async enforceCourseLimit(options = {}) {
+            const { subjectId = null, baseUrl = '', showModalOnLimit = true } = options || {};
+            const info = getSubscriptionInfo();
+            if (info.plan === 'PREMIUM') {
+                return false;
+            }
+            const usage = calculateCourseUsage();
+            if (usage <= info.courseLimit) {
+                return false;
+            }
+            if (subjectId && baseUrl) {
+                try {
+                    await fetch(`${baseUrl}/materia.php?id=${subjectId}`, {
+                        method: 'DELETE',
+                        credentials: 'include',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                } catch (error) {
+                    console.error('Error removing subject beyond free limit:', error);
+                }
+            }
+            if (showModalOnLimit) {
+                showUpgradeModal();
+            }
+            return true;
+        },
+        async enforceIntensificationCleanup(options = {}) {
+            return await cleanupEmptyIntensificationSubjects(options);
+        },
         COURSE_LIMIT_FREE
     };
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+        await cleanupEmptyIntensificationSubjects();
         checkCourseLimit(0, { showModalOnLimit: false });
     });
 })();

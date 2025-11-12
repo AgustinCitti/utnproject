@@ -90,6 +90,9 @@ function setCurrentThemesSubjectId(id) {
 // Use module functions or fallback to inline definitions
 const getTeacherById = Helpers.getTeacherById || function(teacherId) {
     const data = window.appData || window.data || {};
+    const intensificacionEntries = Array.isArray(data.intensificacion)
+        ? data.intensificacion.filter(entry => parseInt(entry.Materia_ID_materia, 10) === subjectId)
+        : [];
     if (!data.usuarios_docente) return null;
     return data.usuarios_docente.find(t => parseInt(t.ID_docente) === parseInt(teacherId)) || null;
 };
@@ -540,7 +543,7 @@ async function handleIntensificationSubjectClosure(subject, report) {
         .map(student => ({
             Materia_ID_materia: targetSubjectId,
             Estudiante_ID_Estudiante: student.id,
-            Estado: 'INSCRITO'
+            Estado: 'APROBADO'
         }));
 
     let movedCount = 0;
@@ -579,6 +582,43 @@ async function handleIntensificationSubjectClosure(subject, report) {
 
     let statusUpdates = 0;
     const statusErrors = [];
+    const intensificacionUpdates = [];
+    const intensificacionErrors = [];
+
+    for (const student of approvedStudents) {
+        const studentEntries = intensificacionEntries.filter(entry => parseInt(entry.Estudiante_ID_Estudiante, 10) === student.id);
+        if (studentEntries.length) {
+            for (const entry of studentEntries) {
+                if (!entry.ID_intensificacion) continue;
+                try {
+                    const response = await fetch(`${baseUrl}/intensificacion.php?id=${entry.ID_intensificacion}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            Estado: 'APROBADO',
+                            Nota_obtenida: typeof student.finalAverage === 'number' && Number.isFinite(student.finalAverage)
+                                ? parseFloat(student.finalAverage.toFixed(2))
+                                : null,
+                            Fecha_resolucion: new Date().toISOString().split('T')[0]
+                        })
+                    });
+                    const result = await response.json().catch(() => ({}));
+                    if (response.ok && result.success !== false) {
+                        intensificacionUpdates.push(entry.ID_intensificacion);
+                    } else if (result.message) {
+                        intensificacionErrors.push(result.message);
+                    }
+                } catch (error) {
+                    intensificacionErrors.push(error.message || `Error al actualizar intensificación del estudiante ${student.nombre} ${student.apellido}.`);
+                }
+            }
+        }
+    }
+
     for (const student of approvedStudents) {
         try {
             const response = await fetch(`${baseUrl}/estudiantes.php?id=${student.id}`, {
@@ -588,7 +628,7 @@ async function handleIntensificationSubjectClosure(subject, report) {
                     'Accept': 'application/json'
                 },
                 credentials: 'include',
-                body: JSON.stringify({ Estado: 'ACTIVO' })
+                body: JSON.stringify({ Estado: 'APROBADO' })
             });
             const result = await response.json().catch(() => ({}));
             if (response.ok && result.success !== false) {
@@ -613,10 +653,19 @@ async function handleIntensificationSubjectClosure(subject, report) {
     if (typeof populateSubjectFilter === 'function') populateSubjectFilter();
     if (typeof populateExamsSubjectFilter === 'function') populateExamsSubjectFilter();
     if (typeof populateUnifiedCourseFilter === 'function') populateUnifiedCourseFilter();
-    if (typeof loadUnifiedStudentData === 'function') loadUnifiedStudentData();
+        if (typeof loadUnifiedStudentData === 'function') loadUnifiedStudentData();
+        if (window.SubscriptionModule && typeof window.SubscriptionModule.checkCourseLimit === 'function') {
+            window.SubscriptionModule.checkCourseLimit(0, { showModalOnLimit: false });
+        }
+        if (window.SubscriptionModule && typeof window.SubscriptionModule.enforceIntensificationCleanup === 'function') {
+            window.SubscriptionModule.enforceIntensificationCleanup();
+        }
     if (typeof updateDashboard === 'function') updateDashboard();
     if (window.SubscriptionModule && typeof window.SubscriptionModule.checkCourseLimit === 'function') {
-        window.SubscriptionModule.checkCourseLimit();
+        window.SubscriptionModule.checkCourseLimit(0, { showModalOnLimit: false });
+    }
+    if (window.SubscriptionModule && typeof window.SubscriptionModule.enforceIntensificationCleanup === 'function') {
+        await window.SubscriptionModule.enforceIntensificationCleanup({ baseUrl });
     }
 
     return {
@@ -630,7 +679,9 @@ async function handleIntensificationSubjectClosure(subject, report) {
         movedCount,
         enrollmentErrors,
         statusUpdates,
-        statusErrors
+        statusErrors,
+        intensificacionUpdates,
+        intensificacionErrors
     };
 }
 
@@ -712,6 +763,24 @@ async function createIntensificationSubjectForClosure(subject, report) {
     } catch (error) {
         console.error('Error creando materia de intensificación:', error);
         return { created: false, reason: 'CREATE_SUBJECT_FAILED', error };
+    }
+
+    if (!reusedExisting && newSubjectId && window.SubscriptionModule && typeof window.SubscriptionModule.enforceCourseLimit === 'function') {
+        const limitExceeded = await window.SubscriptionModule.enforceCourseLimit({
+            subjectId: newSubjectId,
+            baseUrl,
+            showModalOnLimit: true
+        });
+        if (limitExceeded) {
+            if (typeof loadData === 'function') {
+                try {
+                    await loadData();
+                } catch (error) {
+                    console.warn('No se pudo recargar datos después de revertir la materia de intensificación por límite:', error);
+                }
+            }
+            return { created: false, reason: 'LIMIT_REACHED' };
+        }
     }
 
     if (!newSubjectId || Number.isNaN(newSubjectId)) {
@@ -3167,46 +3236,40 @@ function setupMateriaDetailsTabs(subjectId) {
         };
     }
     
-    // Setup import estudiantes button - use loadCourseDivisionModal
+    // Setup import estudiantes button - Open modal directly with selected subject
     const importEstudiantesBtn = document.getElementById('importEstudiantesBtn');
     if (importEstudiantesBtn) {
         importEstudiantesBtn.onclick = function() {
-            // Store current subject ID for the import function
-            const modal = document.getElementById('loadCourseDivisionModal');
-            if (modal) {
-                // Set subject ID in modal data attribute
-                modal.dataset.subjectId = subjectId;
-                
-                // Get the subject to pre-select its course/division
-                const subject = getSubjectById(subjectId);
-                if (subject && subject.Curso_division) {
-                    // Pre-select the course/division in the modal
-                    const bulkCourseDivision = document.getElementById('bulkCourseDivision');
-                    if (bulkCourseDivision) {
-                        // Try to find and select the matching course
-                        setTimeout(() => {
-                            const options = bulkCourseDivision.querySelectorAll('option');
-                            for (let option of options) {
-                                if (option.value === subject.Curso_division || option.textContent.includes(subject.Curso_division)) {
-                                    bulkCourseDivision.value = option.value;
-                                    break;
-                                }
-                            }
-                        }, 100);
-                    }
-                }
-                
-                // Open modal
-                if (typeof showModal === 'function') {
-                    showModal('loadCourseDivisionModal');
-                } else {
-                    modal.classList.add('active');
-                }
-                
-                // Setup modal handlers
-                if (typeof setupModalHandlers === 'function') {
-                    setupModalHandlers('loadCourseDivisionModal');
-                }
+            const subject = getSubjectById(subjectId);
+            if (!subject) {
+                alert('Error: No se encontró la materia seleccionada.');
+                return;
+            }
+            const importModal = document.getElementById('studentImportModal');
+            if (!importModal) {
+                alert('Error: Modal de importación no encontrado.');
+                return;
+            }
+            if (typeof setCurrentStudentSubjectId === 'function') {
+                setCurrentStudentSubjectId(subjectId);
+            } else {
+                window.currentStudentSubjectId = subjectId;
+            }
+            const subjectDisplayField = importModal.querySelector('[data-role="subject-display"]');
+            if (subjectDisplayField) {
+                subjectDisplayField.textContent = subject.Nombre || 'Materia seleccionada';
+            }
+            const hiddenSubjectInput = importModal.querySelector('input[name="Materia_ID_materia"]');
+            if (hiddenSubjectInput) {
+                hiddenSubjectInput.value = subjectId;
+            }
+            if (typeof showModal === 'function') {
+                showModal(importModal.id);
+            } else {
+                importModal.classList.add('active');
+            }
+            if (typeof setupModalHandlers === 'function') {
+                setupModalHandlers(importModal.id);
             }
         };
     }
@@ -4577,6 +4640,36 @@ window.showGradeStudentsDialog = async function(evaluacionId, materiaId) {
         if (estudiantes.length > 0) {
             setupGradeStudentsRealTimeEditors(modal, evaluacionId);
         }
+
+        // Add save button to footer when students are present
+        if (estudiantes.length > 0) {
+            const footer = modal.querySelector('.modal-dialog-footer');
+            if (footer) {
+                const saveBtn = document.createElement('button');
+                saveBtn.type = 'button';
+                saveBtn.className = 'btn-primary';
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Calificaciones';
+                saveBtn.style.marginLeft = 'auto';
+                saveBtn.onclick = async () => {
+                    try {
+                        if (typeof loadData === 'function') {
+                            await loadData();
+                        }
+                        if (typeof loadUnifiedStudentData === 'function') {
+                            loadUnifiedStudentData();
+                        }
+                        if (typeof showNotification === 'function') {
+                            showNotification('Calificaciones guardadas exitosamente', 'success');
+                        }
+                        modal.remove();
+                    } catch (error) {
+                        console.error('Error al guardar calificaciones:', error);
+                        alert(`Error al guardar calificaciones: ${error.message}`);
+                    }
+                };
+                footer.insertBefore(saveBtn, footer.firstChild);
+            }
+        }
         
         // Show modal
         if (typeof showModal === 'function') {
@@ -4847,7 +4940,7 @@ function setupGradeStudentsRealTimeEditors(modal, evaluacionId) {
  * Load students for a materia
  * @param {number} subjectId - Subject ID
  */
-window.loadMateriaStudents = function(subjectId) {
+window.loadMateriaStudents = async function(subjectId) {
     const studentsList = document.getElementById('materiaStudentsList');
     if (!studentsList) {
         console.error('materiaStudentsList element not found');
@@ -4884,6 +4977,27 @@ window.loadMateriaStudents = function(subjectId) {
                 }
                 return (a.Nombre || '').toLowerCase().localeCompare((b.Nombre || '').toLowerCase());
             });
+    }
+
+    const subject = typeof getSubjectById === 'function' ? getSubjectById(subjectId) : null;
+    if (subject && isIntensificationSubject(subject) && enrolledStudents.length === 0) {
+        studentsList.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                <i class="fas fa-bolt" style="font-size: 2.5em; margin-bottom: 15px; opacity: 0.3; display: block;"></i>
+                <p>La materia de intensificación "${subject.Nombre}" no tiene estudiantes asignados y será eliminada automáticamente.</p>
+            </div>
+        `;
+        if (window.SubscriptionModule && typeof window.SubscriptionModule.enforceIntensificationCleanup === 'function') {
+            try {
+                await window.SubscriptionModule.enforceIntensificationCleanup({ baseUrl: getApiBaseUrl() });
+                if (typeof loadData === 'function') {
+                    await loadData();
+                }
+            } catch (cleanupError) {
+                console.error('Error deleting empty intensification subject:', cleanupError);
+            }
+        }
+        return;
     }
     
     // Get all evaluaciones for this materia to filter notas

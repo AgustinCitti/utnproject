@@ -143,6 +143,10 @@ async function loadData() {
         // También hacer data disponible globalmente para reports y search
         window.data = appData;
         window.appData = appData;
+
+        if (window.SubscriptionModule && typeof window.SubscriptionModule.enforceIntensificationCleanup === 'function') {
+            await window.SubscriptionModule.enforceIntensificationCleanup({ baseUrl });
+        }
     } catch (error) {
         // Initialize with empty data structure matching database schema
         appData = {
