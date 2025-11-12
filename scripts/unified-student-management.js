@@ -396,7 +396,11 @@ function loadUnifiedStudentData() {
         const studentAttendance = (appData.asistencia || []).filter(a => a.Estudiante_ID_Estudiante === student.ID_Estudiante);
         
         // Calcular promedio (excluyendo ausentes) - formato decimal (0-10)
-        const gradesForAverage = studentGrades.filter(g => parseFloat(g.Calificacion) > 0); // Excluir ausentes del promedio
+        const gradesForAverage = studentGrades.filter(g => {
+            const calif = parseFloat(g.Calificacion);
+            const esAusente = (calif === 0 || calif === 1) && g.Observacion === 'AUSENTE';
+            return calif > 0 && !esAusente; // Excluir ausentes del promedio
+        });
         const averageGrade = gradesForAverage.length > 0 
             ? parseFloat((gradesForAverage.reduce((sum, g) => sum + parseFloat(g.Calificacion), 0) / gradesForAverage.length).toFixed(1))
             : 0;
@@ -467,7 +471,7 @@ function loadUnifiedStudentData() {
                                     const evaluation = appData.evaluacion ? appData.evaluacion.find(e => parseInt(e.ID_evaluacion) === evaluacionId) : null;
                                     const materia = evaluation && appData.materia ? appData.materia.find(m => parseInt(m.ID_materia) === parseInt(evaluation.Materia_ID_materia)) : null;
                                     const calificacion = parseFloat(grade.Calificacion) || 0;
-                                    const esAusente = calificacion === 0 && (
+                                    const esAusente = (calificacion === 0 || calificacion === 1) && (
                                         (grade.Observacion && grade.Observacion.toUpperCase().includes('AUSENTE')) || 
                                         !grade.Observacion || 
                                         grade.Observacion.trim() === ''
@@ -2283,9 +2287,9 @@ async function loadStudentsForGradeMarking() {
             })
             : null;
         
-        // Check if student was absent (grade 0 with AUSENTE observation)
+        // Check if student was absent (grade 0 or 1 with AUSENTE observation)
         const isAbsent = existingGrade && 
-                        (existingGrade.Calificacion == 0 || existingGrade.Calificacion === 'AUSENTE') &&
+                        (existingGrade.Calificacion == 0 || existingGrade.Calificacion == 1 || existingGrade.Calificacion === 'AUSENTE') &&
                         (existingGrade.Observacion === 'AUSENTE' || !existingGrade.Observacion || existingGrade.Observacion.trim() === '');
         
         const currentGrade = existingGrade && !isAbsent ? existingGrade.Calificacion : '';
@@ -2509,7 +2513,7 @@ async function saveGradesBulk() {
             const notaData = {
                 Evaluacion_ID_evaluacion: selectedEvaluationId,
                 Estudiante_ID_Estudiante: studentId,
-                Calificacion: 'AUSENTE', // API will convert this to 0
+                Calificacion: 1, // API will handle this as absent with grade 1
                 Fecha_calificacion: gradeDate,
                 Observacion: finalObservacion || 'AUSENTE',
                 Estado: 'DEFINITIVA'
