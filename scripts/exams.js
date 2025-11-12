@@ -851,8 +851,8 @@ function showGradeModal(exam, materia, estudiantes, notasExistentes) {
                                 ${estudiantes.map((estudiante, index) => {
                                     const notaExistente = notasMap[estudiante.ID_Estudiante];
                                     const calificacion = notaExistente ? notaExistente.Calificacion : '';
-                                    // Detectar ausente: calificación 0 y observación contiene "AUSENTE" o es null/empty
-                                    const esAusente = notaExistente && notaExistente.Calificacion == 0 && 
+                                    // Detectar ausente: calificación 0 o 1 con observación "AUSENTE" o es null/empty
+                                    const esAusente = notaExistente && (notaExistente.Calificacion == 0 || notaExistente.Calificacion == 1) && 
                                                      (notaExistente.Observacion === 'AUSENTE' || 
                                                       !notaExistente.Observacion || 
                                                       notaExistente.Observacion.trim() === '');
@@ -971,8 +971,8 @@ async function saveGrades(event, examId) {
             const notaData = {
                 Evaluacion_ID_evaluacion: examId,
                 Estudiante_ID_Estudiante: studentId,
-                Calificacion: esAusente ? 'AUSENTE' : parseFloat(calificacion),
-                Observacion: observacion || null,
+                Calificacion: esAusente ? 1 : parseFloat(calificacion),
+                Observacion: esAusente ? 'AUSENTE' : (observacion || null),
                 Estado: 'DEFINITIVA'
             };
             
@@ -1329,7 +1329,7 @@ function loadNotesList(examNotes) {
                                 return sId === studentId;
                             });
                             const gradeValue = note.Calificacion;
-                            const isAbsent = gradeValue == 0 || gradeValue === 'AUSENTE';
+                            const isAbsent = ((gradeValue == 0 || gradeValue == 1) && note.Observacion === 'AUSENTE') || gradeValue === 'AUSENTE';
                             const gradeDisplay = isAbsent ? 'Ausente' : gradeValue;
                             return `
                                 <tr>

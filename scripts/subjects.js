@@ -4551,9 +4551,9 @@ window.showGradeStudentsDialog = async function(evaluacionId, materiaId) {
                                             ${estudiantes.map((estudiante) => {
                                                 const nota = notasMap[parseInt(estudiante.ID_Estudiante)];
                                                 const notaId = nota ? nota.ID_Nota : null;
-                                                const calificacion = nota ? (nota.Calificacion === 0 && nota.Observacion === 'AUSENTE' ? '' : nota.Calificacion) : '';
+                                                const calificacion = nota ? ((nota.Calificacion === 0 || nota.Calificacion === 1) && nota.Observacion === 'AUSENTE' ? '' : nota.Calificacion) : '';
                                                 const observacion = nota ? (nota.Observacion || '') : '';
-                                                const esAusente = nota && (nota.Calificacion === 0 || nota.Calificacion === 'AUSENTE') && nota.Observacion === 'AUSENTE';
+                                                const esAusente = nota && (nota.Calificacion === 0 || nota.Calificacion === 1 || nota.Calificacion === 'AUSENTE') && nota.Observacion === 'AUSENTE';
                                                 
                                                 return `
                                                     <tr style="border-bottom: 1px solid var(--border-color);">
@@ -4803,7 +4803,7 @@ function setupGradeStudentsRealTimeEditors(modal, evaluacionId) {
                 const payload = {
                     Evaluacion_ID_evaluacion: parseInt(evaluacionId),
                     Estudiante_ID_Estudiante: estudianteId,
-                    Calificacion: esAusente ? 0 : null,
+                    Calificacion: esAusente ? 1 : null,
                     Observacion: esAusente ? 'AUSENTE' : null,
                     Estado: 'DEFINITIVA'
                 };

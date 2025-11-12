@@ -128,8 +128,9 @@ try {
 				respond(400, ['success'=>false,'message'=>'Faltan campos requeridos: Evaluacion_ID_evaluacion o Estudiante_ID_Estudiante']);
 			}
 			
-			// Determinar si es ausente (puede venir como 'AUSENTE' o puede no venir el campo Calificacion)
-			$esAusente = (!isset($body['Calificacion']) || $body['Calificacion'] === 'AUSENTE' || $body['Calificacion'] === null || $body['Calificacion'] === '');
+			// Determinar si es ausente (puede venir como 'AUSENTE', null, vacío, o 1 con observación 'AUSENTE')
+			$observacionEsAusente = isset($body['Observacion']) && strtoupper(trim($body['Observacion'])) === 'AUSENTE';
+			$esAusente = (!isset($body['Calificacion']) || $body['Calificacion'] === 'AUSENTE' || $body['Calificacion'] === null || $body['Calificacion'] === '' || ($body['Calificacion'] == 1 && $observacionEsAusente));
 			
 			$Evaluacion_ID_evaluacion = (int)$body['Evaluacion_ID_evaluacion'];
 			$Estudiante_ID_Estudiante = (int)$body['Estudiante_ID_Estudiante'];
@@ -141,9 +142,9 @@ try {
 				respond(400, ['success'=>false,'message'=>'IDs inválidos']);
 			}
 			
-			// Manejar calificación: si es ausente, guardar 0, sino validar y usar el valor
+			// Manejar calificación: si es ausente, guardar 1, sino validar y usar el valor
 			if ($esAusente) {
-				$Calificacion = 0.00;
+				$Calificacion = 1.00;
 				// Si no hay observación, agregar "AUSENTE"
 				$observacionText = isset($body['Observacion']) && $body['Observacion'] !== '' ? trim($body['Observacion']) : 'AUSENTE';
 				$Observacion = $observacionText;
@@ -230,6 +231,17 @@ try {
 			
 			$body = readJson();
 			
+			// Obtener observación actual de la base de datos si no viene en el body (para detectar ausente)
+			$observacionActual = null;
+			if (array_key_exists('Calificacion', $body) && !array_key_exists('Observacion', $body)) {
+				$stmt = $db->prepare("SELECT Observacion FROM Notas WHERE ID_Nota = ?");
+				$stmt->execute([$id]);
+				$notaActual = $stmt->fetch();
+				if ($notaActual) {
+					$observacionActual = $notaActual['Observacion'];
+				}
+			}
+			
 			// Campos actualizables
 			$fields = ['Calificacion', 'Observacion', 'Estado', 'Peso'];
 			$sets = [];
@@ -242,9 +254,12 @@ try {
 			foreach ($fields as $f) {
 				if (array_key_exists($f, $body)) {
 					if ($f === 'Calificacion') {
-						$esAusenteActualizado = $body[$f] === 'AUSENTE' || $body[$f] === null || $body[$f] === '';
+						// Detectar ausente: puede venir como 'AUSENTE', null, vacío, o 1 con observación 'AUSENTE'
+						$observacionEnBody = isset($body['Observacion']) ? $body['Observacion'] : $observacionActual;
+						$observacionEsAusente = $observacionEnBody && strtoupper(trim($observacionEnBody)) === 'AUSENTE';
+						$esAusenteActualizado = $body[$f] === 'AUSENTE' || $body[$f] === null || $body[$f] === '' || ($body[$f] == 1 && $observacionEsAusente);
 						if ($esAusenteActualizado) {
-							$calif = 0.00;
+							$calif = 1.00;
 						} else {
 							$calif = (float)$body[$f];
 							if ($calif < 1 || $calif > 10) {
