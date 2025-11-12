@@ -303,9 +303,153 @@ try {
 
 		case 'DELETE':
 			if (!$id) respond(400, ['success'=>false,'message'=>'Falta id']);
-			$stmt = $db->prepare("DELETE FROM Materia WHERE ID_materia = ?");
-			$stmt->execute([$id]);
-			respond(200, ['success'=>true]);
+			
+			try {
+				$db->beginTransaction();
+
+				$deletedEvaluaciones = 0;
+				$deletedNotas = 0;
+				$deletedContenidos = 0;
+				$deletedTemas = 0;
+				$deletedAsistencias = 0;
+				$deletedArchivos = 0;
+				$deletedRecordatorios = 0;
+				$deletedIntensificacion = 0;
+				$deletedEnrollments = 0;
+				$deletedStudents = 0;
+
+				// Delete notas associated to evaluaciones of this materia
+				$stmt = $db->prepare("SELECT ID_evaluacion FROM Evaluacion WHERE Materia_ID_materia = ?");
+				$stmt->execute([$id]);
+				$evaluacionIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+				if (!empty($evaluacionIds)) {
+					$placeholders = implode(',', array_fill(0, count($evaluacionIds), '?'));
+					$stmt = $db->prepare("DELETE FROM Notas WHERE Evaluacion_ID_evaluacion IN ($placeholders)");
+					$stmt->execute($evaluacionIds);
+					$deletedNotas = $stmt->rowCount();
+
+					$stmt = $db->prepare("DELETE FROM Evaluacion WHERE ID_evaluacion IN ($placeholders)");
+					$stmt->execute($evaluacionIds);
+					$deletedEvaluaciones = $stmt->rowCount();
+				}
+
+				// Delete temas_estudiante linked to contenidos of this materia
+				$stmt = $db->prepare("SELECT ID_contenido FROM Contenido WHERE Materia_ID_materia = ?");
+				$stmt->execute([$id]);
+				$contenidoIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+				if (!empty($contenidoIds) && columnExists($db, 'Tema_estudiante', 'Contenido_ID_contenido')) {
+					$placeholders = implode(',', array_fill(0, count($contenidoIds), '?'));
+					$stmt = $db->prepare("DELETE FROM Tema_estudiante WHERE Contenido_ID_contenido IN ($placeholders)");
+					$stmt->execute($contenidoIds);
+					$deletedTemas = $stmt->rowCount();
+				}
+
+				if (!empty($contenidoIds)) {
+					$placeholders = implode(',', array_fill(0, count($contenidoIds), '?'));
+					$stmt = $db->prepare("DELETE FROM Contenido WHERE ID_contenido IN ($placeholders)");
+					$stmt->execute($contenidoIds);
+					$deletedContenidos = $stmt->rowCount();
+				}
+
+				// Delete intensificacion records if table exists
+				if (columnExists($db, 'Intensificacion', 'Materia_ID_materia')) {
+					$stmt = $db->prepare("DELETE FROM Intensificacion WHERE Materia_ID_materia = ?");
+					$stmt->execute([$id]);
+					$deletedIntensificacion = $stmt->rowCount();
+				}
+
+				// Delete asistencia, archivos, recordatorios linked to materia
+				$stmt = $db->prepare("DELETE FROM Asistencia WHERE Materia_ID_materia = ?");
+				$stmt->execute([$id]);
+				$deletedAsistencias = $stmt->rowCount();
+
+				$stmt = $db->prepare("DELETE FROM Archivos WHERE Materia_ID_materia = ?");
+				$stmt->execute([$id]);
+				$deletedArchivos = $stmt->rowCount();
+
+				$stmt = $db->prepare("DELETE FROM Recordatorio WHERE Materia_ID_materia = ?");
+				$stmt->execute([$id]);
+				$deletedRecordatorios = $stmt->rowCount();
+
+				// Collect students enrolled in this materia
+				$stmt = $db->prepare("SELECT DISTINCT Estudiante_ID_Estudiante FROM Alumnos_X_Materia WHERE Materia_ID_materia = ?");
+				$stmt->execute([$id]);
+				$studentIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+				// Delete enrollments for this materia
+				$stmt = $db->prepare("DELETE FROM Alumnos_X_Materia WHERE Materia_ID_materia = ?");
+				$stmt->execute([$id]);
+				$deletedEnrollments = $stmt->rowCount();
+
+				$studentsToDelete = [];
+				if (!empty($studentIds)) {
+					$countStmt = $db->prepare("SELECT COUNT(*) AS total FROM Alumnos_X_Materia WHERE Estudiante_ID_Estudiante = ?");
+					foreach ($studentIds as $studentId) {
+						$countStmt->execute([$studentId]);
+						$total = (int)($countStmt->fetch()['total'] ?? 0);
+						if ($total === 0) {
+							$studentsToDelete[] = (int)$studentId;
+						}
+					}
+				}
+
+				if (!empty($studentsToDelete)) {
+					$placeholders = implode(',', array_fill(0, count($studentsToDelete), '?'));
+
+					// Clean up any tema_estudiante rows tied directly to the student (if column exists)
+					if (columnExists($db, 'Tema_estudiante', 'Estudiante_ID_Estudiante')) {
+						$stmt = $db->prepare("DELETE FROM Tema_estudiante WHERE Estudiante_ID_Estudiante IN ($placeholders)");
+						$stmt->execute($studentsToDelete);
+					}
+
+					// Clean up asistencia rows for the student (should already be gone, but to ensure)
+					$stmt = $db->prepare("DELETE FROM Asistencia WHERE Estudiante_ID_Estudiante IN ($placeholders)");
+					$stmt->execute($studentsToDelete);
+
+					// Clean up notas for the student (should already be deleted via evaluaciones)
+					$stmt = $db->prepare("DELETE FROM Notas WHERE Estudiante_ID_Estudiante IN ($placeholders)");
+					$stmt->execute($studentsToDelete);
+
+					$stmt = $db->prepare("DELETE FROM Estudiante WHERE ID_Estudiante IN ($placeholders)");
+					$stmt->execute($studentsToDelete);
+					$deletedStudents = $stmt->rowCount();
+				}
+
+				// Finally delete the materia
+				$stmt = $db->prepare("DELETE FROM Materia WHERE ID_materia = ?");
+				$stmt->execute([$id]);
+
+				$db->commit();
+
+				respond(200, [
+					'success' => true,
+					'deleted_nivel' => [
+						'materia' => 1,
+						'evaluaciones' => $deletedEvaluaciones,
+						'notas' => $deletedNotas,
+						'contenidos' => $deletedContenidos,
+						'tema_estudiante' => $deletedTemas,
+						'intensificacion' => $deletedIntensificacion,
+						'asistencia' => $deletedAsistencias,
+						'archivos' => $deletedArchivos,
+						'recordatorios' => $deletedRecordatorios,
+						'alumnos_x_materia' => $deletedEnrollments,
+						'estudiantes' => $deletedStudents
+					]
+				]);
+			} catch (Throwable $deleteError) {
+				if ($db->inTransaction()) {
+					$db->rollBack();
+				}
+				error_log("Error eliminando materia {$id}: " . $deleteError->getMessage());
+				respond(500, [
+					'success' => false,
+					'message' => 'Error al eliminar la materia',
+					'error' => $deleteError->getMessage()
+				]);
+			}
 
 		default:
 			respond(405, ['success'=>false,'message'=>'Método no permitido']);

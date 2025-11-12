@@ -302,25 +302,79 @@ try {
 			respond(200, ['success'=>true,'id'=>$id,'message'=>'Nota actualizada exitosamente']);
 
 		case 'DELETE':
-			if (!$id) respond(400, ['success'=>false,'message'=>'Falta id']);
-			
-			// Validar que la nota pertenezca a una evaluación del docente logueado
-			if ($docente_id) {
-				$stmt = $db->prepare("
-					SELECT n.ID_Nota FROM Notas n
-					INNER JOIN Evaluacion e ON n.Evaluacion_ID_evaluacion = e.ID_evaluacion
-					INNER JOIN Materia m ON e.Materia_ID_materia = m.ID_materia
-					WHERE n.ID_Nota = ? AND m.Usuarios_docente_ID_docente = ?
-				");
-				$stmt->execute([$id, $docente_id]);
-				if (!$stmt->fetch()) {
-					respond(403, ['success'=>false,'message'=>'No tiene permiso para eliminar esta nota']);
+			$notaId = $id;
+			$evaluacionId = isset($_GET['evaluacionId']) ? (int)$_GET['evaluacionId'] : null;
+			$materiaId = isset($_GET['materiaId']) ? (int)$_GET['materiaId'] : null;
+			$estudianteId = isset($_GET['estudianteId']) ? (int)$_GET['estudianteId'] : null;
+
+			if ($notaId) {
+				// Eliminación puntual por ID de nota
+				if ($docente_id) {
+					$stmt = $db->prepare("
+						SELECT n.ID_Nota FROM Notas n
+						INNER JOIN Evaluacion e ON n.Evaluacion_ID_evaluacion = e.ID_evaluacion
+						INNER JOIN Materia m ON e.Materia_ID_materia = m.ID_materia
+						WHERE n.ID_Nota = ? AND m.Usuarios_docente_ID_docente = ?
+					");
+					$stmt->execute([$notaId, $docente_id]);
+					if (!$stmt->fetch()) {
+						respond(403, ['success'=>false,'message'=>'No tiene permiso para eliminar esta nota']);
+					}
 				}
+
+				$stmt = $db->prepare("DELETE FROM Notas WHERE ID_Nota = ?");
+				$stmt->execute([$notaId]);
+				respond(200, ['success'=>true,'message'=>'Nota eliminada exitosamente']);
 			}
-			
-			$stmt = $db->prepare("DELETE FROM Notas WHERE ID_Nota = ?");
-			$stmt->execute([$id]);
-			respond(200, ['success'=>true,'message'=>'Nota eliminada exitosamente']);
+
+			if (!$evaluacionId && !$materiaId && !$estudianteId) {
+				respond(400, ['success'=>false,'message'=>'Debe especificar id, evaluacionId, materiaId o estudianteId para eliminar notas']);
+			}
+
+			$params = [];
+			$whereClauses = [];
+			$permissionJoin = '';
+			$permissionWhere = '';
+
+			if ($materiaId) {
+				$whereClauses[] = "e.Materia_ID_materia = ?";
+				$params[] = $materiaId;
+			}
+			if ($evaluacionId) {
+				$whereClauses[] = "n.Evaluacion_ID_evaluacion = ?";
+				$params[] = $evaluacionId;
+			}
+			if ($estudianteId) {
+				$whereClauses[] = "n.Estudiante_ID_Estudiante = ?";
+				$params[] = $estudianteId;
+			}
+
+			if ($docente_id) {
+				$permissionWhere = "m.Usuarios_docente_ID_docente = ?";
+				$params[] = $docente_id;
+			}
+
+			$sql = "
+				DELETE n FROM Notas n
+				INNER JOIN Evaluacion e ON n.Evaluacion_ID_evaluacion = e.ID_evaluacion
+				" . ($docente_id ? "INNER JOIN Materia m ON e.Materia_ID_materia = m.ID_materia" : "") . "
+			";
+
+			$whereParts = [];
+			if (!empty($whereClauses)) {
+				$whereParts[] = implode(' AND ', $whereClauses);
+			}
+			if ($permissionWhere) {
+				$whereParts[] = $permissionWhere;
+			}
+
+			if (!empty($whereParts)) {
+				$sql .= " WHERE " . implode(' AND ', $whereParts);
+			}
+
+			$stmt = $db->prepare($sql);
+			$stmt->execute($params);
+			respond(200, ['success'=>true,'deleted'=>$stmt->rowCount()]);
 
 		default:
 			respond(405, ['success'=>false,'message'=>'Método no permitido']);

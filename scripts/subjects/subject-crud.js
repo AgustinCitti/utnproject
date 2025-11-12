@@ -333,8 +333,16 @@
             return;
         }
 
-        // Validate that subject with same name and course doesn't exist for this teacher
         const currentSubjectId = getCurrentSubjectId();
+
+        if (!currentSubjectId && window.SubscriptionModule && typeof window.SubscriptionModule.checkCourseLimit === 'function') {
+            const canCreateSubject = window.SubscriptionModule.checkCourseLimit(1, { showModalOnLimit: true });
+            if (!canCreateSubject) {
+                return;
+            }
+        }
+
+        // Validate that subject with same name and course doesn't exist for this teacher
         if (!currentSubjectId) {
             const existingSubject = window.appData?.materia?.find(m => 
                 m.Nombre === payload.Nombre && 
@@ -430,6 +438,9 @@
             if (typeof populateUnifiedCourseFilter === 'function') populateUnifiedCourseFilter();
             if (typeof loadUnifiedStudentData === 'function') loadUnifiedStudentData();
             if (typeof updateDashboard === 'function') updateDashboard();
+            if (!currentSubjectId && window.SubscriptionModule && typeof window.SubscriptionModule.checkCourseLimit === 'function') {
+                await window.SubscriptionModule.checkCourseLimit();
+            }
             
             // If it's a new subject, ask if user wants to assign students
             if (newSubjectId) {

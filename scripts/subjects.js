@@ -615,6 +615,9 @@ async function handleIntensificationSubjectClosure(subject, report) {
     if (typeof populateUnifiedCourseFilter === 'function') populateUnifiedCourseFilter();
     if (typeof loadUnifiedStudentData === 'function') loadUnifiedStudentData();
     if (typeof updateDashboard === 'function') updateDashboard();
+    if (window.SubscriptionModule && typeof window.SubscriptionModule.checkCourseLimit === 'function') {
+        window.SubscriptionModule.checkCourseLimit();
+    }
 
     return {
         created: false,
@@ -720,6 +723,46 @@ async function createIntensificationSubjectForClosure(subject, report) {
     );
     const existingStudentIds = new Set(currentEnrollments.map(axm => parseInt(axm.Estudiante_ID_Estudiante, 10)));
 
+    const originalContents = (data.contenido || []).filter(content =>
+        parseInt(content.Materia_ID_materia, 10) === originalSubjectId
+    );
+    const contentCopy = {
+        attempted: originalContents.length,
+        copied: 0,
+        errors: []
+    };
+
+    if (originalContents.length) {
+        for (const content of originalContents) {
+            const payloadContenido = {
+                Tema: content.Tema || 'Tema sin título',
+                Descripcion: content.Descripcion || null,
+                Estado: 'PENDIENTE',
+                Materia_ID_materia: newSubjectId
+            };
+            try {
+                const response = await fetch(`${baseUrl}/contenido.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(payloadContenido)
+                });
+                const result = await response.json().catch(() => ({}));
+                if (response.ok && result.success !== false) {
+                    contentCopy.copied += 1;
+                } else {
+                    const message = result.message || `No se pudo copiar el tema "${payloadContenido.Tema}".`;
+                    contentCopy.errors.push(message);
+                }
+            } catch (error) {
+                contentCopy.errors.push(error.message || `Error de red al copiar el tema "${payloadContenido.Tema}".`);
+            }
+        }
+    }
+
     const enrollmentPayload = failingStudents
         .filter(student => !existingStudentIds.has(student.id))
         .map(student => ({
@@ -754,6 +797,34 @@ async function createIntensificationSubjectForClosure(subject, report) {
             }
         } catch (error) {
             enrollmentResult.errors.push(error.message || 'Error de red al inscribir estudiantes en la materia de intensificación.');
+        }
+    }
+
+    const gradeCleanup = {
+        attempted: failingStudents.length,
+        cleared: 0,
+        errors: []
+    };
+
+    if (failingStudents.length) {
+        const uniqueStudentIds = [...new Set(failingStudents.map(student => parseInt(student.id, 10)))].filter(id => !Number.isNaN(id));
+        for (const studentId of uniqueStudentIds) {
+            try {
+                const response = await fetch(`${baseUrl}/notas.php?materiaId=${newSubjectId}&estudianteId=${studentId}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                });
+                const result = await response.json().catch(() => ({}));
+                if (response.ok && result.success !== false) {
+                    gradeCleanup.cleared += parseInt(result.deleted ?? 0, 10) || 0;
+                } else {
+                    const message = result.message || `No se pudieron limpiar las calificaciones del estudiante ID ${studentId} en la materia de intensificación.`;
+                    gradeCleanup.errors.push(message);
+                }
+            } catch (error) {
+                gradeCleanup.errors.push(error.message || `Error de red al limpiar calificaciones para el estudiante ID ${studentId}.`);
+            }
         }
     }
 
@@ -866,6 +937,8 @@ async function createIntensificationSubjectForClosure(subject, report) {
         failingCount: failingStudents.length,
         enrolledCount: enrollmentResult.enrolled,
         enrollmentErrors: enrollmentResult.errors,
+        contentCopy,
+        gradeCleanup,
         statusUpdates: intensificaUpdates,
         statusErrors,
         removedCount,
