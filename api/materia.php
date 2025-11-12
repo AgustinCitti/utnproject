@@ -10,6 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 // Incluir configuración de base de datos
 require_once __DIR__ . '/../config/database.php';
 
+session_start();
+
 function respond($code, $data) { http_response_code($code); echo json_encode($data); exit; }
 
 function pdo() {
@@ -138,6 +140,14 @@ try {
 	$method = $_SERVER['REQUEST_METHOD'];
 	$id = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
+	// --- Autenticación y Autorización Basada en Sesión ---
+	if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+		respond(401, ['success' => false, 'message' => 'No autorizado. Debes iniciar sesión.']);
+	}
+	$loggedInUserId = (int)($_SESSION['user_id'] ?? 0);
+	$loggedInUserRole = $_SESSION['user_role'] ?? '';
+	// --- Fin de Autenticación ---
+
 	switch ($method) {
 		case 'GET':
 			// Filtros opcionales: ?id=, ?docenteId=, ?estado=
@@ -159,30 +169,26 @@ try {
 			respond(200, $stmt->fetchAll());
 		
 		case 'POST':
+			// Autorización: Solo los profesores pueden crear materias.
+			if ($loggedInUserRole !== 'PROFESOR') {
+				respond(403, ['success' => false, 'message' => 'Acceso denegado. Solo los profesores pueden crear materias.']);
+			}
+			$DocenteId = $loggedInUserId; // Usar el ID del docente de la sesión.
+
 			$body = readJson();
 			// Validación mínima
-			$required = ['Nombre','Curso_division','Usuarios_docente_ID_docente','Estado'];
+			$required = ['Nombre','Curso_division','Estado'];
 			foreach ($required as $k) {
 				if (!isset($body[$k]) || $body[$k]==='') respond(400, ['success'=>false,'message'=>"Falta campo: $k"]);
 			}
 			$Nombre = $body['Nombre'];
 			$Curso_division = $body['Curso_division'];
-			$DocenteId = (int)$body['Usuarios_docente_ID_docente'];
 			$Estado = $body['Estado'];
 			$Horario = isset($body['Horario']) && $body['Horario'] !== '' ? $body['Horario'] : null;
 			$Aula = isset($body['Aula']) && $body['Aula'] !== '' ? $body['Aula'] : null;
 			$Descripcion = isset($body['Descripcion']) && $body['Descripcion'] !== '' ? $body['Descripcion'] : null;
-			// Validar que el docente ID sea válido
-			if ($DocenteId <= 0) {
-				respond(400, ['success'=>false,'message'=>'ID de docente inválido']);
-			}
 			
-			// Verificar que el docente existe en la base de datos
-			$checkDocente = $db->prepare("SELECT ID_docente FROM Usuarios_docente WHERE ID_docente = ? AND Estado = 'ACTIVO'");
-			$checkDocente->execute([$DocenteId]);
-			if (!$checkDocente->fetch()) {
-				respond(404, ['success'=>false,'message'=>'El docente especificado no existe o no está activo. Por favor, inicia sesión nuevamente.']);
-			}
+			// La validación del docente ya se hizo con la sesión, no es necesario volver a consultar.
 
 			// Verificar si la columna Escuela_ID existe
 			$hasEscuelaId = columnExists($db, 'Materia', 'Escuela_ID');
@@ -242,6 +248,18 @@ try {
 
 		case 'PUT':
 			if (!$id) respond(400, ['success'=>false,'message'=>'Falta id']);
+			
+			// Autorización: Solo el profesor de la materia o un admin pueden editar.
+			$stmt = $db->prepare("SELECT Usuarios_docente_ID_docente FROM Materia WHERE ID_materia = ?");
+			$stmt->execute([$id]);
+			$materia = $stmt->fetch();
+			if (!$materia) {
+				respond(404, ['success' => false, 'message' => 'Materia no encontrada.']);
+			}
+			if ($loggedInUserRole !== 'ADMIN' && $materia['Usuarios_docente_ID_docente'] != $loggedInUserId) {
+				respond(403, ['success' => false, 'message' => 'Acceso denegado. No tienes permiso para editar esta materia.']);
+			}
+
 			$body = readJson();
 			
 			// Get current materia data
@@ -255,6 +273,8 @@ try {
 			$params = [];
 			foreach ($fields as $f) {
 				if (array_key_exists($f, $body)) {
+					// Un admin puede cambiar el docente, el profesor no.
+					if ($f === 'Usuarios_docente_ID_docente' && $loggedInUserRole !== 'ADMIN') continue;
 					$sets[] = "$f = ?";
 					$params[] = $body[$f] === '' ? null : $body[$f];
 				}
@@ -303,6 +323,17 @@ try {
 
 		case 'DELETE':
 			if (!$id) respond(400, ['success'=>false,'message'=>'Falta id']);
+
+			// Autorización: Solo el profesor de la materia o un admin pueden eliminar.
+			$stmt = $db->prepare("SELECT Usuarios_docente_ID_docente FROM Materia WHERE ID_materia = ?");
+			$stmt->execute([$id]);
+			$materia = $stmt->fetch();
+			if (!$materia) {
+				respond(404, ['success' => false, 'message' => 'Materia no encontrada.']);
+			}
+			if ($loggedInUserRole !== 'ADMIN' && $materia['Usuarios_docente_ID_docente'] != $loggedInUserId) {
+				respond(403, ['success' => false, 'message' => 'Acceso denegado. No tienes permiso para eliminar esta materia.']);
+			}
 			
 			try {
 				$db->beginTransaction();
