@@ -1340,3 +1340,21 @@ SELECT 'EduSync instalado exitosamente!' as Mensaje,
        'Procedimientos creados: 10' as Procedimientos_Creados,
        'Triggers creados: 9' as Triggers_Creados;
 
+
+
+
+
+
+          ALTER TABLE Evaluacion 
+     ADD COLUMN Contenido_ID_contenido INT NULL AFTER Materia_ID_materia;
+
+   ALTER TABLE Evaluacion
+     ADD INDEX idx_contenido_evaluacion (Contenido_ID_contenido);
+
+   ALTER TABLE Evaluacion
+     ADD CONSTRAINT fk_evaluacion_contenido
+       FOREIGN KEY (Contenido_ID_contenido)
+       REFERENCES Contenido(ID_contenido)
+       ON DELETE SET NULL
+       ON UPDATE CASCADE;
+
