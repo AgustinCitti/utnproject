@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | EduSync</title>
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/landing.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .error-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+            text-align: center;
+        }
+
+        .error-content {
+            max-width: 600px;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .error-code {
+            font-size: 8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            line-height: 1;
+        }
+
+        .error-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            font-size: 1.125rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .error-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 3rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .error-brand img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .error-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.75rem;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.25);
+        }
+
+        .btn-home:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.35);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.75rem;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            border: 2px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f7fa;
+            transform: translateY(-2px);
+        }
+
+        .language-selector {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .language-btn {
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+        }
+
+        .language-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .language-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .error-code {
+                font-size: 5rem;
+            }
+
+            .error-title {
+                font-size: 1.5rem;
+            }
+
+            .error-message {
+                font-size: 1rem;
+            }
+
+            .error-actions {
+                flex-direction: column;
+            }
+
+            .btn-home,
+            .btn-secondary {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .language-selector {
+                top: 1rem;
+                right: 1rem;
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+
+            .language-btn {
+                font-size: 0.75rem;
+                padding: 0.375rem 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="language-selector">
+            <button class="language-btn active" data-lang="es" id="lang-es">ES</button>
+            <button class="language-btn" data-lang="en" id="lang-en">EN</button>
+        </div>
+        
+        <div class="error-content">
+            <div class="error-brand">
+                <span>EduSync</span>
+            </div>
+            
+            <div class="error-code">404</div>
+            
+            <h1 class="error-title" data-translate="page_not_found">Page Not Found</h1>
+            
+            <p class="error-message" data-translate="page_not_found_message">
+                Oops! The page you're looking for doesn't exist. It might have been moved, deleted, or the URL might be incorrect.
+            </p>
+            
+            <div class="error-actions">
+                <a href="../index.html" class="btn-home" data-translate="go_to_homepage">
+                    Go to Homepage
+                </a>
+                <a href="javascript:history.back()" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    <span data-translate="go_back">Go Back</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="../scripts/translations.js"></script>
+    <script>
+        // Initialize language system for 404 page
+        let currentLanguage = localStorage.getItem('language') || 'es';
+        
+        // Simple translation function for 404 page
+        function translate404Page(language) {
+            currentLanguage = language;
+            document.documentElement.lang = language;
+            
+            // Update active language button
+            document.querySelectorAll('.language-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`lang-${language}`).classList.add('active');
+            
+            // Use the global translatePage function if available
+            if (typeof translatePage === 'function') {
+                translatePage(language);
+            } else {
+                // Fallback: manual translation
+                const translations = {
+                    es: {
+                        page_not_found: "Página No Encontrada",
+                        page_not_found_message: "¡Ups! La página que buscas no existe. Puede haber sido movida, eliminada o la URL podría ser incorrecta.",
+                        go_to_homepage: "Ir a la Página Principal",
+                        go_back: "Volver"
+                    },
+                    en: {
+                        page_not_found: "Page Not Found",
+                        page_not_found_message: "Oops! The page you're looking for doesn't exist. It might have been moved, deleted, or the URL might be incorrect.",
+                        go_to_homepage: "Go to Homepage",
+                        go_back: "Go Back"
+                    }
+                };
+                
+                const t = translations[language] || translations.es;
+                document.querySelector('[data-translate="page_not_found"]').textContent = t.page_not_found;
+                document.querySelector('[data-translate="page_not_found_message"]').textContent = t.page_not_found_message;
+                document.querySelector('[data-translate="go_to_homepage"]').textContent = t.go_to_homepage;
+                document.querySelector('[data-translate="go_back"]').textContent = t.go_back;
+            }
+            
+            localStorage.setItem('language', language);
+        }
+        
+        // Set up language buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize with saved language
+            translate404Page(currentLanguage);
+            
+            // Add click handlers to language buttons
+            document.querySelectorAll('.language-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const lang = this.getAttribute('data-lang');
+                    translate404Page(lang);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
+
