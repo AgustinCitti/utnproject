@@ -183,14 +183,18 @@ CREATE TABLE Evaluacion (
     Tipo ENUM('EXAMEN', 'PARCIAL', 'TRABAJO_PRACTICO', 'PROYECTO', 'ORAL', 'PRACTICO') NOT NULL,
     Peso DECIMAL(3,2) DEFAULT 1.00 COMMENT 'Peso de la evaluación (0.00 a 9.99)',
     Materia_ID_materia INT NOT NULL,
+    Contenido_ID_contenido INT NULL,
     Fecha_creacion DATE DEFAULT (CURRENT_DATE),
     Estado ENUM('PROGRAMADA', 'EN_CURSO', 'FINALIZADA', 'CANCELADA') DEFAULT 'PROGRAMADA',
     INDEX idx_materia_evaluacion (Materia_ID_materia),
+    INDEX idx_contenido_evaluacion (Contenido_ID_contenido),
     INDEX idx_fecha_evaluacion (Fecha),
     INDEX idx_tipo_evaluacion (Tipo),
     INDEX idx_estado_evaluacion (Estado),
     CONSTRAINT fk_evaluacion_materia FOREIGN KEY (Materia_ID_materia) 
-        REFERENCES Materia(ID_materia) ON DELETE CASCADE ON UPDATE CASCADE
+        REFERENCES Materia(ID_materia) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_evaluacion_contenido FOREIGN KEY (Contenido_ID_contenido)
+        REFERENCES Contenido(ID_contenido) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================

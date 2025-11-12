@@ -5781,7 +5781,7 @@ window.showAssignTemaDialog = function(studentId, subjectId) {
  * Show create evaluacion form - Opens modal dialog
  * @param {number} subjectId - Subject ID
  */
-window.showCreateEvaluacionForm = function(subjectId) {
+window.showCreateEvaluacionForm = async function(subjectId) {
     if (!subjectId) {
         subjectId = getCurrentThemesSubjectId();
     }
@@ -5838,6 +5838,114 @@ window.showCreateEvaluacionForm = function(subjectId) {
         const today = new Date().toISOString().split('T')[0];
         evaluacionFecha.value = today;
     }
+
+    const temaSelect = modal.querySelector('#evaluacionTema');
+    const temaHelper = modal.querySelector('#evaluacionTemaHelper');
+    const baseUrl = window.location.pathname.includes('/pages/') ? '../api' : 'api';
+
+    const getTopicsForSubject = (materiaId) => {
+        if (!materiaId || !appData || !Array.isArray(appData.contenido)) {
+            return [];
+        }
+        const normalizedId = parseInt(materiaId);
+        if (isNaN(normalizedId)) {
+            return [];
+        }
+        return appData.contenido.filter(topic => {
+            if (!topic) return false;
+            const topicMateriaId = topic.Materia_ID_materia !== undefined ? parseInt(topic.Materia_ID_materia) : null;
+            return topicMateriaId === normalizedId;
+        });
+    };
+
+    const fetchTopicsForSubject = async (materiaId) => {
+        const normalizedId = materiaId ? parseInt(materiaId) : NaN;
+        if (!materiaId || isNaN(normalizedId)) {
+            return [];
+        }
+        try {
+            const response = await fetch(`${baseUrl}/contenido.php?materiaId=${normalizedId}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!response.ok) {
+                return [];
+            }
+            const freshTopics = await response.json();
+            if (!appData || typeof appData !== 'object') {
+                appData = {};
+            }
+            if (!Array.isArray(appData.contenido)) {
+                appData.contenido = [];
+            }
+            appData.contenido = appData.contenido.filter(topic => parseInt(topic.Materia_ID_materia) !== normalizedId);
+            if (Array.isArray(freshTopics)) {
+                appData.contenido.push(...freshTopics);
+            }
+            return Array.isArray(freshTopics) ? freshTopics : [];
+        } catch (error) {
+            console.error('Error obteniendo temas para la materia', materiaId, error);
+            return [];
+        }
+    };
+
+    const populateTopicSelect = async (materiaId, selectedTopicId = '') => {
+        if (!temaSelect) return false;
+
+        let topics = getTopicsForSubject(materiaId);
+
+        if (!materiaId) {
+            temaSelect.innerHTML = '<option value="" disabled>Seleccione una materia primero</option>';
+            temaSelect.disabled = true;
+            if (temaHelper) {
+                temaHelper.textContent = 'Seleccione una materia para listar los temas disponibles.';
+            }
+            return false;
+        }
+
+        if (!topics || topics.length === 0) {
+            if (temaHelper) {
+                temaHelper.textContent = 'Cargando temas...';
+            }
+            topics = await fetchTopicsForSubject(materiaId);
+        }
+
+        if (!topics || topics.length === 0) {
+            temaSelect.innerHTML = '<option value="" disabled>No hay temas disponibles. Cree un tema primero.</option>';
+            temaSelect.disabled = true;
+            if (temaHelper) {
+                temaHelper.textContent = 'No hay temas disponibles para esta materia. Cree un tema antes de crear la evaluación.';
+            }
+            return false;
+        }
+
+        temaSelect.innerHTML = '<option value="">Seleccione un tema</option>';
+        topics.forEach(topic => {
+            const option = document.createElement('option');
+            option.value = topic.ID_contenido;
+            option.textContent = topic.Tema || 'Tema sin título';
+            temaSelect.appendChild(option);
+        });
+        temaSelect.disabled = false;
+
+        const normalizedSelected = selectedTopicId ? String(selectedTopicId) : '';
+        if (normalizedSelected && topics.some(t => String(t.ID_contenido) === normalizedSelected)) {
+            temaSelect.value = normalizedSelected;
+        } else if (topics.length === 1) {
+            temaSelect.value = String(topics[0].ID_contenido);
+        } else {
+            temaSelect.value = '';
+        }
+
+        if (temaHelper) {
+            temaHelper.textContent = 'Seleccione el tema principal de la evaluación.';
+        }
+
+        return true;
+    };
+
+    await populateTopicSelect(subjectId);
     
     // Setup form submit handler
     if (evaluacionForm) {
@@ -5899,6 +6007,13 @@ function createEvaluacionModal() {
                     <div class="form-group">
                         <label for="evaluacionDescripcion" data-translate="description">Descripción</label>
                         <textarea id="evaluacionDescripcion" rows="3" placeholder="Descripción de la evaluación..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="evaluacionTema" data-translate="topic">Tema</label>
+                        <select id="evaluacionTema" required>
+                            <option value="">Seleccione una materia primero</option>
+                        </select>
+                        <small id="evaluacionTemaHelper" class="form-helper-text">Seleccione una materia para listar los temas disponibles.</small>
                     </div>
                     <div class="form-group">
                         <label for="evaluacionFecha" data-translate="date">Fecha</label>
@@ -5966,10 +6081,12 @@ window.saveEvaluacion = async function() {
     const tipo = modal.querySelector('#evaluacionTipo')?.value;
     const peso = parseFloat(modal.querySelector('#evaluacionPeso')?.value || '1.00');
     const estado = modal.querySelector('#evaluacionEstado')?.value || 'PROGRAMADA';
+    const temaValue = modal.querySelector('#evaluacionTema')?.value || '';
+    const contenidoId = temaValue && !isNaN(parseInt(temaValue)) ? parseInt(temaValue) : 0;
     
     // Validation
-    if (!subjectId || !titulo || !fecha || !tipo) {
-        alert('Por favor, complete todos los campos requeridos (Título, Fecha, Tipo)');
+    if (!subjectId || !titulo || !fecha || !tipo || contenidoId <= 0) {
+        alert('Por favor, complete todos los campos requeridos (Título, Tema, Fecha, Tipo)');
         return;
     }
     
@@ -5980,7 +6097,8 @@ window.saveEvaluacion = async function() {
         Tipo: tipo,
         Peso: peso,
         Estado: estado,
-        Materia_ID_materia: parseInt(subjectId)
+        Materia_ID_materia: parseInt(subjectId),
+        Contenido_ID_contenido: contenidoId
     };
     
     try {

@@ -131,6 +131,7 @@ function loadExams() {
     // Grid view
     examsContainer.innerHTML = filteredExams.map(exam => {
         const subject = appData.materia.find(s => s.ID_materia === exam.Materia_ID_materia);
+        const topic = appData.contenido ? appData.contenido.find(t => parseInt(t.ID_contenido) === parseInt(exam.Contenido_ID_contenido)) : null;
         return `
             <div class="card" onclick="viewExamNotes(${exam.ID_evaluacion})" style="cursor: pointer;">
                 <div class="card-header">
@@ -149,6 +150,7 @@ function loadExams() {
                 </div>
                 <div class="card-content">
                     <p><strong>Subject:</strong> ${subject ? subject.Nombre : 'Unknown Subject'}</p>
+                    <p><strong>Tema:</strong> ${topic ? topic.Tema : 'Sin tema asignado'}</p>
                     <p><strong>Date:</strong> ${exam.Fecha}</p>
                     <p><strong>Type:</strong> ${exam.Tipo}</p>
                     <p><strong>Status:</strong> ${exam.Estado}</p>
@@ -166,6 +168,7 @@ function loadExams() {
                     <tr>
                         <th data-translate="title">Título</th>
                         <th data-translate="subject">Materia</th>
+                        <th data-translate="topic">Tema</th>
                         <th data-translate="type">Tipo</th>
                         <th data-translate="date">Fecha</th>
                         <th data-translate="status">Estado</th>
@@ -175,11 +178,13 @@ function loadExams() {
                 <tbody>
                     ${filteredExams.map(exam => {
                         const subject = appData.materia.find(s => s.ID_materia === exam.Materia_ID_materia);
+                        const topic = appData.contenido ? appData.contenido.find(t => parseInt(t.ID_contenido) === parseInt(exam.Contenido_ID_contenido)) : null;
                         const shortDate = exam.Fecha.split('-').slice(1).join('/');
                         return `
                             <tr onclick="viewExamNotes(${exam.ID_evaluacion})" class="clickable-row" style="cursor: pointer;">
                                 <td><strong>${exam.Titulo}</strong></td>
                                 <td>${subject ? subject.Nombre : 'Unknown'}</td>
+                                <td>${topic ? topic.Tema : 'Sin tema'}</td>
                                 <td>${exam.Tipo}</td>
                                 <td>${shortDate}</td>
                                 <td>${exam.Estado}</td>
@@ -300,6 +305,13 @@ async function showExamModal(examId = null) {
                                 </select>
                             </div>
                             <div class="form-group" style="margin-top: 15px;">
+                                <label for="examTopic" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Tema *</label>
+                                <select id="examTopic" name="examTopic" required style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                                    <option value="">Seleccione una materia primero</option>
+                                </select>
+                                <small id="examTopicHelper" style="display:block; margin-top: 6px; color: var(--text-secondary); font-size: 0.8em;">Seleccione una materia para ver los temas disponibles.</small>
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
                                 <label for="examDate" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Fecha *</label>
                                 <input type="date" id="examDate" name="examDate" required value="${exam ? exam.Fecha : ''}" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
                             </div>
@@ -408,6 +420,145 @@ async function showExamModal(examId = null) {
         // Fallback: manually add active class
         modal.classList.add('active');
     }
+
+    const subjectSelect = modal.querySelector('#examSubject');
+    const topicSelect = modal.querySelector('#examTopic');
+    const topicHelper = modal.querySelector('#examTopicHelper');
+    const submitBtn = modal.querySelector('button[type="submit"]');
+    const preselectedTopicId = exam && exam.Contenido_ID_contenido ? String(exam.Contenido_ID_contenido) : '';
+
+    const getTopicsForSubject = (subjectId) => {
+        if (!subjectId || !appData || !Array.isArray(appData.contenido)) {
+            return [];
+        }
+        const normalizedSubjectId = parseInt(subjectId);
+        if (isNaN(normalizedSubjectId)) {
+            return [];
+        }
+        return appData.contenido.filter(topic => {
+            if (!topic) return false;
+            const topicMateriaId = topic.Materia_ID_materia !== undefined ? parseInt(topic.Materia_ID_materia) : null;
+            return topicMateriaId === normalizedSubjectId;
+        });
+    };
+
+    const getBaseApiUrl = () => window.location.pathname.includes('/pages/') ? '../api' : 'api';
+
+    const fetchTopicsForSubject = async (subjectId) => {
+        const normalizedSubjectId = subjectId ? parseInt(subjectId) : NaN;
+        if (!subjectId || isNaN(normalizedSubjectId)) {
+            return [];
+        }
+        try {
+            const response = await fetch(`${getBaseApiUrl()}/contenido.php?materiaId=${normalizedSubjectId}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            if (!response.ok) {
+                return [];
+            }
+            const freshTopics = await response.json();
+            if (!appData || typeof appData !== 'object') {
+                appData = {};
+            }
+            if (!Array.isArray(appData.contenido)) {
+                appData.contenido = [];
+            }
+            appData.contenido = appData.contenido.filter(topic => parseInt(topic.Materia_ID_materia) !== normalizedSubjectId);
+            if (Array.isArray(freshTopics)) {
+                appData.contenido.push(...freshTopics);
+            }
+            return Array.isArray(freshTopics) ? freshTopics : [];
+        } catch (error) {
+            console.error('Error fetching topics for subject', subjectId, error);
+            return [];
+        }
+    };
+
+    const updateTopicOptions = async (subjectId, selectedTopicId = '') => {
+        if (!topicSelect) return false;
+
+        const normalizedSubjectId = subjectId ? parseInt(subjectId) : NaN;
+        let topics = (!subjectId || isNaN(normalizedSubjectId)) ? [] : getTopicsForSubject(subjectId);
+
+        if (!subjectId || isNaN(normalizedSubjectId)) {
+            topicSelect.innerHTML = '<option value="" disabled>Seleccione una materia primero</option>';
+            topicSelect.disabled = true;
+            if (topicHelper) {
+                topicHelper.textContent = 'Seleccione una materia para ver los temas disponibles.';
+            }
+            return false;
+        }
+
+        if (!appData || !Array.isArray(appData.contenido)) {
+            topicSelect.innerHTML = '<option value="" disabled>Cargando temas...</option>';
+            topicSelect.disabled = true;
+            if (topicHelper) {
+                topicHelper.textContent = 'Cargando temas...';
+            }
+            topics = await fetchTopicsForSubject(subjectId);
+        } else if (!topics || topics.length === 0) {
+            topics = await fetchTopicsForSubject(subjectId);
+        }
+
+        if (!topics || topics.length === 0) {
+            topicSelect.innerHTML = '<option value="" disabled>No hay temas disponibles. Cree un tema primero.</option>';
+            topicSelect.disabled = true;
+            if (topicHelper) {
+                topicHelper.textContent = 'No hay temas disponibles para esta materia. Cree un tema antes de crear la evaluación.';
+            }
+            return false;
+        }
+
+        const selectionPlaceholder = '<option value="">Seleccione un tema</option>';
+        topicSelect.innerHTML = selectionPlaceholder;
+        topics.forEach(topic => {
+            const option = document.createElement('option');
+            option.value = topic.ID_contenido;
+            option.textContent = topic.Tema || 'Tema sin título';
+            topicSelect.appendChild(option);
+        });
+        topicSelect.disabled = false;
+
+        const normalizedSelectedTopicId = selectedTopicId ? String(selectedTopicId) : '';
+        if (normalizedSelectedTopicId && topics.some(t => String(t.ID_contenido) === normalizedSelectedTopicId)) {
+            topicSelect.value = normalizedSelectedTopicId;
+        } else if (topics.length === 1) {
+            topicSelect.value = String(topics[0].ID_contenido);
+        } else {
+            topicSelect.value = '';
+        }
+
+        if (topicHelper) {
+            topicHelper.textContent = 'Seleccione el tema principal de la evaluación.';
+        }
+
+        return true;
+    };
+
+    if (subjectSelect) {
+        const initialSubjectId = subjectSelect.value;
+        updateTopicOptions(initialSubjectId, preselectedTopicId).then(hasTopics => {
+            if (submitBtn) {
+                submitBtn.disabled = !hasTopics;
+            }
+        });
+
+        subjectSelect.addEventListener('change', async (event) => {
+            const selectedSubjectId = event.target.value;
+            const topicsAvailable = await updateTopicOptions(selectedSubjectId);
+            if (submitBtn) {
+                submitBtn.disabled = !topicsAvailable;
+            }
+        });
+    }
+
+    if (!subjectSelect && submitBtn) {
+        submitBtn.disabled = true;
+    }
 }
 
 // Make showExamModal globally available to prevent conflicts
@@ -427,15 +578,21 @@ async function saveExam(event) {
         return;
     }
     
-    // Obtener valores usando FormData (más confiable)
-    const formData = new FormData(form);
+    // Obtener referencias directas a los campos
+    const titleEl = form.querySelector('#examTitle');
+    const subjectEl = form.querySelector('#examSubject');
+    const dateEl = form.querySelector('#examDate');
+    const typeEl = form.querySelector('#examType');
+    const topicEl = form.querySelector('#examTopic');
     
-    // También obtener directamente de los elementos usando el formulario como contexto
-    const titulo = (form.querySelector('#examTitle')?.value || '').trim();
-    const materiaValue = form.querySelector('#examSubject')?.value || '';
+    // Obtener valores usando el formulario como contexto
+    const titulo = (titleEl?.value || '').trim();
+    const materiaValue = subjectEl?.value || '';
     const materiaId = materiaValue && !isNaN(parseInt(materiaValue)) ? parseInt(materiaValue) : 0;
-    const fecha = form.querySelector('#examDate')?.value || '';
-    const tipo = (form.querySelector('#examType')?.value || '').trim().toUpperCase();
+    const fecha = dateEl?.value || '';
+    const tipo = (typeEl?.value || '').trim().toUpperCase();
+    const topicValue = topicEl?.value || '';
+    const contenidoId = topicValue && !isNaN(parseInt(topicValue)) ? parseInt(topicValue) : 0;
     const descripcion = (form.querySelector('#examDescription')?.value || '').trim() || null;
     const peso = parseFloat(form.querySelector('#examPeso')?.value || '1.00') || 1.00;
     const estado = form.querySelector('#examEstado')?.value || 'PROGRAMADA';
@@ -471,6 +628,13 @@ async function saveExam(event) {
         errors.push('Debe seleccionar un tipo de evaluación');
         if (typeEl) typeEl.focus();
     }
+
+    // Validar Tema
+    if (!contenidoId || contenidoId <= 0) {
+        missingFields.push('Tema');
+        errors.push('Debe seleccionar un tema válido para la evaluación');
+        if (topicEl) topicEl.focus();
+    }
     
     if (missingFields.length > 0) {
         const message = 'Por favor, complete todos los campos requeridos:\n\n' + 
@@ -483,6 +647,7 @@ async function saveExam(event) {
     const examData = {
         Titulo: titulo,
         Materia_ID_materia: materiaId,
+        Contenido_ID_contenido: contenidoId,
         Fecha: fecha,
         Tipo: tipo,
         Descripcion: descripcion,
@@ -1096,13 +1261,21 @@ function loadExamNotesView(examId) {
 function loadExamInfoSummary(exam, subject, notesCount) {
     const examInfoSummary = document.getElementById('examInfoSummary');
     if (!examInfoSummary) return;
-    
+
+    const topic = appData && appData.contenido
+        ? appData.contenido.find(t => parseInt(t.ID_contenido) === parseInt(exam.Contenido_ID_contenido))
+        : null;
+
     examInfoSummary.innerHTML = `
         <h3 class="exam-summary-title">${exam.Titulo || 'Evaluación'}</h3>
         <div class="exam-summary-grid">
             <div class="summary-item">
                 <span class="summary-label">Materia:</span>
                 <span class="summary-value">${subject ? subject.Nombre : 'Materia desconocida'}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Tema:</span>
+                <span class="summary-value">${topic ? topic.Tema : 'Sin tema asignado'}</span>
             </div>
             <div class="summary-item">
                 <span class="summary-label">Fecha:</span>

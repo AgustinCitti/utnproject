@@ -50,6 +50,20 @@ function validarMateriaDelDocente($db, $materiaId, $docenteId) {
 	}
 }
 
+function validarContenidoDeMateria($db, $contenidoId, $materiaId) {
+	if (!$contenidoId || !$materiaId) {
+		return false;
+	}
+	try {
+		$stmt = $db->prepare("SELECT ID_contenido FROM Contenido WHERE ID_contenido = ? AND Materia_ID_materia = ?");
+		$stmt->execute([$contenidoId, $materiaId]);
+		return (bool)$stmt->fetch();
+	} catch (PDOException $e) {
+		error_log("Error validando contenido de la materia: " . $e->getMessage());
+		return false;
+	}
+}
+
 function createRecordatoriosForEvaluacion($db, $evaluacionId, $titulo, $fechaEvaluacion, $materiaId, $tipoEvaluacion) {
 	try {
 		// Convert evaluacion date to DateTime
@@ -203,7 +217,7 @@ try {
 			}
 			
 			// Validación mínima
-			$required = ['Titulo', 'Fecha', 'Tipo', 'Materia_ID_materia'];
+			$required = ['Titulo', 'Fecha', 'Tipo', 'Materia_ID_materia', 'Contenido_ID_contenido'];
 			foreach ($required as $k) {
 				if (!isset($body[$k]) || $body[$k]==='') {
 					respond(400, ['success'=>false,'message'=>"Falta campo requerido: $k", 'received'=>array_keys($body)]);
@@ -214,6 +228,7 @@ try {
 			$Fecha = $body['Fecha'];
 			$Tipo = $body['Tipo'];
 			$Materia_ID_materia = (int)$body['Materia_ID_materia'];
+			$Contenido_ID_contenido = isset($body['Contenido_ID_contenido']) ? (int)$body['Contenido_ID_contenido'] : 0;
 			$Descripcion = isset($body['Descripcion']) && $body['Descripcion'] !== '' ? trim($body['Descripcion']) : null;
 			$Peso = isset($body['Peso']) ? (float)$body['Peso'] : 1.00;
 			$Estado = isset($body['Estado']) ? $body['Estado'] : 'PROGRAMADA';
@@ -221,6 +236,9 @@ try {
 			// Validar que los IDs sean válidos
 			if ($Materia_ID_materia <= 0) {
 				respond(400, ['success'=>false,'message'=>'ID de materia inválido']);
+			}
+			if ($Contenido_ID_contenido <= 0) {
+				respond(400, ['success'=>false,'message'=>'Debe seleccionar un tema válido para la evaluación']);
 			}
 			
 			// Validar que el título no esté vacío
@@ -267,9 +285,14 @@ try {
 				}
 			}
 			
+			// Validar que el contenido pertenezca a la materia seleccionada
+			if (!validarContenidoDeMateria($db, $Contenido_ID_contenido, $Materia_ID_materia)) {
+				respond(400, ['success'=>false,'message'=>'El tema seleccionado no pertenece a la materia indicada o no existe']);
+			}
+			
 			try {
-				$stmt = $db->prepare("INSERT INTO Evaluacion (Titulo, Descripcion, Fecha, Tipo, Peso, Materia_ID_materia, Estado) VALUES (?, ?, ?, ?, ?, ?, ?)");
-				$resultado = $stmt->execute([$Titulo, $Descripcion, $Fecha, $Tipo, $Peso, $Materia_ID_materia, $Estado]);
+				$stmt = $db->prepare("INSERT INTO Evaluacion (Titulo, Descripcion, Fecha, Tipo, Peso, Materia_ID_materia, Contenido_ID_contenido, Estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+				$resultado = $stmt->execute([$Titulo, $Descripcion, $Fecha, $Tipo, $Peso, $Materia_ID_materia, $Contenido_ID_contenido, $Estado]);
 				
 				if (!$resultado) {
 					respond(500, ['success'=>false,'message'=>'Error al ejecutar la consulta INSERT']);
@@ -312,9 +335,18 @@ try {
 			$body = readJson();
 			
 			// Campos actualizables
-			$fields = ['Titulo', 'Descripcion', 'Fecha', 'Tipo', 'Peso', 'Estado'];
+			$fields = ['Titulo', 'Descripcion', 'Fecha', 'Tipo', 'Peso', 'Estado', 'Contenido_ID_contenido'];
 			$sets = [];
 			$params = [];
+
+			// Obtener datos actuales de la evaluación (incluye materia y contenido actual)
+			$stmt = $db->prepare("SELECT Titulo, Fecha, Tipo, Materia_ID_materia, Contenido_ID_contenido FROM Evaluacion WHERE ID_evaluacion = ?");
+			$stmt->execute([$id]);
+			$currentEval = $stmt->fetch();
+			
+			if (!$currentEval) {
+				respond(404, ['success'=>false,'message'=>'Evaluación no encontrada']);
+			}
 			
 			foreach ($fields as $f) {
 				if (array_key_exists($f, $body)) {
@@ -352,6 +384,19 @@ try {
 						}
 						$sets[] = "$f = ?";
 						$params[] = $body[$f];
+					} else if ($f === 'Contenido_ID_contenido') {
+						if ($body[$f] === null || $body[$f] === '') {
+							respond(400, ['success'=>false,'message'=>'Debe seleccionar un tema válido para la evaluación']);
+						}
+						$contenidoId = (int)$body[$f];
+						if ($contenidoId <= 0) {
+							respond(400, ['success'=>false,'message'=>'Debe seleccionar un tema válido para la evaluación']);
+						}
+						if (!validarContenidoDeMateria($db, $contenidoId, $currentEval['Materia_ID_materia'])) {
+							respond(400, ['success'=>false,'message'=>'El tema seleccionado no pertenece a la materia indicada o no existe']);
+						}
+						$sets[] = "$f = ?";
+						$params[] = $contenidoId;
 					} else {
 						$sets[] = "$f = ?";
 						$params[] = $body[$f];
@@ -360,11 +405,6 @@ try {
 			}
 			
 			if (!$sets) respond(400, ['success'=>false,'message'=>'Nada para actualizar']);
-			
-			// Get current evaluacion data to check if fecha changed
-			$stmt = $db->prepare("SELECT Titulo, Fecha, Tipo, Materia_ID_materia FROM Evaluacion WHERE ID_evaluacion = ?");
-			$stmt->execute([$id]);
-			$currentEval = $stmt->fetch();
 			
 			$params[] = $id;
 			$sql = "UPDATE Evaluacion SET ".implode(', ', $sets)." WHERE ID_evaluacion = ?";

@@ -151,10 +151,13 @@ CREATE TABLE Evaluacion (
     Tipo VARCHAR(50) NOT NULL, -- EXAMEN, PARCIAL, TRABAJO_PRACTICO, etc.
     Peso DECIMAL(3,2) DEFAULT 1.00, -- Peso de la evaluación (0.00 a 9.99)
     Materia_ID_materia INT NOT NULL,
+    Contenido_ID_contenido INT NULL,
     Fecha_creacion DATE DEFAULT (CURRENT_DATE),
     Estado VARCHAR(20) DEFAULT 'PROGRAMADA',
     CONSTRAINT fk_evaluacion_materia FOREIGN KEY (Materia_ID_materia) 
-        REFERENCES Materia(ID_materia)
+        REFERENCES Materia(ID_materia),
+    CONSTRAINT fk_evaluacion_contenido FOREIGN KEY (Contenido_ID_contenido)
+        REFERENCES Contenido(ID_contenido)
 );
 
 -- =====================================================
