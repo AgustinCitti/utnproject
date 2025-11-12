@@ -35,3 +35,5 @@ SELECT
     'Tipo_usuario ahora incluye: PROFESOR, PROFESOR_ADJUNTO, JEFE_TP, COORDINADOR, ADMIN' AS Valores_Disponibles;
 
 
+
+

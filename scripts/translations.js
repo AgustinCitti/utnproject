@@ -123,6 +123,12 @@ const translations = {
         reports: "Reportes",
         language: "Idioma",
         
+        // 404 Page
+        page_not_found: "Página No Encontrada",
+        page_not_found_message: "¡Ups! La página que buscas no existe. Puede haber sido movida, eliminada o la URL podría ser incorrecta.",
+        go_to_homepage: "Ir a la Página Principal",
+        go_back: "Volver",
+        
         // Dashboard
         total_students: "Estudiantes",
         average_grade: "Calificaciones",
@@ -516,6 +522,12 @@ const translations = {
         notifications: "Notifications",
         reports: "Reports",
         language: "Language",
+        
+        // 404 Page
+        page_not_found: "Page Not Found",
+        page_not_found_message: "Oops! The page you're looking for doesn't exist. It might have been moved, deleted, or the URL might be incorrect.",
+        go_to_homepage: "Go to Homepage",
+        go_back: "Go Back",
         
         // Dashboard
         total_students: "Total Students",

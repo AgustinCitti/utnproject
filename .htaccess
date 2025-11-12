@@ -1,0 +1,13 @@
+# Custom Error Pages
+# Try absolute path first (if project is in /utnproject/)
+ErrorDocument 404 /utnproject/pages/404.html
+
+# Alternative: If the above doesn't work, try relative path
+# ErrorDocument 404 pages/404.html
+
+# Enable Rewrite Engine (if needed for other features)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /utnproject/
+</IfModule>
+
