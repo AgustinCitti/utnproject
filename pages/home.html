@@ -1316,6 +1316,17 @@
                     <small style="display:block; margin-top:6px; color:#666;">Se creará como: <strong>CURSOº Curso - División X</strong>.</small>
                 </div>
                 <div class="form-group">
+                    <label for="bulkStudentSubjects" data-translate="subjects">Materias</label>
+                    <select id="bulkStudentSubjects">
+                        <option value="" data-translate="select_subject">- Seleccionar Materia -</option>
+                        <!-- Se poblará dinámicamente con las materias del docente actual -->
+                    </select>
+                    <div id="bulkSelectedSubjectsContainer" class="selected-subjects-container" style="display: none; margin-top: 10px;">
+                        <!-- Selected subjects will be displayed here as chips -->
+                    </div>
+                    <small style="display: block; margin-top: 5px; color: #666;">Puedes seleccionar múltiples materias individualmente o seleccionar un curso arriba para que se muestren las materias de ese curso.</small>
+                </div>
+                <div class="form-group">
                     <label for="bulkStudentsList">Lista de Alumnos</label>
                     <div style="display:flex; gap:8px; margin-bottom:8px;">
                         <button type="button" class="btn-secondary" id="toggleInputModeBtn" onclick="toggleBulkInputMode(); return false;">

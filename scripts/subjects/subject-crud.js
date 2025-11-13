@@ -81,6 +81,26 @@
                 }
             }
             
+            // Preseleccionar la materia en el modal
+            setTimeout(() => {
+                if (typeof clearBulkSelectedSubjects === 'function') {
+                    clearBulkSelectedSubjects();
+                }
+                if (typeof addBulkSelectedSubject === 'function') {
+                    const targetSubject = (appData.materia || []).find(m => parseInt(m.ID_materia, 10) === parseInt(subjectId, 10));
+                    if (targetSubject) {
+                        addBulkSelectedSubject({
+                            id: parseInt(targetSubject.ID_materia),
+                            name: targetSubject.Nombre,
+                            curso: targetSubject.Curso_division || ''
+                        });
+                    }
+                }
+                if (typeof populateBulkStudentSubjectsSelect === 'function') {
+                    populateBulkStudentSubjectsSelect();
+                }
+            }, 200);
+            
             // Preseleccionar el curso/división si lo tenemos
             if (cursoDivision) {
                 const bulkCourseDivision = document.getElementById('bulkCourseDivision');

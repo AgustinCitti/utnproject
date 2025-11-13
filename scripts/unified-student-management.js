@@ -119,6 +119,10 @@ function initializeUnifiedStudentManagement() {
                 }
                 // Poblar el dropdown de cursos (async)
                 populateBulkCourseDivisionDropdown().catch(err => console.error('Error al poblar dropdown:', err));
+                // Poblar el dropdown de materias
+                populateBulkStudentSubjectsSelect();
+                // Limpiar materias seleccionadas
+                clearBulkSelectedSubjects();
                 // Limpiar el formulario
                 const form = document.getElementById('loadCourseDivisionForm');
                 if (form) form.reset();
@@ -3603,7 +3607,203 @@ async function populateBulkCourseDivisionDropdown() {
     courseSelect.onchange = () => {
         if (!createSection) return;
         createSection.style.display = courseSelect.value === '__new__' ? 'block' : 'none';
+        // Cuando se selecciona un curso, actualizar el desplegable de materias
+        handleBulkCourseSelection();
     };
+}
+
+// Variables para almacenar materias seleccionadas en el modal de carga masiva
+let bulkSelectedSubjects = [];
+
+/**
+ * Obtener materias seleccionadas en el modal de carga masiva
+ */
+function getBulkSelectedSubjects() {
+    return bulkSelectedSubjects || [];
+}
+
+/**
+ * Establecer materias seleccionadas en el modal de carga masiva
+ */
+function setBulkSelectedSubjects(subjects) {
+    bulkSelectedSubjects = Array.isArray(subjects) ? subjects : [];
+    renderBulkSelectedSubjects();
+}
+
+/**
+ * Agregar una materia a la lista de seleccionadas
+ */
+function addBulkSelectedSubject(subject) {
+    if (!bulkSelectedSubjects) {
+        bulkSelectedSubjects = [];
+    }
+    // Evitar duplicados
+    if (!bulkSelectedSubjects.some(s => parseInt(s.id) === parseInt(subject.id))) {
+        bulkSelectedSubjects.push(subject);
+        renderBulkSelectedSubjects();
+    }
+}
+
+/**
+ * Eliminar una materia de la lista de seleccionadas
+ */
+function removeBulkSelectedSubject(index) {
+    if (bulkSelectedSubjects && bulkSelectedSubjects[index]) {
+        bulkSelectedSubjects.splice(index, 1);
+        renderBulkSelectedSubjects();
+        populateBulkStudentSubjectsSelect();
+    }
+}
+
+/**
+ * Limpiar todas las materias seleccionadas
+ */
+function clearBulkSelectedSubjects() {
+    bulkSelectedSubjects = [];
+    renderBulkSelectedSubjects();
+}
+
+/**
+ * Poblar el desplegable de materias en el modal de carga masiva
+ */
+function populateBulkStudentSubjectsSelect() {
+    const subjectsSelect = document.getElementById('bulkStudentSubjects');
+    if (!subjectsSelect) return;
+    
+    // Get current teacher ID
+    const userIdString = localStorage.getItem('userId');
+    const teacherId = userIdString ? parseInt(userIdString, 10) : null;
+    
+    // Get already selected subjects (to exclude from dropdown)
+    const selectedSubjectIds = bulkSelectedSubjects.map(s => parseInt(s.id));
+    
+    // Get selected course to filter subjects
+    const courseSelect = document.getElementById('bulkCourseDivision');
+    const selectedCourse = courseSelect ? courseSelect.value : '';
+    
+    // Clear current options
+    subjectsSelect.innerHTML = '<option value="" data-translate="select_subject">- Seleccionar Materia -</option>';
+    
+    // Filter subjects: only active subjects not already selected
+    let teacherSubjects = (appData.materia || []).filter(m => 
+        (!m.Estado || m.Estado === 'ACTIVA') && 
+        !selectedSubjectIds.includes(parseInt(m.ID_materia))
+    );
+    
+    // Filter by teacher
+    if (teacherId) {
+        teacherSubjects = teacherSubjects.filter(m => 
+            m.Usuarios_docente_ID_docente === teacherId
+        );
+    }
+    
+    // If a course is selected, filter by course
+    if (selectedCourse && selectedCourse !== '__new__') {
+        teacherSubjects = teacherSubjects.filter(m => 
+            m.Curso_division === selectedCourse
+        );
+    }
+    
+    if (teacherSubjects.length === 0 && bulkSelectedSubjects.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = selectedCourse ? 'No hay materias disponibles para este curso' : 'No hay materias disponibles';
+        option.disabled = true;
+        subjectsSelect.appendChild(option);
+    } else {
+        teacherSubjects.forEach(subject => {
+            const option = document.createElement('option');
+            option.value = subject.ID_materia;
+            option.textContent = `${subject.Nombre}${subject.Curso_division ? ' - ' + subject.Curso_division : ''}`;
+            subjectsSelect.appendChild(option);
+        });
+    }
+    
+    // Add event listener for subject selection (only once)
+    if (!subjectsSelect._hasBulkSubjectListener) {
+        subjectsSelect.addEventListener('change', handleBulkSubjectSelection);
+        subjectsSelect._hasBulkSubjectListener = true;
+    }
+}
+
+/**
+ * Manejar selección de materia en el modal de carga masiva
+ */
+function handleBulkSubjectSelection() {
+    const subjectsSelect = document.getElementById('bulkStudentSubjects');
+    const selectedValue = subjectsSelect.value;
+    
+    if (!selectedValue) {
+        return;
+    }
+    
+    // Find the selected subject
+    const subject = appData.materia.find(m => parseInt(m.ID_materia) === parseInt(selectedValue));
+    if (!subject) {
+        console.error('Subject not found for ID:', selectedValue);
+        return;
+    }
+    
+    // Add to selected list
+    addBulkSelectedSubject({
+        id: parseInt(subject.ID_materia),
+        name: subject.Nombre,
+        curso: subject.Curso_division
+    });
+    
+    // Repopulate dropdown (without already selected subjects)
+    populateBulkStudentSubjectsSelect();
+    
+    // Reset dropdown
+    subjectsSelect.value = '';
+}
+
+/**
+ * Renderizar materias seleccionadas como chips
+ */
+function renderBulkSelectedSubjects() {
+    const container = document.getElementById('bulkSelectedSubjectsContainer');
+    if (!container) return;
+    
+    if (!bulkSelectedSubjects || bulkSelectedSubjects.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = bulkSelectedSubjects.map((subject, index) => `
+        <span class="subject-chip" data-subject-id="${subject.id}">
+            ${subject.name}${subject.curso ? ' - ' + subject.curso : ''}
+            <button type="button" class="remove-subject-btn" onclick="removeBulkSubject(${index})" title="Eliminar">
+                <i class="fas fa-times"></i>
+            </button>
+        </span>
+    `).join('');
+}
+
+/**
+ * Manejar selección de curso en el modal de carga masiva
+ */
+function handleBulkCourseSelection() {
+    const courseSelect = document.getElementById('bulkCourseDivision');
+    const selectedCourse = courseSelect ? courseSelect.value : '';
+    
+    // Si se selecciona un curso, limpiar materias seleccionadas y repoblar el desplegable
+    if (selectedCourse && selectedCourse !== '__new__') {
+        // Opcional: auto-seleccionar todas las materias del curso
+        // Por ahora solo actualizamos el desplegable
+        populateBulkStudentSubjectsSelect();
+    } else {
+        // Si no hay curso seleccionado, mostrar todas las materias
+        populateBulkStudentSubjectsSelect();
+    }
+}
+
+/**
+ * Función global para eliminar materia del modal de carga masiva
+ */
+window.removeBulkSubject = function(index) {
+    removeBulkSelectedSubject(index);
 }
 
 // Función para parsear archivo CSV
@@ -3864,25 +4064,39 @@ async function processBulkStudents() {
         return;
     }
     
-    // Obtener todas las materias del curso seleccionado para este docente
-    let courseSubjects = (appData.materia || []).filter(m => 
-        m.Usuarios_docente_ID_docente === teacherId &&
-        m.Curso_division === courseDivision &&
-        (!m.Estado || m.Estado === 'ACTIVA')
-    );
-
+    // Obtener materias seleccionadas del modal
+    const selectedBulkSubjects = getBulkSelectedSubjects();
+    
+    let courseSubjects = [];
     const targetSubjectId = bulkModal && bulkModal.dataset.subjectId
         ? parseInt(bulkModal.dataset.subjectId, 10)
         : null;
+    
+    // Si hay una materia específica en el dataset (cuando se abre desde una materia), usar solo esa
     if (targetSubjectId) {
         const targetSubject = (appData.materia || []).find(m => parseInt(m.ID_materia, 10) === targetSubjectId);
         if (targetSubject) {
             courseSubjects = [targetSubject];
         }
+    } 
+    // Si hay materias seleccionadas en el modal, usar esas
+    else if (selectedBulkSubjects && selectedBulkSubjects.length > 0) {
+        courseSubjects = selectedBulkSubjects.map(subj => {
+            const materia = (appData.materia || []).find(m => parseInt(m.ID_materia) === parseInt(subj.id));
+            return materia;
+        }).filter(m => m !== undefined);
+    }
+    // Si no hay materias seleccionadas, obtener todas las materias del curso (comportamiento por defecto)
+    else {
+        courseSubjects = (appData.materia || []).filter(m => 
+            m.Usuarios_docente_ID_docente === teacherId &&
+            m.Curso_division === courseDivision &&
+            (!m.Estado || m.Estado === 'ACTIVA')
+        );
     }
     
     if (courseSubjects.length === 0) {
-        alert(`No hay materias activas para el curso "${courseDivision}". Por favor crea al menos una materia para este curso primero.`);
+        alert(`No hay materias seleccionadas o activas para el curso "${courseDivision}". Por favor selecciona al menos una materia.`);
         return;
     }
     

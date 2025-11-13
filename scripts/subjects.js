@@ -3819,9 +3819,30 @@ function switchToEstudiantesTab(subjectId) {
                                     break;
                                 }
                             }
+                            // Trigger course selection handler
+                            if (typeof handleBulkCourseSelection === 'function') {
+                                handleBulkCourseSelection();
+                            }
                         }, 100);
                     }
                 }
+                
+                // Preseleccionar la materia en el modal
+                setTimeout(() => {
+                    if (typeof clearBulkSelectedSubjects === 'function') {
+                        clearBulkSelectedSubjects();
+                    }
+                    if (subject && typeof addBulkSelectedSubject === 'function') {
+                        addBulkSelectedSubject({
+                            id: parseInt(subject.ID_materia),
+                            name: subject.Nombre,
+                            curso: subject.Curso_division || ''
+                        });
+                    }
+                    if (typeof populateBulkStudentSubjectsSelect === 'function') {
+                        populateBulkStudentSubjectsSelect();
+                    }
+                }, 200);
                 
                 // Open modal
                 if (typeof showModal === 'function') {
