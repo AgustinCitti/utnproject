@@ -4100,7 +4100,19 @@ async function processBulkStudents() {
         return;
     }
     
-    const subjectIds = courseSubjects.map(s => parseInt(s.ID_materia));
+    const subjectIds = courseSubjects.map(s => parseInt(s.ID_materia)).filter(id => !isNaN(id) && id > 0);
+    
+    // Log para debug
+    console.log('Materias seleccionadas para asignar:', {
+        courseSubjects: courseSubjects.map(s => ({ id: s.ID_materia, nombre: s.Nombre })),
+        subjectIds: subjectIds,
+        selectedBulkSubjects: selectedBulkSubjects
+    });
+    
+    if (subjectIds.length === 0) {
+        alert('No se encontraron IDs válidos de materias para asignar.');
+        return;
+    }
     
     // Procesar estudiantes uno por uno
     let successCount = 0;
@@ -4161,12 +4173,15 @@ async function processBulkStudents() {
                     throw new Error('No se pudo obtener el ID del estudiante creado');
                 }
                 
-                // Asignar el estudiante a todas las materias del curso
+                // Asignar el estudiante a todas las materias seleccionadas
                 const enrollmentRelations = subjectIds.map(materiaId => ({
                     Materia_ID_materia: materiaId,
                     Estudiante_ID_Estudiante: studentId,
                     Estado: 'INSCRITO'
                 }));
+                
+                // Log para debug
+                console.log(`Asignando estudiante ${studentId} (${student.Nombre} ${student.Apellido}) a ${enrollmentRelations.length} materia(s):`, enrollmentRelations);
                 
                 const enrollmentResponse = await fetch('../api/alumnos_x_materia.php', {
                     method: 'POST',
@@ -4177,9 +4192,21 @@ async function processBulkStudents() {
                 
                 const enrollmentResult = await enrollmentResponse.json().catch(() => ({}));
                 
+                // Log para debug
+                console.log(`Respuesta de asignación de materias para ${student.Nombre} ${student.Apellido}:`, enrollmentResult);
+                
                 if (!enrollmentResponse.ok && enrollmentResponse.status !== 207) {
                     // 207 es "Multi-Status" - algunos pueden haber fallado, pero otros pueden haber funcionado
                     console.warn(`Error asignando materias a ${student.Nombre} ${student.Apellido}:`, enrollmentResult.message);
+                } else if (enrollmentResponse.status === 207 || enrollmentResponse.status === 201) {
+                    // Verificar cuántas materias se insertaron realmente
+                    const insertedCount = enrollmentResult.inserted ? enrollmentResult.inserted.length : 0;
+                    if (insertedCount < enrollmentRelations.length) {
+                        console.warn(`Solo se insertaron ${insertedCount} de ${enrollmentRelations.length} materias para ${student.Nombre} ${student.Apellido}`);
+                        if (enrollmentResult.warnings && enrollmentResult.warnings.length > 0) {
+                            console.warn('Advertencias:', enrollmentResult.warnings);
+                        }
+                    }
                 }
                 
                 successCount++;

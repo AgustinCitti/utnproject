@@ -151,13 +151,23 @@ try {
 			
 			// Log para debug
 			error_log("alumnos_x_materia POST recibido: " . json_encode($body));
+			error_log("Tipo de body: " . gettype($body) . ", es array: " . (is_array($body) ? 'sí' : 'no'));
+			if (is_array($body)) {
+				error_log("Cantidad de elementos: " . count($body));
+				if (count($body) > 0) {
+					error_log("Primer elemento es array: " . (is_array($body[0]) ? 'sí' : 'no'));
+				}
+			}
 			
 			if (empty($body)) {
 				respond(400, ['success' => false, 'message' => 'Body vacío']);
 			}
 			
 			// Puede ser un solo registro o múltiples
-			if (isset($body[0]) && is_array($body[0])) {
+			// Verificar si es un array numérico (múltiples registros)
+			$isMultiple = is_array($body) && isset($body[0]) && is_array($body[0]) && isset($body[0]['Materia_ID_materia']);
+			
+			if ($isMultiple) {
 				// Múltiples inserciones (array de objetos)
 				$inserted = [];
 				$errors = [];
