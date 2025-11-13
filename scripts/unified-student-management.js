@@ -426,6 +426,19 @@ function loadUnifiedStudentData() {
             : '';
         const displayEstado = getStudentDisplayEstado(student);
         
+        // Obtener curso/división del estudiante basado en sus materias inscritas
+        const studentEnrollments = (appData.alumnos_x_materia || []).filter(
+            axm => parseInt(axm.Estudiante_ID_Estudiante) === studentIdNum
+        );
+        const enrolledSubjectIds = studentEnrollments.map(axm => parseInt(axm.Materia_ID_materia));
+        const enrolledSubjects = (appData.materia || []).filter(
+            m => enrolledSubjectIds.includes(parseInt(m.ID_materia))
+        );
+        const uniqueCourses = [...new Set(enrolledSubjects.map(s => s.Curso_division).filter(Boolean))];
+        const courseDisplay = uniqueCourses.length > 0 
+            ? uniqueCourses.join(', ') 
+            : 'Sin asignar';
+        
         return `
             <div class="${cardClass}" onclick="showStudentDetail(${parseInt(student.ID_Estudiante)})" style="cursor: pointer;">
                 <div class="card-header">
@@ -435,7 +448,7 @@ function loadUnifiedStudentData() {
                     <div class="student-info">
                         <h3 class="student-name">${student.Nombre} ${student.Apellido}${intensificadorLabel}</h3>
                         <p class="student-id">ID: ${student.ID_Estudiante}</p>
-                        <p class="student-course">Estudiante</p>
+                        <p class="student-course">${courseDisplay}</p>
                     </div>
                     <div class="student-actions">
                         ${isIntensificador ? `
@@ -605,6 +618,19 @@ function loadUnifiedStudentData() {
                         const rowStyle = isIntensificador ? 'background-color: #fff3e0; border-left: 3px solid #ff9800;' : '';
                         const displayEstado = getStudentDisplayEstado(student);
                         
+                        // Obtener curso/división del estudiante basado en sus materias inscritas
+                        const studentEnrollments = (appData.alumnos_x_materia || []).filter(
+                            axm => parseInt(axm.Estudiante_ID_Estudiante) === studentIdNum
+                        );
+                        const enrolledSubjectIds = studentEnrollments.map(axm => parseInt(axm.Materia_ID_materia));
+                        const enrolledSubjects = (appData.materia || []).filter(
+                            m => enrolledSubjectIds.includes(parseInt(m.ID_materia))
+                        );
+                        const uniqueCourses = [...new Set(enrolledSubjects.map(s => s.Curso_division).filter(Boolean))];
+                        const courseDisplay = uniqueCourses.length > 0 
+                            ? uniqueCourses.join(', ') 
+                            : 'Sin asignar';
+                        
                         return `
                             <tr onclick="showStudentDetail(${parseInt(student.ID_Estudiante)})" class="clickable-row" style="${rowStyle}; cursor: pointer;">
                                 <td>
@@ -618,7 +644,7 @@ function loadUnifiedStudentData() {
                                         </div>
                                     </div>
                                 </td>
-                                <td>Estudiante</td>
+                                <td>${courseDisplay}</td>
                                 <td>
                                     <span class="table-status grade-${averageGrade >= 8.0 ? 'excellent' : averageGrade >= 6.0 ? 'good' : 'poor'}">
                                         ${averageGrade.toFixed(1)}
@@ -4049,8 +4075,18 @@ async function processBulkStudents() {
         return;
     }
     
-    // Confirmar antes de proceder
-    const confirmMessage = `¿Deseas crear ${validStudents.length} alumno(s) para el curso "${courseDivision}"?`;
+    // Obtener materias seleccionadas del modal (antes de la confirmación para mostrarlas)
+    const selectedBulkSubjects = getBulkSelectedSubjects();
+    
+    // Preparar mensaje de confirmación con información de materias
+    let confirmMessage = `¿Deseas crear ${validStudents.length} alumno(s) para el curso "${courseDivision}"?`;
+    
+    // Si hay materias seleccionadas manualmente, mostrarlas en el mensaje
+    if (selectedBulkSubjects && selectedBulkSubjects.length > 0) {
+        const materiasNombres = selectedBulkSubjects.map(s => s.name).join(', ');
+        confirmMessage += `\n\nMaterias seleccionadas (${selectedBulkSubjects.length}): ${materiasNombres}`;
+    }
+    
     if (!confirm(confirmMessage)) {
         return;
     }
@@ -4064,8 +4100,8 @@ async function processBulkStudents() {
         return;
     }
     
-    // Obtener materias seleccionadas del modal
-    const selectedBulkSubjects = getBulkSelectedSubjects();
+    // Las materias seleccionadas ya se obtuvieron antes de la confirmación
+    // selectedBulkSubjects ya está definido arriba
     
     let courseSubjects = [];
     const targetSubjectId = bulkModal && bulkModal.dataset.subjectId
@@ -4079,12 +4115,18 @@ async function processBulkStudents() {
             courseSubjects = [targetSubject];
         }
     } 
-    // Si hay materias seleccionadas en el modal, usar esas
+    // Si hay materias seleccionadas en el modal, usar esas (prioridad sobre el curso seleccionado)
     else if (selectedBulkSubjects && selectedBulkSubjects.length > 0) {
         courseSubjects = selectedBulkSubjects.map(subj => {
             const materia = (appData.materia || []).find(m => parseInt(m.ID_materia) === parseInt(subj.id));
             return materia;
-        }).filter(m => m !== undefined);
+        }).filter(m => m !== undefined && m !== null);
+        
+        // Validar que todas las materias seleccionadas pertenezcan al docente
+        courseSubjects = courseSubjects.filter(m => 
+            m.Usuarios_docente_ID_docente === teacherId &&
+            (!m.Estado || m.Estado === 'ACTIVA')
+        );
     }
     // Si no hay materias seleccionadas, obtener todas las materias del curso (comportamiento por defecto)
     else {
@@ -4104,13 +4146,21 @@ async function processBulkStudents() {
     
     // Log para debug
     console.log('Materias seleccionadas para asignar:', {
-        courseSubjects: courseSubjects.map(s => ({ id: s.ID_materia, nombre: s.Nombre })),
+        courseSubjects: courseSubjects.map(s => ({ id: s.ID_materia, nombre: s.Nombre, curso: s.Curso_division })),
         subjectIds: subjectIds,
-        selectedBulkSubjects: selectedBulkSubjects
+        selectedBulkSubjects: selectedBulkSubjects,
+        courseDivision: courseDivision,
+        totalMaterias: courseSubjects.length
     });
     
     if (subjectIds.length === 0) {
         alert('No se encontraron IDs válidos de materias para asignar.');
+        return;
+    }
+    
+    // Validar que hay al menos una materia
+    if (courseSubjects.length === 0) {
+        alert('No hay materias válidas para asignar. Verifica que las materias seleccionadas pertenezcan al docente y estén activas.');
         return;
     }
     
