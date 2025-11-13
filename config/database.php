@@ -11,8 +11,10 @@ define('DB_USER', 'root');
 define('DB_PASS', ''); // Cambia si tu MySQL tiene contraseña
 define('DB_CHARSET', 'utf8mb4');
 
+
+
 // Session Configuration
-define('SESSION_LIFETIME', 3600); // 1 hora
+define('SESSION_LIFETIME', 1800); // 1 hora
 
 // Application Configuration
 define('APP_NAME', 'EduSync');
