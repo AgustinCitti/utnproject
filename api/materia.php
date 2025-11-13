@@ -325,7 +325,8 @@ try {
 			if (!$id) respond(400, ['success'=>false,'message'=>'Falta id']);
 
 			// Autorización: Solo el profesor de la materia o un admin pueden eliminar.
-			$stmt = $db->prepare("SELECT Usuarios_docente_ID_docente FROM Materia WHERE ID_materia = ?");
+			// Obtener información de la materia antes de eliminarla (incluyendo Curso_division para verificar si eliminar el curso)
+			$stmt = $db->prepare("SELECT Usuarios_docente_ID_docente, Curso_division FROM Materia WHERE ID_materia = ?");
 			$stmt->execute([$id]);
 			$materia = $stmt->fetch();
 			if (!$materia) {
@@ -334,6 +335,10 @@ try {
 			if ($loggedInUserRole !== 'ADMIN' && $materia['Usuarios_docente_ID_docente'] != $loggedInUserId) {
 				respond(403, ['success' => false, 'message' => 'Acceso denegado. No tienes permiso para eliminar esta materia.']);
 			}
+			
+			// Guardar información del curso para verificar después de eliminar la materia
+			$cursoDivision = $materia['Curso_division'];
+			$docenteId = (int)$materia['Usuarios_docente_ID_docente'];
 			
 			try {
 				$db->beginTransaction();
@@ -451,13 +456,90 @@ try {
 				// Finally delete the materia
 				$stmt = $db->prepare("DELETE FROM Materia WHERE ID_materia = ?");
 				$stmt->execute([$id]);
+				$deletedMateria = $stmt->rowCount();
 
+				// Verify that the materia was actually deleted
+				if ($deletedMateria === 0) {
+					throw new Exception("No se pudo eliminar la materia. La materia no existe o ya fue eliminada.");
+				}
+
+				// Check if the curso should be deleted (if no more materias exist for this curso_division and docente)
+				// This must be done BEFORE commit to ensure it's part of the same transaction
+				$deletedCurso = 0;
+				if ($cursoDivision && $cursoDivision !== 'Sin asignar') {
+					// Check if there are any remaining materias with this curso_division and docente
+					$remainingMateriasStmt = $db->prepare("
+						SELECT COUNT(*) as count 
+						FROM Materia 
+						WHERE Curso_division = ? 
+						  AND Usuarios_docente_ID_docente = ?
+					");
+					$remainingMateriasStmt->execute([$cursoDivision, $docenteId]);
+					$remainingMaterias = $remainingMateriasStmt->fetch();
+					
+					// If no materias remain, delete the curso
+					if ($remainingMaterias && (int)$remainingMaterias['count'] === 0) {
+						// Check if table Curso exists
+						$cursoTableExists = false;
+						try {
+							$checkTableStmt = $db->query("SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'Curso'");
+							$tableCheck = $checkTableStmt->fetch();
+							$cursoTableExists = $tableCheck && $tableCheck['count'] > 0;
+						} catch (Exception $e) {
+							// Table doesn't exist, skip curso deletion
+							$cursoTableExists = false;
+						}
+						
+						if ($cursoTableExists) {
+							// Find the curso by Curso_division and docente
+							$findCursoStmt = $db->prepare("
+								SELECT ID_curso 
+								FROM Curso 
+								WHERE Curso_division = ? 
+								  AND Usuarios_docente_ID_docente = ?
+								LIMIT 1
+							");
+							$findCursoStmt->execute([$cursoDivision, $docenteId]);
+							$cursoToDelete = $findCursoStmt->fetch();
+							
+							if ($cursoToDelete) {
+								$cursoId = (int)$cursoToDelete['ID_curso'];
+								$deleteCursoStmt = $db->prepare("DELETE FROM Curso WHERE ID_curso = ?");
+								$deleteCursoStmt->execute([$cursoId]);
+								$deletedCurso = $deleteCursoStmt->rowCount();
+								
+								if ($deletedCurso > 0) {
+									error_log("Curso {$cursoId} ({$cursoDivision}) eliminado automáticamente porque no quedan materias asociadas.");
+								}
+							}
+						}
+					}
+				}
+
+				// Commit the transaction
 				$db->commit();
+
+				// Verify deletion after commit
+				$verifyStmt = $db->prepare("SELECT COUNT(*) as count FROM Materia WHERE ID_materia = ?");
+				$verifyStmt->execute([$id]);
+				$verifyResult = $verifyStmt->fetch();
+				
+				if ($verifyResult && $verifyResult['count'] > 0) {
+					error_log("ADVERTENCIA: La materia {$id} aún existe después del commit. Posible problema de transacción.");
+					throw new Exception("La materia no se eliminó correctamente de la base de datos.");
+				}
+
+				$responseMessage = 'Materia eliminada correctamente';
+				if ($deletedCurso > 0) {
+					$responseMessage .= '. El curso asociado también fue eliminado automáticamente porque no quedaban materias.';
+				}
 
 				respond(200, [
 					'success' => true,
+					'message' => $responseMessage,
 					'deleted_nivel' => [
-						'materia' => 1,
+						'materia' => $deletedMateria,
+						'curso' => $deletedCurso,
 						'evaluaciones' => $deletedEvaluaciones,
 						'notas' => $deletedNotas,
 						'contenidos' => $deletedContenidos,
@@ -474,10 +556,10 @@ try {
 				if ($db->inTransaction()) {
 					$db->rollBack();
 				}
-				error_log("Error eliminando materia {$id}: " . $deleteError->getMessage());
+				error_log("Error eliminando materia {$id}: " . $deleteError->getMessage() . " | Trace: " . $deleteError->getTraceAsString());
 				respond(500, [
 					'success' => false,
-					'message' => 'Error al eliminar la materia',
+					'message' => 'Error al eliminar la materia: ' . $deleteError->getMessage(),
 					'error' => $deleteError->getMessage()
 				]);
 			}

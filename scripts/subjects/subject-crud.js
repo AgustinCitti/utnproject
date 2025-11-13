@@ -720,11 +720,19 @@
             try {
                 data = JSON.parse(text);
             } catch (e) {
-                throw new Error(`Error del servidor (${res.status})`);
+                console.error('Error parsing response:', text);
+                throw new Error(`Error del servidor (${res.status}): ${text.substring(0, 100)}`);
             }
             
-            if (!res.ok) {
-                throw new Error(data.message || 'No se pudo eliminar la materia');
+            if (!res.ok || !data.success) {
+                const errorMsg = data.message || data.error || 'No se pudo eliminar la materia';
+                console.error('Error eliminando materia:', data);
+                throw new Error(errorMsg);
+            }
+            
+            // Verify that the materia was actually deleted
+            if (data.deleted_nivel && data.deleted_nivel.materia === 0) {
+                throw new Error('La materia no se eliminó correctamente. Verifica los logs del servidor.');
             }
             
             // Reload data from backend
@@ -741,8 +749,19 @@
             if (typeof loadUnifiedStudentData === 'function') loadUnifiedStudentData();
             if (typeof updateDashboard === 'function') updateDashboard();
             
-            alert('Materia eliminada correctamente');
+            // If a curso was also deleted, reload courses list
+            if (data.deleted_nivel && data.deleted_nivel.curso > 0) {
+                if (typeof loadCourses === 'function') {
+                    await loadCourses();
+                }
+                if (typeof populateCourseDivisionDropdown === 'function') {
+                    await populateCourseDivisionDropdown();
+                }
+            }
+            
+            alert(data.message || 'Materia eliminada correctamente');
         } catch (err) {
+            console.error('Error en deleteSubject:', err);
             alert(err.message || 'Error al eliminar la materia');
         }
     }
