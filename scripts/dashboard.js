@@ -326,16 +326,20 @@ function setupQuickActions() {
                     }, 100);
                     break;
                 case 'grades':
-                    // Navigate to grade marking section
-                    showSection('grade-marking');
+                    // Navigate to exams section (student-management with exams subsection)
+                    showSection('student-management', 'exams');
                     setTimeout(() => {
-                        if (typeof showGradeMarkingView === 'function') {
-                            showGradeMarkingView();
-                        } else {
-                            const gradeMarkingView = document.getElementById('gradeMarkingView');
-                            if (gradeMarkingView) {
-                                gradeMarkingView.style.display = 'block';
-                            }
+                        // Ensure exams tab is active
+                        const examsTab = document.getElementById('examsTab');
+                        if (examsTab) {
+                            examsTab.click();
+                        }
+                        // Load exams data
+                        if (typeof loadExams === 'function') {
+                            loadExams();
+                        }
+                        if (typeof loadUnifiedStudentData === 'function') {
+                            loadUnifiedStudentData();
                         }
                     }, 100);
                     break;
