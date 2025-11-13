@@ -129,9 +129,14 @@ function initializeStudentModalOverride() {
             if (typeof populateStudentSubjectsSelect === 'function') {
                 populateStudentSubjectsSelect();
             }
-            if (typeof populateStudentTopicsSelect === 'function') {
-                populateStudentTopicsSelect();
-            }
+            
+            // Initialize topics container visibility based on status
+            // This ensures the topics dropdown is hidden by default for new students
+            setTimeout(() => {
+                if (typeof toggleIntensificacionThemes === 'function') {
+                    toggleIntensificacionThemes();
+                }
+            }, 50);
             
             // Check if we're creating a student for a specific materia
             // This flag is set when clicking "Add Student" from materia details

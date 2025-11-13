@@ -504,6 +504,14 @@ window.editStudent = function(id) {
                 setSelectedIntensificacionThemes([]);
             }
         }
+        
+        // Toggle topics dropdown visibility based on status
+        // This ensures the topics dropdown is shown/hidden correctly
+        setTimeout(() => {
+            if (typeof toggleIntensificacionThemes === 'function') {
+                toggleIntensificacionThemes();
+            }
+        }, 50);
     }
     
     // Clear and populate selected subjects

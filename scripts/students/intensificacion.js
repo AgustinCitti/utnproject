@@ -13,18 +13,45 @@
 window.toggleIntensificacionThemes = function() {
     const studentStatus = document.getElementById('studentStatus');
     const themesContainer = document.getElementById('intensificacionThemesContainer');
+    const topicsContainer = document.getElementById('studentTopicsContainer');
     
-    if (!studentStatus || !themesContainer) return;
+    if (!studentStatus) return;
     
-    if (studentStatus.value === 'INTENSIFICA') {
-        themesContainer.style.display = 'block';
-        loadIntensificacionThemes();
-    } else {
-        themesContainer.style.display = 'none';
-        if (typeof clearSelectedIntensificacionThemes === 'function') {
-            clearSelectedIntensificacionThemes();
+    const isIntensifica = studentStatus.value === 'INTENSIFICA';
+    
+    // Toggle intensification themes container
+    if (themesContainer) {
+        if (isIntensifica) {
+            themesContainer.style.display = 'block';
+            loadIntensificacionThemes();
+        } else {
+            themesContainer.style.display = 'none';
+            if (typeof clearSelectedIntensificacionThemes === 'function') {
+                clearSelectedIntensificacionThemes();
+            }
+            renderIntensificacionThemes();
         }
-        renderIntensificacionThemes();
+    }
+    
+    // Hide topics selector dropdown when INTENSIFICA is selected
+    // The intensification themes container (with checkboxes) is used instead
+    if (topicsContainer) {
+        // Always hide the dropdown selector - intensification uses the checkbox container instead
+        topicsContainer.style.display = 'none';
+        // Clear selected topics when hiding
+        const topicsSelect = document.getElementById('studentTopics');
+        if (topicsSelect) {
+            topicsSelect.value = '';
+        }
+        const selectedTopicsContainer = document.getElementById('selectedTopicsContainer');
+        if (selectedTopicsContainer) {
+            selectedTopicsContainer.style.display = 'none';
+            selectedTopicsContainer.innerHTML = '';
+        }
+        // Clear selected topics from memory if function exists
+        if (typeof clearSelectedTopics === 'function') {
+            clearSelectedTopics();
+        }
     }
 };
 
