@@ -4739,13 +4739,37 @@ function setupGradeStudentsRealTimeEditors(modal, evaluacionId) {
             }
             
             try {
+                // Validate calificacion before sending
+                let calificacionValue = null;
+                if (calificacion && calificacion.trim() !== '') {
+                    const parsed = parseFloat(calificacion);
+                    if (!isNaN(parsed) && parsed >= 1 && parsed <= 10) {
+                        calificacionValue = parsed;
+                    } else {
+                        alert('La calificación debe estar entre 1 y 10');
+                        this.value = originalValue;
+                        return;
+                    }
+                }
+                
                 const payload = {
                     Evaluacion_ID_evaluacion: parseInt(evaluacionId),
                     Estudiante_ID_Estudiante: estudianteId,
-                    Calificacion: calificacion ? parseFloat(calificacion) : null,
+                    Calificacion: calificacionValue,
                     Observacion: null,
                     Estado: 'DEFINITIVA'
                 };
+                
+                // Don't send if calificacion is null/empty (user hasn't entered a grade yet)
+                if (!calificacionValue) {
+                    // If there's no notaId and no calificacion, don't create a nota yet
+                    if (!notaId) {
+                        return; // Wait for user to enter a valid grade
+                    }
+                    // If there's a notaId but no calificacion, we might want to delete it or keep it
+                    // For now, we'll skip the update if there's no calificacion
+                    return;
+                }
                 
                 let response;
                 if (notaId) {
@@ -4766,12 +4790,35 @@ function setupGradeStudentsRealTimeEditors(modal, evaluacionId) {
                     });
                 }
                 
+                // Get response text first to handle potential non-JSON responses
+                const responseText = await response.text();
+                
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
+                    let errorData = {};
+                    try {
+                        errorData = JSON.parse(responseText);
+                    } catch (e) {
+                        // If response is not JSON, use the text as error message
+                        throw new Error(`Error del servidor (${response.status}): ${responseText.substring(0, 200)}`);
+                    }
                     throw new Error(errorData.message || 'Error al guardar la calificación');
                 }
                 
-                const result = await response.json();
+                // Parse JSON response
+                let result = {};
+                try {
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('Error parsing JSON response (calificacion):', {
+                        error: e.message,
+                        responseText: responseText,
+                        responseLength: responseText.length,
+                        firstChars: responseText.substring(0, 200),
+                        status: response.status,
+                        statusText: response.statusText
+                    });
+                    throw new Error(`Error al procesar la respuesta del servidor. La respuesta no es JSON válido. Respuesta recibida: ${responseText.substring(0, 100)}...`);
+                }
                 if (result.id) {
                     this.dataset.notaId = result.id;
                 }
@@ -4848,12 +4895,35 @@ function setupGradeStudentsRealTimeEditors(modal, evaluacionId) {
                     });
                 }
                 
+                // Get response text first to handle potential non-JSON responses
+                const responseText = await response.text();
+                
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
+                    let errorData = {};
+                    try {
+                        errorData = JSON.parse(responseText);
+                    } catch (e) {
+                        // If response is not JSON, use the text as error message
+                        throw new Error(`Error del servidor (${response.status}): ${responseText.substring(0, 200)}`);
+                    }
                     throw new Error(errorData.message || 'Error al guardar el estado de ausente');
                 }
                 
-                const result = await response.json();
+                // Parse JSON response
+                let result = {};
+                try {
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('Error parsing JSON response (ausente):', {
+                        error: e.message,
+                        responseText: responseText,
+                        responseLength: responseText.length,
+                        firstChars: responseText.substring(0, 200),
+                        status: response.status,
+                        statusText: response.statusText
+                    });
+                    throw new Error(`Error al procesar la respuesta del servidor. La respuesta no es JSON válido. Respuesta recibida: ${responseText.substring(0, 100)}...`);
+                }
                 if (result.id && calificacionInput) {
                     calificacionInput.dataset.notaId = result.id;
                 }
@@ -4924,12 +4994,35 @@ function setupGradeStudentsRealTimeEditors(modal, evaluacionId) {
                     });
                 }
                 
+                // Get response text first to handle potential non-JSON responses
+                const responseText = await response.text();
+                
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
+                    let errorData = {};
+                    try {
+                        errorData = JSON.parse(responseText);
+                    } catch (e) {
+                        // If response is not JSON, use the text as error message
+                        throw new Error(`Error del servidor (${response.status}): ${responseText.substring(0, 200)}`);
+                    }
                     throw new Error(errorData.message || 'Error al guardar las observaciones');
                 }
                 
-                const result = await response.json();
+                // Parse JSON response
+                let result = {};
+                try {
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('Error parsing JSON response (observacion):', {
+                        error: e.message,
+                        responseText: responseText,
+                        responseLength: responseText.length,
+                        firstChars: responseText.substring(0, 200),
+                        status: response.status,
+                        statusText: response.statusText
+                    });
+                    throw new Error(`Error al procesar la respuesta del servidor. La respuesta no es JSON válido. Respuesta recibida: ${responseText.substring(0, 100)}...`);
+                }
                 if (result.id && calificacionInput) {
                     calificacionInput.dataset.notaId = result.id;
                 }

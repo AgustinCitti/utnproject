@@ -1,11 +1,21 @@
 <?php
 // C:\xampp\htdocs\utnproject\api\notas.php
+// Disable output buffering and error display to prevent non-JSON output
+ob_start();
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, Accept');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { 
+    ob_end_clean();
+    http_response_code(204); 
+    exit; 
+}
 
 // Incluir configuración de base de datos
 require_once __DIR__ . '/../config/database.php';
@@ -13,7 +23,16 @@ require_once __DIR__ . '/../config/database.php';
 // Iniciar sesión para obtener el docente logueado
 session_start();
 
-function respond($code, $data) { http_response_code($code); echo json_encode($data); exit; }
+// Clear any output that might have been generated
+ob_end_clean();
+
+function respond($code, $data) { 
+    // Ensure no output before JSON
+    ob_clean();
+    http_response_code($code); 
+    echo json_encode($data, JSON_UNESCAPED_UNICODE); 
+    exit; 
+}
 
 function pdo() {
 	try {
@@ -149,6 +168,10 @@ try {
 				$observacionText = isset($body['Observacion']) && $body['Observacion'] !== '' ? trim($body['Observacion']) : 'AUSENTE';
 				$Observacion = $observacionText;
 			} else {
+				// Check if Calificacion is null or empty
+				if (!isset($body['Calificacion']) || $body['Calificacion'] === null || $body['Calificacion'] === '') {
+					respond(400, ['success'=>false,'message'=>'La calificación es requerida']);
+				}
 				$Calificacion = (float)$body['Calificacion'];
 				// Validar calificación (1.00 a 10.00)
 				if ($Calificacion < 1 || $Calificacion > 10) {
@@ -396,6 +419,10 @@ try {
 	}
 
 } catch (Throwable $e) {
+	// Log error to server log
+	error_log("Error en notas.php: " . $e->getMessage());
+	error_log("Stack trace: " . $e->getTraceAsString());
+	
 	// En desarrollo, mostrar el error completo. En producción, ocultar detalles.
 	$errorDetails = [
 		'success' => false,
@@ -404,6 +431,9 @@ try {
 		'file' => $e->getFile(),
 		'line' => $e->getLine()
 	];
+	
+	// Ensure no output before JSON
+	ob_clean();
 	respond(500, $errorDetails);
 }
 
