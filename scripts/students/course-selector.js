@@ -7,8 +7,9 @@
 
 /**
  * Populate the course select dropdown with available courses from the teacher's subjects
+ * Primero intenta obtener los cursos desde la API (tabla Curso), luego usa las materias como fallback
  */
-function populateStudentCourseSelect() {
+async function populateStudentCourseSelect() {
     const courseSelect = document.getElementById('studentCourse');
     if (!courseSelect) return;
     
@@ -21,13 +22,39 @@ function populateStudentCourseSelect() {
         return;
     }
     
-    // Get all unique curso_division values from teacher's subjects
+    const uniqueCourses = [];
+    
+    // Primero, intentar obtener cursos desde la API (tabla Curso)
+    try {
+        const response = await fetch(`api/curso.php?userId=${userIdString}&estado=ACTIVO`);
+        const result = await response.json();
+        if (result.success && result.data && Array.isArray(result.data)) {
+            result.data.forEach(c => {
+                if (c.Curso_division && c.Estado === 'ACTIVO' && !uniqueCourses.includes(c.Curso_division)) {
+                    uniqueCourses.push(c.Curso_division);
+                }
+            });
+        }
+    } catch (error) {
+        console.warn('Error al cargar cursos desde API:', error);
+    }
+    
+    // SIEMPRE combinar con los cursos de las materias (no solo como fallback)
+    // Esto asegura que los cursos cargados desde materias también aparezcan
     const teacherSubjects = (appData.materia || []).filter(m => 
         m.Usuarios_docente_ID_docente === teacherId && 
         (!m.Estado || m.Estado === 'ACTIVA')
     );
     
-    const uniqueCourses = [...new Set(teacherSubjects.map(s => s.Curso_division).filter(Boolean))].sort();
+    const coursesFromSubjects = [...new Set(teacherSubjects.map(s => s.Curso_division).filter(Boolean))];
+    coursesFromSubjects.forEach(course => {
+        if (course && !uniqueCourses.includes(course)) {
+            uniqueCourses.push(course);
+        }
+    });
+    
+    // Ordenar cursos
+    uniqueCourses.sort();
     
     // Clear current options
     courseSelect.innerHTML = '<option value="">- Seleccionar Curso (Opcional) -</option>';
@@ -39,6 +66,14 @@ function populateStudentCourseSelect() {
         option.textContent = course;
         courseSelect.appendChild(option);
     });
+    
+    // Si no hay cursos disponibles, mostrar mensaje pero no deshabilitar
+    if (uniqueCourses.length === 0) {
+        courseSelect.innerHTML = '<option value="">- No hay cursos disponibles (puedes seleccionar materias manualmente) -</option>';
+        courseSelect.disabled = false; // No deshabilitar para permitir selección manual de materias
+    } else {
+        courseSelect.disabled = false;
+    }
     
     // Add event listener for course selection (only once)
     if (!courseSelect._hasCourseListener) {

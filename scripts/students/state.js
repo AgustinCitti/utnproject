@@ -135,7 +135,17 @@ function getSelectedIntensificacionThemes() {
  * @param {Array} themes - Array of theme IDs
  */
 function setSelectedIntensificacionThemes(themes) {
-    selectedIntensificacionThemes = Array.isArray(themes) ? themes : [];
+    if (!Array.isArray(themes)) {
+        selectedIntensificacionThemes = [];
+        return;
+    }
+    
+    // Normalizar todos los IDs a números para consistencia
+    selectedIntensificacionThemes = themes
+        .map(id => parseInt(id))
+        .filter(id => !isNaN(id));
+    
+    console.log('setSelectedIntensificacionThemes:', selectedIntensificacionThemes);
 }
 
 /**
@@ -143,8 +153,19 @@ function setSelectedIntensificacionThemes(themes) {
  * @param {number} themeId - The theme ID to add
  */
 function addSelectedIntensificacionTheme(themeId) {
-    if (!selectedIntensificacionThemes.includes(themeId)) {
-        selectedIntensificacionThemes.push(themeId);
+    // Normalizar el ID a número para consistencia
+    const normalizedId = parseInt(themeId);
+    if (isNaN(normalizedId)) {
+        console.error('addSelectedIntensificacionTheme: ID inválido', themeId);
+        return;
+    }
+    
+    // Normalizar todos los IDs existentes para comparación
+    const normalizedExisting = selectedIntensificacionThemes.map(id => parseInt(id)).filter(id => !isNaN(id));
+    
+    if (!normalizedExisting.includes(normalizedId)) {
+        selectedIntensificacionThemes.push(normalizedId);
+        console.log('Tema agregado:', normalizedId, 'Total:', selectedIntensificacionThemes);
     }
 }
 
@@ -153,7 +174,19 @@ function addSelectedIntensificacionTheme(themeId) {
  * @param {number} themeId - The theme ID to remove
  */
 function removeSelectedIntensificacionTheme(themeId) {
-    selectedIntensificacionThemes = selectedIntensificacionThemes.filter(id => id !== themeId);
+    // Normalizar el ID a número para consistencia
+    const normalizedId = parseInt(themeId);
+    if (isNaN(normalizedId)) {
+        console.error('removeSelectedIntensificacionTheme: ID inválido', themeId);
+        return;
+    }
+    
+    // Normalizar todos los IDs y filtrar
+    selectedIntensificacionThemes = selectedIntensificacionThemes
+        .map(id => parseInt(id))
+        .filter(id => !isNaN(id) && id !== normalizedId);
+    
+    console.log('Tema eliminado:', normalizedId, 'Total:', selectedIntensificacionThemes);
 }
 
 /**

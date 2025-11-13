@@ -233,12 +233,19 @@ try {
         }
 
         // Insertar nuevo estudiante
-        // Verificar si la columna INTENSIFICA existe
+        // Verificar si las columnas INTENSIFICA y Curso_ID_curso existen
         try {
             $stmtCheck = $pdo->query("SHOW COLUMNS FROM Estudiante LIKE 'INTENSIFICA'");
             $hasIntensificaColumn = $stmtCheck->rowCount() > 0;
         } catch (Exception $e) {
             $hasIntensificaColumn = false;
+        }
+        
+        try {
+            $stmtCheck = $pdo->query("SHOW COLUMNS FROM Estudiante LIKE 'Curso_ID_curso'");
+            $hasCursoIdColumn = $stmtCheck->rowCount() > 0;
+        } catch (Exception $e) {
+            $hasCursoIdColumn = false;
         }
         
         // Si es INTENSIFICA, marcar la columna INTENSIFICA=TRUE y Estado='ACTIVO'
@@ -247,32 +254,38 @@ try {
         $esIntensifica = ($estadoInput === 'INTENSIFICA');
         $estadoParaBD = $esIntensifica ? 'ACTIVO' : ($estadoInput ?? 'ACTIVO');
         
+        // Obtener Curso_ID_curso si se proporciona
+        $cursoId = isset($data['Curso_ID_curso']) ? (int)$data['Curso_ID_curso'] : null;
+        
+        // Construir SQL dinámicamente según las columnas disponibles
+        $columns = ['Apellido', 'Nombre', 'Email', 'Fecha_nacimiento', 'Estado'];
+        $values = [
+            $data['Apellido'],
+            $data['Nombre'],
+            $data['Email'] ?? null,
+            $data['Fecha_nacimiento'] ?? null,
+            $estadoParaBD
+        ];
+        
         if ($hasIntensificaColumn) {
-            $sql = "INSERT INTO Estudiante (Apellido, Nombre, Email, Fecha_nacimiento, Estado, INTENSIFICA) 
-                    VALUES (?, ?, ?, ?, ?, ?)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
-                $data['Apellido'],
-                $data['Nombre'],
-                $data['Email'] ?? null,
-                $data['Fecha_nacimiento'] ?? null,
-                $estadoParaBD,
-                $esIntensifica ? 1 : 0  // BOOLEAN en MySQL: 1 = TRUE, 0 = FALSE
-            ]);
-        } else {
-            // Fallback: usar lógica anterior (guardar como INACTIVO si es INTENSIFICA)
-            $estadoParaBD = $esIntensifica ? 'INACTIVO' : ($estadoInput ?? 'ACTIVO');
-            $sql = "INSERT INTO Estudiante (Apellido, Nombre, Email, Fecha_nacimiento, Estado) 
-                    VALUES (?, ?, ?, ?, ?)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
-                $data['Apellido'],
-                $data['Nombre'],
-                $data['Email'] ?? null,
-                $data['Fecha_nacimiento'] ?? null,
-                $estadoParaBD
-            ]);
+            $columns[] = 'INTENSIFICA';
+            $values[] = $esIntensifica ? 1 : 0;
         }
+        
+        if ($hasCursoIdColumn && $cursoId) {
+            // Verificar que el curso existe
+            $stmtCheck = $pdo->prepare("SELECT ID_curso FROM Curso WHERE ID_curso = ?");
+            $stmtCheck->execute([$cursoId]);
+            if ($stmtCheck->fetch()) {
+                $columns[] = 'Curso_ID_curso';
+                $values[] = $cursoId;
+            }
+        }
+        
+        $sql = "INSERT INTO Estudiante (" . implode(', ', $columns) . ") VALUES (" . 
+               implode(', ', array_fill(0, count($values), '?')) . ")";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($values);
 
         $estudianteId = $pdo->lastInsertId();
 
@@ -342,7 +355,7 @@ try {
             }
         }
 
-        // Verificar si la columna INTENSIFICA existe
+        // Verificar si las columnas INTENSIFICA y Curso_ID_curso existen
         try {
             $stmtCheck = $pdo->query("SHOW COLUMNS FROM Estudiante LIKE 'INTENSIFICA'");
             $hasIntensificaColumn = $stmtCheck->rowCount() > 0;
@@ -350,8 +363,18 @@ try {
             $hasIntensificaColumn = false;
         }
         
+        try {
+            $stmtCheck = $pdo->query("SHOW COLUMNS FROM Estudiante LIKE 'Curso_ID_curso'");
+            $hasCursoIdColumn = $stmtCheck->rowCount() > 0;
+        } catch (Exception $e) {
+            $hasCursoIdColumn = false;
+        }
+        
         // Actualizar solo los campos proporcionados
         $camposPermitidos = ['Nombre', 'Apellido', 'Email', 'Fecha_nacimiento', 'Estado'];
+        if ($hasCursoIdColumn) {
+            $camposPermitidos[] = 'Curso_ID_curso';
+        }
         $updates = [];
         $valores = [];
         $intensificaValue = null;
@@ -374,6 +397,21 @@ try {
                     
                     $updates[] = "$campo = ?";
                     $valores[] = $estadoValor;
+                } else if ($campo === 'Curso_ID_curso') {
+                    // Validar que el curso existe antes de actualizar
+                    $cursoId = isset($data[$campo]) ? (int)$data[$campo] : null;
+                    if ($cursoId) {
+                        $stmtCheck = $pdo->prepare("SELECT ID_curso FROM Curso WHERE ID_curso = ?");
+                        $stmtCheck->execute([$cursoId]);
+                        if ($stmtCheck->fetch()) {
+                            $updates[] = "$campo = ?";
+                            $valores[] = $cursoId;
+                        }
+                    } else {
+                        // Si es null, permitir establecerlo como NULL
+                        $updates[] = "$campo = ?";
+                        $valores[] = null;
+                    }
                 } else {
                     $updates[] = "$campo = ?";
                     $valores[] = $data[$campo];

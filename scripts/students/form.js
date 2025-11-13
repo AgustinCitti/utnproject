@@ -46,9 +46,6 @@ function clearStudentForm() {
     }
     
     // Repopulate dropdowns
-    if (typeof populateStudentCourseSelect === 'function') {
-        populateStudentCourseSelect();
-    }
     if (typeof populateStudentSubjectsSelect === 'function') {
         populateStudentSubjectsSelect();
     }

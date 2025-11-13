@@ -44,6 +44,69 @@ function validarMateriaDelDocente($db, $materiaId, $docenteId) {
 	return $stmt->fetch() !== false;
 }
 
+// Función para actualizar el curso del estudiante basado en sus materias
+function updateStudentCourseFromSubjects($db, $estudianteId) {
+	try {
+		// Verificar si la columna Curso_ID_curso existe
+		$stmtCheck = $db->query("SHOW COLUMNS FROM Estudiante LIKE 'Curso_ID_curso'");
+		$hasCursoIdColumn = $stmtCheck->rowCount() > 0;
+		
+		if (!$hasCursoIdColumn) {
+			return; // La columna no existe, no hacer nada
+		}
+		
+		// Obtener todas las materias del estudiante
+		$stmt = $db->prepare("
+			SELECT DISTINCT m.Curso_division, m.Usuarios_docente_ID_docente
+			FROM Alumnos_X_Materia axm
+			INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+			WHERE axm.Estudiante_ID_Estudiante = ?
+		");
+		$stmt->execute([$estudianteId]);
+		$materias = $stmt->fetchAll();
+		
+		if (empty($materias)) {
+			return; // No hay materias, no actualizar curso
+		}
+		
+		// Obtener cursos únicos
+		$cursosUnicos = [];
+		foreach ($materias as $materia) {
+			$cursoDivision = $materia['Curso_division'];
+			$docenteId = $materia['Usuarios_docente_ID_docente'];
+			
+			if (!isset($cursosUnicos[$cursoDivision])) {
+				$cursosUnicos[$cursoDivision] = $docenteId;
+			}
+		}
+		
+		// Si todas las materias pertenecen al mismo curso, actualizar
+		if (count($cursosUnicos) === 1) {
+			$cursoDivision = array_key_first($cursosUnicos);
+			$docenteId = $cursosUnicos[$cursoDivision];
+			
+			// Buscar el ID del curso en la tabla Curso
+			$cursoStmt = $db->prepare("
+				SELECT ID_curso FROM Curso 
+				WHERE Curso_division = ? AND Usuarios_docente_ID_docente = ? AND Estado = 'ACTIVO'
+				LIMIT 1
+			");
+			$cursoStmt->execute([$cursoDivision, $docenteId]);
+			$curso = $cursoStmt->fetch();
+			
+			if ($curso && $curso['ID_curso']) {
+				// Actualizar el curso del estudiante
+				$updateStmt = $db->prepare("UPDATE Estudiante SET Curso_ID_curso = ? WHERE ID_Estudiante = ?");
+				$updateStmt->execute([$curso['ID_curso'], $estudianteId]);
+				error_log("Actualizado Curso_ID_curso del estudiante $estudianteId a curso " . $curso['ID_curso']);
+			}
+		}
+	} catch (Exception $e) {
+		// No fallar si hay error al actualizar el curso
+		error_log("Error en updateStudentCourseFromSubjects: " . $e->getMessage());
+	}
+}
+
 // Función para asignar todos los temas de una materia a un estudiante
 function assignAllTopicsToStudent($db, $materiaId, $estudianteId) {
 	try {
@@ -202,6 +265,9 @@ try {
 						$inserted[] = ['Materia_ID_materia' => $materiaId, 'Estudiante_ID_Estudiante' => $estudianteId];
 						error_log("Insertado: materia=$materiaId, estudiante=$estudianteId");
 						
+						// Actualizar el curso del estudiante basado en sus materias
+						updateStudentCourseFromSubjects($db, $estudianteId);
+						
 						// Asignar automáticamente todos los temas existentes de esta materia al estudiante
 						if ($estado === 'INSCRITO') {
 							assignAllTopicsToStudent($db, $materiaId, $estudianteId);
@@ -218,6 +284,9 @@ try {
 								$updateStmt->execute([$estado, $materiaId, $estudianteId]);
 								$inserted[] = ['Materia_ID_materia' => $materiaId, 'Estudiante_ID_Estudiante' => $estudianteId, 'updated' => true];
 								error_log("Actualizado (duplicado): materia=$materiaId, estudiante=$estudianteId");
+								
+								// Actualizar el curso del estudiante basado en sus materias
+								updateStudentCourseFromSubjects($db, $estudianteId);
 								
 								// Asignar temas si el estado es INSCRITO
 								if ($estado === 'INSCRITO') {
@@ -259,6 +328,9 @@ try {
 					$stmt->execute([$materiaId, $estudianteId, $estado]);
 					error_log("Insertado único: materia=$materiaId, estudiante=$estudianteId");
 					
+					// Actualizar el curso del estudiante basado en sus materias
+					updateStudentCourseFromSubjects($db, $estudianteId);
+					
 					// Asignar automáticamente todos los temas existentes de esta materia al estudiante
 					if ($estado === 'INSCRITO') {
 						assignAllTopicsToStudent($db, $materiaId, $estudianteId);
@@ -274,6 +346,9 @@ try {
 						try {
 							$updateStmt = $db->prepare("UPDATE Alumnos_X_Materia SET Estado = ? WHERE Materia_ID_materia = ? AND Estudiante_ID_Estudiante = ?");
 							$updateStmt->execute([$estado, $materiaId, $estudianteId]);
+							
+							// Actualizar el curso del estudiante basado en sus materias
+							updateStudentCourseFromSubjects($db, $estudianteId);
 							
 							// Asignar temas si el estado es INSCRITO
 							if ($estado === 'INSCRITO') {
@@ -298,6 +373,17 @@ try {
 				respond(400, ['success' => false, 'message' => 'Debe especificar estudianteId o materiaId']);
 			}
 			
+			// Guardar los IDs de estudiantes afectados antes de eliminar
+			$affectedStudentIds = [];
+			if ($estudianteId) {
+				$affectedStudentIds[] = $estudianteId;
+			} else {
+				// Si se elimina por materia, obtener los estudiantes afectados
+				$stmt = $db->prepare("SELECT DISTINCT Estudiante_ID_Estudiante FROM Alumnos_X_Materia WHERE Materia_ID_materia = ?");
+				$stmt->execute([$materiaId]);
+				$affectedStudentIds = array_column($stmt->fetchAll(), 'Estudiante_ID_Estudiante');
+			}
+			
 			$where = [];
 			$params = [];
 			
@@ -313,6 +399,11 @@ try {
 			$sql = "DELETE FROM Alumnos_X_Materia WHERE " . implode(' AND ', $where);
 			$stmt = $db->prepare($sql);
 			$stmt->execute($params);
+			
+			// Actualizar el curso de los estudiantes afectados después de eliminar materias
+			foreach ($affectedStudentIds as $affectedId) {
+				updateStudentCourseFromSubjects($db, $affectedId);
+			}
 			
 			respond(200, ['success' => true, 'deleted' => $stmt->rowCount()]);
 
