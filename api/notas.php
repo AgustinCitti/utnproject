@@ -67,6 +67,21 @@ function validarEvaluacionDelDocente($db, $evaluacionId, $docenteId) {
 	return $stmt->fetch() !== false;
 }
 
+/**
+ * Actualizar el estado de la evaluación a FINALIZADA cuando se guardan calificaciones
+ */
+function actualizarEstadoEvaluacion($db, $evaluacionId) {
+	try {
+		// Actualizar el estado de la evaluación a FINALIZADA
+		$stmt = $db->prepare("UPDATE Evaluacion SET Estado = 'FINALIZADA' WHERE ID_evaluacion = ?");
+		$stmt->execute([$evaluacionId]);
+		error_log("Estado de evaluación {$evaluacionId} actualizado a FINALIZADA");
+	} catch (PDOException $e) {
+		// No fallar si hay error al actualizar el estado, solo loguear
+		error_log("Error al actualizar estado de evaluación {$evaluacionId}: " . $e->getMessage());
+	}
+}
+
 try {
 	$db = pdo();
 	$method = $_SERVER['REQUEST_METHOD'];
@@ -216,6 +231,10 @@ try {
 				$notaId = $existing['ID_Nota'];
 				$stmt = $db->prepare("UPDATE Notas SET Calificacion = ?, Observacion = ?, Estado = ?, Peso = ?, Fecha_calificacion = CURRENT_DATE WHERE ID_Nota = ?");
 				$stmt->execute([$Calificacion, $Observacion, $Estado, $Peso, $notaId]);
+				
+				// Actualizar estado de la evaluación a FINALIZADA
+				actualizarEstadoEvaluacion($db, $Evaluacion_ID_evaluacion);
+				
 				respond(200, ['success'=>true,'id'=>$notaId,'message'=>'Nota actualizada exitosamente']);
 			} else {
 				// Crear nueva nota
@@ -225,6 +244,9 @@ try {
 					$newId = (int)$db->lastInsertId();
 					
 					if ($newId > 0) {
+						// Actualizar estado de la evaluación a FINALIZADA
+						actualizarEstadoEvaluacion($db, $Evaluacion_ID_evaluacion);
+						
 						respond(201, ['success'=>true,'id'=>$newId,'message'=>'Nota creada exitosamente']);
 					} else {
 						respond(500, ['success'=>false,'message'=>'Error al crear la nota']);
@@ -331,12 +353,24 @@ try {
 			
 			if (!$sets) respond(400, ['success'=>false,'message'=>'Nada para actualizar']);
 			
+			// Obtener el ID de la evaluación antes de actualizar
+			$stmt = $db->prepare("SELECT Evaluacion_ID_evaluacion FROM Notas WHERE ID_Nota = ?");
+			$stmt->execute([$id]);
+			$notaActual = $stmt->fetch();
+			$evaluacionId = $notaActual ? (int)$notaActual['Evaluacion_ID_evaluacion'] : null;
+			
 			// Actualizar fecha de calificación
 			$sets[] = "Fecha_calificacion = CURRENT_DATE";
 			$params[] = $id;
 			$sql = "UPDATE Notas SET ".implode(', ', $sets)." WHERE ID_Nota = ?";
 			$stmt = $db->prepare($sql);
 			$stmt->execute($params);
+			
+			// Actualizar estado de la evaluación a FINALIZADA si se actualizó la calificación
+			if ($evaluacionId && $calificacionActualizada !== null) {
+				actualizarEstadoEvaluacion($db, $evaluacionId);
+			}
+			
 			respond(200, ['success'=>true,'id'=>$id,'message'=>'Nota actualizada exitosamente']);
 
 		case 'DELETE':
