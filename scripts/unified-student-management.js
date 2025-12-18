@@ -1438,39 +1438,58 @@ async function populateUnifiedCourseFilter() {
     
     // Primero, obtener cursos desde la API (tabla Curso)
     try {
-        const response = await fetch(`api/curso.php?userId=${currentUserId}&estado=ACTIVO`);
-        const result = await response.json();
-        if (result.success && result.data && Array.isArray(result.data)) {
-            result.data.forEach(c => {
-                if (c.ID_curso && c.Curso_division && c.Estado === 'ACTIVO') {
-                    const cursoId = parseInt(c.ID_curso);
-                    // Extraer número y división del Curso_division para mostrar formato simple
-                    // Curso_division es como "2º Curso - División B", queremos mostrar "2B"
-                    let simpleDivision = c.Curso_division;
-                    if (c.Numero_curso && c.Division) {
-                        // Si tenemos Numero_curso y Division, usarlos directamente
-                        simpleDivision = `${c.Numero_curso}${c.Division}`;
-                    } else {
-                        // Intentar extraer del Curso_division
-                        // Formato: "2º Curso - División B" -> "2B"
-                        const match = c.Curso_division.match(/(\d+).*?([A-Z])/i);
-                        if (match) {
-                            simpleDivision = `${match[1]}${match[2].toUpperCase()}`;
+        // Determinar la ruta base según desde dónde se carga
+        const isInPages = window.location.pathname.includes('/pages/');
+        const baseUrl = isInPages ? '../api' : 'api';
+        
+        const response = await fetch(`${baseUrl}/curso.php?userId=${currentUserId}&estado=ACTIVO`);
+        
+        // Verificar que la respuesta sea JSON válido
+        if (!response.ok) {
+            console.warn(`Error al cargar cursos: ${response.status} ${response.statusText}`);
+            // Continuar con el fallback de materias
+        } else {
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const textResponse = await response.text();
+                console.warn('Respuesta no es JSON válido al cargar cursos:', textResponse.substring(0, 200));
+                // Continuar con el fallback de materias
+            } else {
+                const result = await response.json();
+                if (result.success && result.data && Array.isArray(result.data)) {
+                    result.data.forEach(c => {
+                        if (c.ID_curso && c.Curso_division && c.Estado === 'ACTIVO') {
+                            const cursoId = parseInt(c.ID_curso);
+                            // Extraer número y división del Curso_division para mostrar formato simple
+                            // Curso_division es como "2º Curso - División B", queremos mostrar "2B"
+                            let simpleDivision = c.Curso_division;
+                            if (c.Numero_curso && c.Division) {
+                                // Si tenemos Numero_curso y Division, usarlos directamente
+                                simpleDivision = `${c.Numero_curso}${c.Division}`;
+                            } else {
+                                // Intentar extraer del Curso_division
+                                // Formato: "2º Curso - División B" -> "2B"
+                                const match = c.Curso_division.match(/(\d+).*?([A-Z])/i);
+                                if (match) {
+                                    simpleDivision = `${match[1]}${match[2].toUpperCase()}`;
+                                }
+                            }
+                            uniqueCourses.push({
+                                id: cursoId,
+                                division: c.Curso_division,
+                                simpleDivision: simpleDivision
+                            });
+                            // Almacenar en el mapa para uso posterior
+                            window.courseIdToDivisionMap[cursoId] = c.Curso_division;
                         }
-                    }
-                    uniqueCourses.push({
-                        id: cursoId,
-                        division: c.Curso_division,
-                        simpleDivision: simpleDivision
                     });
-                    // Almacenar en el mapa para uso posterior
-                    window.courseIdToDivisionMap[cursoId] = c.Curso_division;
+                    console.log('populateUnifiedCourseFilter: Cursos desde API:', uniqueCourses.length);
                 }
-            });
-            console.log('populateUnifiedCourseFilter: Cursos desde API:', uniqueCourses.length);
+            }
         }
     } catch (error) {
         console.warn('Error al cargar cursos desde API:', error);
+        // Continuar con el fallback de materias
     }
     
     // También agregar cursos de las materias como fallback
@@ -2475,8 +2494,8 @@ async function showExamModal(examId = null) {
                                 </select>
                             </div>
                             <div class="form-group" style="margin-top: 15px;">
-                                <label for="examPeso" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Peso (0.00 - 9.99)</label>
-                                <input type="number" id="examPeso" name="examPeso" step="0.01" min="0" max="9.99" value="${exam ? exam.Peso || 1.00 : 1.00}" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                                <label for="examPeso" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Peso (0.00 - 10.00)</label>
+                                <input type="number" id="examPeso" name="examPeso" step="0.01" min="0" max="10" value="${exam ? exam.Peso || 1.00 : 1.00}" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
                             </div>
                             <div class="form-group" style="margin-top: 15px;">
                                 <label for="examEstado" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Estado</label>
@@ -2602,6 +2621,12 @@ async function showExamModal(examId = null) {
                 headers: { 'Accept': 'application/json' }
             });
             if (!response.ok) {
+                return [];
+            }
+            // Verificar que la respuesta sea JSON válido
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.warn('Respuesta no es JSON válido al cargar temas');
                 return [];
             }
             const freshTopics = await response.json();
@@ -2795,10 +2820,36 @@ async function saveExam(event) {
     
     // Determinar si es crear o actualizar
     const examModal = document.getElementById('examModal');
-    const existingExamId = examModal ? (examModal.dataset.examId || document.getElementById('examId')?.value) : null;
+    let existingExamId = null;
+    
+    if (examModal) {
+        // Intentar obtener el ID del dataset del modal
+        existingExamId = examModal.dataset.examId;
+        
+        // Si no está en el dataset, intentar obtenerlo del input hidden
+        if (!existingExamId) {
+            const examIdInput = document.getElementById('examId');
+            if (examIdInput && examIdInput.value) {
+                existingExamId = examIdInput.value;
+            }
+        }
+        
+        // Validar que el ID sea un número válido
+        if (existingExamId) {
+            const parsedId = parseInt(existingExamId);
+            if (isNaN(parsedId) || parsedId <= 0) {
+                existingExamId = null;
+            } else {
+                existingExamId = parsedId.toString();
+            }
+        }
+    }
+    
     const isEdit = existingExamId && !isNaN(parseInt(existingExamId));
     const url = isEdit ? `${baseUrl}/evaluacion.php?id=${existingExamId}` : `${baseUrl}/evaluacion.php`;
     const method = isEdit ? 'PUT' : 'POST';
+    
+    console.log('saveExam - isEdit:', isEdit, 'existingExamId:', existingExamId, 'url:', url, 'method:', method);
     
     try {
         const response = await fetch(url, {
@@ -2811,9 +2862,39 @@ async function saveExam(event) {
             body: JSON.stringify(examData)
         });
         
+        // Verificar que la respuesta sea JSON válido
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const textResponse = await response.text();
+            console.error('Error: Respuesta no es JSON válido', textResponse);
+            throw new Error(`Error del servidor: ${response.status} ${response.statusText}. La respuesta no es JSON válido.`);
+        }
+        
         const result = await response.json();
         
         if (response.ok && (result.success !== false && result.id)) {
+            // Si es una creación, guardar el ID en el modal para futuras ediciones
+            if (!isEdit && result.id) {
+                const modal = document.getElementById('examModal');
+                if (modal) {
+                    modal.dataset.examId = result.id;
+                    // También crear/actualizar el input hidden si existe
+                    let examIdInput = document.getElementById('examId');
+                    if (!examIdInput) {
+                        examIdInput = document.createElement('input');
+                        examIdInput.type = 'hidden';
+                        examIdInput.id = 'examId';
+                        examIdInput.value = result.id;
+                        const form = document.getElementById('examForm');
+                        if (form) {
+                            form.appendChild(examIdInput);
+                        }
+                    } else {
+                        examIdInput.value = result.id;
+                    }
+                }
+            }
+            
             // Recargar datos desde el servidor
             if (typeof loadData === 'function') {
                 await loadData();
@@ -2851,6 +2932,15 @@ async function saveExam(event) {
         }
     } catch (error) {
         console.error('Error saving exam:', error);
+        let errorMessage = 'Error al guardar la evaluación';
+        if (error.message) {
+            errorMessage = error.message;
+        }
+        if (typeof showNotification === 'function') {
+            showNotification(errorMessage, 'error');
+        } else {
+            alert(errorMessage);
+        }
         alert(error.message || 'Error al guardar la evaluación. Por favor, intente nuevamente.');
     }
 }

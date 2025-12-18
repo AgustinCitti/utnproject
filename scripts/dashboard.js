@@ -459,9 +459,9 @@ function loadLatestNotifications() {
         });
     });
 
-    // Sort by date (newest first) and take last 3
+    // Sort by date (newest first) and take last 2
     allItems.sort((a, b) => b.date - a.date);
-    const latestItems = allItems.slice(0, 3);
+    const latestItems = allItems.slice(0, 2);
 
     if (latestItems.length === 0) {
         classesList.innerHTML = `
