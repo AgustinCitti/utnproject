@@ -298,6 +298,13 @@ function showSection(sectionName, subsection = null) {
             updateDashboard();
             break;
         case 'student-management':
+            // Recargar filtros cuando se navega a esta sección
+            if (typeof populateSubjectFilter === 'function') {
+                populateSubjectFilter();
+            }
+            if (typeof populateUnifiedCourseFilter === 'function') {
+                populateUnifiedCourseFilter();
+            }
             if (typeof loadUnifiedStudentData === 'function') {
                 loadUnifiedStudentData();
             }

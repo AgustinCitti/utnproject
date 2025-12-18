@@ -722,9 +722,30 @@ function selectSuggestion(suggestion, type) {
     }
 
     if (suggestion.metadata) {
-        setTimeout(() => {
-            focusUsingMetadata(suggestion.metadata, suggestion.type);
-        }, 500);
+        // Esperar a que la sección se cargue completamente antes de enfocar
+        // Aumentar el timeout para dar tiempo a que los datos se carguen
+        const waitForSection = () => {
+            const sectionId = suggestion.section;
+            const targetSection = document.getElementById(sectionId);
+            
+            if (targetSection && targetSection.classList.contains('active')) {
+                // La sección está activa, intentar enfocar
+                const focused = focusUsingMetadata(suggestion.metadata, suggestion.type);
+                
+                // Si no se pudo enfocar y es un estudiante, esperar un poco más
+                if (!focused && suggestion.type === 'student') {
+                    setTimeout(() => {
+                        focusUsingMetadata(suggestion.metadata, suggestion.type);
+                    }, 500);
+                }
+            } else {
+                // La sección aún no está activa, esperar un poco más
+                setTimeout(waitForSection, 200);
+            }
+        };
+        
+        // Iniciar después de un pequeño delay para que showSection tenga tiempo de ejecutarse
+        setTimeout(waitForSection, 300);
     }
 }
 
@@ -1497,11 +1518,45 @@ function focusUsingMetadata(metadata, type) {
             const alreadySelected = window.selectedStudentIdFilter === studentId;
             window.selectedStudentIdFilter = studentId;
             if (!alreadySelected && typeof loadUnifiedStudentData === 'function') {
-                loadUnifiedStudentData();
+                // Cargar datos y esperar a que terminen antes de mostrar el detalle
+                const loadPromise = loadUnifiedStudentData();
+                if (loadPromise && typeof loadPromise.then === 'function') {
+                    // Es una promesa, esperar a que termine
+                    loadPromise.then(() => {
+                        setTimeout(() => {
+                            if (typeof showStudentDetail === 'function') {
+                                showStudentDetail(studentId);
+                            }
+                        }, 300);
+                    }).catch(() => {
+                        // Si falla, intentar de todos modos
+                        setTimeout(() => {
+                            if (typeof showStudentDetail === 'function') {
+                                showStudentDetail(studentId);
+                            }
+                        }, 500);
+                    });
+                } else {
+                    // No es una promesa, esperar un tiempo razonable
+                    setTimeout(() => {
+                        if (typeof showStudentDetail === 'function') {
+                            showStudentDetail(studentId);
+                        }
+                    }, 800);
+                }
+            } else {
+                // Ya estaba seleccionado o no hay función de carga, mostrar directamente
+                setTimeout(() => {
+                    if (typeof showStudentDetail === 'function') {
+                        showStudentDetail(studentId);
+                    }
+                }, 300);
             }
-        }
-        if (typeof showStudentDetail === 'function') {
-            setTimeout(() => showStudentDetail(studentId), 200);
+        } else {
+            // No hay filtro de estudiante, mostrar directamente
+            if (typeof showStudentDetail === 'function') {
+                setTimeout(() => showStudentDetail(studentId), 300);
+            }
         }
         return true;
     }
@@ -1510,7 +1565,10 @@ function focusUsingMetadata(metadata, type) {
         if (typeof clearSelectedStudentFilter === 'function') {
             clearSelectedStudentFilter({ suppressReload: true });
         }
-        showExamModal(examId);
+        // Esperar un poco para que la sección se cargue antes de mostrar el modal
+        setTimeout(() => {
+            showExamModal(examId);
+        }, 400);
         return true;
     }
 
@@ -1518,7 +1576,10 @@ function focusUsingMetadata(metadata, type) {
         if (typeof clearSelectedStudentFilter === 'function') {
             clearSelectedStudentFilter();
         }
-        showSubjectThemesPanel(subjectId);
+        // Esperar un poco para que la sección se cargue antes de mostrar el panel
+        setTimeout(() => {
+            showSubjectThemesPanel(subjectId);
+        }, 400);
         return true;
     }
 

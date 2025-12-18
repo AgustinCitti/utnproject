@@ -1025,16 +1025,48 @@ if (Helpers.formatDate) {
 
 const getFilteredSubjects = Filters.getFilteredSubjects || function() {
     const data = window.appData || window.data || {};
-    if (!data.materia || !Array.isArray(data.materia)) return [];
+    if (!data.materia || !Array.isArray(data.materia)) {
+        console.warn('getFilteredSubjects: No materia data available');
+        return [];
+    }
+    
+    // Get current user ID from localStorage
+    const currentUserId = localStorage.getItem('userId');
+    
+    // Filter by current teacher's subjects first
+    let filtered = [...data.materia];
+    
+    // Only filter by user if we have a valid userId
+    if (currentUserId) {
+        const teacherId = parseInt(currentUserId);
+        if (!isNaN(teacherId)) {
+            const beforeFilter = filtered.length;
+            filtered = filtered.filter(subject => {
+                if (!subject || !subject.Usuarios_docente_ID_docente) return false;
+                const subjectTeacherId = parseInt(subject.Usuarios_docente_ID_docente);
+                return !isNaN(subjectTeacherId) && subjectTeacherId === teacherId;
+            });
+            console.log(`getFilteredSubjects: Filtered from ${beforeFilter} to ${filtered.length} subjects for teacher ${teacherId}`);
+            
+            // If filtering removed all subjects, show all subjects as fallback (for debugging)
+            if (filtered.length === 0 && beforeFilter > 0) {
+                console.warn('getFilteredSubjects: No subjects found for current user, showing all subjects as fallback');
+                filtered = [...data.materia];
+            }
+        }
+    } else {
+        console.warn('getFilteredSubjects: No userId in localStorage, showing all subjects');
+    }
+    
     const courseFilter = document.getElementById('subjectsCourseFilter');
     const statusFilter = document.getElementById('subjectsStatusFilter');
     const selectedCourse = courseFilter ? courseFilter.value : '';
     const selectedStatus = statusFilter ? statusFilter.value : '';
-    let filtered = [...data.materia];
-    if (selectedCourse && selectedCourse !== 'all') {
+    
+    if (selectedCourse && selectedCourse !== 'all' && selectedCourse !== '') {
         filtered = filtered.filter(subject => subject.Curso_division === selectedCourse);
     }
-    if (selectedStatus && selectedStatus !== 'all') {
+    if (selectedStatus && selectedStatus !== 'all' && selectedStatus !== '') {
         filtered = filtered.filter(subject => subject.Estado === selectedStatus);
     }
     return filtered;
@@ -1734,7 +1766,7 @@ const loadSubjects = SubjectViews.loadSubjects || function() {
                     <p><strong>Profesor:</strong> ${teacher ? `${teacher.Nombre_docente} ${teacher.Apellido_docente}` : 'N/A'}</p>
                     <p><strong>Horario:</strong> ${subject.Horario || 'No especificado'}</p>
                     <p><strong>Aula:</strong> ${subject.Aula || 'No especificada'}</p>
-                    <p><strong>Estado:</strong> <span class="status-${subject.Estado.toLowerCase()}">${getStatusText(subject.Estado)}</span></p>
+                    <p><strong>Estado:</strong> <span class="status-${(subject.Estado || 'ACTIVA').toLowerCase()}">${getStatusText(subject.Estado || 'ACTIVA')}</span></p>
                     <div class="card-stats">
                         <div class="stat-item">
                             <i class="fas fa-users"></i>
@@ -1798,7 +1830,7 @@ const loadSubjects = SubjectViews.loadSubjects || function() {
                                 <td>${teacher ? `${teacher.Nombre_docente} ${teacher.Apellido_docente}` : 'N/A'}</td>
                                 <td>${subject.Horario || 'No especificado'}</td>
                                 <td>${subject.Aula || 'No especificada'}</td>
-                                <td><span class="table-status ${subject.Estado.toLowerCase()}">${getStatusText(subject.Estado)}</span></td>
+                                <td><span class="table-status ${(subject.Estado || 'ACTIVA').toLowerCase()}">${getStatusText(subject.Estado || 'ACTIVA')}</span></td>
                                 <td>
                                     <span style="display: inline-flex; align-items: center; gap: 6px;">
                                         <i class="fas fa-users" style="color: #667eea;"></i>
@@ -5229,8 +5261,8 @@ window.loadMateriaStudents = async function(subjectId) {
                                     ${student.ID_Estudiante || 'N/A'}
                                 </td>
                                 <td style="padding: 12px; border-bottom: 1px solid var(--border-color, #ddd);">
-                                    <span class="status-badge status-${displayEstado.toLowerCase()}" style="font-size: 0.8em; padding: 3px 8px; border-radius: 10px;">
-                                        ${displayEstado}
+                                    <span class="status-badge status-${(displayEstado || 'ACTIVO').toLowerCase()}" style="font-size: 0.8em; padding: 3px 8px; border-radius: 10px;">
+                                        ${displayEstado || 'ACTIVO'}
                                     </span>
                                 </td>
                                 <td style="padding: 12px; border-bottom: 1px solid var(--border-color, #ddd); text-align: center;">
@@ -6333,7 +6365,7 @@ function createEvaluacionModal() {
                     </div>
                     <div class="form-group">
                         <label for="evaluacionPeso" data-translate="weight">Peso</label>
-                        <input type="number" id="evaluacionPeso" min="0" max="9.99" step="0.01" value="1.00" required>
+                        <input type="number" id="evaluacionPeso" min="0" max="10" step="0.01" value="1.00" required>
                     </div>
                     <div class="form-group">
                         <label for="evaluacionEstado" data-translate="status">Estado</label>

@@ -197,14 +197,6 @@ window.preSelectMateriaForNewStudent = function(materiaId) {
     // Render selected subjects
     renderSelectedSubjects();
     
-    // If the materia has a curso_division, set it in the course select
-    if (materia.Curso_division) {
-        const courseSelect = document.getElementById('studentCourse');
-        if (courseSelect) {
-            courseSelect.value = materia.Curso_division;
-        }
-    }
-    
     // Repopulate the subjects select to remove the selected one
     populateStudentSubjectsSelect();
     

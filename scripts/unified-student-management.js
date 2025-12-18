@@ -152,20 +152,76 @@ function initializeUnifiedStudentManagement() {
 
     // Filter functionality
     if (unifiedSubjectFilter) {
-        unifiedSubjectFilter.addEventListener('change', () => {
-            filterUnifiedData();
+        unifiedSubjectFilter.addEventListener('change', async () => {
+            await filterUnifiedData();
         });
     }
 
     if (unifiedCourseFilter) {
-        unifiedCourseFilter.addEventListener('change', () => {
-            filterUnifiedData();
+        unifiedCourseFilter.addEventListener('change', async () => {
+            console.log('unifiedCourseFilter: Cambio detectado');
+            // Cuando cambia el curso, actualizar el filtro de materia para mostrar solo materias del curso
+            const subjectFilter = document.getElementById('unifiedSubjectFilter');
+            const courseFilter = document.getElementById('unifiedCourseFilter');
+            const selectedCourse = courseFilter ? courseFilter.value : '';
+            const selectedSubject = subjectFilter ? subjectFilter.value : '';
+            
+            console.log('unifiedCourseFilter: Curso seleccionado:', selectedCourse);
+            console.log('unifiedCourseFilter: Materia seleccionada:', selectedSubject);
+            
+            // Actualizar el filtro de materias para mostrar solo las del curso seleccionado
+            populateSubjectFilter();
+            
+            // Esperar un momento para que populateSubjectFilter termine antes de continuar
+            await new Promise(resolve => setTimeout(resolve, 150));
+            
+            // Si hay una materia seleccionada, verificar que pertenezca al nuevo curso
+            if (selectedSubject && selectedSubject !== '' && selectedCourse && selectedCourse !== '') {
+                const subjectId = parseInt(selectedSubject);
+                const cursoIdNum = parseInt(selectedCourse);
+                
+                // Obtener datos de la materia seleccionada
+                const data = appData || window.appData || window.data || {};
+                const selectedSubjectData = (data.materia || []).find(m => parseInt(m.ID_materia) === subjectId);
+                
+                if (selectedSubjectData) {
+                    // Determinar el Curso_division del curso seleccionado
+                    let targetCursoDivision = null;
+                    if (!isNaN(cursoIdNum)) {
+                        targetCursoDivision = window.courseIdToDivisionMap && window.courseIdToDivisionMap[cursoIdNum];
+                    } else {
+                        targetCursoDivision = selectedCourse;
+                    }
+                    
+                    // Si la materia no pertenece al nuevo curso, limpiar el filtro de materia
+                    if (targetCursoDivision && selectedSubjectData.Curso_division !== targetCursoDivision) {
+                        console.log('La materia seleccionada no pertenece al curso, limpiando filtro de materia');
+                        if (subjectFilter) {
+                            subjectFilter.value = '';
+                        }
+                    } else if (targetCursoDivision && selectedSubjectData.Curso_division === targetCursoDivision) {
+                        // Si la materia pertenece al curso, mantenerla seleccionada
+                        if (subjectFilter) {
+                            subjectFilter.value = selectedSubject;
+                        }
+                    }
+                }
+            } else if (selectedCourse && selectedCourse !== '') {
+                // Si solo hay curso seleccionado, limpiar el filtro de materia
+                console.log('unifiedCourseFilter: Solo curso seleccionado, limpiando filtro de materia');
+                if (subjectFilter) {
+                    subjectFilter.value = '';
+                }
+            }
+            
+            console.log('unifiedCourseFilter: Llamando a filterUnifiedData');
+            await filterUnifiedData();
         });
     }
 
     if (unifiedTopicFilter) {
-        unifiedTopicFilter.addEventListener('change', () => {
-            filterUnifiedData();
+        unifiedTopicFilter.addEventListener('change', async () => {
+            await filterUnifiedData();
         });
     }
 
@@ -322,11 +378,15 @@ function initializeUnifiedStudentManagement() {
         });
     }
 
-    // Initialize data
-    populateSubjectFilter();
-    populateUnifiedCourseFilter();
-    populateExamsSubjectFilter();
-    populateExamsCourseFilter();
+    // Initialize data - populate filters after a short delay to ensure appData is loaded
+    // This ensures that loadData() has completed before we try to populate filters
+    setTimeout(() => {
+        populateSubjectFilter();
+        populateUnifiedCourseFilter();
+        populateExamsSubjectFilter();
+        populateExamsCourseFilter();
+    }, 300);
+    
     loadUnifiedStudentData();
     loadExams();
     
@@ -341,7 +401,7 @@ function initializeUnifiedStudentManagement() {
     initializeExportFunctionality();
 }
 
-function loadUnifiedStudentData() {
+async function loadUnifiedStudentData() {
     const unifiedStudentCards = document.getElementById('unifiedStudentCards');
     const unifiedStudentList = document.getElementById('unifiedStudentList');
     
@@ -355,7 +415,13 @@ function loadUnifiedStudentData() {
     if (!Array.isArray(appData.evaluacion)) appData.evaluacion = [];
     if (!Array.isArray(appData.materia)) appData.materia = [];
 
-    let filteredStudents = getFilteredUnifiedStudents();
+    let filteredStudents = [];
+    try {
+        filteredStudents = await getFilteredUnifiedStudents();
+    } catch (error) {
+        console.error('Error al obtener estudiantes filtrados:', error);
+        filteredStudents = appData.estudiante || [];
+    }
     
     if (window.selectedStudentIdFilter !== null) {
         const idFilter = parseInt(window.selectedStudentIdFilter, 10);
@@ -686,13 +752,27 @@ function loadUnifiedStudentData() {
     `;
 }
 
-function getFilteredUnifiedStudents() {
+async function getFilteredUnifiedStudents() {
     const subjectFilter = document.getElementById('unifiedSubjectFilter');
     const courseFilter = document.getElementById('unifiedCourseFilter');
     const topicFilter = document.getElementById('unifiedTopicFilter');
+    
+    // Leer los valores directamente del DOM para asegurar que tenemos los valores más recientes
     const selectedSubject = subjectFilter ? subjectFilter.value : '';
     const selectedCourse = courseFilter ? courseFilter.value : '';
-    const selectedTopic = topicFilter ? topicFilter.value : '';
+    const selectedTopicStatus = topicFilter ? topicFilter.value : '';
+    
+    // Verificar si se seleccionó la opción especial de intensificadores
+    const onlyIntensificadores = selectedCourse === 'INTENSIFICADORES';
+    
+    console.log('getFilteredUnifiedStudents: Valores de filtros:', {
+        selectedSubject,
+        selectedCourse,
+        selectedTopicStatus,
+        onlyIntensificadores,
+        courseFilterValue: courseFilter ? courseFilter.value : 'NO ENCONTRADO',
+        courseFilterOptions: courseFilter ? Array.from(courseFilter.options).map(opt => ({value: opt.value, text: opt.text})) : []
+    });
     
     // Get current teacher ID
     const currentUserId = localStorage.getItem('userId');
@@ -705,79 +785,328 @@ function getFilteredUnifiedStudents() {
     if (!Array.isArray(appData.alumnos_x_materia)) appData.alumnos_x_materia = [];
     if (!Array.isArray(appData.tema_estudiante)) appData.tema_estudiante = [];
     
+    console.log('getFilteredUnifiedStudents: Datos disponibles:', {
+        estudiantes: appData.estudiante.length,
+        materias: appData.materia.length,
+        alumnos_x_materia: appData.alumnos_x_materia.length,
+        tema_estudiante: appData.tema_estudiante.length,
+        teacherId
+    });
+    
     // Start with all students enrolled in subjects taught by current teacher
+    // Si no hay filtro de curso seleccionado, mostrar TODOS los estudiantes del docente
     let filteredStudents = appData.estudiante || [];
 
     if (teacherId) {
         // Get subjects taught by current teacher
         let teacherSubjects = (appData.materia || []).filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
         
-        // Si el profesor tiene materias, mostrar estudiantes inscritos en esas materias
-        // PERO también mostrar estudiantes que no tienen materias asignadas aún
+        // Mostrar todos los estudiantes inscritos en materias del docente
+        // Y también estudiantes que no tienen materias asignadas aún
         if (teacherSubjects.length > 0) {
-            // Filter by course/division if selected
-            if (selectedCourse) {
-                teacherSubjects = teacherSubjects.filter(subject => subject.Curso_division === selectedCourse);
-            }
-            
-            const teacherSubjectIds = teacherSubjects.map(subject => subject.ID_materia);
+            const teacherSubjectIds = teacherSubjects.map(subject => parseInt(subject.ID_materia)).filter(id => !isNaN(id));
             
             // Get students enrolled in these subjects
             const enrolledStudentIds = new Set();
             (appData.alumnos_x_materia || []).forEach(enrollment => {
-                if (teacherSubjectIds.includes(enrollment.Materia_ID_materia)) {
-                    enrolledStudentIds.add(enrollment.Estudiante_ID_Estudiante);
+                const materiaId = parseInt(enrollment.Materia_ID_materia);
+                if (!isNaN(materiaId) && teacherSubjectIds.includes(materiaId)) {
+                    enrolledStudentIds.add(parseInt(enrollment.Estudiante_ID_Estudiante));
                 }
             });
             
             // Mostrar estudiantes inscritos en materias del docente
             // Y también estudiantes que NO tienen ninguna materia asignada (recién creados)
             const studentsWithoutSubjects = (appData.estudiante || []).filter(student => {
+                const studentId = parseInt(student.ID_Estudiante);
                 const hasAnyEnrollment = (appData.alumnos_x_materia || []).some(
-                    axm => axm.Estudiante_ID_Estudiante === student.ID_Estudiante
+                    axm => parseInt(axm.Estudiante_ID_Estudiante) === studentId
                 );
                 return !hasAnyEnrollment;
             });
             
-            const enrolledStudentsArray = Array.from(enrolledStudentIds);
-            filteredStudents = filteredStudents.filter(student => 
-                enrolledStudentsArray.includes(student.ID_Estudiante) || 
-                studentsWithoutSubjects.some(s => s.ID_Estudiante === student.ID_Estudiante)
-            );
+            const enrolledStudentsArray = Array.from(enrolledStudentIds).map(id => parseInt(id));
+            filteredStudents = filteredStudents.filter(student => {
+                const studentId = parseInt(student.ID_Estudiante);
+                return enrolledStudentsArray.includes(studentId) || 
+                       studentsWithoutSubjects.some(s => parseInt(s.ID_Estudiante) === studentId);
+            });
         }
         // Si el profesor NO tiene materias, mostrar TODOS los estudiantes
     }
     
-    // Filter by subject (students enrolled in this subject)
-    if (selectedSubject) {
-        const subjectId = parseInt(selectedSubject);
+    // Si ambos filtros están seleccionados (y no es "todas las materias" y no es "INTENSIFICADORES"), aplicar lógica combinada
+    if (selectedSubject && selectedSubject !== '' && selectedCourse && selectedCourse !== '' && selectedCourse !== 'INTENSIFICADORES') {
+        console.log('getFilteredUnifiedStudents: Filtrando por materia Y curso simultáneamente');
+        const subjectId = normalizeId(selectedSubject);
+        const cursoIdNum = normalizeId(selectedCourse);
+        
+        // Verificar que los IDs sean válidos
+        if (subjectId === null) {
+            console.warn('getFilteredUnifiedStudents: ID de materia inválido');
+            return [];
+        }
+        
+        // Verificar que la materia seleccionada pertenezca al curso seleccionado
+        const selectedSubjectData = (appData.materia || []).find(m => {
+            const materiaId = normalizeId(m.ID_materia);
+            return materiaId !== null && materiaId === subjectId;
+        });
+        
+        if (!selectedSubjectData) {
+            console.warn('getFilteredUnifiedStudents: Materia seleccionada no encontrada');
+            return [];
+        }
+        
+        console.log('getFilteredUnifiedStudents: Materia seleccionada:', selectedSubjectData);
+        
+        // Determinar el Curso_division del curso seleccionado
+        let targetCursoDivision = null;
+        
+        if (cursoIdNum !== null) {
+            // Si el curso es un ID numérico, buscar en el mapa almacenado
+            if (window.courseIdToDivisionMap && window.courseIdToDivisionMap[cursoIdNum]) {
+                targetCursoDivision = window.courseIdToDivisionMap[cursoIdNum];
+            } else {
+                // Si no está en el mapa, buscar en materias del docente
+                // Buscar todas las materias del docente que tengan el mismo Curso_division
+                // y verificar si alguna pertenece a ese curso
+                const teacherSubjects = (appData.materia || []).filter(subject => {
+                    const subjectTeacherId = normalizeId(subject.Usuarios_docente_ID_docente);
+                    return subjectTeacherId !== null && subjectTeacherId === teacherId;
+                });
+                // Si la materia seleccionada tiene un Curso_division, usarlo como referencia
+                // (esto es un fallback si el mapa no está disponible)
+                targetCursoDivision = selectedSubjectData.Curso_division;
+            }
+        } else {
+            // Si el curso es Curso_division (string), usar directamente
+            targetCursoDivision = selectedCourse;
+        }
+        
+        // Verificar que la materia pertenezca al curso seleccionado
+        if (selectedSubjectData.Curso_division !== targetCursoDivision) {
+            console.warn('getFilteredUnifiedStudents: La materia no pertenece al curso seleccionado', {
+                materiaCurso: selectedSubjectData.Curso_division,
+                cursoSeleccionado: targetCursoDivision
+            });
+            return [];
+        }
+        
+        // Si la materia pertenece al curso, filtrar solo por materia
+        // (ya que la materia ya está filtrada por curso)
+        const normalizedSubjectId = normalizeId(subjectId);
         const enrolledStudentIds = (appData.alumnos_x_materia || [])
-            .filter(enrollment => enrollment.Materia_ID_materia === subjectId)
-            .map(enrollment => enrollment.Estudiante_ID_Estudiante);
+            .filter(enrollment => {
+                const enrollmentMateriaId = normalizeId(enrollment.Materia_ID_materia);
+                return enrollmentMateriaId !== null && enrollmentMateriaId === normalizedSubjectId;
+            })
+            .map(enrollment => normalizeId(enrollment.Estudiante_ID_Estudiante))
+            .filter(id => id !== null);
         
-        filteredStudents = filteredStudents.filter(student => 
-            enrolledStudentIds.includes(student.ID_Estudiante)
-        );
+        console.log('getFilteredUnifiedStudents: Estudiantes inscritos en materia del curso:', enrolledStudentIds.length);
+        filteredStudents = filteredStudents.filter(student => {
+            const studentId = normalizeId(student.ID_Estudiante);
+            return studentId !== null && enrolledStudentIds.includes(studentId);
+        });
+        // Retornar aquí porque ya se aplicó la lógica combinada
+        // El filtro de tema se aplicará después si es necesario
+    } else {
+        // Aplicar filtros individualmente si solo uno está seleccionado
+        
+        // Filter by course using direct relationship (Curso_ID_curso)
+        // Solo aplicar filtro de curso si hay uno seleccionado (no vacío) y no es la opción especial de intensificadores
+        if (selectedCourse && selectedCourse !== '' && selectedCourse !== 'all' && selectedCourse !== 'INTENSIFICADORES') {
+            console.log('getFilteredUnifiedStudents: === INICIANDO FILTRADO POR CURSO ===');
+            console.log('getFilteredUnifiedStudents: Curso seleccionado:', selectedCourse, 'Tipo:', typeof selectedCourse);
+            const beforeCount = filteredStudents.length;
+            console.log('getFilteredUnifiedStudents: Estudiantes antes del filtro:', beforeCount);
+            
+            // Obtener TODOS los estudiantes que pertenecen a este curso
+            const studentsInCourse = new Set();
+            
+            // selectedCourse puede ser Curso_division (string) o ID_curso (number)
+            // Primero intentar como ID_curso
+            const cursoIdNum = parseInt(selectedCourse);
+            
+            if (!isNaN(cursoIdNum) && cursoIdNum.toString() === selectedCourse) {
+                // Es un ID_curso numérico
+                console.log('getFilteredUnifiedStudents: Es un ID_curso numérico:', cursoIdNum);
+                
+                // Obtener el Curso_division del curso seleccionado
+                const cursoDivision = window.courseIdToDivisionMap && window.courseIdToDivisionMap[cursoIdNum];
+                console.log('getFilteredUnifiedStudents: Curso_division del curso seleccionado:', cursoDivision);
+                
+                // 1. Estudiantes con Curso_ID_curso asignado directamente
+                filteredStudents.forEach(student => {
+                    const studentCursoId = student.Curso_ID_curso ? parseInt(student.Curso_ID_curso) : null;
+                    if (studentCursoId === cursoIdNum) {
+                        studentsInCourse.add(parseInt(student.ID_Estudiante));
+                        console.log('getFilteredUnifiedStudents: Estudiante encontrado por Curso_ID_curso:', student.ID_Estudiante, student.Nombre);
+                    }
+                });
+                
+                // 2. Estudiantes a través de materias del curso (para aquellos sin Curso_ID_curso)
+                if (cursoDivision) {
+                    const teacherSubjects = (appData.materia || []).filter(subject => {
+                        const subjectTeacherId = parseInt(subject.Usuarios_docente_ID_docente);
+                        return !isNaN(subjectTeacherId) && subjectTeacherId === teacherId &&
+                               subject.Curso_division === cursoDivision;
+                    });
+                    console.log('getFilteredUnifiedStudents: Materias del docente en este curso:', teacherSubjects.length, teacherSubjects.map(s => s.Nombre));
+                    
+                    const teacherSubjectIds = teacherSubjects.map(subject => parseInt(subject.ID_materia)).filter(id => !isNaN(id));
+                    
+                    (appData.alumnos_x_materia || []).forEach(enrollment => {
+                        const materiaId = parseInt(enrollment.Materia_ID_materia);
+                        const studentId = parseInt(enrollment.Estudiante_ID_Estudiante);
+                        if (!isNaN(materiaId) && !isNaN(studentId) && teacherSubjectIds.includes(materiaId)) {
+                            studentsInCourse.add(studentId);
+                            console.log('getFilteredUnifiedStudents: Estudiante encontrado por materia:', studentId);
+                        }
+                    });
+                }
+            } else {
+                // Es un Curso_division (string)
+                console.log('getFilteredUnifiedStudents: Es un Curso_division (string):', selectedCourse);
+                
+                const teacherSubjects = (appData.materia || []).filter(subject => {
+                    const subjectTeacherId = parseInt(subject.Usuarios_docente_ID_docente);
+                    return !isNaN(subjectTeacherId) && subjectTeacherId === teacherId &&
+                           subject.Curso_division === selectedCourse;
+                });
+                console.log('getFilteredUnifiedStudents: Materias del curso:', teacherSubjects.length, teacherSubjects.map(s => `${s.Nombre} - ${s.Curso_division}`));
+                
+                const teacherSubjectIds = teacherSubjects.map(subject => parseInt(subject.ID_materia)).filter(id => !isNaN(id));
+                
+                (appData.alumnos_x_materia || []).forEach(enrollment => {
+                    const materiaId = parseInt(enrollment.Materia_ID_materia);
+                    const studentId = parseInt(enrollment.Estudiante_ID_Estudiante);
+                    if (!isNaN(materiaId) && !isNaN(studentId) && teacherSubjectIds.includes(materiaId)) {
+                        studentsInCourse.add(studentId);
+                        console.log('getFilteredUnifiedStudents: Estudiante encontrado por materia (string):', studentId);
+                    }
+                });
+                
+                // También incluir estudiantes con Curso_ID_curso que apunte a un curso con este Curso_division
+                if (window.courseIdToDivisionMap) {
+                    Object.keys(window.courseIdToDivisionMap).forEach(courseId => {
+                        if (window.courseIdToDivisionMap[courseId] === selectedCourse) {
+                            const courseIdNum = parseInt(courseId);
+                            filteredStudents.forEach(student => {
+                                const studentCursoId = student.Curso_ID_curso ? parseInt(student.Curso_ID_curso) : null;
+                                if (studentCursoId === courseIdNum) {
+                                    studentsInCourse.add(parseInt(student.ID_Estudiante));
+                                    console.log('getFilteredUnifiedStudents: Estudiante encontrado por Curso_ID_curso (string):', student.ID_Estudiante);
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+            
+            console.log('getFilteredUnifiedStudents: Total estudiantes encontrados en el curso:', studentsInCourse.size);
+            console.log('getFilteredUnifiedStudents: IDs de estudiantes:', Array.from(studentsInCourse));
+            
+            // Filtrar estudiantes para mostrar solo los del curso
+            filteredStudents = filteredStudents.filter(student => {
+                const studentId = parseInt(student.ID_Estudiante);
+                return studentsInCourse.has(studentId);
+            });
+            
+            console.log(`getFilteredUnifiedStudents: === RESULTADO: ${beforeCount} -> ${filteredStudents.length} estudiantes ===`);
+        } else {
+            console.log('getFilteredUnifiedStudents: No hay filtro de curso aplicado (selectedCourse:', selectedCourse, ')');
+        }
+        
+        // Filter by subject (students enrolled in this subject)
+        // Aplicar si hay una materia seleccionada (independientemente del curso)
+        // Si hay curso seleccionado también, ya se aplicó la lógica combinada arriba y se retornó
+        if (selectedSubject && selectedSubject !== '') {
+            const subjectId = normalizeId(selectedSubject);
+            console.log('getFilteredUnifiedStudents: Filtrando por materia:', subjectId);
+            if (subjectId !== null) {
+                const enrolledStudentIds = (appData.alumnos_x_materia || [])
+                    .filter(enrollment => {
+                        const enrollmentMateriaId = normalizeId(enrollment.Materia_ID_materia);
+                        return enrollmentMateriaId !== null && enrollmentMateriaId === subjectId;
+                    })
+                    .map(enrollment => normalizeId(enrollment.Estudiante_ID_Estudiante))
+                    .filter(id => id !== null);
+                
+                console.log('getFilteredUnifiedStudents: Estudiantes inscritos en materia:', enrolledStudentIds.length);
+                const beforeCount = filteredStudents.length;
+                filteredStudents = filteredStudents.filter(student => {
+                    const studentId = normalizeId(student.ID_Estudiante);
+                    return studentId !== null && enrolledStudentIds.includes(studentId);
+                });
+                console.log(`getFilteredUnifiedStudents: Filtrado por materia: ${beforeCount} -> ${filteredStudents.length} estudiantes`);
+            }
+        }
     }
     
-    // Filter by tema_estudiante status (topic progress)
-    if (selectedTopic) {
-        const studentIdsWithTopicStatus = (appData.tema_estudiante || [])
-            .filter(tema => tema.Estado === selectedTopic)
-            .map(tema => tema.Estudiante_ID_Estudiante);
-        
-        filteredStudents = filteredStudents.filter(student => 
-            studentIdsWithTopicStatus.includes(student.ID_Estudiante)
-        );
+    // Filter by topic status (COMPLETADO, EN_PROGRESO, PENDIENTE)
+    if (selectedTopicStatus && selectedTopicStatus !== '') {
+        const studentIdsWithTopicStatus = new Set();
+        (appData.tema_estudiante || []).forEach(tema => {
+            if (tema.Estado === selectedTopicStatus) {
+                const studentId = parseInt(tema.Estudiante_ID_Estudiante);
+                if (!isNaN(studentId)) {
+                    studentIdsWithTopicStatus.add(studentId);
+                }
+            }
+        });
+        filteredStudents = filteredStudents.filter(student => {
+            const studentId = parseInt(student.ID_Estudiante);
+            return studentIdsWithTopicStatus.has(studentId);
+        });
+        console.log(`getFilteredUnifiedStudents: Filtrado por temas ${selectedTopicStatus}:`, filteredStudents.length);
     }
     
+    // Filter by intensificadores only (si se seleccionó la opción especial en el dropdown de cursos)
+    if (onlyIntensificadores) {
+        const beforeCount = filteredStudents.length;
+        filteredStudents = filteredStudents.filter(student => {
+            // Verificar si el estudiante es intensificador
+            // Puede ser por INTENSIFICA = true/1 o por Estado = 'INTENSIFICA'
+            const esIntensificador = 
+                (student.INTENSIFICA === true || student.INTENSIFICA === 1 || student.INTENSIFICA === '1' || String(student.INTENSIFICA).toLowerCase() === 'true') ||
+                (student.Estado && String(student.Estado).toUpperCase() === 'INTENSIFICA');
+            
+            return esIntensificador;
+        });
+        console.log(`getFilteredUnifiedStudents: Filtrado por intensificadores: ${beforeCount} -> ${filteredStudents.length} estudiantes`);
+    } else if (selectedCourse && selectedCourse !== '' && selectedCourse !== 'INTENSIFICADORES') {
+        // Si hay un curso seleccionado (y no es la opción de intensificadores), aplicar el filtro de curso normalmente
+        // Este código ya existe más arriba, pero lo mencionamos aquí para claridad
+    }
+    
+    console.log('getFilteredUnifiedStudents: Total estudiantes filtrados:', filteredStudents.length);
     return filteredStudents;
 }
  
 
-function filterUnifiedData() {
+async function filterUnifiedData() {
+    console.log('filterUnifiedData: Iniciando filtrado...');
+    
+    const subjectFilter = document.getElementById('unifiedSubjectFilter');
+    const courseFilter = document.getElementById('unifiedCourseFilter');
+    const topicFilter = document.getElementById('unifiedTopicFilter');
+    
+    const selectedSubject = subjectFilter ? subjectFilter.value : '';
+    const selectedCourse = courseFilter ? courseFilter.value : '';
+    const selectedTopicStatus = topicFilter ? topicFilter.value : '';
+    const onlyIntensificadores = selectedCourse === 'INTENSIFICADORES';
+    
+    console.log('filterUnifiedData: Filtros seleccionados:', {
+        subject: selectedSubject,
+        course: selectedCourse,
+        topicStatus: selectedTopicStatus,
+        onlyIntensificadores: onlyIntensificadores
+    });
+    
     clearSelectedStudentFilter({ suppressReload: true });
-    loadUnifiedStudentData();
+    await loadUnifiedStudentData();
     // También actualizar la matriz si está visible
     const studentMatrix = document.getElementById('unifiedStudentMatrix');
     if (studentMatrix && studentMatrix.style.display !== 'none') {
@@ -837,15 +1166,25 @@ function loadStudentMatrix() {
 
     if (courseFilter && courseFilter.value) {
         const selectedCourse = courseFilter.value;
-        const subjectIdsInCourse = teacherSubjects
-            .filter(s => s.Curso_division === selectedCourse)
-            .map(s => s.ID_materia);
-        const studentIdsInCourse = (appData.alumnos_x_materia || [])
-            .filter(axm => subjectIdsInCourse.includes(axm.Materia_ID_materia))
-            .map(axm => axm.Estudiante_ID_Estudiante);
-        filteredStudents = filteredStudents.filter(s => 
-            studentIdsInCourse.includes(s.ID_Estudiante)
-        );
+        // Intentar como ID_curso primero
+        const cursoIdNum = parseInt(selectedCourse);
+        if (!isNaN(cursoIdNum)) {
+            // Filtrar por ID_curso directamente usando la relación Curso_ID_curso
+            filteredStudents = filteredStudents.filter(s => 
+                s.Curso_ID_curso && parseInt(s.Curso_ID_curso) === cursoIdNum
+            );
+        } else {
+            // Si no es un número, buscar por Curso_division a través de las materias
+            const subjectIdsInCourse = teacherSubjects
+                .filter(s => s.Curso_division === selectedCourse)
+                .map(s => s.ID_materia);
+            const studentIdsInCourse = (appData.alumnos_x_materia || [])
+                .filter(axm => subjectIdsInCourse.includes(axm.Materia_ID_materia))
+                .map(axm => axm.Estudiante_ID_Estudiante);
+            filteredStudents = filteredStudents.filter(s => 
+                studentIdsInCourse.includes(s.ID_Estudiante)
+            );
+        }
     }
 
     // Crear mapa de inscripciones para acceso rápido
@@ -983,52 +1322,251 @@ function switchToMatrixView() {
 
 function populateSubjectFilter() {
     const subjectFilter = document.getElementById('unifiedSubjectFilter');
-    if (!subjectFilter) return;
+    if (!subjectFilter) {
+        console.warn('populateSubjectFilter: Elemento unifiedSubjectFilter no encontrado');
+        return;
+    }
+
+    // Ensure appData is available - check both appData and window.appData
+    const data = appData || window.appData || window.data || {};
+    if (!data.materia || !Array.isArray(data.materia)) {
+        console.warn('populateSubjectFilter: appData.materia no disponible, esperando...', {
+            hasAppData: !!appData,
+            hasWindowAppData: !!window.appData,
+            hasWindowData: !!window.data,
+            materiaType: typeof data.materia,
+            materiaLength: data.materia ? data.materia.length : 'N/A'
+        });
+        // Retry after a short delay if appData is not ready
+        setTimeout(() => populateSubjectFilter(), 500);
+        return;
+    }
 
     // Get current user ID from localStorage
     const currentUserId = localStorage.getItem('userId');
+    if (!currentUserId) {
+        console.warn('populateSubjectFilter: No hay userId en localStorage');
+        return;
+    }
     
     // Filter subjects by current teacher if available
-    let subjectsToShow = appData.materia;
-    if (currentUserId) {
+    let subjectsToShow = data.materia || [];
+    if (currentUserId && subjectsToShow.length > 0) {
         const teacherId = parseInt(currentUserId);
-        subjectsToShow = appData.materia.filter(subject => subject.Usuarios_docente_ID_docente === teacherId);
+        subjectsToShow = subjectsToShow.filter(subject => 
+            parseInt(subject.Usuarios_docente_ID_docente) === teacherId
+        );
     }
 
+    console.log('populateSubjectFilter: Materias encontradas:', subjectsToShow.length, subjectsToShow);
+
+    if (subjectsToShow.length === 0) {
+        console.warn('populateSubjectFilter: No se encontraron materias para el usuario');
+    }
+
+    // Filtrar por curso si hay uno seleccionado
+    const courseFilter = document.getElementById('unifiedCourseFilter');
+    const selectedCourse = courseFilter ? courseFilter.value : '';
+    if (selectedCourse && selectedCourse !== '') {
+        const cursoIdNum = parseInt(selectedCourse);
+        let targetCursoDivision = null;
+        
+        if (!isNaN(cursoIdNum)) {
+            // Si es un ID_curso, obtener el Curso_division del mapa
+            targetCursoDivision = window.courseIdToDivisionMap && window.courseIdToDivisionMap[cursoIdNum];
+        } else {
+            // Si es un Curso_division (string), usarlo directamente
+            targetCursoDivision = selectedCourse;
+        }
+        
+        if (targetCursoDivision) {
+            subjectsToShow = subjectsToShow.filter(subject => 
+                subject.Curso_division === targetCursoDivision
+            );
+        }
+    }
+    
+    // Agrupar materias por nombre para mostrar solo una vez
+    const uniqueSubjectsByName = new Map();
+    subjectsToShow.forEach(subject => {
+        const subjectName = (subject.Nombre || 'Sin nombre').trim();
+        if (!uniqueSubjectsByName.has(subjectName)) {
+            // Guardar la primera materia con este nombre que encontremos
+            uniqueSubjectsByName.set(subjectName, subject);
+        }
+    });
+    
+    // Mostrar materias únicas por nombre
     subjectFilter.innerHTML = `
         <option value="" data-translate="all_subjects">Todas las Materias</option>
-        ${subjectsToShow.map(subject => 
-            `<option value="${subject.ID_materia}">${subject.Nombre}</option>`
+        ${Array.from(uniqueSubjectsByName.values()).map(subject => 
+            `<option value="${subject.ID_materia}">${subject.Nombre || 'Sin nombre'}</option>`
         ).join('')}
     `;
 }
 
-function populateUnifiedCourseFilter() {
+async function populateUnifiedCourseFilter() {
     const courseFilter = document.getElementById('unifiedCourseFilter');
-    if (!courseFilter) return;
+    if (!courseFilter) {
+        console.warn('populateUnifiedCourseFilter: Elemento unifiedCourseFilter no encontrado');
+        return;
+    }
 
     // Get current user ID
     const currentUserId = localStorage.getItem('userId');
-    if (!currentUserId) return;
+    if (!currentUserId) {
+        console.warn('populateUnifiedCourseFilter: No hay userId en localStorage');
+        return;
+    }
 
-    // Get user's subjects
-    const userSubjects = appData.materia.filter(subject => 
-        subject.Usuarios_docente_ID_docente === parseInt(currentUserId)
-    );
+    // Ensure appData is available - check both appData and window.appData
+    const data = appData || window.appData || window.data || {};
+    if (!data.materia || !Array.isArray(data.materia)) {
+        console.warn('populateUnifiedCourseFilter: appData.materia no disponible, esperando...', {
+            hasAppData: !!appData,
+            hasWindowAppData: !!window.appData,
+            hasWindowData: !!window.data
+        });
+        // Retry after a short delay if appData is not ready
+        setTimeout(() => populateUnifiedCourseFilter(), 500);
+        return;
+    }
 
-    // Get unique course divisions from user's subjects
-    const courseDivisions = [...new Set(userSubjects.map(subject => subject.Curso_division))];
+    const uniqueCourses = [];
+    // Almacenar mapa de ID_curso -> Curso_division para uso posterior
+    window.courseIdToDivisionMap = window.courseIdToDivisionMap || {};
     
-    // Clear existing options except the first one
+    // Primero, obtener cursos desde la API (tabla Curso)
+    try {
+        // Determinar la ruta base según desde dónde se carga
+        const isInPages = window.location.pathname.includes('/pages/');
+        const baseUrl = isInPages ? '../api' : 'api';
+        
+        const response = await fetch(`${baseUrl}/curso.php?userId=${currentUserId}&estado=ACTIVO`);
+        
+        // Verificar que la respuesta sea JSON válido
+        if (!response.ok) {
+            console.warn(`Error al cargar cursos: ${response.status} ${response.statusText}`);
+            // Continuar con el fallback de materias
+        } else {
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const textResponse = await response.text();
+                console.warn('Respuesta no es JSON válido al cargar cursos:', textResponse.substring(0, 200));
+                // Continuar con el fallback de materias
+            } else {
+                const result = await response.json();
+                if (result.success && result.data && Array.isArray(result.data)) {
+                    result.data.forEach(c => {
+                        if (c.ID_curso && c.Curso_division && c.Estado === 'ACTIVO') {
+                            const cursoId = parseInt(c.ID_curso);
+                            // Extraer número y división del Curso_division para mostrar formato simple
+                            // Curso_division es como "2º Curso - División B", queremos mostrar "2B"
+                            let simpleDivision = c.Curso_division;
+                            if (c.Numero_curso && c.Division) {
+                                // Si tenemos Numero_curso y Division, usarlos directamente
+                                simpleDivision = `${c.Numero_curso}${c.Division}`;
+                            } else {
+                                // Intentar extraer del Curso_division
+                                // Formato: "2º Curso - División B" -> "2B"
+                                const match = c.Curso_division.match(/(\d+).*?([A-Z])/i);
+                                if (match) {
+                                    simpleDivision = `${match[1]}${match[2].toUpperCase()}`;
+                                }
+                            }
+                            uniqueCourses.push({
+                                id: cursoId,
+                                division: c.Curso_division,
+                                simpleDivision: simpleDivision
+                            });
+                            // Almacenar en el mapa para uso posterior
+                            window.courseIdToDivisionMap[cursoId] = c.Curso_division;
+                        }
+                    });
+                    console.log('populateUnifiedCourseFilter: Cursos desde API:', uniqueCourses.length);
+                }
+            }
+        }
+    } catch (error) {
+        console.warn('Error al cargar cursos desde API:', error);
+        // Continuar con el fallback de materias
+    }
+    
+    // También agregar cursos de las materias como fallback
+    const userSubjects = (data.materia || []).filter(subject => 
+        parseInt(subject.Usuarios_docente_ID_docente) === parseInt(currentUserId)
+    );
+    
+    console.log('populateUnifiedCourseFilter: Materias del usuario:', userSubjects.length);
+    
+    const courseDivisionsFromSubjects = [...new Set(userSubjects.map(subject => subject.Curso_division).filter(Boolean))];
+    courseDivisionsFromSubjects.forEach(division => {
+        if (!uniqueCourses.some(c => c.division === division)) {
+            // Extraer formato simple del Curso_division
+            let simpleDivision = division;
+            const match = division.match(/(\d+).*?([A-Z])/i);
+            if (match) {
+                simpleDivision = `${match[1]}${match[2].toUpperCase()}`;
+            }
+            uniqueCourses.push({
+                id: null,
+                division: division,
+                simpleDivision: simpleDivision
+            });
+        }
+    });
+    
+    console.log('populateUnifiedCourseFilter: Total cursos únicos:', uniqueCourses.length);
+    
+    // Eliminar duplicados por division (mantener el que tiene ID_curso si hay duplicados)
+    const coursesByDivision = new Map();
+    uniqueCourses.forEach(course => {
+        const existing = coursesByDivision.get(course.division);
+        if (!existing || (course.id && !existing.id)) {
+            coursesByDivision.set(course.division, course);
+        }
+    });
+    const finalCourses = Array.from(coursesByDivision.values());
+    
+    // Ordenar cursos de manera más inteligente
+    finalCourses.sort((a, b) => {
+        // Primero por número de curso
+        const numA = a.simpleDivision.match(/^(\d+)/);
+        const numB = b.simpleDivision.match(/^(\d+)/);
+        if (numA && numB) {
+            const numAInt = parseInt(numA[1]);
+            const numBInt = parseInt(numB[1]);
+            if (numAInt !== numBInt) {
+                return numAInt - numBInt;
+            }
+        }
+        // Luego por división (A, B, C, etc.)
+        if (a.division < b.division) return -1;
+        if (a.division > b.division) return 1;
+        return 0;
+    });
+    
+    // Clear existing options
     courseFilter.innerHTML = '<option value="" data-translate="all_courses">Todos los Cursos</option>';
     
-    // Add course division options
-    courseDivisions.forEach(division => {
+    // Add course options (usar ID_curso si está disponible, sino usar Curso_division)
+    finalCourses.forEach(course => {
         const option = document.createElement('option');
-        option.value = division;
-        option.textContent = division;
+        // Usar ID_curso si está disponible para filtrado directo, sino usar Curso_division
+        option.value = course.id ? course.id.toString() : course.division;
+        // Mostrar el formato completo como está guardado en la base de datos (Curso_division)
+        option.textContent = course.division;
         courseFilter.appendChild(option);
     });
+    
+    // Agregar opción especial para filtrar solo intensificadores
+    const intensificadoresOption = document.createElement('option');
+    intensificadoresOption.value = 'INTENSIFICADORES';
+    intensificadoresOption.textContent = 'Solo Intensificadores';
+    intensificadoresOption.setAttribute('data-translate', 'only_intensificadores');
+    courseFilter.appendChild(intensificadoresOption);
+    
+    console.log('populateUnifiedCourseFilter: Cursos finales mostrados:', finalCourses.length);
 }
 
 function populateExamsCourseFilter() {
@@ -1081,6 +1619,127 @@ function populateExamsSubjectFilter() {
     `;
 }
 
+// Función para editar el estado de un tema de intensificación
+window.editIntensificacionTheme = function(temaEstudianteId, studentId) {
+    if (!temaEstudianteId || !studentId) {
+        alert('Error: Datos incompletos');
+        return;
+    }
+    
+    // Buscar el tema en appData
+    const temaEstudiante = (appData.tema_estudiante || []).find(te => parseInt(te.ID_Tema_estudiante) === parseInt(temaEstudianteId));
+    if (!temaEstudiante) {
+        alert('Error: Tema no encontrado');
+        return;
+    }
+    
+    const estadoActual = temaEstudiante.Estado || 'PENDIENTE';
+    
+    // Crear modal para cambiar el estado
+    const modalContent = `
+        <div style="padding: 20px;">
+            <h3 style="margin-bottom: 15px;">Editar Estado del Tema</h3>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Estado actual: <span style="color: #667eea;">${estadoActual}</span></label>
+                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Nuevo estado:</label>
+                <select id="nuevoEstadoSelect" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1em;">
+                    <option value="PENDIENTE" ${estadoActual === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
+                    <option value="EN_PROGRESO" ${estadoActual === 'EN_PROGRESO' ? 'selected' : ''}>EN_PROGRESO</option>
+                    <option value="COMPLETADO" ${estadoActual === 'COMPLETADO' ? 'selected' : ''}>COMPLETADO</option>
+                    <option value="CANCELADO" ${estadoActual === 'CANCELADO' ? 'selected' : ''}>CANCELADO</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button id="cancelEditThemeBtn" class="btn-secondary" style="padding: 8px 16px;">Cancelar</button>
+                <button id="saveEditThemeBtn" class="btn-primary" style="padding: 8px 16px;">Guardar Cambios</button>
+            </div>
+        </div>
+    `;
+    
+    // Crear o actualizar modal
+    let modal = document.getElementById('editIntensificacionThemeModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'editIntensificacionThemeModal';
+        modal.className = 'modal-overlay';
+        document.body.appendChild(modal);
+    }
+    
+    const modalWrapper = document.createElement('div');
+    modalWrapper.className = 'modal-dialog';
+    modalWrapper.innerHTML = `
+        <div class="modal-dialog-content">
+            <div class="modal-dialog-header">
+                <h3>Editar Estado del Tema</h3>
+                <button class="modal-dialog-close close-modal">&times;</button>
+            </div>
+            ${modalContent}
+        </div>
+    `;
+    
+    modal.innerHTML = '';
+    modal.appendChild(modalWrapper);
+    
+    // Setup modal handlers
+    if (typeof setupModalHandlers === 'function') {
+        setupModalHandlers('editIntensificacionThemeModal');
+    }
+    
+    // Setup event listeners
+    const cancelBtn = modalWrapper.querySelector('#cancelEditThemeBtn');
+    const saveBtn = modalWrapper.querySelector('#saveEditThemeBtn');
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            if (typeof closeModal === 'function') {
+                closeModal('editIntensificacionThemeModal');
+            } else {
+                modal.classList.remove('active');
+            }
+        });
+    }
+    
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            const nuevoEstado = modalWrapper.querySelector('#nuevoEstadoSelect').value;
+            
+            if (nuevoEstado === estadoActual) {
+                if (typeof closeModal === 'function') {
+                    closeModal('editIntensificacionThemeModal');
+                } else {
+                    modal.classList.remove('active');
+                }
+                return;
+            }
+            
+            // Deshabilitar botón durante el guardado
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Guardando...';
+            
+            // Llamar a la función de actualización
+            if (typeof updateIntensificacionThemeStatus === 'function') {
+                await updateIntensificacionThemeStatus(temaEstudianteId, nuevoEstado, studentId);
+            } else {
+                alert('Error: Función de actualización no disponible');
+            }
+            
+            // Cerrar modal
+            if (typeof closeModal === 'function') {
+                closeModal('editIntensificacionThemeModal');
+            } else {
+                modal.classList.remove('active');
+            }
+        });
+    }
+    
+    // Show modal
+    if (typeof showModal === 'function') {
+        showModal('editIntensificacionThemeModal');
+    } else {
+        modal.classList.add('active');
+    }
+};
+
 // Función para actualizar el estado de un tema de intensificación
 window.updateIntensificacionThemeStatus = async function(temaEstudianteId, nuevoEstado, studentId) {
     if (!temaEstudianteId || !nuevoEstado) {
@@ -1089,8 +1748,11 @@ window.updateIntensificacionThemeStatus = async function(temaEstudianteId, nuevo
     }
     
     try {
+        const isInPages = window.location.pathname.includes('/pages/');
+        const baseUrl = isInPages ? '../api' : 'api';
+        
         // El endpoint espera el ID en la URL o en query string
-        const response = await fetch(`../api/tema_estudiante.php?id=${temaEstudianteId}`, {
+        const response = await fetch(`${baseUrl}/tema_estudiante.php?id=${temaEstudianteId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -1106,18 +1768,28 @@ window.updateIntensificacionThemeStatus = async function(temaEstudianteId, nuevo
         const result = await response.json();
         
         if (response.ok && result.success !== false) {
-            // Recargar datos
+            // Recargar datos completamente
             if (typeof loadData === 'function') {
                 await loadData();
             }
             
-            // Recargar el panel de detalles del estudiante
+            // Esperar un momento para que los datos se actualicen
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Recargar el panel de detalles del estudiante para actualizar la vista
             if (typeof showStudentDetail === 'function') {
-                showStudentDetail(studentId);
+                await showStudentDetail(studentId);
+            }
+            
+            // Recargar también la lista de estudiantes si está visible
+            if (typeof loadUnifiedStudentData === 'function') {
+                loadUnifiedStudentData();
             }
             
             // Mostrar notificación
-            const estadoTexto = nuevoEstado === 'COMPLETADO' ? 'Terminado' : nuevoEstado;
+            const estadoTexto = nuevoEstado === 'COMPLETADO' ? 'Completado' : 
+                               nuevoEstado === 'CANCELADO' ? 'Cancelado' : 
+                               nuevoEstado;
             if (typeof showNotification === 'function') {
                 showNotification(`Tema marcado como ${estadoTexto}`, 'success');
             } else {
@@ -1128,11 +1800,11 @@ window.updateIntensificacionThemeStatus = async function(temaEstudianteId, nuevo
         }
     } catch (error) {
         console.error('Error actualizando estado del tema:', error);
-        alert('Error al conectar con el servidor');
+        alert('Error al conectar con el servidor: ' + (error.message || 'Error desconocido'));
     }
 };
 
-function showStudentDetail(studentId) {
+async function showStudentDetail(studentId) {
     // Ensure function is accessible globally
     if (typeof studentId === 'undefined' || studentId === null) {
         return;
@@ -1141,17 +1813,82 @@ function showStudentDetail(studentId) {
     const studentIdNum = parseInt(studentId);
     
     // Ensure appData exists
-    if (!appData || !appData.estudiante || !Array.isArray(appData.estudiante)) {
-        return;
+    if (!appData) {
+        appData = {};
+    }
+    if (!appData.estudiante || !Array.isArray(appData.estudiante)) {
+        appData.estudiante = [];
     }
 
     // Find student - handle both string and number comparisons
-    const student = appData.estudiante.find(s => {
+    let student = appData.estudiante.find(s => {
         const studentIdValue = parseInt(s.ID_Estudiante);
         return studentIdValue === studentIdNum;
     });
     
+    // Si no se encuentra en appData, recargar datos y luego obtenerlo desde la API
     if (!student) {
+        console.warn('showStudentDetail: Estudiante no encontrado en appData, recargando datos...', studentIdNum);
+        // Primero intentar recargar appData completo
+        if (typeof loadData === 'function') {
+            try {
+                await loadData();
+                // Buscar nuevamente después de recargar
+                student = appData.estudiante?.find(s => {
+                    const studentIdValue = parseInt(s.ID_Estudiante);
+                    return studentIdValue === studentIdNum;
+                });
+            } catch (error) {
+                console.warn('showStudentDetail: Error al recargar datos:', error);
+            }
+        }
+        
+        // Si aún no se encuentra, obtenerlo directamente de la API
+        if (!student) {
+            console.warn('showStudentDetail: Estudiante aún no encontrado, obteniendo desde API...', studentIdNum);
+            try {
+                const isInPages = window.location.pathname.includes('/pages/');
+                const baseUrl = isInPages ? '../api' : 'api';
+                const response = await fetch(`${baseUrl}/estudiantes.php?id=${studentIdNum}`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const studentData = await response.json();
+                    // Si la respuesta es un objeto con el estudiante directamente
+                    if (studentData.ID_Estudiante) {
+                        student = studentData;
+                        // Actualizar appData con el estudiante obtenido
+                        if (!appData.estudiante) {
+                            appData.estudiante = [];
+                        }
+                        // Verificar si ya existe en appData y actualizarlo, o agregarlo
+                        const existingIndex = appData.estudiante.findIndex(s => 
+                            parseInt(s.ID_Estudiante) === studentIdNum
+                        );
+                        if (existingIndex >= 0) {
+                            appData.estudiante[existingIndex] = student;
+                        } else {
+                            appData.estudiante.push(student);
+                        }
+                    } else if (studentData.success === false) {
+                        console.error('showStudentDetail: Error desde API:', studentData.message);
+                        // No mostrar alert aquí, solo retornar silenciosamente
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('showStudentDetail: Error al obtener estudiante desde API:', error);
+                // No mostrar alert aquí, solo retornar silenciosamente
+                return;
+            }
+        }
+    }
+    
+    if (!student) {
+        console.error('showStudentDetail: No se pudo obtener el estudiante', studentIdNum);
         return;
     }
     // Verificar si el estudiante es intensificador usando la columna INTENSIFICA
@@ -1242,6 +1979,17 @@ function showStudentDetail(studentId) {
 
     // Populate tema_estudiante records
     populateStudentTemaEstudiante(studentIdNum);
+    
+    // Si es intensificador, mostrar temas de intensificación que debe
+    if (isIntensificador) {
+        populateIntensificacionThemes(studentIdNum);
+    } else {
+        // Ocultar la sección si no es intensificador
+        const intensificacionSection = document.getElementById('intensificacionThemesSection');
+        if (intensificacionSection) {
+            intensificacionSection.style.display = 'none';
+        }
+    }
 
     // Show modal
     const modal = document.getElementById('studentDetailsModal');
@@ -1375,6 +2123,139 @@ function populateStudentTemaEstudiante(studentId) {
     }).join('');
 
     temaEstudianteList.innerHTML = temasHtml;
+}
+
+// Función para mostrar los temas de intensificación que debe el estudiante
+function populateIntensificacionThemes(studentId) {
+    const intensificacionList = document.getElementById('studentIntensificacionThemesList');
+    const intensificacionSection = document.getElementById('intensificacionThemesSection');
+    
+    if (!intensificacionList || !intensificacionSection) return;
+    
+    // Mostrar la sección
+    intensificacionSection.style.display = 'block';
+    
+    // Ensure arrays exist
+    if (!appData.tema_estudiante || !Array.isArray(appData.tema_estudiante)) {
+        appData.tema_estudiante = [];
+    }
+    if (!appData.contenido || !Array.isArray(appData.contenido)) {
+        appData.contenido = [];
+    }
+    if (!appData.materia || !Array.isArray(appData.materia)) {
+        appData.materia = [];
+    }
+    
+    // Obtener temas de intensificación que debe (PENDIENTE o EN_PROGRESO)
+    const temasIntensificacion = appData.tema_estudiante
+        .filter(te => {
+            const teStudentId = parseInt(te.Estudiante_ID_Estudiante);
+            const estado = (te.Estado || '').toUpperCase();
+            // Solo mostrar temas pendientes o en progreso (los que debe)
+            return teStudentId === studentId && 
+                   (estado === 'PENDIENTE' || estado === 'EN_PROGRESO');
+        })
+        .map(te => {
+            const contenido = appData.contenido.find(c => parseInt(c.ID_contenido) === parseInt(te.Contenido_ID_contenido));
+            const materia = contenido ? appData.materia.find(m => parseInt(m.ID_materia) === parseInt(contenido.Materia_ID_materia)) : null;
+            return { tema_estudiante: te, contenido, materia };
+        })
+        .filter(item => item.contenido)
+        .sort((a, b) => {
+            // Ordenar por fecha de actualización (más reciente primero)
+            const dateA = a.tema_estudiante.Fecha_actualizacion ? new Date(a.tema_estudiante.Fecha_actualizacion) : new Date(0);
+            const dateB = b.tema_estudiante.Fecha_actualizacion ? new Date(b.tema_estudiante.Fecha_actualizacion) : new Date(0);
+            return dateB - dateA;
+        });
+    
+    if (temasIntensificacion.length === 0) {
+        intensificacionList.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #999;">
+                <i class="fas fa-check-circle" style="font-size: 3em; margin-bottom: 15px; opacity: 0.3; color: #4caf50;"></i>
+                <p style="font-size: 1.1em; margin-bottom: 5px;">No hay temas pendientes</p>
+                <p style="font-size: 0.9em; color: #bbb;">Este estudiante intensificador no tiene temas pendientes de intensificación.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Construir HTML para los temas de intensificación
+    const temasHtml = temasIntensificacion.map(item => {
+        const { tema_estudiante, contenido, materia } = item;
+        
+        const estado = tema_estudiante.Estado || 'PENDIENTE';
+        const observaciones = tema_estudiante.Observaciones || '';
+        
+        // Determinar color basado en el estado
+        let estadoColor = '#ff9800'; // Naranja (pendiente)
+        let estadoBg = '#fff3e0';
+        let estadoIcon = 'fa-clock';
+        
+        if (estado === 'EN_PROGRESO') {
+            estadoColor = '#ffc107';
+            estadoBg = '#fff9c4';
+            estadoIcon = 'fa-spinner';
+        }
+        
+        // Formatear fecha
+        const fechaActualizacion = tema_estudiante.Fecha_actualizacion 
+            ? new Date(tema_estudiante.Fecha_actualizacion).toLocaleDateString('es-ES', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            })
+            : 'Sin fecha';
+        
+        const statusClass = estado.toLowerCase().replace('_', '-');
+        
+        return `
+            <div class="tema-estudiante-card tema-intensificacion" style="border-left: 4px solid ${estadoColor}; background: ${estadoBg};">
+                <div class="tema-estudiante-header">
+                    <div class="tema-estudiante-content">
+                        <h5 class="tema-estudiante-title" style="color: #ff9800; font-weight: 600;">
+                            <i class="fas fa-star" style="margin-right: 8px;"></i>
+                            ${contenido.Tema || 'Tema sin nombre'}
+                        </h5>
+                        ${materia ? `
+                            <div class="tema-estudiante-materia">
+                                <i class="fas fa-book"></i>
+                                ${materia.Nombre}
+                            </div>
+                        ` : ''}
+                        ${observaciones ? `
+                            <div class="tema-estudiante-observaciones">
+                                <i class="fas fa-comment"></i>
+                                ${observaciones}
+                            </div>
+                        ` : ''}
+                        <div class="tema-estudiante-fecha">
+                            <i class="fas fa-calendar-alt"></i>
+                            Última actualización: ${fechaActualizacion}
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="tema-estudiante-status">
+                            <span class="status-badge status-${statusClass}" style="color: ${estadoColor};">
+                                <i class="fas ${estadoIcon}"></i>
+                                ${estado}
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 5px;">
+                            <button 
+                                class="btn-icon btn-edit" 
+                                onclick="editIntensificacionTheme(${tema_estudiante.ID_Tema_estudiante}, ${studentId})" 
+                                title="Editar Estado"
+                                style="padding: 6px 8px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-edit" style="font-size: 0.9em;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    intensificacionList.innerHTML = temasHtml;
 }
 
 // Make showStudentDetail globally accessible
@@ -1613,8 +2494,8 @@ async function showExamModal(examId = null) {
                                 </select>
                             </div>
                             <div class="form-group" style="margin-top: 15px;">
-                                <label for="examPeso" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Peso (0.00 - 9.99)</label>
-                                <input type="number" id="examPeso" name="examPeso" step="0.01" min="0" max="9.99" value="${exam ? exam.Peso || 1.00 : 1.00}" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                                <label for="examPeso" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Peso (0.00 - 10.00)</label>
+                                <input type="number" id="examPeso" name="examPeso" step="0.01" min="0" max="10" value="${exam ? exam.Peso || 1.00 : 1.00}" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
                             </div>
                             <div class="form-group" style="margin-top: 15px;">
                                 <label for="examEstado" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Estado</label>
@@ -1740,6 +2621,12 @@ async function showExamModal(examId = null) {
                 headers: { 'Accept': 'application/json' }
             });
             if (!response.ok) {
+                return [];
+            }
+            // Verificar que la respuesta sea JSON válido
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.warn('Respuesta no es JSON válido al cargar temas');
                 return [];
             }
             const freshTopics = await response.json();
@@ -1933,10 +2820,36 @@ async function saveExam(event) {
     
     // Determinar si es crear o actualizar
     const examModal = document.getElementById('examModal');
-    const existingExamId = examModal ? (examModal.dataset.examId || document.getElementById('examId')?.value) : null;
+    let existingExamId = null;
+    
+    if (examModal) {
+        // Intentar obtener el ID del dataset del modal
+        existingExamId = examModal.dataset.examId;
+        
+        // Si no está en el dataset, intentar obtenerlo del input hidden
+        if (!existingExamId) {
+            const examIdInput = document.getElementById('examId');
+            if (examIdInput && examIdInput.value) {
+                existingExamId = examIdInput.value;
+            }
+        }
+        
+        // Validar que el ID sea un número válido
+        if (existingExamId) {
+            const parsedId = parseInt(existingExamId);
+            if (isNaN(parsedId) || parsedId <= 0) {
+                existingExamId = null;
+            } else {
+                existingExamId = parsedId.toString();
+            }
+        }
+    }
+    
     const isEdit = existingExamId && !isNaN(parseInt(existingExamId));
     const url = isEdit ? `${baseUrl}/evaluacion.php?id=${existingExamId}` : `${baseUrl}/evaluacion.php`;
     const method = isEdit ? 'PUT' : 'POST';
+    
+    console.log('saveExam - isEdit:', isEdit, 'existingExamId:', existingExamId, 'url:', url, 'method:', method);
     
     try {
         const response = await fetch(url, {
@@ -1949,9 +2862,39 @@ async function saveExam(event) {
             body: JSON.stringify(examData)
         });
         
+        // Verificar que la respuesta sea JSON válido
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const textResponse = await response.text();
+            console.error('Error: Respuesta no es JSON válido', textResponse);
+            throw new Error(`Error del servidor: ${response.status} ${response.statusText}. La respuesta no es JSON válido.`);
+        }
+        
         const result = await response.json();
         
         if (response.ok && (result.success !== false && result.id)) {
+            // Si es una creación, guardar el ID en el modal para futuras ediciones
+            if (!isEdit && result.id) {
+                const modal = document.getElementById('examModal');
+                if (modal) {
+                    modal.dataset.examId = result.id;
+                    // También crear/actualizar el input hidden si existe
+                    let examIdInput = document.getElementById('examId');
+                    if (!examIdInput) {
+                        examIdInput = document.createElement('input');
+                        examIdInput.type = 'hidden';
+                        examIdInput.id = 'examId';
+                        examIdInput.value = result.id;
+                        const form = document.getElementById('examForm');
+                        if (form) {
+                            form.appendChild(examIdInput);
+                        }
+                    } else {
+                        examIdInput.value = result.id;
+                    }
+                }
+            }
+            
             // Recargar datos desde el servidor
             if (typeof loadData === 'function') {
                 await loadData();
@@ -1989,6 +2932,15 @@ async function saveExam(event) {
         }
     } catch (error) {
         console.error('Error saving exam:', error);
+        let errorMessage = 'Error al guardar la evaluación';
+        if (error.message) {
+            errorMessage = error.message;
+        }
+        if (typeof showNotification === 'function') {
+            showNotification(errorMessage, 'error');
+        } else {
+            alert(errorMessage);
+        }
         alert(error.message || 'Error al guardar la evaluación. Por favor, intente nuevamente.');
     }
 }
@@ -2877,8 +3829,15 @@ function getCurrentExamFilters() {
     };
 }
 
-function exportStudentsAsExcel() {
-    const students = getFilteredUnifiedStudents();
+async function exportStudentsAsExcel() {
+    let students = [];
+    try {
+        students = await getFilteredUnifiedStudents();
+    } catch (error) {
+        console.error('Error al obtener estudiantes para exportar:', error);
+        alert('Error al obtener estudiantes para exportar.');
+        return;
+    }
     
     if (!students || students.length === 0) {
         alert('No hay estudiantes para exportar.');
@@ -2967,8 +3926,15 @@ function exportStudentsAsExcel() {
     }
 }
 
-function exportStudentsAsDOC() {
-    const students = getFilteredUnifiedStudents();
+async function exportStudentsAsDOC() {
+    let students = [];
+    try {
+        students = await getFilteredUnifiedStudents();
+    } catch (error) {
+        console.error('Error al obtener estudiantes para exportar:', error);
+        alert('Error al obtener estudiantes para exportar.');
+        return;
+    }
     
     if (!students || students.length === 0) {
         alert('No hay estudiantes para exportar.');
@@ -3088,8 +4054,16 @@ function exportStudentsAsDOC() {
     }
 }
 
-function exportFilteredStudentsAsCSV() {
-    const students = getFilteredUnifiedStudents();
+async function exportFilteredStudentsAsCSV() {
+    let students = [];
+    try {
+        students = await getFilteredUnifiedStudents();
+    } catch (error) {
+        console.error('Error al obtener estudiantes para exportar:', error);
+        alert('Error al obtener estudiantes para exportar.');
+        return;
+    }
+    
     if (!students || students.length === 0) {
         alert('No hay estudiantes para exportar.');
         return;

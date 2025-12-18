@@ -48,8 +48,8 @@ DROP TABLE IF EXISTS Tema_estudiante;
 DROP TABLE IF EXISTS Contenido;
 DROP TABLE IF EXISTS Alumnos_X_Materia;
 DROP TABLE IF EXISTS Materia;
-DROP TABLE IF EXISTS Curso;
 DROP TABLE IF EXISTS Estudiante;
+DROP TABLE IF EXISTS Curso;
 DROP TABLE IF EXISTS Usuarios_docente;
 DROP TABLE IF EXISTS Configuracion;
 DROP TABLE IF EXISTS Plan;
@@ -121,24 +121,7 @@ CREATE TABLE Usuarios_docente (
     INDEX idx_docente_plan_actual (Plan_actual_ID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 2. TABLA: Estudiante (Estudiantes)
-CREATE TABLE Estudiante (
-    ID_Estudiante INT AUTO_INCREMENT PRIMARY KEY,
-    Apellido VARCHAR(30) NOT NULL,
-    Nombre VARCHAR(30) NOT NULL,
-    Email VARCHAR(100) UNIQUE,
-    Fecha_nacimiento DATE,
-    Fecha_inscripcion DATE DEFAULT (CURRENT_DATE),
-    Estado ENUM('ACTIVO', 'INACTIVO', 'EGRESADO', 'SUSPENDIDO') DEFAULT 'ACTIVO',
-    INTENSIFICA BOOLEAN DEFAULT FALSE COMMENT 'Indica si el estudiante está en intensificación',
-    Tema_estudiante_ID_Tema_estudiante INT,
-    INDEX idx_nombre_estudiante (Nombre, Apellido),
-    INDEX idx_email_estudiante (Email),
-    INDEX idx_estado_estudiante (Estado),
-    INDEX idx_intensifica (INTENSIFICA)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- 3. TABLA: Escuela (Escuelas/Establecimientos)
+-- 2. TABLA: Escuela (Escuelas/Establecimientos)
 CREATE TABLE Escuela (
     ID_escuela INT AUTO_INCREMENT PRIMARY KEY,
     Nombre VARCHAR(120) NOT NULL,
@@ -154,7 +137,7 @@ CREATE TABLE Escuela (
     INDEX idx_escuela_estado (Estado)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 4. TABLA: Curso (Cursos/Divisiones)
+-- 3. TABLA: Curso (Cursos/Divisiones)
 CREATE TABLE Curso (
     ID_curso INT AUTO_INCREMENT PRIMARY KEY,
     Curso_division VARCHAR(100) NOT NULL COMMENT 'Formato: "Nº Curso - División X"',
@@ -171,6 +154,27 @@ CREATE TABLE Curso (
     INDEX idx_estado (Estado),
     INDEX idx_institucion (Institucion)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de cursos/divisiones gestionados por docentes';
+
+-- 4. TABLA: Estudiante (Estudiantes)
+CREATE TABLE Estudiante (
+    ID_Estudiante INT AUTO_INCREMENT PRIMARY KEY,
+    Apellido VARCHAR(30) NOT NULL,
+    Nombre VARCHAR(30) NOT NULL,
+    Email VARCHAR(100) UNIQUE,
+    Fecha_nacimiento DATE,
+    Fecha_inscripcion DATE DEFAULT (CURRENT_DATE),
+    Estado ENUM('ACTIVO', 'INACTIVO', 'EGRESADO', 'SUSPENDIDO') DEFAULT 'ACTIVO',
+    INTENSIFICA BOOLEAN DEFAULT FALSE COMMENT 'Indica si el estudiante está en intensificación',
+    Curso_ID_curso INT NULL COMMENT 'Referencia al curso al que pertenece el estudiante',
+    Tema_estudiante_ID_Tema_estudiante INT,
+    INDEX idx_nombre_estudiante (Nombre, Apellido),
+    INDEX idx_email_estudiante (Email),
+    INDEX idx_estado_estudiante (Estado),
+    INDEX idx_intensifica (INTENSIFICA),
+    INDEX idx_estudiante_curso (Curso_ID_curso),
+    CONSTRAINT fk_estudiante_curso FOREIGN KEY (Curso_ID_curso) 
+        REFERENCES Curso(ID_curso) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 5. TABLA: Materia (Materias/Asignaturas)
 CREATE TABLE Materia (
@@ -1344,17 +1348,151 @@ SELECT 'EduSync instalado exitosamente!' as Mensaje,
 
 
 
+-- =============================================================
+-- MIGRACIONES ADICIONALES PARA BASES DE DATOS EXISTENTES
+-- =============================================================
+-- Nota: Estas migraciones son para bases de datos que ya existen.
+-- Si estás creando la base de datos desde cero, estas columnas ya están
+-- incluidas en las definiciones CREATE TABLE anteriores.
 
-          ALTER TABLE Evaluacion 
-     ADD COLUMN Contenido_ID_contenido INT NULL AFTER Materia_ID_materia;
+-- Agregar Contenido_ID_contenido a Evaluacion
+-- Verificar si la columna ya existe antes de agregarla
+SET @col_exists_contenido = (
+    SELECT COUNT(*) 
+    FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE TABLE_SCHEMA = DATABASE() 
+    AND TABLE_NAME = 'Evaluacion' 
+    AND COLUMN_NAME = 'Contenido_ID_contenido'
+);
 
-   ALTER TABLE Evaluacion
-     ADD INDEX idx_contenido_evaluacion (Contenido_ID_contenido);
+-- Verificar si el índice ya existe
+SET @idx_exists_contenido = (
+    SELECT COUNT(*) 
+    FROM INFORMATION_SCHEMA.STATISTICS 
+    WHERE TABLE_SCHEMA = DATABASE() 
+    AND TABLE_NAME = 'Evaluacion' 
+    AND INDEX_NAME = 'idx_contenido_evaluacion'
+);
 
-   ALTER TABLE Evaluacion
-     ADD CONSTRAINT fk_evaluacion_contenido
-       FOREIGN KEY (Contenido_ID_contenido)
-       REFERENCES Contenido(ID_contenido)
-       ON DELETE SET NULL
-       ON UPDATE CASCADE;
+-- Verificar si la foreign key ya existe
+SET @fk_exists_contenido = (
+    SELECT COUNT(*) 
+    FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
+    WHERE TABLE_SCHEMA = DATABASE() 
+    AND TABLE_NAME = 'Evaluacion' 
+    AND CONSTRAINT_NAME = 'fk_evaluacion_contenido'
+);
+
+-- Agregar la columna si no existe
+SET @sql_contenido_col = IF(@col_exists_contenido = 0,
+    'ALTER TABLE Evaluacion ADD COLUMN Contenido_ID_contenido INT NULL AFTER Materia_ID_materia',
+    'SELECT "La columna Contenido_ID_contenido ya existe en la tabla Evaluacion" AS mensaje'
+);
+
+PREPARE stmt_contenido_col FROM @sql_contenido_col;
+EXECUTE stmt_contenido_col;
+DEALLOCATE PREPARE stmt_contenido_col;
+
+-- Agregar el índice si no existe
+SET @sql_contenido_idx = IF(@idx_exists_contenido = 0,
+    'ALTER TABLE Evaluacion ADD INDEX idx_contenido_evaluacion (Contenido_ID_contenido)',
+    'SELECT "El índice idx_contenido_evaluacion ya existe" AS mensaje'
+);
+
+PREPARE stmt_contenido_idx FROM @sql_contenido_idx;
+EXECUTE stmt_contenido_idx;
+DEALLOCATE PREPARE stmt_contenido_idx;
+
+-- Agregar la foreign key si no existe
+SET @sql_contenido_fk = IF(@fk_exists_contenido = 0,
+    'ALTER TABLE Evaluacion ADD CONSTRAINT fk_evaluacion_contenido FOREIGN KEY (Contenido_ID_contenido) REFERENCES Contenido(ID_contenido) ON DELETE SET NULL ON UPDATE CASCADE',
+    'SELECT "La foreign key fk_evaluacion_contenido ya existe" AS mensaje'
+);
+
+PREPARE stmt_contenido_fk FROM @sql_contenido_fk;
+EXECUTE stmt_contenido_fk;
+DEALLOCATE PREPARE stmt_contenido_fk;
+
+-- Agregar Curso_ID_curso a Estudiante (relación: un estudiante pertenece a un curso)
+-- Verificar si la columna ya existe antes de agregarla
+SET @col_exists_curso = (
+    SELECT COUNT(*) 
+    FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE TABLE_SCHEMA = DATABASE() 
+    AND TABLE_NAME = 'Estudiante' 
+    AND COLUMN_NAME = 'Curso_ID_curso'
+);
+
+-- Verificar si el índice ya existe
+SET @idx_exists_curso = (
+    SELECT COUNT(*) 
+    FROM INFORMATION_SCHEMA.STATISTICS 
+    WHERE TABLE_SCHEMA = DATABASE() 
+    AND TABLE_NAME = 'Estudiante' 
+    AND INDEX_NAME = 'idx_estudiante_curso'
+);
+
+-- Verificar si la foreign key ya existe
+SET @fk_exists_curso = (
+    SELECT COUNT(*) 
+    FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
+    WHERE TABLE_SCHEMA = DATABASE() 
+    AND TABLE_NAME = 'Estudiante' 
+    AND CONSTRAINT_NAME = 'fk_estudiante_curso'
+);
+
+-- Agregar la columna si no existe
+SET @sql_curso_col = IF(@col_exists_curso = 0,
+    'ALTER TABLE Estudiante ADD COLUMN Curso_ID_curso INT NULL AFTER INTENSIFICA',
+    'SELECT "La columna Curso_ID_curso ya existe en la tabla Estudiante" AS mensaje'
+);
+
+PREPARE stmt_curso_col FROM @sql_curso_col;
+EXECUTE stmt_curso_col;
+DEALLOCATE PREPARE stmt_curso_col;
+
+-- Agregar el índice si no existe
+SET @sql_curso_idx = IF(@idx_exists_curso = 0,
+    'ALTER TABLE Estudiante ADD INDEX idx_estudiante_curso (Curso_ID_curso)',
+    'SELECT "El índice idx_estudiante_curso ya existe" AS mensaje'
+);
+
+PREPARE stmt_curso_idx FROM @sql_curso_idx;
+EXECUTE stmt_curso_idx;
+DEALLOCATE PREPARE stmt_curso_idx;
+
+-- Agregar la foreign key si no existe
+SET @sql_curso_fk = IF(@fk_exists_curso = 0,
+    'ALTER TABLE Estudiante ADD CONSTRAINT fk_estudiante_curso FOREIGN KEY (Curso_ID_curso) REFERENCES Curso(ID_curso) ON DELETE SET NULL ON UPDATE CASCADE',
+    'SELECT "La foreign key fk_estudiante_curso ya existe" AS mensaje'
+);
+
+PREPARE stmt_curso_fk FROM @sql_curso_fk;
+EXECUTE stmt_curso_fk;
+DEALLOCATE PREPARE stmt_curso_fk;
+
+-- Migrar datos existentes: Asignar Curso_ID_curso a estudiantes
+-- Solo se asigna si todas las materias del estudiante pertenecen al mismo curso
+UPDATE Estudiante e
+SET e.Curso_ID_curso = (
+    SELECT c.ID_curso
+    FROM Alumnos_X_Materia axm
+    INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+    INNER JOIN Curso c ON m.Curso_division = c.Curso_division 
+        AND m.Usuarios_docente_ID_docente = c.Usuarios_docente_ID_docente
+    WHERE axm.Estudiante_ID_Estudiante = e.ID_Estudiante
+    GROUP BY c.ID_curso
+    HAVING COUNT(DISTINCT m.Curso_division) = 1 -- Solo si todas sus materias pertenecen al mismo curso
+    LIMIT 1
+)
+WHERE e.ID_Estudiante IN (
+    SELECT axm.Estudiante_ID_Estudiante
+    FROM Alumnos_X_Materia axm
+    INNER JOIN Materia m ON axm.Materia_ID_materia = m.ID_materia
+    INNER JOIN Curso c ON m.Curso_division = c.Curso_division 
+        AND m.Usuarios_docente_ID_docente = c.Usuarios_docente_ID_docente
+    GROUP BY axm.Estudiante_ID_Estudiante
+    HAVING COUNT(DISTINCT m.Curso_division) = 1
+)
+AND e.Curso_ID_curso IS NULL;
 

@@ -279,8 +279,12 @@ async function saveCourse() {
             if (typeof populateBulkCourseDivisionDropdown === 'function') {
                 populateBulkCourseDivisionDropdown().catch(err => console.error('Error al poblar dropdown:', err));
             }
-            if (typeof populateStudentCourseSelect === 'function') {
-                populateStudentCourseSelect();
+            // Recargar filtros de gestión de estudiantes
+            if (typeof populateUnifiedCourseFilter === 'function') {
+                await populateUnifiedCourseFilter();
+            }
+            if (typeof populateExamsCourseFilter === 'function') {
+                populateExamsCourseFilter();
             }
         } else {
             const errorMsg = result.message || 'Error al guardar el curso';
@@ -342,6 +346,13 @@ async function deleteCourse(courseId) {
             }
             if (typeof populateBulkCourseDivisionDropdown === 'function') {
                 populateBulkCourseDivisionDropdown().catch(err => console.error('Error al poblar dropdown:', err));
+            }
+            // Recargar filtros de gestión de estudiantes
+            if (typeof populateUnifiedCourseFilter === 'function') {
+                await populateUnifiedCourseFilter();
+            }
+            if (typeof populateExamsCourseFilter === 'function') {
+                populateExamsCourseFilter();
             }
         } else {
             if (result.error === 'HAS_SUBJECTS') {

@@ -459,9 +459,9 @@ function loadLatestNotifications() {
         });
     });
 
-    // Sort by date (newest first) and take last 3
+    // Sort by date (newest first) and take last 2
     allItems.sort((a, b) => b.date - a.date);
-    const latestItems = allItems.slice(0, 3);
+    const latestItems = allItems.slice(0, 2);
 
     if (latestItems.length === 0) {
         classesList.innerHTML = `
@@ -665,8 +665,16 @@ function loadUnifiedNotifications() {
     // Combine all items into a unified array
     const allItems = [];
     
-    // Add recordatorios
-    recordatorios.forEach(recordatorio => {
+    // Add recordatorios (limitados a los más recientes)
+    const sortedRecordatorios = recordatorios
+        .map(r => ({
+            recordatorio: r,
+            date: new Date(r.Fecha_creacion || r.Fecha || 0)
+        }))
+        .sort((a, b) => b.date - a.date)
+        .slice(0, 5); // Limitar a 5 más recientes antes de procesar
+    
+    sortedRecordatorios.forEach(({ recordatorio }) => {
         const subject = appData.materia ? appData.materia.find(m => m.ID_materia === recordatorio.Materia_ID_materia) : null;
         const subjectName = subject ? subject.Nombre : 'Materia no encontrada';
         
@@ -687,8 +695,16 @@ function loadUnifiedNotifications() {
         });
     });
     
-    // Add notifications
-    notifications.forEach(notification => {
+    // Add notifications (limitadas a las más recientes)
+    const sortedNotifications = notifications
+        .map(n => ({
+            notification: n,
+            date: new Date(n.Fecha_creacion || 0)
+        }))
+        .sort((a, b) => b.date - a.date)
+        .slice(0, 5); // Limitar a 5 más recientes antes de procesar
+    
+    sortedNotifications.forEach(({ notification }) => {
         const dateObj = notification.Fecha_creacion ? new Date(notification.Fecha_creacion) : new Date();
         
         allItems.push({
@@ -777,8 +793,11 @@ function loadUnifiedNotifications() {
         return;
     }
 
+    // Limitar a solo 2 elementos
+    const limitedItems = allItems.slice(0, 2);
+
     // Display unified list
-    unifiedList.innerHTML = allItems.map(item => {
+    unifiedList.innerHTML = limitedItems.map(item => {
         if (item.type === 'upcoming_class') {
             // Format upcoming class or in-progress class
             const displayDate = item.dateStr ? formatDate(item.dateStr) : formatNotificationDate(item.date);

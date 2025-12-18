@@ -2573,13 +2573,16 @@
     }
     
     /* Notification badge responsive */
+    /* BADGE DESHABILITADO: Siempre ocultar el badge de notificaciones */
     .mobile-nav .notification-badge {
-        font-size: 0.7rem;
+        display: none !important;
+        visibility: hidden !important;
+        /* font-size: 0.7rem;
         padding: 2px 6px;
         min-width: 18px;
         height: 18px;
         right: 12px;
-        top: 8px;
+        top: 8px; */
     }
     
     /* Language selector responsive */

@@ -140,6 +140,23 @@ async function loadData() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         appData = await response.json();
+        
+        // Sincronizar el plan del usuario desde la base de datos
+        if (appData.usuarios_docente && Array.isArray(appData.usuarios_docente)) {
+            const currentUserId = localStorage.getItem('userId');
+            if (currentUserId) {
+                const userId = parseInt(currentUserId);
+                const currentUser = appData.usuarios_docente.find(user => parseInt(user.ID_docente) === userId);
+                if (currentUser && currentUser.Plan_usuario) {
+                    // Sincronizar el plan a localStorage
+                    if (window.SubscriptionModule && typeof window.SubscriptionModule.setSubscriptionInfo === 'function') {
+                        const plan = currentUser.Plan_usuario === 'PREMIUM' ? 'PREMIUM' : 'FREE';
+                        window.SubscriptionModule.setSubscriptionInfo({ plan });
+                    }
+                }
+            }
+        }
+        
         // También hacer data disponible globalmente para reports y search
         window.data = appData;
         window.appData = appData;

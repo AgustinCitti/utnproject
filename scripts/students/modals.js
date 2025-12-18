@@ -123,9 +123,6 @@ function initializeStudentModalOverride() {
         
         if (modalId === 'studentModal') {
             // Populate dropdowns when modal opens
-            if (typeof populateStudentCourseSelect === 'function') {
-                populateStudentCourseSelect();
-            }
             if (typeof populateStudentSubjectsSelect === 'function') {
                 populateStudentSubjectsSelect();
             }

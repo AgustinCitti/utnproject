@@ -203,22 +203,10 @@
    ========================================================================== */
 
 /* Notification badge - Red circular badge showing unread count */
+/* BADGE DESHABILITADO: Siempre ocultar el badge de notificaciones */
 .desktop-nav .notification-badge {
-    background: #ff4444;
-    color: white;
-    border-radius: 10px;
-    padding: 2px 6px;
-    font-size: 0.8rem;
-    margin-left: 5px;
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    min-width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
+    display: none !important;
+    visibility: hidden !important;
 }
 
 /* Notifications icon container - Clickable notification bell */
@@ -587,12 +575,15 @@
 }
 
 /* Mobile notification badge - Red badge for unread notifications */
+/* BADGE DESHABILITADO: Siempre ocultar el badge de notificaciones */
 .notification-badge {
-    background: #ff4444;
+    display: none !important;
+    visibility: hidden !important;
+    /* background: #ff4444;
     color: white;
     border-radius: 10px;
     padding: 2px 6px;
-    font-size: 0.8rem;
+    font-size: 0.8rem; */
     margin-left: auto;
 }
 

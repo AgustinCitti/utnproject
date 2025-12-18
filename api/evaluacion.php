@@ -1,5 +1,11 @@
 <?php
 // C:\xampp\htdocs\utnproject\api\evaluacion.php
+// Desactivar display_errors para evitar que se muestren errores HTML
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+// Log errors to error log instead
+ini_set('log_errors', 1);
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
@@ -13,7 +19,19 @@ require_once __DIR__ . '/../config/database.php';
 // Iniciar sesión para obtener el docente logueado
 session_start();
 
-function respond($code, $data) { http_response_code($code); echo json_encode($data); exit; }
+function respond($code, $data) { 
+	// Asegurar que no haya salida previa
+	if (ob_get_level() > 0) {
+		ob_clean();
+	}
+	// Asegurar headers JSON
+	if (!headers_sent()) {
+		header('Content-Type: application/json; charset=utf-8');
+		http_response_code($code);
+	}
+	echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+	exit; 
+}
 
 function pdo() {
 	try {
@@ -258,9 +276,9 @@ try {
 				$Estado = 'PROGRAMADA';
 			}
 			
-			// Validar peso (entre 0.00 y 9.99)
-			if ($Peso < 0 || $Peso > 9.99) {
-				respond(400, ['success'=>false,'message'=>'El peso debe estar entre 0.00 y 9.99']);
+			// Validar peso (entre 0.00 y 10.00 inclusive)
+			if ($Peso < 0 || $Peso > 10.00) {
+				respond(400, ['success'=>false,'message'=>'El peso debe estar entre 0.00 y 10.00']);
 			}
 			
 			// Validar formato de fecha
@@ -372,8 +390,8 @@ try {
 						$params[] = $body[$f];
 					} else if ($f === 'Peso') {
 						$peso = (float)$body[$f];
-						if ($peso < 0 || $peso > 9.99) {
-							respond(400, ['success'=>false,'message'=>'El peso debe estar entre 0.00 y 9.99']);
+						if ($peso < 0 || $peso > 10.00) {
+							respond(400, ['success'=>false,'message'=>'El peso debe estar entre 0.00 y 10.00']);
 						}
 						$sets[] = "$f = ?";
 						$params[] = $peso;
@@ -408,27 +426,38 @@ try {
 			
 			$params[] = $id;
 			$sql = "UPDATE Evaluacion SET ".implode(', ', $sets)." WHERE ID_evaluacion = ?";
-			$stmt = $db->prepare($sql);
-			$stmt->execute($params);
 			
-			// If fecha or titulo changed, update/create recordatorios
-			if (isset($body['Fecha']) || isset($body['Titulo'])) {
-				$newFecha = isset($body['Fecha']) ? $body['Fecha'] : $currentEval['Fecha'];
-				$newTitulo = isset($body['Titulo']) ? trim($body['Titulo']) : $currentEval['Titulo'];
-				$newTipo = isset($body['Tipo']) ? $body['Tipo'] : $currentEval['Tipo'];
+			try {
+				$stmt = $db->prepare($sql);
+				$stmt->execute($params);
 				
-				// Delete old recordatorios for this evaluacion and create new ones
-				$stmt = $db->prepare("
-					DELETE FROM Recordatorio 
-					WHERE Materia_ID_materia = ? AND Descripcion LIKE ? AND Tipo IN ('EXAMEN', 'ENTREGA')
-				");
-				$stmt->execute([$currentEval['Materia_ID_materia'], "%{$currentEval['Titulo']}%"]);
+				// If fecha or titulo changed, update/create recordatorios
+				if (isset($body['Fecha']) || isset($body['Titulo'])) {
+					try {
+						$newFecha = isset($body['Fecha']) ? $body['Fecha'] : $currentEval['Fecha'];
+						$newTitulo = isset($body['Titulo']) ? trim($body['Titulo']) : $currentEval['Titulo'];
+						$newTipo = isset($body['Tipo']) ? $body['Tipo'] : $currentEval['Tipo'];
+						
+						// Delete old recordatorios for this evaluacion and create new ones
+						$stmt = $db->prepare("
+							DELETE FROM Recordatorio 
+							WHERE Materia_ID_materia = ? AND Descripcion LIKE ? AND Tipo IN ('EXAMEN', 'ENTREGA')
+						");
+						$stmt->execute([$currentEval['Materia_ID_materia'], "%{$currentEval['Titulo']}%"]);
+						
+						// Create new recordatorios
+						createRecordatoriosForEvaluacion($db, $id, $newTitulo, $newFecha, $currentEval['Materia_ID_materia'], $newTipo);
+					} catch (Exception $e) {
+						// Si falla la actualización de recordatorios, no fallar toda la operación
+						error_log("Error actualizando recordatorios: " . $e->getMessage());
+					}
+				}
 				
-				// Create new recordatorios
-				createRecordatoriosForEvaluacion($db, $id, $newTitulo, $newFecha, $currentEval['Materia_ID_materia'], $newTipo);
+				respond(200, ['success'=>true,'id'=>$id,'message'=>'Evaluación actualizada exitosamente']);
+			} catch (PDOException $e) {
+				error_log("Error PDO al actualizar evaluación: " . $e->getMessage());
+				respond(500, ['success'=>false,'message'=>'Error al actualizar en la base de datos: ' . $e->getMessage()]);
 			}
-			
-			respond(200, ['success'=>true,'id'=>$id,'message'=>'Evaluación actualizada exitosamente']);
 
 		case 'DELETE':
 			if (!$id) respond(400, ['success'=>false,'message'=>'Falta id']);
@@ -469,6 +498,9 @@ try {
 	}
 
 } catch (Throwable $e) {
+	// Asegurar que siempre se devuelva JSON, incluso si hay errores
+	error_log("Error en evaluacion.php: " . $e->getMessage() . " en " . $e->getFile() . " línea " . $e->getLine());
+	
 	// En desarrollo, mostrar el error completo. En producción, ocultar detalles.
 	$errorDetails = [
 		'success' => false,
@@ -477,6 +509,12 @@ try {
 		'file' => $e->getFile(),
 		'line' => $e->getLine()
 	];
+	
+	// Asegurar que los headers JSON estén establecidos antes de responder
+	if (!headers_sent()) {
+		header('Content-Type: application/json; charset=utf-8');
+	}
+	
 	respond(500, $errorDetails);
 }
 

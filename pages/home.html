@@ -1216,15 +1216,7 @@
                     <input type="email" id="studentEmail" required>
                 </div>
                 <div class="form-group">
-                    <label for="studentCourse" data-translate="course">Curso</label>
-                    <select id="studentCourse">
-                        <option value="" data-translate="select_course">- Seleccionar Curso (Opcional) -</option>
-                        <!-- Se poblará dinámicamente con los cursos disponibles -->
-                    </select>
-                    <small style="display: block; margin-top: 5px; color: #666;">Si seleccionas un curso, se asignarán automáticamente todas las materias de ese curso.</small>
-                </div>
-                <div class="form-group">
-                    <label for="studentSubjects" data-translate="subjects">Materias</label>
+                    <label for="studentSubjects" data-translate="subjects">Materias *</label>
                     <select id="studentSubjects" required>
                         <option value="" data-translate="select_subject">- Seleccionar Materia -</option>
                         <!-- Se poblará dinámicamente con las materias del docente actual -->
@@ -1232,7 +1224,7 @@
                     <div id="selectedSubjectsContainer" class="selected-subjects-container" style="display: none; margin-top: 10px;">
                         <!-- Selected subjects will be displayed here as chips -->
                     </div>
-                    <small style="display: block; margin-top: 5px; color: #666;">Puedes seleccionar múltiples materias individualmente o seleccionar un curso arriba para asignar todas las materias del curso.</small>
+                    <small style="display: block; margin-top: 5px; color: #666;">Selecciona una o más materias para asignar al estudiante.</small>
                 </div>
                 <div class="form-group">
                     <label for="studentStatus" data-translate="status">Estado</label>
@@ -2157,6 +2149,17 @@
                     </h4>
                     <div id="studentDetailsInfo" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
                         <!-- Student info will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Temas de Intensificación Section - Only for intensificador students -->
+                <div class="student-details-section" id="intensificacionThemesSection" style="display: none; margin-bottom: 2rem;">
+                    <h4 style="margin-bottom: 1rem; color: #ff9800; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-star"></i>
+                        Temas de Intensificación que Debe
+                    </h4>
+                    <div id="studentIntensificacionThemesList" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Intensificación themes will be populated here -->
                     </div>
                 </div>
 

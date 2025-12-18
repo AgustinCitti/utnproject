@@ -108,7 +108,7 @@ async function loadNotifications() {
         }))
         .filter(item => item.dateObj && item.dateObj >= now)
         .sort((a, b) => a.dateObj - b.dateObj)
-        .slice(0, 5)
+        .slice(0, 2)
         .map(item => ({
             id: `recordatorio_${item.raw.ID_recordatorio}`,
             title: getRecordatorioTitle(item.raw),
@@ -138,7 +138,7 @@ async function loadNotifications() {
         }
         return a.dateObj - b.dateObj;
     })
-     .slice(0, 5)
+     .slice(0, 2)
      .map(({ dateObj, ...rest }) => rest);
 
     const allNotifications = combinedNotifications;
@@ -253,48 +253,26 @@ async function loadNotifications() {
 }
 
 function updateNotificationCount() {
-    // Check if appData is loaded
-    if (!appData) {
-        return;
-    }
-    
-    // Get current docente user
-    const currentUser = getCurrentUser();
-    if (!currentUser) return;
-    
-    // Get recordatorios for current docente's subjects
-    const recordatorios = getRecordatoriosForDocente(currentUser.ID_docente);
-    
-    // Initialize notifications array if it doesn't exist
-    if (!appData.notifications) {
-        appData.notifications = [];
-    }
-    
-    // Count unread notifications (system only) and recordatorios
-    const notificationCount = (appData.notifications || [])
-        .filter(n => n.Tipo === 'SISTEMA' && n.Estado !== 'LEIDA').length;
-    const recordatorioCount = recordatorios.filter(r => r.Estado === 'PENDIENTE').length;
-    const totalCount = notificationCount + recordatorioCount;
-    
+    // BADGE DESHABILITADO: Siempre ocultar el badge de notificaciones
     // Update notification count in header
     const notificationCountElement = document.getElementById('notificationCount');
     if (notificationCountElement) {
-        notificationCountElement.textContent = totalCount;
-        notificationCountElement.style.display = totalCount > 0 ? 'inline' : 'none';
+        notificationCountElement.textContent = '';
+        notificationCountElement.style.display = 'none';
     }
     
     // Update mobile notification badge
     const mobileBadge = document.getElementById('mobileNotificationCount');
     if (mobileBadge) {
-        mobileBadge.textContent = totalCount;
-        mobileBadge.style.display = totalCount > 0 ? 'inline' : 'none';
+        mobileBadge.textContent = '';
+        mobileBadge.style.display = 'none';
     }
     
     // Update desktop notification badge
     const desktopBadge = document.getElementById('desktopNotificationCount');
     if (desktopBadge) {
-        desktopBadge.textContent = totalCount;
-        desktopBadge.style.display = totalCount > 0 ? 'inline' : 'none';
+        desktopBadge.textContent = '';
+        desktopBadge.style.display = 'none';
     }
 }
 

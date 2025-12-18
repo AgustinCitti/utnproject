@@ -328,8 +328,8 @@ async function showExamModal(examId = null) {
                                 </select>
                             </div>
                             <div class="form-group" style="margin-top: 15px;">
-                                <label for="examPeso" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Peso (0.00 - 9.99)</label>
-                                <input type="number" id="examPeso" name="examPeso" step="0.01" min="0" max="9.99" value="${exam ? exam.Peso || 1.00 : 1.00}" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
+                                <label for="examPeso" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Peso (0.00 - 10.00)</label>
+                                <input type="number" id="examPeso" name="examPeso" step="0.01" min="0" max="10" value="${exam ? exam.Peso || 1.00 : 1.00}" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; background: var(--card-bg); color: var(--text-primary);">
                             </div>
                             <div class="form-group" style="margin-top: 15px;">
                                 <label for="examEstado" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Estado</label>
