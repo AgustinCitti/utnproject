@@ -114,7 +114,7 @@ async function loadNotifications() {
             title: getRecordatorioTitle(item.raw),
             message: item.raw.Descripcion,
             date: formatRecordatorioDate(item.raw.Fecha),
-            read: false,
+            read: item.raw.Estado === 'COMPLETADO',
             type: 'recordatorio',
             recordatorio: item.raw,
             dateObj: item.dateObj
@@ -131,7 +131,13 @@ async function loadNotifications() {
     const combinedNotifications = [
         ...upcomingNotifications,
         ...upcomingRecordatorios
-    ].sort((a, b) => a.dateObj - b.dateObj)
+    ].sort((a, b) => {
+        // Sort by read status first (unread first), then by date
+        if (a.read !== b.read) {
+            return a.read ? 1 : -1; // Unread notifications come first
+        }
+        return a.dateObj - b.dateObj;
+    })
      .slice(0, 5)
      .map(({ dateObj, ...rest }) => rest);
 
@@ -148,18 +154,19 @@ async function loadNotifications() {
         `;
     } else {
         notificationsContainer.innerHTML = allNotifications.map(notification => {
-            const priorityClass = notification.type === 'recordatorio' && notification.recordatorio 
+            // Only apply priority class if notification is unread
+            const priorityClass = !notification.read && notification.type === 'recordatorio' && notification.recordatorio 
                 ? `priority-${notification.recordatorio.Prioridad.toLowerCase()}` 
                 : '';
             return `
-            <div class="notification-card ${notification.read ? 'read' : 'unread'} ${notification.type} ${priorityClass}">
+            <div class="notification-card ${notification.read ? 'read' : 'unread'} ${notification.type} ${priorityClass}" data-notification-id="${notification.id}">
                 <h3 class="notification-title">
                     ${notification.type === 'recordatorio' ? '<i class="fas fa-bell"></i>' : '<i class="fas fa-info-circle"></i>'}
                     ${notification.title}
                 </h3>
                 <div class="notification-meta">
                     <span class="notification-date">${notification.date}</span>
-                    ${notification.type === 'recordatorio' && notification.recordatorio ? 
+                    ${!notification.read && notification.type === 'recordatorio' && notification.recordatorio ? 
                         `<span class="priority-badge ${notification.recordatorio.Prioridad.toLowerCase()}">${notification.recordatorio.Prioridad}</span>` : ''}
                 </div>
                 <p class="notification-message">${notification.message}</p>
@@ -205,11 +212,12 @@ async function loadNotifications() {
                 <tbody>
                     ${allNotifications.map(notification => {
                         const shortMessage = notification.message.length > 30 ? notification.message.substring(0, 30) + '...' : notification.message;
-                        const priorityClass = notification.type === 'recordatorio' && notification.recordatorio 
+                        // Only apply priority class if notification is unread
+                        const priorityClass = !notification.read && notification.type === 'recordatorio' && notification.recordatorio 
                             ? `priority-${notification.recordatorio.Prioridad.toLowerCase()}` 
                             : '';
                         return `
-                            <tr class="${notification.read ? 'read' : 'unread'} ${notification.type} ${priorityClass}">
+                            <tr class="${notification.read ? 'read' : 'unread'} ${notification.type} ${priorityClass}" data-notification-id="${notification.id}">
                                 <td>
                                     ${notification.type === 'recordatorio' && notification.recordatorio ? 
                                         `<span class="recordatorio-type">${getCursoDivision(notification.recordatorio.Materia_ID_materia)}</span>` : 
@@ -220,7 +228,7 @@ async function loadNotifications() {
                                 <td title="${notification.message}">${shortMessage}</td>
                                 <td>${notification.date}</td>
                                 <td>
-                                    ${notification.type === 'recordatorio' && notification.recordatorio ? 
+                                    ${!notification.read && notification.type === 'recordatorio' && notification.recordatorio ? 
                                         `<span class="priority-badge ${notification.recordatorio.Prioridad.toLowerCase()}">${notification.recordatorio.Prioridad}</span>` : 
                                         `<span class="table-status ${notification.read ? 'read' : 'unread'}">${notification.read ? 'Leído' : 'No leído'}</span>`
                                     }
@@ -295,16 +303,51 @@ function markNotificationRead(id) {
         return;
     }
     
+    // Find the card/row element
+    const cardElement = document.querySelector(`[data-notification-id="${id}"]`);
+    
+    if (!cardElement) {
+        console.error('Card element not found for notification:', id);
+        return;
+    }
+    
     if (id.startsWith('recordatorio_')) {
-        // Handle recordatorio - mark as completed
+        // Handle recordatorio - mark as completed via API
         const recordatorioId = parseInt(id.replace('recordatorio_', ''));
-        const recordatorio = appData.recordatorio.find(r => r.ID_recordatorio === recordatorioId);
-        if (recordatorio) {
-            recordatorio.Estado = 'COMPLETADO';
-            saveData();
-            loadNotifications();
-            updateNotificationCount();
-        }
+        const baseUrl = window.location.pathname.includes('/pages/') ? '../api' : 'api';
+        
+        // Call API to update recordatorio status
+        fetch(`${baseUrl}/recordatorio.php?id=${recordatorioId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ Estado: 'COMPLETADO' })
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp && resp.success) {
+                // Update local data
+                const recordatorio = appData.recordatorio.find(r => r.ID_recordatorio === recordatorioId);
+                if (recordatorio) {
+                    recordatorio.Estado = 'COMPLETADO';
+                }
+                saveData();
+                updateNotificationCount();
+                
+                // Animate and move card to end in real-time
+                moveCardToEnd(cardElement, id);
+                
+                if (window.toast) {
+                    window.toast.success('Recordatorio marcado como completado');
+                }
+            } else {
+                console.error('Failed to mark recordatorio as completed:', resp);
+                alert('No se pudo marcar el recordatorio como completado. Por favor, intente nuevamente.');
+            }
+        })
+        .catch(err => {
+            console.error('Error marking recordatorio as completed:', err);
+            alert('Error al marcar el recordatorio como completado. Por favor, intente nuevamente.');
+        });
     } else {
         // Handle regular notification
         const idNotificacion = parseInt(id) || id;
@@ -325,8 +368,14 @@ function markNotificationRead(id) {
                     notification.Fecha_leida = new Date().toISOString();
                 }
                 saveData();
-                loadNotifications();
                 updateNotificationCount();
+                
+                // Animate and move card to end in real-time
+                moveCardToEnd(cardElement, id);
+                
+                if (window.toast) {
+                    window.toast.success('Notificación marcada como leída');
+                }
             } else {
                 console.error('Failed to mark notification read:', resp);
                 alert('No se pudo marcar la notificación como leída. Por favor, intente nuevamente.');
@@ -337,6 +386,44 @@ function markNotificationRead(id) {
             alert('Error al marcar la notificación como leída. Por favor, intente nuevamente.');
         });
     }
+}
+
+function moveCardToEnd(cardElement, id) {
+    // Apply read styles immediately
+    cardElement.classList.remove('unread', 'priority-alta', 'priority-media', 'priority-baja');
+    cardElement.classList.add('read');
+    
+    // Remove priority badge if exists
+    const priorityBadge = cardElement.querySelector('.priority-badge');
+    if (priorityBadge) {
+        priorityBadge.style.display = 'none';
+    }
+    
+    // Remove "Mark as read" button
+    const markReadBtn = cardElement.querySelector('.btn-success');
+    if (markReadBtn) {
+        markReadBtn.style.display = 'none';
+    }
+    
+    // Get parent container
+    const parent = cardElement.parentElement;
+    
+    // Animate fade and shrink
+    cardElement.style.transition = 'all 0.4s ease';
+    cardElement.style.opacity = '0';
+    cardElement.style.transform = 'scale(0.9)';
+    
+    setTimeout(() => {
+        // Remove from current position
+        cardElement.remove();
+        
+        // Re-append to end
+        parent.appendChild(cardElement);
+        
+        // Reset transform and fade back in with new gray style
+        cardElement.style.transform = 'scale(1)';
+        cardElement.style.opacity = '1';
+    }, 400);
 }
 
 function markAllNotificationsRead() {
@@ -377,40 +464,112 @@ function deleteNotification(id) {
     }
     
     if (confirm('¿Está seguro de que desea eliminar esta notificación?')) {
-        if (id.startsWith('recordatorio_')) {
-            // Handle recordatorio deletion
-            const recordatorioId = parseInt(id.replace('recordatorio_', ''));
-            appData.recordatorio = appData.recordatorio.filter(r => r.ID_recordatorio !== recordatorioId);
-            saveData();
-            loadNotifications();
-            updateNotificationCount();
-        } else {
-            // Handle regular notification deletion via API
-            const idNotificacion = parseInt(id) || id;
-            const baseUrl = window.location.pathname.includes('/pages/') ? '../api' : 'api';
-            
-            fetch(`${baseUrl}/notifications.php`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: idNotificacion })
-            })
-            .then(r => r.json())
-            .then(resp => {
-                if (resp && resp.success) {
-                    appData.notifications = appData.notifications.filter(n => n.ID_notificacion !== idNotificacion);
-                    saveData();
-                    loadNotifications();
-                    updateNotificationCount();
-                } else {
-                    console.error('Failed to delete notification:', resp);
-                    alert('No se pudo eliminar la notificación. Por favor, intente nuevamente.');
-                }
-            })
-            .catch(err => {
-                console.error('Error deleting notification:', err);
-                alert('Error al eliminar la notificación. Por favor, intente nuevamente.');
-            });
+        // Find the card/row element
+        const cardElement = document.querySelector(`[data-notification-id="${id}"]`);
+        
+        if (!cardElement) {
+            console.error('Card element not found for notification:', id);
+            return;
         }
+        
+        // Animate card removal FIRST (instant visual feedback)
+        cardElement.style.transition = 'all 0.3s ease';
+        cardElement.style.opacity = '0';
+        cardElement.style.transform = 'translateX(100%)';
+        cardElement.style.height = cardElement.offsetHeight + 'px';
+        
+        // After fade animation, collapse the height
+        setTimeout(() => {
+            cardElement.style.height = '0';
+            cardElement.style.margin = '0';
+            cardElement.style.padding = '0';
+            cardElement.style.overflow = 'hidden';
+        }, 300);
+        
+        // Remove from DOM after animations complete
+        setTimeout(() => {
+            cardElement.remove();
+        }, 600);
+        
+        // Then perform API call in background
+        performDelete(id);
+    }
+}
+
+function performDelete(id) {
+    if (id.startsWith('recordatorio_')) {
+        // Handle recordatorio deletion via API
+        const recordatorioId = parseInt(id.replace('recordatorio_', ''));
+        const baseUrl = window.location.pathname.includes('/pages/') ? '../api' : 'api';
+        
+        // Call API to delete recordatorio
+        fetch(`${baseUrl}/recordatorio.php?id=${recordatorioId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp && resp.success) {
+                // Update local data
+                appData.recordatorio = appData.recordatorio.filter(r => r.ID_recordatorio !== recordatorioId);
+                saveData();
+                updateNotificationCount();
+                
+                if (window.toast) {
+                    window.toast.success('Recordatorio eliminado correctamente');
+                }
+            } else {
+                console.error('Failed to delete recordatorio:', resp);
+                // Since card is already removed, show toast and reload to restore if needed
+                if (window.toast) {
+                    window.toast.error('Error al eliminar el recordatorio');
+                }
+                setTimeout(() => loadNotifications(), 1000);
+            }
+        })
+        .catch(err => {
+            console.error('Error deleting recordatorio:', err);
+            if (window.toast) {
+                window.toast.error('Error al eliminar el recordatorio');
+            }
+            setTimeout(() => loadNotifications(), 1000);
+        });
+    } else {
+        // Handle regular notification deletion via API
+        const idNotificacion = parseInt(id) || id;
+        const baseUrl = window.location.pathname.includes('/pages/') ? '../api' : 'api';
+        
+        fetch(`${baseUrl}/notifications.php`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: idNotificacion })
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp && resp.success) {
+                appData.notifications = appData.notifications.filter(n => n.ID_notificacion !== idNotificacion);
+                saveData();
+                updateNotificationCount();
+                
+                if (window.toast) {
+                    window.toast.success('Notificación eliminada correctamente');
+                }
+            } else {
+                console.error('Failed to delete notification:', resp);
+                // Since card is already removed, show toast and reload to restore if needed
+                if (window.toast) {
+                    window.toast.error('Error al eliminar la notificación');
+                }
+                setTimeout(() => loadNotifications(), 1000);
+            }
+        })
+        .catch(err => {
+            console.error('Error deleting notification:', err);
+            if (window.toast) {
+                window.toast.error('Error al eliminar la notificación');
+            }
+            setTimeout(() => loadNotifications(), 1000);
+        });
     }
 }
 
