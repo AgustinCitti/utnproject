@@ -160,10 +160,27 @@ try {
 			}
 			$where = [];
 			$params = [];
-			if (isset($_GET['docenteId'])) { $where[] = "Usuarios_docente_ID_docente = ?"; $params[] = (int)$_GET['docenteId']; }
-			if (isset($_GET['estado'])) { $where[] = "Estado = ?"; $params[] = $_GET['estado']; }
+
+			// Prioridad 1: Filtro explícito en la URL
+			if (isset($_GET['docenteId'])) {
+				$where[] = "Usuarios_docente_ID_docente = ?";
+				$params[] = (int)$_GET['docenteId'];
+			}
+			// Prioridad 2: Si no hay filtro explícito, y el usuario es un profesor, filtrar por su propio ID
+			else if ($loggedInUserRole === 'PROFESOR') {
+				$where[] = "Usuarios_docente_ID_docente = ?";
+				$params[] = $loggedInUserId;
+			}
+			// Si es ADMIN y no hay filtro en URL, no se aplica filtro de docente (ve todo)
+
+			if (isset($_GET['estado'])) {
+				$where[] = "Estado = ?";
+				$params[] = $_GET['estado'];
+			}
+			
 			$sql = "SELECT * FROM Materia";
 			if ($where) $sql .= " WHERE " . implode(' AND ', $where);
+			
 			$stmt = $db->prepare($sql);
 			$stmt->execute($params);
 			respond(200, $stmt->fetchAll());

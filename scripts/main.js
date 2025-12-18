@@ -225,7 +225,13 @@ async function syncSession() {
     try {
         const isInPages = window.location.pathname.includes('/pages/');
         const baseUrl = isInPages ? '../api' : 'api';
-        const response = await fetch(`${baseUrl}/session_sync.php`);
+        const response = await fetch(`${baseUrl}/session_sync.php`, {
+            method: 'GET',
+            credentials: 'include', // Include cookies for session identification
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
         const result = await response.json();
         
         if (result.success && result.isLoggedIn && result.user) {

@@ -202,32 +202,14 @@ function populateAttendanceMateriaSelect() {
         return;
     }
     
-    // Get current user ID
-    const currentUserId = localStorage.getItem('userId');
-    if (!currentUserId) {
-        console.warn('No user ID found in localStorage');
-        subjectSelect.innerHTML = '<option value="" data-translate="select_subject">- Seleccionar -</option>';
-        return;
-    }
-    
-    // Ensure appData.materia exists
-    if (!appData || !appData.materia || !Array.isArray(appData.materia)) {
-        console.warn('appData.materia is not available or not an array');
-        subjectSelect.innerHTML = '<option value="" data-translate="select_subject">- Seleccionar -</option>';
-        return;
-    }
-    
-    // Get user's materias - filter by logged-in user's ID
-    const userSubjects = appData.materia.filter(subject => 
-        subject && subject.Usuarios_docente_ID_docente && 
-        parseInt(subject.Usuarios_docente_ID_docente) === parseInt(currentUserId)
-    );
+    // The data from appData.materia should already be filtered by the backend (get_data.php)
+    // We can use it directly without re-filtering on the client-side.
+    const userSubjects = appData.materia || [];
     
     // Clear and populate subject filter
     subjectSelect.innerHTML = '<option value="" data-translate="select_subject">- Seleccionar -</option>';
     
     if (userSubjects.length === 0) {
-        console.warn('No materias found for user ID:', currentUserId);
         const noMateriasOption = document.createElement('option');
         noMateriasOption.value = '';
         noMateriasOption.textContent = 'No hay materias disponibles';
